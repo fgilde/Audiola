@@ -89,7 +89,9 @@ def make_variant(input_path, output_path, fmt, filtergraph, mp3_bitrate):
             ]
 
     if fmt == "wav":
-        cmd += ["-c:a", "pcm_s24le", str(output_path)]
+        #cmd += ["-ac", "2", "-ar", "48000", "-c:a", "pcm_f32le", str(output_path)
+        cmd += ["-ac", "2", "-c:a", "pcm_f32le", str(output_path)
+    ]
     elif fmt == "flac":
         cmd += ["-c:a", "flac", "-compression_level", "5", str(output_path)]
     elif fmt == "mp3":

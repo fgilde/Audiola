@@ -69,7 +69,9 @@ public abstract class PythonVariationProviderBase : IAudioVariationProvider
                     $"Python script did not create a WAV output for variation '{variationId}' in '{outputDir}'.");
             }
 
-            return ReadStereoFloatWav(outputWav);
+            var normalizedOutputWav = Path.Combine(tempRoot, "normalized_output.wav");
+            await RunFfmpegNormalizeAsync(outputWav, normalizedOutputWav, ct);
+            return ReadStereoFloatWav(normalizedOutputWav);
         }
         finally
         {
@@ -81,6 +83,49 @@ public abstract class PythonVariationProviderBase : IAudioVariationProvider
             {
                 // Ignore temp cleanup errors.
             }
+        }
+    }
+
+    private static async Task RunFfmpegNormalizeAsync(
+        string inputWav,
+        string outputWav,
+        CancellationToken ct)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = "ffmpeg",
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+
+        psi.ArgumentList.Add("-hide_banner");
+        psi.ArgumentList.Add("-y");
+        psi.ArgumentList.Add("-i");
+        psi.ArgumentList.Add(inputWav);
+        psi.ArgumentList.Add("-map_metadata");
+        psi.ArgumentList.Add("-1");
+        psi.ArgumentList.Add("-map_chapters");
+        psi.ArgumentList.Add("-1");
+        psi.ArgumentList.Add("-vn");
+        psi.ArgumentList.Add("-sn");
+        psi.ArgumentList.Add("-ac");
+        psi.ArgumentList.Add("2");
+        psi.ArgumentList.Add("-c:a");
+        psi.ArgumentList.Add("pcm_f32le");
+        psi.ArgumentList.Add(outputWav);
+
+        using var process = Process.Start(psi)!;
+        var stdout = await process.StandardOutput.ReadToEndAsync(ct);
+        var stderr = await process.StandardError.ReadToEndAsync(ct);
+
+        await process.WaitForExitAsync(ct);
+
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"ffmpeg normalize failed with exit code {process.ExitCode}\n\nSTDOUT:\n{stdout}\n\nSTDERR:\n{stderr}");
         }
     }
 
