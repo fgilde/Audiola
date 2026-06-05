@@ -72,6 +72,10 @@
                 <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon SelectObjectSkew24}" Command="{Binding ViewModel.ClearSelectionCommand}" ToolTip="Auswahl löschen" />
                 <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Save24}" Command="{Binding ViewModel.ExportRangeCommand}" ToolTip="Auswahlbereich exportieren" />
                 <Border Width="1" Margin="6,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
+
+                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Wand24}" Content="Variationen" Click="Variations_All_Click"
+                           ToolTip="Variationen-Provider auf das gesamte Audio (alle Spuren) anwenden" />
+                <Border Width="1" Margin="6,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
                 <ui:ToggleSwitch VerticalAlignment="Center" Content="Mixer" IsChecked="{Binding ViewModel.ShowMixer, Mode=TwoWay}" ToolTip="Mixer-Panel ein-/ausblenden" />
 
                 <ui:ProgressRing Width="20" Height="20" Margin="12,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
@@ -113,8 +117,10 @@
                         <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon SoundWaveCircle24}" Content="Echo" Command="{Binding ViewModel.ClipEchoCommand}" />
                         <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Gauge24}" Content="Norm." Command="{Binding ViewModel.ClipNormalizeCommand}" ToolTip="Normalisieren" />
                         <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon ArrowSync24}" Content="Reverse" Command="{Binding ViewModel.ClipReverseCommand}" ToolTip="Umkehren" />
-                        <ui:Button Icon="{ui:SymbolIcon MicSparkle24}" Content="Vocal-Cleanup" Command="{Binding ViewModel.ClipVocalCleanupCommand}"
+                        <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon MicSparkle24}" Content="Vocal-Cleanup" Command="{Binding ViewModel.ClipVocalCleanupCommand}"
                                    ToolTip="Glättet Vocals: De-Esser, Härte zähmen, sanfte Kompression" />
+                        <ui:Button Icon="{ui:SymbolIcon Wand24}" Content="Variationen…" Click="ClipVariations_Click"
+                                   ToolTip="Variationen-Provider auf diesen Clip anwenden" />
                     </WrapPanel>
                 </StackPanel>
 
@@ -288,6 +294,7 @@
                                                                 <MenuItem Header="Normalisieren" Command="{Binding ViewModel.ClipNormalizeCommand}" />
                                                                 <MenuItem Header="Umkehren (Reverse)" Command="{Binding ViewModel.ClipReverseCommand}" />
                                                                 <MenuItem Header="Stimme tauschen (ElevenLabs · Sprache)" Command="{Binding ViewModel.ClipVoiceChangeCommand}" />
+                                                                <MenuItem Header="Variationen…" Click="ClipVariations_Click" />
                                                                 <Separator />
                                                                 <MenuItem Header="Markierten Bereich ausschneiden" Command="{Binding ViewModel.CutRegionCommand}" />
                                                                 <MenuItem Header="Am Playhead teilen" Command="{Binding ViewModel.SplitAtPlayheadCommand}" />

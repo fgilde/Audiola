@@ -151,6 +151,30 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
     private bool _moved;
     private bool _undoPushed;
 
+    // ---- Variationen-Provider anwenden ----
+    private async void Variations_All_Click(object sender, RoutedEventArgs e)
+        => await OpenVariationsAsync(ViewModel.Tracks.SelectMany(t => t.Clips).ToList(), "Gesamtes Audio (alle Spuren)");
+
+    private async void ClipVariations_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedClip is { } c)
+            await OpenVariationsAsync([c], "Ausgewählter Clip");
+    }
+
+    private async System.Threading.Tasks.Task OpenVariationsAsync(IReadOnlyList<ClipViewModel> clips, string scope)
+    {
+        var providers = ViewModel.VariationProviders;
+        if (providers.Count == 0 || clips.Count == 0) return;
+
+        var dlg = new Audiola.Views.Dialogs.VariationPickerWindow(providers, scope)
+        {
+            Owner = System.Windows.Window.GetWindow(this)
+        };
+        if (dlg.ShowDialog() != true || dlg.SelectedProvider is null || dlg.SelectedVariationIds.Count == 0) return;
+
+        await ViewModel.ApplyVariationsAsync(dlg.SelectedProvider, dlg.SelectedVariationIds, clips);
+    }
+
     // Rechtsklick wählt den Clip aus, damit das Kontextmenü darauf wirkt.
     private void Clip_RightDown(object sender, MouseButtonEventArgs e)
     {

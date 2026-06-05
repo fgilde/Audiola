@@ -34,6 +34,9 @@ public partial class App : Application
             services.AddSingleton<IAudioRecorder, AudioRecorder>();
             services.AddSingleton<IProjectService, ProjectService>();
             services.AddSingleton<ProjectWorkspace>();
+
+            // Audio-Variations-Provider (weitere Implementierungen hier registrieren):
+            services.AddSingleton<IAudioVariationProvider, StudioEffectsVariationProvider>();
             services.AddSingleton<IStemMixService, StemMixService>();
             services.AddSingleton<StemMixerEngine>();
             services.AddSingleton<IMasteringService, MasteringService>();

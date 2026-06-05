@@ -27,6 +27,9 @@ public sealed partial class TimelineViewModel : ObservableObject
     private readonly IVoiceChangeService _voiceChange;
     private readonly ISnackbarService _snackbar;
 
+    /// <summary>Registrierte Variations-Provider (z. B. „Studio-Effekte", „Internal", Python …).</summary>
+    public IReadOnlyList<IAudioVariationProvider> VariationProviders { get; }
+
     public ObservableCollection<StemTrackViewModel> Tracks { get; } = [];
 
     [ObservableProperty] private double _pixelsPerSecond = 40;
@@ -161,6 +164,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         TransportViewModel transport,
         IStemSeparationService separation,
         IVoiceChangeService voiceChange,
+        IEnumerable<IAudioVariationProvider> variationProviders,
         ISnackbarService snackbar)
     {
         _session = session;
@@ -169,6 +173,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         _transport = transport;
         _separation = separation;
         _voiceChange = voiceChange;
+        VariationProviders = variationProviders.ToList();
         _snackbar = snackbar;
 
         _engine.PositionChanged += (_, _) => UpdatePlayhead();
@@ -905,9 +910,16 @@ public sealed partial class TimelineViewModel : ObservableObject
 
     private void ReplaceSelectedClipSource(ClipViewModel clip, string temp, float[] outBuf, double lenSec)
     {
+        var r = ReplaceClipSource(clip, temp, outBuf, lenSec);
+        if (r is not null) { SelectedClip = r; r.IsSelected = true; }
+    }
+
+    /// <summary>Ersetzt einen beliebigen Clip durch gebackenes Material; behält die Auswahl, falls betroffen.</summary>
+    private ClipViewModel? ReplaceClipSource(ClipViewModel clip, string temp, float[] outBuf, double lenSec)
+    {
         var track = clip.Track;
         var idx = track.Clips.IndexOf(clip);
-        if (idx < 0) return;
+        if (idx < 0) return null;
 
         var peaks = AudioEdits.ComputePeaks(outBuf);
         var replacement = new ClipViewModel
@@ -925,8 +937,61 @@ public sealed partial class TimelineViewModel : ObservableObject
             FadeOutSeconds = clip.FadeOutSeconds
         };
         track.Clips[idx] = replacement;
-        SelectedClip = replacement;
-        replacement.IsSelected = true;
+        if (ReferenceEquals(SelectedClip, clip)) { SelectedClip = replacement; replacement.IsSelected = true; }
+        return replacement;
+    }
+
+    /// <summary>
+    /// Wendet die gewählten Variationen eines Providers nacheinander auf die angegebenen Clips an
+    /// und backt das Ergebnis in die jeweiligen Clips (für Spur- oder Gesamt-Audio-Bearbeitung).
+    /// </summary>
+    public async Task ApplyVariationsAsync(IAudioVariationProvider provider, IReadOnlyList<string> variationIds, IReadOnlyList<ClipViewModel> clips)
+    {
+        if (provider is null || variationIds.Count == 0) return;
+        var targets = clips.Where(c => !string.IsNullOrEmpty(c.SourcePath)).ToList();
+        if (targets.Count == 0) return;
+
+        PushUndo();
+        try
+        {
+            foreach (var clip in targets)
+            {
+                var srcStart = clip.SourceStartSeconds;
+                var len = clip.LengthSeconds;
+                var (seg, sr) = await Task.Run(() =>
+                {
+                    var (all, rate) = AudioProcessingHelper.ReadStereo(clip.SourcePath);
+                    var startS = (int)Math.Clamp((long)(srcStart * rate) * 2, 0, all.Length);
+                    var lenS = (int)Math.Clamp((long)(len * rate) * 2, 0, all.Length - startS);
+                    var s = new float[lenS];
+                    Array.Copy(all, startS, s, 0, lenS);
+                    return (s, rate);
+                });
+
+                foreach (var id in variationIds)
+                    seg = await provider.ApplyAsync(id, seg, sr);
+
+                var temp = await Task.Run(() =>
+                {
+                    System.IO.Directory.CreateDirectory(ClipFxDir);
+                    var t = System.IO.Path.Combine(ClipFxDir, $"var_{Guid.NewGuid():N}.wav");
+                    AudioEdits.WriteWav(t, seg, sr);
+                    return t;
+                });
+
+                ReplaceClipSource(clip, temp, seg, (double)(seg.Length / 2) / sr);
+            }
+
+            CommitClips();
+            _snackbar.Show("Variationen angewendet",
+                $"{provider.Name}: {variationIds.Count} Variation(en) auf {targets.Count} Clip(s).",
+                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Show("Variation fehlgeschlagen", ex.Message,
+                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(6));
+        }
     }
 
     private static float[] SlicePeaks(float[] peaks, double startFrac, double endFrac)
