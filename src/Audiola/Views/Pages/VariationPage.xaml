@@ -1,0 +1,106 @@
+<Page
+    x:Class="Audiola.Views.Pages.VariationPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d"
+    Title="VariationPage">
+
+    <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="820" HorizontalAlignment="Left">
+            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Klangvariation" />
+            <TextBlock
+                Margin="0,2,0,0"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="{Binding ViewModel.Session.CurrentTrack.FileName, FallbackValue='Keine Datei geladen', TargetNullValue='Keine Datei geladen'}" />
+            <TextBlock
+                Margin="0,8,0,0"
+                TextWrapping="Wrap"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="Diese Seite erzeugt eine songnahe Variante: kleine Klang-, Stereo- und Textur-Aenderungen ohne Tempo- oder Pitch-Eingriff. Die Originaldatei bleibt unveraendert." />
+
+            <TextBlock Margin="0,24,0,8" FontWeight="SemiBold" Text="Presets" />
+            <StackPanel Orientation="Horizontal">
+                <ui:Button Appearance="Secondary" Content="Subtil" Command="{Binding ViewModel.ApplySubtlePresetCommand}" />
+                <ui:Button Margin="8,0,0,0" Appearance="Secondary" Content="Ausgewogen" Command="{Binding ViewModel.ApplyBalancedPresetCommand}" />
+                <ui:Button Margin="8,0,0,0" Appearance="Secondary" Content="Etwas staerker" Command="{Binding ViewModel.ApplyStrongerPresetCommand}" />
+            </StackPanel>
+
+            <TextBlock Margin="0,20,0,8" FontWeight="SemiBold" Text="Gesamtwirkung" />
+            <ui:Card Padding="16">
+                <StackPanel>
+                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding ViewModel.OverallStrength, StringFormat='Stärke: {0:F0} %'}" />
+                    <Slider Minimum="0" Maximum="100" Value="{Binding ViewModel.OverallStrength, Mode=TwoWay}" />
+                    <CheckBox Margin="0,12,0,0"
+                              Content="Ausgangslautheit an den Originaltrack angleichen"
+                              IsChecked="{Binding ViewModel.MatchInputLoudness, Mode=TwoWay}" />
+                </StackPanel>
+            </ui:Card>
+
+            <TextBlock Margin="0,20,0,8" FontWeight="SemiBold" Text="Klangformung" />
+            <ui:Card Padding="16">
+                <StackPanel>
+                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding ViewModel.TimbreShift, StringFormat='Klangneigung: {0:+0;-0;0} (wärmer ↔ heller)'}" />
+                    <Slider Minimum="-100" Maximum="100" Value="{Binding ViewModel.TimbreShift, Mode=TwoWay}" />
+
+                    <TextBlock Margin="0,10,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding ViewModel.PresenceShift, StringFormat='Praesenz: {0:+0;-0;0} (weicher ↔ direkter)'}" />
+                    <Slider Minimum="-100" Maximum="100" Value="{Binding ViewModel.PresenceShift, Mode=TwoWay}" />
+
+                    <TextBlock Margin="0,10,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding ViewModel.Saturation, StringFormat='Sättigung: {0:F0} %'}" />
+                    <Slider Minimum="0" Maximum="100" Value="{Binding ViewModel.Saturation, Mode=TwoWay}" />
+                </StackPanel>
+            </ui:Card>
+
+            <TextBlock Margin="0,20,0,8" FontWeight="SemiBold" Text="Stereo &amp; Textur" />
+            <ui:Card Padding="16">
+                <StackPanel>
+                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding ViewModel.StereoWidth, StringFormat='Stereo-Breite: {0:+0;-0;0} (enger ↔ weiter)'}" />
+                    <Slider Minimum="-100" Maximum="100" Value="{Binding ViewModel.StereoWidth, Mode=TwoWay}" />
+
+                    <TextBlock Margin="0,10,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding ViewModel.Texture, StringFormat='Feinkorn: {0:F0} %'}" />
+                    <Slider Minimum="0" Maximum="100" Value="{Binding ViewModel.Texture, Mode=TwoWay}" />
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.VariantSeed, StringFormat='Seed: {0}'}" />
+                        <ui:Button Grid.Column="1"
+                                   Margin="12,0,0,0"
+                                   Appearance="Secondary"
+                                   Content="Seed neu würfeln"
+                                   Command="{Binding ViewModel.RandomizeSeedCommand}" />
+                    </Grid>
+                </StackPanel>
+            </ui:Card>
+
+            <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                <ui:Button Appearance="Primary"
+                           Icon="{ui:SymbolIcon Save24}"
+                           Content="Variante exportieren"
+                           Command="{Binding ViewModel.ExportCommand}" />
+                <ui:ProgressRing Margin="16,0,0,0"
+                                 VerticalAlignment="Center"
+                                 IsIndeterminate="True"
+                                 Visibility="{Binding ViewModel.IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </StackPanel>
+
+            <TextBlock Margin="0,12,0,0"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="{Binding ViewModel.StatusText}" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

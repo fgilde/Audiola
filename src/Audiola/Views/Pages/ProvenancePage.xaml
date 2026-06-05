@@ -1,0 +1,112 @@
+<Page
+    x:Class="Audiola.Views.Pages.ProvenancePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:models="clr-namespace:Audiola.Models"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d"
+    Title="ProvenancePage">
+
+    <Grid Margin="42,24,42,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Kopf -->
+        <StackPanel Grid.Row="0">
+            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Provenienz &amp; KI-Erkennung" />
+            <TextBlock
+                Margin="0,2,0,0"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap"
+                Text="Liest aus, welche Herkunfts-/Wasserzeichen-Daten eingebettet sind, und erklärt, warum ein Track als KI eingestuft werden kann. Reine Analyse — es wird nichts verändert." />
+        </StackPanel>
+
+        <!-- Aktionen -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,16,0,0">
+            <ui:Button Appearance="Primary" Icon="{ui:SymbolIcon DocumentSearch24}" Content="Geladenen Track analysieren"
+                       Command="{Binding ViewModel.AnalyzeTrackCommand}" />
+            <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon FolderOpen24}" Content="Datei wählen …"
+                       Command="{Binding ViewModel.AnalyzeFileCommand}" />
+            <ui:ProgressRing Margin="16,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
+                             Visibility="{Binding ViewModel.IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            <TextBlock Margin="12,0,0,0" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="{Binding ViewModel.StatusText}" />
+        </StackPanel>
+
+        <!-- Ergebnis -->
+        <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Befundliste -->
+                <ItemsControl ItemsSource="{Binding ViewModel.Findings}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models:Finding}">
+                            <Border Margin="0,0,0,8" Padding="14,10"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <ui:SymbolIcon x:Name="Icon" Grid.Column="0" VerticalAlignment="Center"
+                                                   Margin="0,0,12,0" Symbol="Info24" />
+
+                                    <Border Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0"
+                                            Padding="8,2" CornerRadius="4"
+                                            Background="{DynamicResource ControlFillColorSecondaryBrush}">
+                                        <TextBlock FontSize="11" Text="{Binding Category}" />
+                                    </Border>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Title}" TextWrapping="Wrap" />
+                                        <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                   Text="{Binding Detail}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding Severity}" Value="AiIndicator">
+                                    <Setter TargetName="Icon" Property="Symbol" Value="Warning24" />
+                                    <Setter TargetName="Icon" Property="Foreground" Value="#FFB454" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Severity}" Value="Notice">
+                                    <Setter TargetName="Icon" Property="Symbol" Value="Important24" />
+                                    <Setter TargetName="Icon" Property="Foreground" Value="#FF6B6B" />
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Bewertung -->
+                <Border Margin="0,8,0,0" Padding="16"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Visibility="{Binding ViewModel.Assessment, Converter={StaticResource StringToVisibilityConverter}}">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Bewertung" Margin="0,0,0,8" />
+                        <TextBlock FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                                   Text="{Binding ViewModel.Assessment}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <!-- C2PA-Rohausgabe -->
+                <ui:CardExpander Margin="0,8,0,0" Header="c2patool-Rohausgabe (C2PA-Manifest)"
+                                 Visibility="{Binding ViewModel.HasC2paRaw, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBox IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" MaxHeight="320"
+                             VerticalScrollBarVisibility="Auto"
+                             FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                             Text="{Binding ViewModel.C2paRaw, Mode=OneWay}" />
+                </ui:CardExpander>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

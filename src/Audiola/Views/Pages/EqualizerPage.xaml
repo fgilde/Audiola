@@ -1,0 +1,67 @@
+<Page
+    x:Class="Audiola.Views.Pages.EqualizerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:controls="clr-namespace:Audiola.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d"
+    Title="EqualizerPage">
+
+    <Grid Margin="42,24,42,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Kopf -->
+        <StackPanel Grid.Row="0">
+            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Equalizer" />
+            <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Interaktiver 4-Band-EQ — Punkte ziehen, dann auf den Track anwenden." />
+        </StackPanel>
+
+        <!-- Werkzeugleiste -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,14,0,0">
+            <ui:ToggleSwitch VerticalAlignment="Center" Content="Master-EQ (live)"
+                             IsChecked="{Binding ViewModel.IsLivePreview, Mode=TwoWay}" />
+            <ui:Button Margin="16,0,0,0" Icon="{ui:SymbolIcon ArrowReset24}" Content="Zurücksetzen" Command="{Binding ViewModel.ResetCommand}" />
+            <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon Save24}" Content="Mix exportieren" Command="{Binding ViewModel.ExportCommand}" />
+            <ui:ProgressRing Margin="16,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
+                             Visibility="{Binding ViewModel.IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="{Binding ViewModel.StatusText}" />
+        </StackPanel>
+
+        <!-- EQ-Kurve -->
+        <Border Grid.Row="2" Margin="0,14,0,0" Padding="12" CornerRadius="10" MinHeight="280"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+            <controls:EqCurveControl Bands="{Binding ViewModel.Bands}" SampleRate="{Binding ViewModel.SampleRate}" />
+        </Border>
+
+        <!-- Band-Legende -->
+        <ItemsControl Grid.Row="3" Margin="0,12,0,0" ItemsSource="{Binding ViewModel.Bands}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="4" Padding="10,8" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="12" Height="12" CornerRadius="6" VerticalAlignment="Center"
+                                    Background="{Binding ColorHex, Converter={StaticResource StringToBrushConverter}}" />
+                            <StackPanel Margin="8,0,0,0">
+                                <TextBlock FontSize="12" Text="{Binding Frequency, StringFormat='{}{0:F0} Hz'}" />
+                                <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                           Text="{Binding GainDb, StringFormat='{}{0:+0.0;-0.0;0} dB'}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</Page>

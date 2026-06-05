@@ -1,0 +1,69 @@
+using Audiola.ViewModels;
+
+namespace Audiola.Services;
+
+/// <summary>
+/// Orchestriert Speichern/Laden eines Projekts über alle beteiligten ViewModels
+/// (Timeline, Equalizer, Mastering) und pflegt die Liste „Letzte Projekte".
+/// </summary>
+public sealed class ProjectWorkspace
+{
+    private readonly IProjectService _project;
+    private readonly ISettingsService _settings;
+    private readonly TimelineViewModel _timeline;
+    private readonly EqualizerViewModel _eq;
+    private readonly MasteringViewModel _mastering;
+
+    public ProjectWorkspace(IProjectService project, ISettingsService settings,
+        TimelineViewModel timeline, EqualizerViewModel eq, MasteringViewModel mastering)
+    {
+        _project = project;
+        _settings = settings;
+        _timeline = timeline;
+        _eq = eq;
+        _mastering = mastering;
+    }
+
+    public event EventHandler? RecentChanged;
+
+    public string? CurrentPath => _timeline.CurrentProjectPath;
+    public bool IsDirty => _timeline.IsDirty;
+    public bool HasContent => _timeline.Tracks.Count > 0;
+    public IReadOnlyList<string> RecentProjects => _settings.Current.RecentProjects;
+
+    public async Task SaveAsync(string path)
+    {
+        var dto = _timeline.BuildProjectDto();
+        dto.Eq = _eq.ExportBands();
+        var (ms, profile) = _mastering.ExportSettings();
+        dto.Mastering = ms;
+        dto.MasteringProfile = profile;
+
+        await _project.SaveAsync(path, dto);
+
+        _timeline.CurrentProjectPath = path;
+        _timeline.IsDirty = false;
+        AddRecent(path);
+    }
+
+    public async Task OpenAsync(string path)
+    {
+        var dto = await _project.LoadAsync(path);
+        await _timeline.ApplyProjectDtoAsync(dto);   // setzt IsDirty=false + leert Undo-Historie
+        _eq.ImportBands(dto.Eq);
+        _mastering.ImportSettings(dto.Mastering, dto.MasteringProfile);
+
+        _timeline.CurrentProjectPath = path;
+        AddRecent(path);
+    }
+
+    private void AddRecent(string path)
+    {
+        var list = _settings.Current.RecentProjects;
+        list.RemoveAll(p => string.Equals(p, path, StringComparison.OrdinalIgnoreCase));
+        list.Insert(0, path);
+        while (list.Count > 10) list.RemoveAt(list.Count - 1);
+        _settings.Save();
+        RecentChanged?.Invoke(this, EventArgs.Empty);
+    }
+}

@@ -1,0 +1,140 @@
+<ui:FluentWindow
+    x:Class="Audiola.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:controls="clr-namespace:Audiola.Controls"
+    xmlns:pages="clr-namespace:Audiola.Views.Pages"
+    Title="{Binding ViewModel.ApplicationTitle}"
+    Width="1200"
+    Height="780"
+    MinWidth="900"
+    MinHeight="600"
+    ExtendsContentIntoTitleBar="True"
+    WindowBackdropType="Mica"
+    WindowCornerPreference="Round"
+    WindowStartupLocation="CenterScreen"
+    AllowDrop="True"
+    DragOver="OnDragOver"
+    Drop="OnFileDrop">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar
+            Grid.Row="0"
+            Title="Audiola"
+            Grid.ColumnSpan="2">
+            <ui:TitleBar.Icon>
+                <ui:SymbolIcon Symbol="MusicNote224" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+
+        <!-- Menüleiste -->
+        <Menu Grid.Row="1" Margin="8,0" Background="Transparent">
+            <MenuItem Header="_Datei">
+                <MenuItem Header="Audiodatei öffnen…" Click="OpenFile_Click" />
+                <MenuItem Header="Audio ins Studio hinzufügen…" Click="AddToStudio_Click" />
+                <Separator />
+                <MenuItem Header="Projekt öffnen…" Click="OpenProject_Click" />
+                <MenuItem Header="Projekt speichern…" Click="SaveProject_Click" />
+                <Separator />
+                <MenuItem Header="Beenden" Click="Exit_Click" />
+            </MenuItem>
+            <MenuItem Header="_Ansicht">
+                <MenuItem Header="Start" Tag="{x:Type pages:HomePage}" Click="Nav_Click" />
+                <MenuItem Header="Editor" Tag="{x:Type pages:EditorPage}" Click="Nav_Click" />
+                <MenuItem Header="Studio" Tag="{x:Type pages:TimelinePage}" Click="Nav_Click" />
+                <MenuItem Header="Mastering" Tag="{x:Type pages:MasteringPage}" Click="Nav_Click" />
+                <MenuItem Header="Equalizer" Tag="{x:Type pages:EqualizerPage}" Click="Nav_Click" />
+                <MenuItem Header="Provenienz" Tag="{x:Type pages:ProvenancePage}" Click="Nav_Click" />
+                <MenuItem Header="Mess-Harness" Tag="{x:Type pages:EvaluationPage}" Click="Nav_Click" />
+            </MenuItem>
+            <MenuItem Header="_Wiedergabe">
+                <MenuItem Header="Abspielen / Pause" Click="PlayPause_Click" />
+                <MenuItem Header="Stopp" Click="StopPlay_Click" />
+            </MenuItem>
+            <MenuItem Header="_Hilfe">
+                <MenuItem Header="Über Audiola" Click="About_Click" />
+            </MenuItem>
+        </Menu>
+
+        <ui:NavigationView
+            x:Name="RootNavigation"
+            Grid.Row="2"
+            IsBackButtonVisible="Visible"
+            MenuItemsSource="{Binding ViewModel.MenuItems}"
+            FooterMenuItemsSource="{Binding ViewModel.FooterMenuItems}"
+            PaneDisplayMode="Left" />
+
+        <!-- Durchgehende Transportleiste (sichtbar, sobald ein Track geladen ist) -->
+        <Border
+            Grid.Row="3"
+            Background="{DynamicResource ControlFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="16,8"
+            Visibility="{Binding Transport.HasTrack, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Play / Stop -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:Button Width="44" Icon="{ui:SymbolIcon Play24}" Command="{Binding Transport.PlayPauseCommand}" />
+                    <ui:Button Width="44" Margin="6,0,0,0" Icon="{ui:SymbolIcon Stop24}" Command="{Binding Transport.StopCommand}" />
+                </StackPanel>
+
+                <!-- Trackname -->
+                <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center">
+                    <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Aktueller Track" />
+                    <TextBlock FontWeight="SemiBold" Text="{Binding Transport.TrackName}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+
+                <!-- Wellenform + Position -->
+                <Grid Grid.Column="2" Margin="8,0" VerticalAlignment="Center">
+                    <controls:WaveformControl
+                        x:Name="TransportWaveform"
+                        Height="40" Cursor="Hand"
+                        MouseLeftButtonDown="Transport_WaveformMouseDown"
+                        Peaks="{Binding Transport.Peaks}"
+                        Progress="{Binding Transport.Progress}" />
+                </Grid>
+
+                <!-- Zeit -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="12,0" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" Text="{Binding Transport.PositionText}" />
+                    <TextBlock FontSize="12" Margin="4,0" Text="/" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                    <TextBlock FontSize="12" Text="{Binding Transport.DurationText}" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                </StackPanel>
+
+                <!-- Lautstärke -->
+                <StackPanel Grid.Column="4" Orientation="Horizontal" Margin="8,0,0,0" VerticalAlignment="Center">
+                    <ui:SymbolIcon Symbol="Speaker224" VerticalAlignment="Center" />
+                    <Slider Width="100" Margin="8,0,0,0" VerticalAlignment="Center"
+                            Minimum="0" Maximum="1" Value="{Binding Transport.Volume, Mode=TwoWay}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ui:SnackbarPresenter
+            x:Name="RootSnackbarPresenter"
+            Grid.Row="2"
+            Grid.RowSpan="2" />
+
+        <ContentPresenter
+            x:Name="RootContentDialogPresenter"
+            Grid.Row="2"
+            Grid.RowSpan="2" />
+    </Grid>
+</ui:FluentWindow>

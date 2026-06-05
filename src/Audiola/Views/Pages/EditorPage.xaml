@@ -1,0 +1,131 @@
+<Page
+    x:Class="Audiola.Views.Pages.EditorPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:controls="clr-namespace:Audiola.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d"
+    Title="EditorPage">
+
+    <Grid Margin="42,24,42,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Kopf -->
+        <StackPanel Grid.Row="0">
+            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Editor" />
+            <TextBlock
+                Margin="0,2,0,0"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="{Binding ViewModel.Session.CurrentTrack.FileName, FallbackValue='Keine Datei geladen', TargetNullValue='Keine Datei geladen'}" />
+        </StackPanel>
+
+        <!-- Werkzeugleiste + Effekt-Einstellungen -->
+        <StackPanel Grid.Row="1"
+                    Visibility="{Binding ViewModel.HasTrack, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Border Margin="0,14,0,0" Padding="10,8" CornerRadius="10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+            <WrapPanel Orientation="Horizontal">
+                <ui:Button Margin="0,0,10,6" Appearance="Primary" Icon="{ui:SymbolIcon Timeline24}"
+                           Content="Zurück ins Studio" Command="{Binding ViewModel.BakeToStudioCommand}"
+                           Visibility="{Binding ViewModel.HasClipTarget, Converter={StaticResource BooleanToVisibilityConverter}}"
+                           ToolTip="Bearbeitung in den Clip übernehmen" />
+                <ui:Button Margin="0,0,6,6" Icon="{ui:SymbolIcon Crop24}" Content="Trimmen" Command="{Binding ViewModel.TrimCommand}" ToolTip="Nur die Auswahl behalten" />
+                <ui:Button Margin="0,0,6,6" Icon="{ui:SymbolIcon Cut24}" Content="Löschen" Command="{Binding ViewModel.DeleteCommand}" ToolTip="Auswahl entfernen und zusammenfügen" />
+                <ui:Button Margin="0,0,6,6" Icon="{ui:SymbolIcon SpeakerMute24}" Content="Stille" Command="{Binding ViewModel.SilenceCommand}" ToolTip="Auswahl stummschalten" />
+                <ui:Button Margin="0,0,6,6" Icon="{ui:SymbolIcon ArrowTrending24}" Content="Fade-In" Command="{Binding ViewModel.FadeInCommand}" />
+                <ui:Button Margin="0,0,6,6" Icon="{ui:SymbolIcon ArrowTrendingDown24}" Content="Fade-Out" Command="{Binding ViewModel.FadeOutCommand}" />
+
+                <Border Width="1" Margin="6,2,10,6" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
+
+                <ui:Button Margin="0,0,6,6" Icon="{ui:SymbolIcon Gauge24}" Content="Normalisieren" Command="{Binding ViewModel.NormalizeCommand}" ToolTip="Auf −1 dBFS anheben" />
+                <ui:Button Margin="0,0,6,6" Icon="{ui:SymbolIcon SoundWaveCircle24}" Content="Echo" Command="{Binding ViewModel.EchoCommand}" />
+                <ui:Button Margin="0,0,6,6" Icon="{ui:SymbolIcon Sparkle24}" Content="Hall" Command="{Binding ViewModel.ReverbCommand}" />
+                <ui:Button Margin="0,0,6,6" Icon="{ui:SymbolIcon ArrowExpand24}" Content="Stereo +" Command="{Binding ViewModel.WidenCommand}" ToolTip="Stereo-Breite erhöhen" />
+                <ui:Button Margin="0,0,6,6" Icon="{ui:SymbolIcon ArrowSync24}" Content="Umkehren" Command="{Binding ViewModel.ReverseCommand}" />
+
+                <Border Width="1" Margin="6,2,10,6" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
+
+                <ui:Button Margin="0,0,6,6" Icon="{ui:SymbolIcon ArrowUndo24}" Content="Undo" Command="{Binding ViewModel.UndoCommand}" />
+                <ui:Button Margin="0,0,6,6" Icon="{ui:SymbolIcon SelectObjectSkew24}" Content="Auswahl löschen" Command="{Binding ViewModel.ClearSelectionCommand}" />
+                <ui:Button Margin="0,0,6,6" Appearance="Primary" Icon="{ui:SymbolIcon Save24}" Content="Exportieren" Command="{Binding ViewModel.ExportCommand}" />
+            </WrapPanel>
+        </Border>
+
+        <ui:CardExpander Margin="0,8,0,0" Header="Effekt-Einstellungen">
+            <StackPanel>
+                <!-- Live-Vorschau -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <ui:ToggleSwitch Content="Live-Vorschau (beim Abspielen)"
+                                     IsChecked="{Binding ViewModel.LivePreview, Mode=TwoWay}" />
+                    <CheckBox Margin="20,0,0,0" VerticalAlignment="Center" Content="Echo" IsChecked="{Binding ViewModel.PreviewEcho, Mode=TwoWay}" />
+                    <CheckBox Margin="12,0,0,0" VerticalAlignment="Center" Content="Hall" IsChecked="{Binding ViewModel.PreviewReverb, Mode=TwoWay}" />
+                    <CheckBox Margin="12,0,0,0" VerticalAlignment="Center" Content="Stereo" IsChecked="{Binding ViewModel.PreviewWiden, Mode=TwoWay}" />
+                </StackPanel>
+            <UniformGrid Columns="2">
+                <StackPanel Margin="0,4,16,4">
+                    <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               Text="{Binding ViewModel.EchoDelayMs, StringFormat='Echo · Verzögerung: {0:F0} ms'}" />
+                    <Slider Minimum="50" Maximum="1000" Value="{Binding ViewModel.EchoDelayMs, Mode=TwoWay}" />
+                    <TextBlock FontSize="11" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               Text="{Binding ViewModel.EchoFeedback, StringFormat='Echo · Feedback: {0:P0}'}" />
+                    <Slider Minimum="0" Maximum="0.9" Value="{Binding ViewModel.EchoFeedback, Mode=TwoWay}" />
+                    <TextBlock FontSize="11" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               Text="{Binding ViewModel.EchoMix, StringFormat='Echo · Mix: {0:P0}'}" />
+                    <Slider Minimum="0" Maximum="1" Value="{Binding ViewModel.EchoMix, Mode=TwoWay}" />
+                </StackPanel>
+                <StackPanel Margin="0,4,0,4">
+                    <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               Text="{Binding ViewModel.ReverbMix, StringFormat='Hall · Menge: {0:P0}'}" />
+                    <Slider Minimum="0" Maximum="1" Value="{Binding ViewModel.ReverbMix, Mode=TwoWay}" />
+                    <TextBlock FontSize="11" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               Text="{Binding ViewModel.WidenAmount, StringFormat='Stereo · Breite: {0:F2}×'}" />
+                    <Slider Minimum="0" Maximum="2" Value="{Binding ViewModel.WidenAmount, Mode=TwoWay}" />
+                </StackPanel>
+            </UniformGrid>
+            </StackPanel>
+        </ui:CardExpander>
+        </StackPanel>
+
+        <!-- Große Wellenform -->
+        <Border Grid.Row="2" Margin="0,14,0,14" Padding="12" CornerRadius="10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+            <Grid>
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                           Text="Keine Datei geladen — über „Start“ öffnen oder per Drag &amp; Drop ziehen."
+                           Visibility="{Binding ViewModel.HasTrack, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+
+                <controls:WaveformControl
+                    x:Name="Waveform"
+                    Cursor="IBeam"
+                    MouseLeftButtonDown="Waveform_MouseDown"
+                    MouseMove="Waveform_MouseMove"
+                    MouseLeftButtonUp="Waveform_MouseUp"
+                    Peaks="{Binding ViewModel.Session.CurrentTrack.Peaks}"
+                    Progress="{Binding ViewModel.Transport.Progress}"
+                    SelectionStart="{Binding ViewModel.SelectionStart}"
+                    SelectionEnd="{Binding ViewModel.SelectionEnd}"
+                    Visibility="{Binding ViewModel.HasTrack, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </Grid>
+        </Border>
+
+        <!-- Auswahl-Info + Metadaten -->
+        <StackPanel Grid.Row="3" Visibility="{Binding ViewModel.HasTrack, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding ViewModel.SelectionInfo}" />
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <ui:SymbolIcon Symbol="Info24" VerticalAlignment="Center" Margin="0,0,10,0" />
+                <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding ViewModel.FormatInfo}" />
+                <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="12"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                           Text="{Binding ViewModel.PathInfo}" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Page>

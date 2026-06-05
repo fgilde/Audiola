@@ -1,0 +1,1252 @@
+using System.Collections.ObjectModel;
+using System.Windows;
+using Audiola.Services;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
+using Wpf.Ui;
+using Wpf.Ui.Controls;
+
+namespace Audiola.ViewModels;
+
+/// <summary>
+/// Multitrack-Timeline: übernimmt die Stems als Spuren, zeigt sie entlang einer
+/// gemeinsamen Zeitachse mit Zoom und mitlaufendem Playhead. Wiedergabe über die
+/// gemeinsame <see cref="StemMixerEngine"/>; die globale Transportleiste steuert mit.
+/// </summary>
+public sealed partial class TimelineViewModel : ObservableObject
+{
+    private const double MinPps = 10;
+    private const double MaxPps = 200;
+
+    private readonly SessionState _session;
+    private readonly StemMixerEngine _engine;
+    private readonly IWaveformService _waveform;
+    private readonly TransportViewModel _transport;
+    private readonly IStemSeparationService _separation;
+    private readonly IVoiceChangeService _voiceChange;
+    private readonly ISnackbarService _snackbar;
+
+    public ObservableCollection<StemTrackViewModel> Tracks { get; } = [];
+
+    [ObservableProperty] private double _pixelsPerSecond = 40;
+    [ObservableProperty] private double _durationSeconds;
+    [ObservableProperty] private Thickness _playheadMargin;
+    [ObservableProperty] private bool _isPlaying;
+    [ObservableProperty] private bool _snapEnabled = true;
+    [ObservableProperty] private double _gridSeconds = 0.25;
+    [ObservableProperty] private double _selectionStartSeconds;
+    [ObservableProperty] private double _selectionEndSeconds;
+    [ObservableProperty] private bool _loopEnabled;
+    [ObservableProperty] private double _masterVolume = 1.0;
+    [ObservableProperty] private bool _showMixer;
+
+    /// <summary>Auswahl-Werkzeug: Ziehen in den Spuren markiert einen Bereich, statt Clips zu verschieben.</summary>
+    [ObservableProperty] private bool _rangeSelectMode;
+
+    partial void OnMasterVolumeChanged(double value) { _engine.MasterVolume = (float)value; MarkDirty(); }
+
+    public bool HasSelection => SelectionEndSeconds > SelectionStartSeconds + 1e-6;
+    public double SelectionLengthSeconds => Math.Max(0, SelectionEndSeconds - SelectionStartSeconds);
+
+    partial void OnSelectionStartSecondsChanged(double value) => SelectionChanged();
+    partial void OnSelectionEndSecondsChanged(double value) => SelectionChanged();
+    partial void OnLoopEnabledChanged(bool value) => UpdateLoop();
+
+    /// <summary>Spur, auf der der Auswahlbereich liegt (null = global, z. B. vom Zeit-Lineal).</summary>
+    private StemTrackViewModel? _selectionTrack;
+    public StemTrackViewModel? SelectionTrack
+    {
+        get => _selectionTrack;
+        private set
+        {
+            _selectionTrack = value;
+            foreach (var t in Tracks) t.IsSelectionTrack = ReferenceEquals(t, value);
+            OnPropertyChanged(nameof(HasGlobalSelection));
+        }
+    }
+
+    /// <summary>Auswahl ohne bestimmte Spur (über alle Spuren, z. B. fürs Loopen/Exportieren).</summary>
+    public bool HasGlobalSelection => HasSelection && SelectionTrack is null;
+
+    private void SelectionChanged()
+    {
+        OnPropertyChanged(nameof(HasSelection));
+        OnPropertyChanged(nameof(HasGlobalSelection));
+        OnPropertyChanged(nameof(SelectionLengthSeconds));
+        OnPropertyChanged(nameof(HasClipRegion));
+        OnPropertyChanged(nameof(ClipEffectScope));
+        OnPropertyChanged(nameof(CanCutRegion));
+        CutRegionCommand.NotifyCanExecuteChanged();
+        UpdateLoop();
+        ExportRangeCommand.NotifyCanExecuteChanged();
+    }
+
+    private void UpdateLoop()
+    {
+        _engine.LoopEnabled = LoopEnabled && HasSelection;
+        _engine.LoopStart = TimeSpan.FromSeconds(SelectionStartSeconds);
+        _engine.LoopEnd = TimeSpan.FromSeconds(SelectionEndSeconds);
+    }
+
+    /// <summary>Setzt den Auswahlbereich global (z. B. vom Zeit-Lineal).</summary>
+    public void SetSelection(double a, double b) => SetSelection(a, b, null);
+
+    /// <summary>Setzt den Auswahlbereich für eine bestimmte Spur (Band nur dort).</summary>
+    public void SetSelection(double a, double b, StemTrackViewModel? track)
+    {
+        SelectionTrack = track;
+        SelectionStartSeconds = Math.Max(0, Math.Min(a, b));
+        SelectionEndSeconds = Math.Max(0, Math.Max(a, b));
+    }
+
+    [RelayCommand]
+    private void ClearSelection()
+    {
+        SelectionTrack = null;
+        SelectionStartSeconds = 0;
+        SelectionEndSeconds = 0;
+    }
+
+    private bool CanExportRange => HasSelection;
+
+    [RelayCommand(CanExecute = nameof(CanExportRange))]
+    private async Task ExportRangeAsync()
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = "Auswahlbereich exportieren",
+            Filter = AudioExporter.SaveFilter,
+            FileName = "audiola-bereich.wav"
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        var start = TimeSpan.FromSeconds(SelectionStartSeconds);
+        var end = TimeSpan.FromSeconds(SelectionEndSeconds);
+        var tracks = Tracks.ToList();
+        try
+        {
+            await Task.Run(() =>
+            {
+                var (samples, sr) = _engine.RenderRange(tracks, start, end);
+                AudioExporter.Export(new FloatArraySampleProvider(samples, sr, 2), dialog.FileName);
+            });
+            _snackbar.Show("Bereich exportiert", System.IO.Path.GetFileName(dialog.FileName),
+                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Show("Export fehlgeschlagen", ex.Message,
+                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
+        }
+    }
+
+    public IReadOnlyList<double> GridOptions { get; } = [0.1, 0.25, 0.5, 1.0];
+
+    /// <summary>Rastet Sekunden auf das Raster ein (falls aktiv) und klemmt auf ≥ 0.</summary>
+    public double Snap(double seconds)
+    {
+        seconds = Math.Max(0, seconds);
+        if (!SnapEnabled || GridSeconds <= 0) return seconds;
+        return Math.Round(seconds / GridSeconds) * GridSeconds;
+    }
+
+    public double ContentWidth => Math.Max(0, DurationSeconds * PixelsPerSecond);
+    public bool HasTracks => Tracks.Count > 0;
+
+    public TimelineViewModel(
+        SessionState session,
+        StemMixerEngine engine,
+        IWaveformService waveform,
+        TransportViewModel transport,
+        IStemSeparationService separation,
+        IVoiceChangeService voiceChange,
+        ISnackbarService snackbar)
+    {
+        _session = session;
+        _engine = engine;
+        _waveform = waveform;
+        _transport = transport;
+        _separation = separation;
+        _voiceChange = voiceChange;
+        _snackbar = snackbar;
+
+        _engine.PositionChanged += (_, _) => UpdatePlayhead();
+        _engine.StateChanged += (_, _) => IsPlaying = _engine.IsPlaying;
+
+        // „Geändert"-Erkennung: Struktur- und Eigenschaftsänderungen markieren das Projekt als dirty.
+        Tracks.CollectionChanged += (_, e) =>
+        {
+            if (e.NewItems is not null)
+                foreach (StemTrackViewModel t in e.NewItems) HookTrack(t);
+            MarkDirty();
+        };
+    }
+
+    // ---- „Geändert"-Status (für „Speichern beim Beenden?") ----
+
+    private bool _suppressDirty;
+
+    /// <summary>True, sobald seit dem letzten Speichern/Laden etwas geändert wurde.</summary>
+    [ObservableProperty] private bool _isDirty;
+
+    /// <summary>Pfad der aktuell geöffneten/gespeicherten Projektdatei (null = noch keine).</summary>
+    public string? CurrentProjectPath { get; set; }
+
+    private void MarkDirty() { if (!_suppressDirty) IsDirty = true; }
+
+    private void HookTrack(StemTrackViewModel t)
+    {
+        t.PropertyChanged += (_, e) =>
+        {
+            // Pegel-Updates (Wiedergabe) und Auswahl-Markierung sind keine Bearbeitung.
+            if (e.PropertyName is not (nameof(StemTrackViewModel.Level) or nameof(StemTrackViewModel.IsSelectionTrack)))
+                MarkDirty();
+        };
+        t.Clips.CollectionChanged += (_, e) =>
+        {
+            if (e.NewItems is not null)
+                foreach (ClipViewModel c in e.NewItems) HookClip(c);
+            MarkDirty();
+        };
+        foreach (var c in t.Clips) HookClip(c);
+    }
+
+    private void HookClip(ClipViewModel c) =>
+        c.PropertyChanged += (_, e) =>
+        {
+            // Auswahl ist keine Bearbeitung.
+            if (e.PropertyName != nameof(ClipViewModel.IsSelected)) MarkDirty();
+        };
+
+    private static readonly string[] Palette =
+        ["#5B8CFF", "#FF6B6B", "#FFB454", "#9B8CFF", "#54D6A0", "#FF8AD8", "#6BD6FF", "#D6C054"];
+
+    /// <summary>Beim Anzeigen: bestehendes Arrangement behalten; sonst Stems einmalig übernehmen.</summary>
+    public void OnActivated()
+    {
+        if (!HasTracks && _session.CurrentStemSet is not null)
+        {
+            ImportStems();
+        }
+        else if (HasTracks)
+        {
+            _engine.Load(Tracks);
+            DurationSeconds = _engine.Duration.TotalSeconds;
+        }
+
+        if (HasTracks) _transport.SetMode(TransportMode.StemMix);
+        UpdateContentWidth();
+        UpdatePlayhead();
+    }
+
+    public void OnDeactivated() { /* Transport bleibt auf dem Studio-Mix (Auto-Follow) */ }
+
+    /// <summary>Übernimmt die aktuellen Stems als zusätzliche Spuren.</summary>
+    [RelayCommand]
+    private void ImportStems()
+    {
+        if (_session.CurrentStemSet is not { } set) return;
+
+        PushUndo();
+        var added = new List<StemTrackViewModel>();
+        foreach (var stem in set.Stems)
+        {
+            var vm = new StemTrackViewModel(stem);
+            Tracks.Add(vm);
+            added.Add(vm);
+        }
+        OnPropertyChanged(nameof(HasTracks));
+        _ = LoadPeaksAsync(added);
+        if (HasTracks) _transport.SetMode(TransportMode.StemMix);
+    }
+
+    /// <summary>Öffnet einen Dialog und fügt gewählte Audiodateien als neue Spuren hinzu.</summary>
+    [RelayCommand]
+    private async Task AddAudioAsync()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Audiodatei(en) als Spur hinzufügen",
+            Multiselect = true,
+            Filter = "Audiodateien|*.wav;*.mp3;*.flac;*.aiff;*.m4a;*.ogg|Alle Dateien|*.*"
+        };
+        if (dialog.ShowDialog() != true) return;
+        foreach (var f in dialog.FileNames)
+            await AddAudioFileAsync(f, -1, 0);
+    }
+
+    /// <summary>
+    /// Fügt eine Audiodatei als Clip hinzu — entweder in eine bestehende Spur
+    /// (trackIndex ≥ 0) oder als neue Spur.
+    /// </summary>
+    public async Task AddAudioFileAsync(string path, int trackIndex, double offsetSeconds)
+    {
+        AudioTrackData t;
+        try { t = await LoadClipDataAsync(path); }
+        catch { return; }
+
+        PushUndo();
+        StemTrackViewModel track;
+        if (trackIndex >= 0 && trackIndex < Tracks.Count)
+        {
+            track = Tracks[trackIndex];
+        }
+        else
+        {
+            track = StemTrackViewModel.ForFile(path,
+                System.IO.Path.GetFileNameWithoutExtension(path),
+                Palette[Tracks.Count % Palette.Length]);
+            Tracks.Add(track);
+            OnPropertyChanged(nameof(HasTracks));
+        }
+
+        track.Clips.Add(new ClipViewModel
+        {
+            Track = track,
+            SourcePath = path,
+            SourceTotalSeconds = t.Seconds,
+            SourcePeaks = t.Peaks,
+            TimelineOffsetSeconds = Snap(offsetSeconds),
+            SourceStartSeconds = 0,
+            LengthSeconds = t.Seconds,
+            Peaks = t.Peaks
+        });
+
+        RecomputeDuration();
+        CommitClips();
+        if (HasTracks) _transport.SetMode(TransportMode.StemMix);
+    }
+
+    private readonly record struct AudioTrackData(float[] Peaks, double Seconds);
+
+    private async Task<AudioTrackData> LoadClipDataAsync(string path)
+    {
+        var t = await _waveform.LoadAsync(path, 4000);
+        return new AudioTrackData(t.Peaks, t.Duration.TotalSeconds);
+    }
+
+    private async Task LoadPeaksAsync(IReadOnlyList<StemTrackViewModel> tracks)
+    {
+        foreach (var vm in tracks)
+        {
+            try
+            {
+                // Mehr Buckets für die breitere Timeline-Darstellung.
+                var t = await _waveform.LoadAsync(vm.Model.FilePath, 4000);
+                vm.Peaks = t.Peaks;
+                vm.LengthSeconds = t.Duration.TotalSeconds;
+
+                // Anfangs ein Clip über den ganzen Stem.
+                vm.Clips.Clear();
+                vm.Clips.Add(new ClipViewModel
+                {
+                    Track = vm,
+                    SourcePath = vm.Model.FilePath,
+                    SourceTotalSeconds = vm.LengthSeconds,
+                    SourcePeaks = vm.Peaks,
+                    TimelineOffsetSeconds = 0,
+                    SourceStartSeconds = 0,
+                    LengthSeconds = vm.LengthSeconds,
+                    Peaks = vm.Peaks
+                });
+            }
+            catch { /* Wellenform optional */ }
+        }
+        RecomputeDuration();
+        if (HasTracks) _engine.Load(Tracks); // auf Clip-Modus umstellen
+    }
+
+    private void RecomputeDuration()
+    {
+        double max = 0;
+        foreach (var vm in Tracks)
+        {
+            if (vm.Clips.Count == 0)
+                max = Math.Max(max, vm.StartOffsetSeconds + vm.LengthSeconds);
+            else
+                foreach (var clip in vm.Clips)
+                    max = Math.Max(max, clip.EndSeconds);
+        }
+        if (max > 0) DurationSeconds = max;
+    }
+
+    [ObservableProperty] private ClipViewModel? _selectedClip;
+
+    public bool HasSelectedClip => SelectedClip is not null;
+    partial void OnSelectedClipChanged(ClipViewModel? value)
+    {
+        OnPropertyChanged(nameof(HasSelectedClip));
+        OnPropertyChanged(nameof(HasClipRegion));
+        OnPropertyChanged(nameof(ClipEffectScope));
+        OnPropertyChanged(nameof(CanCutRegion));
+        CutRegionCommand.NotifyCanExecuteChanged();
+    }
+
+    public void SelectClip(ClipViewModel clip)
+    {
+        foreach (var t in Tracks)
+            foreach (var c in t.Clips)
+                c.IsSelected = ReferenceEquals(c, clip);
+        SelectedClip = clip;
+    }
+
+    /// <summary>Während des Ziehens: Clip-Offset visuell setzen (ohne Engine-Reload).</summary>
+    public void SetClipOffset(ClipViewModel clip, double seconds)
+    {
+        clip.TimelineOffsetSeconds = Snap(seconds);
+        RecomputeDuration();
+    }
+
+    /// <summary>
+    /// Verschiebt einen Clip auf eine andere Spur (und an eine neue Timeline-Position).
+    /// Da <see cref="ClipViewModel.Track"/> init-only ist, wird der Clip in der Zielspur neu erzeugt.
+    /// </summary>
+    public void MoveClipToTrack(ClipViewModel clip, int targetTrackIndex, double newOffsetSeconds)
+    {
+        if (targetTrackIndex < 0 || targetTrackIndex >= Tracks.Count) return;
+        var target = Tracks[targetTrackIndex];
+        var offset = Snap(Math.Max(0, newOffsetSeconds));
+
+        if (clip.Track == target)
+        {
+            clip.TimelineOffsetSeconds = offset;
+            RecomputeDuration();
+            CommitClips();
+            return;
+        }
+
+        var replacement = new ClipViewModel
+        {
+            Track = target,
+            SourcePath = clip.SourcePath,
+            SourceTotalSeconds = clip.SourceTotalSeconds,
+            SourcePeaks = clip.SourcePeaks,
+            TimelineOffsetSeconds = offset,
+            SourceStartSeconds = clip.SourceStartSeconds,
+            LengthSeconds = clip.LengthSeconds,
+            Peaks = clip.Peaks,
+            GainDb = clip.GainDb,
+            FadeInSeconds = clip.FadeInSeconds,
+            FadeOutSeconds = clip.FadeOutSeconds
+        };
+        clip.Track.Clips.Remove(clip);
+        target.Clips.Add(replacement);
+        SelectedClip = replacement;
+        replacement.IsSelected = true;
+        RecomputeDuration();
+        CommitClips();
+    }
+
+    [RelayCommand]
+    private void SplitAtPlayhead()
+    {
+        var clip = SelectedClip;
+        if (clip is null) return;
+
+        var t = _engine.Position.TotalSeconds;
+        if (t <= clip.TimelineOffsetSeconds + 0.02 || t >= clip.EndSeconds - 0.02) return;
+
+        PushUndo();
+        var track = clip.Track;
+        var rel = t - clip.TimelineOffsetSeconds; // Sekunden in den Clip hinein
+        var srcTotal = clip.SourceTotalSeconds <= 0 ? clip.LengthSeconds : clip.SourceTotalSeconds;
+
+        var fStart = clip.SourceStartSeconds / srcTotal;
+        var fSplit = (clip.SourceStartSeconds + rel) / srcTotal;
+        var fEnd = (clip.SourceStartSeconds + clip.LengthSeconds) / srcTotal;
+
+        var left = new ClipViewModel
+        {
+            Track = track,
+            SourcePath = clip.SourcePath,
+            SourceTotalSeconds = clip.SourceTotalSeconds,
+            SourcePeaks = clip.SourcePeaks,
+            TimelineOffsetSeconds = clip.TimelineOffsetSeconds,
+            SourceStartSeconds = clip.SourceStartSeconds,
+            LengthSeconds = rel,
+            Peaks = SlicePeaks(clip.SourcePeaks, fStart, fSplit)
+        };
+        var right = new ClipViewModel
+        {
+            Track = track,
+            SourcePath = clip.SourcePath,
+            SourceTotalSeconds = clip.SourceTotalSeconds,
+            SourcePeaks = clip.SourcePeaks,
+            TimelineOffsetSeconds = clip.TimelineOffsetSeconds + rel,
+            SourceStartSeconds = clip.SourceStartSeconds + rel,
+            LengthSeconds = clip.LengthSeconds - rel,
+            Peaks = SlicePeaks(clip.SourcePeaks, fSplit, fEnd)
+        };
+
+        var idx = track.Clips.IndexOf(clip);
+        track.Clips.RemoveAt(idx);
+        track.Clips.Insert(idx, right);
+        track.Clips.Insert(idx, left);
+
+        SelectedClip = null;
+        CommitClips();
+    }
+
+    [RelayCommand]
+    private void DeleteSelected()
+    {
+        if (SelectedClip is null) return;
+        PushUndo();
+        SelectedClip.Track.Clips.Remove(SelectedClip);
+        SelectedClip = null;
+        CommitClips();
+    }
+
+    /// <summary>True, wenn der markierte Bereich einen Teil des gewählten Clips abdeckt.</summary>
+    public bool CanCutRegion => SelectedClip is { } c && ClipRegionSeconds(c) is not null;
+
+    /// <summary>Schneidet den markierten Bereich aus dem gewählten Clip heraus (es bleibt eine Lücke).</summary>
+    [RelayCommand(CanExecute = nameof(CanCutRegion))]
+    private void CutRegion()
+    {
+        var clip = SelectedClip;
+        if (clip is null || ClipRegionSeconds(clip) is not { } region) return;
+
+        PushUndo();
+        var track = clip.Track;
+        var srcTotal = clip.SourceTotalSeconds <= 0 ? clip.LengthSeconds : clip.SourceTotalSeconds;
+        var idx = track.Clips.IndexOf(clip);
+        if (idx < 0) return;
+
+        var aSec = region.aSec; // clip-relative Sekunden
+        var bSec = region.bSec;
+
+        var pieces = new List<ClipViewModel>();
+        // Linkes Reststück [0, aSec)
+        if (aSec > MinClipSeconds)
+        {
+            var f0 = clip.SourceStartSeconds / srcTotal;
+            var f1 = (clip.SourceStartSeconds + aSec) / srcTotal;
+            pieces.Add(new ClipViewModel
+            {
+                Track = track,
+                SourcePath = clip.SourcePath,
+                SourceTotalSeconds = clip.SourceTotalSeconds,
+                SourcePeaks = clip.SourcePeaks,
+                TimelineOffsetSeconds = clip.TimelineOffsetSeconds,
+                SourceStartSeconds = clip.SourceStartSeconds,
+                LengthSeconds = aSec,
+                Peaks = SlicePeaks(clip.SourcePeaks, f0, f1),
+                GainDb = clip.GainDb,
+                FadeInSeconds = clip.FadeInSeconds
+            });
+        }
+        // Rechtes Reststück [bSec, len)
+        if (clip.LengthSeconds - bSec > MinClipSeconds)
+        {
+            var f0 = (clip.SourceStartSeconds + bSec) / srcTotal;
+            var f1 = (clip.SourceStartSeconds + clip.LengthSeconds) / srcTotal;
+            pieces.Add(new ClipViewModel
+            {
+                Track = track,
+                SourcePath = clip.SourcePath,
+                SourceTotalSeconds = clip.SourceTotalSeconds,
+                SourcePeaks = clip.SourcePeaks,
+                TimelineOffsetSeconds = clip.TimelineOffsetSeconds + bSec,
+                SourceStartSeconds = clip.SourceStartSeconds + bSec,
+                LengthSeconds = clip.LengthSeconds - bSec,
+                Peaks = SlicePeaks(clip.SourcePeaks, f0, f1),
+                FadeOutSeconds = clip.FadeOutSeconds
+            });
+        }
+
+        track.Clips.RemoveAt(idx);
+        for (var i = 0; i < pieces.Count; i++)
+            track.Clips.Insert(idx + i, pieces[i]);
+
+        SelectedClip = pieces.FirstOrDefault();
+        if (SelectedClip is not null) SelectedClip.IsSelected = true;
+        ClearSelection();
+        RecomputeDuration();
+        CommitClips();
+    }
+
+    [ObservableProperty] private bool _isSeparating;
+    [ObservableProperty] private string _separationStatus = "";
+
+    /// <summary>Schnelle Trennung in 4 Stems (Modell aus Einstellungen, keine Inhaltserkennung).</summary>
+    [RelayCommand]
+    private Task SeparateTrack(StemTrackViewModel? track) => SeparateTrackCore(track, null, 0, detectContent: false);
+
+    /// <summary>
+    /// Automatik: trennt mit htdemucs_6s in höherer Qualität (shifts) und übernimmt nur die
+    /// Stems, die tatsächlich hörbaren Inhalt haben (erkennt, was im Song steckt).
+    /// </summary>
+    [RelayCommand]
+    private Task SeparateTrackAuto(StemTrackViewModel? track) => SeparateTrackCore(track, "htdemucs_6s", 2, detectContent: true);
+
+    /// <summary>RMS-Schwelle (dBFS), ab der ein Stem als „vorhanden" gilt.</summary>
+    private const double StemPresenceDb = -50.0;
+
+    private async Task SeparateTrackCore(StemTrackViewModel? track, string? modelOverride, int shifts, bool detectContent)
+    {
+        if (track is null || IsSeparating) return;
+        var clip = track.Clips.FirstOrDefault();
+        if (clip is null) return;
+
+        var path = clip.SourcePath;
+        var offset = clip.TimelineOffsetSeconds;
+
+        IsSeparating = true;
+        try
+        {
+            if (!await _separation.IsAvailableAsync())
+            {
+                _snackbar.Show("Demucs fehlt", "Bitte 'pip install demucs soundfile' ausführen.",
+                    ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(5));
+                return;
+            }
+
+            SeparationStatus = "Stems trennen … 0 %";
+            var progress = new Progress<string>(line =>
+            {
+                var m = System.Text.RegularExpressions.Regex.Match(line, @"(\d{1,3})%");
+                if (m.Success) SeparationStatus = $"Stems trennen … {m.Groups[1].Value} %";
+            });
+
+            var result = await _separation.SeparateAsync(path, progress, modelOverride, shifts);
+
+            // Inhaltserkennung: nur Stems mit hörbarem Pegel übernehmen.
+            var stems = result.Stems.AsEnumerable();
+            if (detectContent)
+            {
+                SeparationStatus = "Inhalt erkennen …";
+                var measured = await Task.Run(() => result.Stems
+                    .Select(s => (Stem: s, Rms: AudioProcessingHelper.MeasureRmsDb(s.FilePath)))
+                    .ToList());
+                var kept = measured.Where(x => x.Rms > StemPresenceDb).Select(x => x.Stem).ToList();
+                stems = kept.Count > 0 ? kept : result.Stems; // Fallback: nie alles verwerfen
+            }
+            var stemList = stems.ToList();
+
+            PushUndo();
+            var insertAt = Tracks.IndexOf(track) + 1;
+            foreach (var stem in stemList)
+            {
+                var data = await _waveform.LoadAsync(stem.FilePath, 4000);
+                var dur = data.Duration.TotalSeconds;
+                var t = StemTrackViewModel.ForFile(stem.FilePath, $"{StemName(stem.Kind)} ◂ {track.Name}", StemColor(stem.Kind));
+                t.LengthSeconds = dur;
+                t.Clips.Add(new ClipViewModel
+                {
+                    Track = t,
+                    SourcePath = stem.FilePath,
+                    SourceTotalSeconds = dur,
+                    SourcePeaks = data.Peaks,
+                    TimelineOffsetSeconds = offset,
+                    SourceStartSeconds = 0,
+                    LengthSeconds = dur,
+                    Peaks = data.Peaks
+                });
+                Tracks.Insert(insertAt++, t);
+            }
+
+            OnPropertyChanged(nameof(HasTracks));
+            RecomputeDuration();
+            CommitClips();
+            var detected = string.Join(", ", stemList.Select(s => StemName(s.Kind)));
+            _snackbar.Show("Stems hinzugefügt",
+                detectContent ? $"Erkannt: {detected} ({stemList.Count} Spuren)." : $"{stemList.Count} Spuren aus „{track.Name}“.",
+                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(4));
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Show("Trennung fehlgeschlagen", ex.Message,
+                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
+        }
+        finally
+        {
+            IsSeparating = false;
+            SeparationStatus = "";
+        }
+    }
+
+    private static string StemName(Audiola.Models.StemKind k) => k switch
+    {
+        Audiola.Models.StemKind.Vocals => "Vocals",
+        Audiola.Models.StemKind.Drums => "Drums",
+        Audiola.Models.StemKind.Bass => "Bass",
+        Audiola.Models.StemKind.Guitar => "Guitar",
+        Audiola.Models.StemKind.Piano => "Piano",
+        _ => "Other"
+    };
+
+    private static string StemColor(Audiola.Models.StemKind k) => k switch
+    {
+        Audiola.Models.StemKind.Vocals => "#FF6B6B",
+        Audiola.Models.StemKind.Drums => "#FFB454",
+        Audiola.Models.StemKind.Bass => "#5B8CFF",
+        Audiola.Models.StemKind.Guitar => "#54D6A0",
+        Audiola.Models.StemKind.Piano => "#6BD6FF",
+        _ => "#9B8CFF"
+    };
+
+    [RelayCommand]
+    private void DeleteTrack(StemTrackViewModel? track)
+    {
+        if (track is null) return;
+        PushUndo();
+        Tracks.Remove(track);
+        OnPropertyChanged(nameof(HasTracks));
+        RecomputeDuration();
+        CommitClips();
+    }
+
+    private const double MinClipSeconds = 0.05;
+
+    /// <summary>Linke Clip-Kante auf eine Timeline-Zeit ziehen (Offset + Quellstart + Länge).</summary>
+    public void SetClipLeftEdge(ClipViewModel clip, double timelineSeconds)
+    {
+        var total = clip.SourceTotalSeconds <= 0 ? clip.LengthSeconds : clip.SourceTotalSeconds;
+        var newStart = Snap(timelineSeconds);
+        var delta = newStart - clip.TimelineOffsetSeconds;
+        var newSrcStart = clip.SourceStartSeconds + delta;
+        var newLen = clip.LengthSeconds - delta;
+
+        if (newSrcStart < 0) { var fix = -newSrcStart; newSrcStart = 0; newStart += fix; newLen -= fix; }
+        if (newLen < MinClipSeconds) return;
+
+        clip.TimelineOffsetSeconds = newStart;
+        clip.SourceStartSeconds = newSrcStart;
+        clip.LengthSeconds = newLen;
+        Reslice(clip, total);
+        RecomputeDuration();
+    }
+
+    /// <summary>Rechte Clip-Kante auf eine Timeline-Zeit ziehen (Länge).</summary>
+    public void SetClipRightEdge(ClipViewModel clip, double timelineSeconds)
+    {
+        var total = clip.SourceTotalSeconds <= 0 ? clip.LengthSeconds : clip.SourceTotalSeconds;
+        var newEnd = Snap(timelineSeconds);
+        var newLen = Math.Min(newEnd - clip.TimelineOffsetSeconds, total - clip.SourceStartSeconds);
+        if (newLen < MinClipSeconds) return;
+
+        clip.LengthSeconds = newLen;
+        Reslice(clip, total);
+        RecomputeDuration();
+    }
+
+    private static void Reslice(ClipViewModel clip, double total)
+    {
+        if (total <= 0) return;
+        var fStart = clip.SourceStartSeconds / total;
+        var fEnd = (clip.SourceStartSeconds + clip.LengthSeconds) / total;
+        clip.Peaks = SlicePeaks(clip.SourcePeaks, fStart, fEnd);
+    }
+
+    // ---- Clip-Effekte (backen den Effekt destruktiv in den Clip) ----
+
+    private static readonly string ClipFxDir =
+        System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Audiola", "clipfx");
+
+    [RelayCommand] private Task ClipReverb() => ApplyClipEffect((seg, sr, a, b) => AudioEffects.Reverb(seg, a, b, sr, 0.3));
+    [RelayCommand] private Task ClipEcho() => ApplyClipEffect((seg, sr, a, b) => AudioEffects.Echo(seg, a, b, sr));
+    [RelayCommand] private Task ClipNormalize() => ApplyClipEffect((seg, sr, a, b) => AudioEffects.Normalize(seg, a, b, -1));
+    [RelayCommand] private Task ClipReverse() => ApplyClipEffect((seg, sr, a, b) => AudioEffects.Reverse(seg, a, b));
+    [RelayCommand] private Task ClipVocalCleanup() => ApplyClipEffect((seg, sr, a, b) => AudioEffects.VocalCleanup(seg, a, b, sr, 1.0));
+
+    /// <summary>
+    /// Bereich (in Clip-relativen Sekunden), auf den Clip-Operationen wirken: Schnittmenge
+    /// der Timeline-Auswahl mit dem Clip. null = kein/keine Überlappung → ganzer Clip.
+    /// </summary>
+    private (double aSec, double bSec)? ClipRegionSeconds(ClipViewModel clip)
+    {
+        if (!HasSelection) return null;
+        var clipStart = clip.TimelineOffsetSeconds;
+        var clipEnd = clipStart + clip.LengthSeconds;
+        var rStart = Math.Max(clipStart, SelectionStartSeconds);
+        var rEnd = Math.Min(clipEnd, SelectionEndSeconds);
+        if (rEnd <= rStart + 1e-6) return null;
+        return (rStart - clipStart, rEnd - clipStart);
+    }
+
+    /// <summary>True, wenn die Auswahl einen Teil des gewählten Clips abdeckt (Effekte wirken nur dort).</summary>
+    public bool HasClipRegion => SelectedClip is { } c && ClipRegionSeconds(c) is not null;
+
+    /// <summary>Beschriftung für den Effekt-Bereich im Inspektor.</summary>
+    public string ClipEffectScope => HasClipRegion ? "Effekte (auf Auswahl)" : "Effekte (ganzer Clip)";
+
+    [ObservableProperty] private bool _isVoiceChanging;
+
+    /// <summary>
+    /// Ersetzt die Stimme des ausgewählten Clips (oder des markierten Bereichs darin) über
+    /// ElevenLabs Speech-to-Speech. Hinweis: nur für eigene/lizenzierte Zielstimmen, und nur
+    /// für gesprochene Stimme geeignet (kein Gesang).
+    /// </summary>
+    [RelayCommand]
+    private async Task ClipVoiceChange()
+    {
+        var clip = SelectedClip;
+        if (clip is null || IsVoiceChanging) return;
+
+        if (!_voiceChange.IsConfigured)
+        {
+            _snackbar.Show("ElevenLabs nicht konfiguriert",
+                "Bitte API-Key und Voice-ID in den Einstellungen hinterlegen.",
+                ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(5));
+            return;
+        }
+
+        var path = clip.SourcePath;
+        var srcStart = clip.SourceStartSeconds;
+        var len = clip.LengthSeconds;
+        var region = ClipRegionSeconds(clip);
+
+        IsVoiceChanging = true;
+        try
+        {
+            // Clip-(Bereichs-)Ausschnitt als temporäre WAV exportieren.
+            var prep = await Task.Run(() =>
+            {
+                var (all, rate) = AudioProcessingHelper.ReadStereo(path);
+                var startS = (int)Math.Clamp((long)(srcStart * rate) * 2, 0, all.Length);
+                var lenS = (int)Math.Clamp((long)(len * rate) * 2, 0, all.Length - startS);
+                var seg = new float[lenS];
+                Array.Copy(all, startS, seg, 0, lenS);
+
+                var lenFrames = lenS / 2;
+                var a = region is null ? 0 : (int)Math.Clamp((long)(region.Value.aSec * rate), 0, lenFrames);
+                var b = region is null ? lenFrames : (int)Math.Clamp((long)(region.Value.bSec * rate), 0, lenFrames);
+                var aS = a * 2;
+                var bS = b * 2;
+
+                var sub = new float[bS - aS];
+                Array.Copy(seg, aS, sub, 0, sub.Length);
+
+                var dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Audiola", "voice");
+                System.IO.Directory.CreateDirectory(dir);
+                var t = System.IO.Path.Combine(dir, $"in_{Guid.NewGuid():N}.wav");
+                AudioEdits.WriteWav(t, sub, rate);
+                return (temp: t, seg, aS, bS, rate, whole: a == 0 && b == lenFrames);
+            });
+
+            var (outSamples, outSr) = await _voiceChange.ChangeAsync(prep.temp);
+
+            if (prep.whole)
+            {
+                ReplaceClipFromBuffer(clip, outSamples, outSr);
+            }
+            else
+            {
+                // Ergebnis auf die Clip-Rate bringen und in den Bereich einsetzen.
+                var outRes = AudioProcessingHelper.Resample(outSamples, outSr, prep.rate);
+                var newBuf = AudioProcessingHelper.SpliceStereo(prep.seg, prep.aS, prep.bS, outRes);
+                ReplaceClipFromBuffer(clip, newBuf, prep.rate);
+            }
+
+            _snackbar.Show("Stimme getauscht",
+                prep.whole ? "Der Clip wurde ersetzt." : "Der markierte Bereich wurde ersetzt.",
+                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Show("Voice-Change fehlgeschlagen", ex.Message,
+                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(6));
+        }
+        finally
+        {
+            IsVoiceChanging = false;
+        }
+    }
+
+    private async Task ApplyClipEffect(Func<float[], int, int, int, float[]> transform)
+    {
+        var clip = SelectedClip;
+        if (clip is null) return;
+        PushUndo();
+
+        var path = clip.SourcePath;
+        var srcStart = clip.SourceStartSeconds;
+        var len = clip.LengthSeconds;
+        var region = ClipRegionSeconds(clip);
+
+        var result = await Task.Run(() =>
+        {
+            var (samples, sr) = AudioProcessingHelper.ReadStereo(path);
+            var startS = (int)Math.Clamp((long)(srcStart * sr) * 2, 0, samples.Length);
+            var lenS = (int)Math.Clamp((long)(len * sr) * 2, 0, samples.Length - startS);
+            var seg = new float[lenS];
+            Array.Copy(samples, startS, seg, 0, lenS);
+
+            // Effekt nur auf den (ggf. markierten) Bereich anwenden — Rest bleibt unverändert.
+            var lenFrames = lenS / 2;
+            var a = region is null ? 0 : (int)Math.Clamp((long)(region.Value.aSec * sr), 0, lenFrames);
+            var b = region is null ? lenFrames : (int)Math.Clamp((long)(region.Value.bSec * sr), 0, lenFrames);
+
+            var outBuf = transform(seg, sr, a, b);
+            System.IO.Directory.CreateDirectory(ClipFxDir);
+            var temp = System.IO.Path.Combine(ClipFxDir, $"clip_{Guid.NewGuid():N}.wav");
+            AudioEdits.WriteWav(temp, outBuf, sr);
+            return (temp, outBuf, lenSec: (double)(outBuf.Length / 2) / sr);
+        });
+
+        // Clip auf das gebackene Material umstellen (SourcePath ist init-only → Clip ersetzen).
+        ReplaceSelectedClipSource(clip, result.temp, result.outBuf, result.lenSec);
+        CommitClips();
+    }
+
+    /// <summary>Ersetzt die Quelle eines Clips durch einen bearbeiteten Puffer (Editor-Bake / Voice-Change).</summary>
+    public void ReplaceClipFromBuffer(ClipViewModel clip, float[] samples, int sampleRate)
+    {
+        PushUndo();
+        System.IO.Directory.CreateDirectory(ClipFxDir);
+        var temp = System.IO.Path.Combine(ClipFxDir, $"edit_{Guid.NewGuid():N}.wav");
+        AudioEdits.WriteWav(temp, samples, sampleRate);
+        var lenSec = (double)(samples.Length / 2) / sampleRate;
+        ReplaceSelectedClipSource(clip, temp, samples, lenSec);
+        CommitClips();
+    }
+
+    private void ReplaceSelectedClipSource(ClipViewModel clip, string temp, float[] outBuf, double lenSec)
+    {
+        var track = clip.Track;
+        var idx = track.Clips.IndexOf(clip);
+        if (idx < 0) return;
+
+        var peaks = AudioEdits.ComputePeaks(outBuf);
+        var replacement = new ClipViewModel
+        {
+            Track = track,
+            SourcePath = temp,
+            SourceTotalSeconds = lenSec,
+            SourcePeaks = peaks,
+            TimelineOffsetSeconds = clip.TimelineOffsetSeconds,
+            SourceStartSeconds = 0,
+            LengthSeconds = lenSec,
+            Peaks = peaks,
+            GainDb = clip.GainDb,
+            FadeInSeconds = clip.FadeInSeconds,
+            FadeOutSeconds = clip.FadeOutSeconds
+        };
+        track.Clips[idx] = replacement;
+        SelectedClip = replacement;
+        replacement.IsSelected = true;
+    }
+
+    private static float[] SlicePeaks(float[] peaks, double startFrac, double endFrac)
+    {
+        if (peaks.Length < 2) return peaks;
+        var buckets = peaks.Length / 2;
+        var i0 = Math.Clamp((int)(startFrac * buckets), 0, buckets);
+        var i1 = Math.Clamp((int)(endFrac * buckets), i0, buckets);
+        var res = new float[(i1 - i0) * 2];
+        Array.Copy(peaks, i0 * 2, res, 0, res.Length);
+        return res;
+    }
+
+    // ---- Projekt speichern/laden (.audiola) ----
+
+    /// <summary>Baut den serialisierbaren Projektzustand aus den aktuellen Spuren/Clips.</summary>
+    public Audiola.Models.ProjectDto BuildProjectDto()
+    {
+        var dto = new Audiola.Models.ProjectDto
+        {
+            MasterVolume = MasterVolume,
+            PixelsPerSecond = PixelsPerSecond,
+            SnapEnabled = SnapEnabled,
+            GridSeconds = GridSeconds,
+            SelectedTrackIndex = SelectedClip is null ? -1 : Tracks.IndexOf(SelectedClip.Track)
+        };
+
+        foreach (var t in Tracks)
+        {
+            var td = new Audiola.Models.ProjectTrackDto
+            {
+                Name = t.Name,
+                ColorHex = t.AccentColor,
+                Volume = t.Volume,
+                Pan = t.Pan,
+                IsEnabled = t.IsEnabled,
+                IsMuted = t.IsMuted,
+                IsSolo = t.IsSolo
+            };
+
+            if (t.Clips.Count == 0 && !string.IsNullOrEmpty(t.Model.FilePath))
+            {
+                td.Clips.Add(new Audiola.Models.ProjectClipDto
+                {
+                    Media = t.Model.FilePath,
+                    TimelineOffsetSeconds = t.StartOffsetSeconds,
+                    SourceStartSeconds = 0,
+                    LengthSeconds = t.LengthSeconds,
+                    SourceTotalSeconds = t.LengthSeconds
+                });
+            }
+            else
+            {
+                foreach (var c in t.Clips)
+                    td.Clips.Add(new Audiola.Models.ProjectClipDto
+                    {
+                        Media = string.IsNullOrEmpty(c.SourcePath) ? t.Model.FilePath : c.SourcePath,
+                        SourceTotalSeconds = c.SourceTotalSeconds,
+                        TimelineOffsetSeconds = c.TimelineOffsetSeconds,
+                        SourceStartSeconds = c.SourceStartSeconds,
+                        LengthSeconds = c.LengthSeconds,
+                        GainDb = c.GainDb,
+                        FadeInSeconds = c.FadeInSeconds,
+                        FadeOutSeconds = c.FadeOutSeconds
+                    });
+            }
+
+            dto.Tracks.Add(td);
+        }
+
+        return dto;
+    }
+
+    /// <summary>Stellt das Studio aus einem geladenen Projekt wieder her.</summary>
+    public async Task ApplyProjectDtoAsync(Audiola.Models.ProjectDto dto)
+    {
+        _suppressDirty = true;
+        Tracks.Clear();
+        SelectedClip = null;
+
+        foreach (var td in dto.Tracks)
+        {
+            var firstMedia = td.Clips.FirstOrDefault()?.Media ?? "";
+            var t = StemTrackViewModel.ForFile(firstMedia, td.Name, td.ColorHex);
+            t.Volume = td.Volume;
+            t.Pan = td.Pan;
+            t.IsEnabled = td.IsEnabled;
+            t.IsMuted = td.IsMuted;
+            t.IsSolo = td.IsSolo;
+
+            foreach (var cd in td.Clips)
+            {
+                if (string.IsNullOrEmpty(cd.Media)) continue;
+                float[] peaks = [];
+                var srcTotal = cd.SourceTotalSeconds;
+                try
+                {
+                    var data = await _waveform.LoadAsync(cd.Media, 4000);
+                    peaks = data.Peaks;
+                    if (srcTotal <= 0) srcTotal = data.Duration.TotalSeconds;
+                }
+                catch { /* fehlende Medien überspringen wir gleich beim Engine-Load */ }
+
+                var len = cd.LengthSeconds > 0 ? cd.LengthSeconds : srcTotal;
+                var fStart = srcTotal > 0 ? cd.SourceStartSeconds / srcTotal : 0;
+                var fEnd = srcTotal > 0 ? (cd.SourceStartSeconds + len) / srcTotal : 1;
+
+                t.Clips.Add(new ClipViewModel
+                {
+                    Track = t,
+                    SourcePath = cd.Media,
+                    SourceTotalSeconds = srcTotal,
+                    SourcePeaks = peaks,
+                    TimelineOffsetSeconds = cd.TimelineOffsetSeconds,
+                    SourceStartSeconds = cd.SourceStartSeconds,
+                    LengthSeconds = len,
+                    Peaks = SlicePeaks(peaks, fStart, fEnd),
+                    GainDb = cd.GainDb,
+                    FadeInSeconds = cd.FadeInSeconds,
+                    FadeOutSeconds = cd.FadeOutSeconds
+                });
+            }
+
+            if (t.Clips.Count > 0)
+                t.LengthSeconds = t.Clips.Max(c => c.EndSeconds);
+
+            Tracks.Add(t);
+        }
+
+        if (dto.PixelsPerSecond > 0) PixelsPerSecond = dto.PixelsPerSecond;
+        SnapEnabled = dto.SnapEnabled;
+        if (dto.GridSeconds > 0) GridSeconds = dto.GridSeconds;
+        MasterVolume = dto.MasterVolume;
+
+        OnPropertyChanged(nameof(HasTracks));
+        RecomputeDuration();
+        UpdateContentWidth();
+        CommitClips();
+        if (HasTracks) _transport.SetMode(TransportMode.StemMix);
+
+        // Zuletzt ausgewählte Spur wiederherstellen.
+        if (dto.SelectedTrackIndex >= 0 && dto.SelectedTrackIndex < Tracks.Count)
+        {
+            var clip = Tracks[dto.SelectedTrackIndex].Clips.FirstOrDefault();
+            if (clip is not null) SelectClip(clip);
+        }
+
+        _suppressDirty = false;
+        IsDirty = false;
+        ClearHistory();
+    }
+
+    // ---- Undo / Redo (Snapshot-basiert, im Speicher) ----
+
+    private sealed record ClipSnap(string SourcePath, double SourceTotalSeconds, float[] SourcePeaks,
+        double TimelineOffsetSeconds, double SourceStartSeconds, double LengthSeconds, float[] Peaks,
+        double GainDb, double FadeInSeconds, double FadeOutSeconds);
+
+    private sealed record TrackSnap(string Name, string AccentColor, string FilePath, double Volume, double Pan,
+        bool IsEnabled, bool IsMuted, bool IsSolo, double StartOffsetSeconds, double LengthSeconds,
+        float[] Peaks, List<ClipSnap> Clips);
+
+    private sealed record StudioSnapshot(List<TrackSnap> Tracks, double MasterVolume);
+
+    private readonly List<StudioSnapshot> _undo = [];
+    private readonly List<StudioSnapshot> _redo = [];
+    private const int MaxUndo = 60;
+
+    public bool CanUndo => _undo.Count > 0;
+    public bool CanRedo => _redo.Count > 0;
+
+    private StudioSnapshot Capture() => new(
+        Tracks.Select(t => new TrackSnap(
+            t.Name, t.AccentColor, t.Model.FilePath, t.Volume, t.Pan,
+            t.IsEnabled, t.IsMuted, t.IsSolo, t.StartOffsetSeconds, t.LengthSeconds, t.Peaks,
+            t.Clips.Select(c => new ClipSnap(c.SourcePath, c.SourceTotalSeconds, c.SourcePeaks,
+                c.TimelineOffsetSeconds, c.SourceStartSeconds, c.LengthSeconds, c.Peaks,
+                c.GainDb, c.FadeInSeconds, c.FadeOutSeconds)).ToList())).ToList(),
+        MasterVolume);
+
+    /// <summary>Vor einer Bearbeitung den aktuellen Zustand für Undo sichern.</summary>
+    public void PushUndo()
+    {
+        _undo.Add(Capture());
+        if (_undo.Count > MaxUndo) _undo.RemoveAt(0);
+        _redo.Clear();
+        IsDirty = true;
+        NotifyUndoRedo();
+    }
+
+    private void Restore(StudioSnapshot snap)
+    {
+        _suppressDirty = true;
+        Tracks.Clear();
+        SelectedClip = null;
+        foreach (var ts in snap.Tracks)
+        {
+            var t = StemTrackViewModel.ForFile(ts.FilePath, ts.Name, ts.AccentColor);
+            t.Volume = ts.Volume; t.Pan = ts.Pan;
+            t.IsEnabled = ts.IsEnabled; t.IsMuted = ts.IsMuted; t.IsSolo = ts.IsSolo;
+            t.StartOffsetSeconds = ts.StartOffsetSeconds; t.LengthSeconds = ts.LengthSeconds; t.Peaks = ts.Peaks;
+            foreach (var cs in ts.Clips)
+                t.Clips.Add(new ClipViewModel
+                {
+                    Track = t,
+                    SourcePath = cs.SourcePath,
+                    SourceTotalSeconds = cs.SourceTotalSeconds,
+                    SourcePeaks = cs.SourcePeaks,
+                    TimelineOffsetSeconds = cs.TimelineOffsetSeconds,
+                    SourceStartSeconds = cs.SourceStartSeconds,
+                    LengthSeconds = cs.LengthSeconds,
+                    Peaks = cs.Peaks,
+                    GainDb = cs.GainDb,
+                    FadeInSeconds = cs.FadeInSeconds,
+                    FadeOutSeconds = cs.FadeOutSeconds
+                });
+            Tracks.Add(t);
+        }
+        MasterVolume = snap.MasterVolume;
+        _suppressDirty = false;
+
+        OnPropertyChanged(nameof(HasTracks));
+        RecomputeDuration();
+        UpdateContentWidth();
+        CommitClips();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanUndo))]
+    private void Undo()
+    {
+        if (_undo.Count == 0) return;
+        _redo.Add(Capture());
+        var snap = _undo[^1];
+        _undo.RemoveAt(_undo.Count - 1);
+        Restore(snap);
+        IsDirty = true;
+        NotifyUndoRedo();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRedo))]
+    private void Redo()
+    {
+        if (_redo.Count == 0) return;
+        _undo.Add(Capture());
+        var snap = _redo[^1];
+        _redo.RemoveAt(_redo.Count - 1);
+        Restore(snap);
+        IsDirty = true;
+        NotifyUndoRedo();
+    }
+
+    private void NotifyUndoRedo()
+    {
+        OnPropertyChanged(nameof(CanUndo));
+        OnPropertyChanged(nameof(CanRedo));
+        UndoCommand.NotifyCanExecuteChanged();
+        RedoCommand.NotifyCanExecuteChanged();
+    }
+
+    private void ClearHistory()
+    {
+        _undo.Clear();
+        _redo.Clear();
+        NotifyUndoRedo();
+    }
+
+    /// <summary>Legt eine neue, leere Spur an (z. B. um Parts dorthin zu verschieben).</summary>
+    [RelayCommand]
+    private void AddEmptyTrack()
+    {
+        PushUndo();
+        var track = StemTrackViewModel.ForFile("", $"Spur {Tracks.Count + 1}", Palette[Tracks.Count % Palette.Length]);
+        Tracks.Add(track);
+        OnPropertyChanged(nameof(HasTracks));
+        SelectedClip = null;
+    }
+
+    /// <summary>Nach dem Ziehen: Offsets in die Wiedergabe übernehmen.</summary>
+    public void CommitClips()
+    {
+        _engine.Load(Tracks); // Load([]) entlädt sauber
+        DurationSeconds = _engine.Duration.TotalSeconds;
+        UpdatePlayhead();
+    }
+
+    partial void OnPixelsPerSecondChanged(double value)
+    {
+        UpdateContentWidth();
+        UpdatePlayhead();
+    }
+
+    partial void OnDurationSecondsChanged(double value) => UpdateContentWidth();
+
+    private void UpdateContentWidth() => OnPropertyChanged(nameof(ContentWidth));
+
+    private void UpdatePlayhead()
+        => PlayheadMargin = new Thickness(_engine.Position.TotalSeconds * PixelsPerSecond, 0, 0, 0);
+
+    /// <summary>Klick auf die Zeitachse → an die entsprechende Zeit springen.</summary>
+    public void SeekToPixel(double pixelX)
+    {
+        if (PixelsPerSecond <= 0) return;
+        var seconds = Math.Clamp(pixelX / PixelsPerSecond, 0, DurationSeconds);
+        _engine.Position = TimeSpan.FromSeconds(seconds);
+        UpdatePlayhead();
+    }
+
+    [RelayCommand]
+    private void ZoomIn() => PixelsPerSecond = Math.Min(MaxPps, PixelsPerSecond * 1.5);
+
+    [RelayCommand]
+    private void ZoomOut() => PixelsPerSecond = Math.Max(MinPps, PixelsPerSecond / 1.5);
+
+    [RelayCommand]
+    private void PlayPause()
+    {
+        if (_engine.IsPlaying) _engine.Pause();
+        else _engine.Play();
+    }
+
+    [RelayCommand]
+    private void Stop() => _engine.Stop();
+}

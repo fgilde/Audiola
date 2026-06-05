@@ -1,0 +1,119 @@
+<Page
+    x:Class="Audiola.Views.Pages.MasteringPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:controls="clr-namespace:Audiola.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d"
+    Title="MasteringPage">
+
+    <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel MaxWidth="1120" HorizontalAlignment="Left">
+            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Mastering" />
+            <TextBlock
+                Margin="0,2,0,0"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="EQ → Kompressor → Loudness (LUFS) auf dem aktiven Studio-Mix. Vorschau hörbar, „Master (A/B)“ zum Vergleichen." />
+
+            <!-- Vorschau & A/B -->
+            <TextBlock Margin="0,20,0,8" FontWeight="SemiBold" Text="Vorschau" />
+            <ui:Card Padding="14">
+                <StackPanel>
+                    <controls:WaveformControl x:Name="Waveform" Height="70" Cursor="Hand"
+                                              MouseLeftButtonDown="Waveform_MouseDown"
+                                              Peaks="{Binding ViewModel.MixPeaks}"
+                                              Progress="{Binding ViewModel.Transport.Progress}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center">
+                        <ui:Button Width="44" Icon="{ui:SymbolIcon Play24}" Command="{Binding ViewModel.Transport.PlayPauseCommand}" />
+                        <ui:Button Width="44" Margin="6,0,0,0" Icon="{ui:SymbolIcon Stop24}" Command="{Binding ViewModel.Transport.StopCommand}" />
+                        <ui:ToggleSwitch Margin="16,0,0,0" VerticalAlignment="Center" Content="Master (A/B)"
+                                         IsChecked="{Binding ViewModel.PreviewMaster, Mode=TwoWay}"
+                                         ToolTip="Mastering live an/aus schalten und vergleichen" />
+                        <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.StatusText}" />
+                    </StackPanel>
+                </StackPanel>
+            </ui:Card>
+
+            <!-- Profile -->
+            <TextBlock Margin="0,20,0,8" FontWeight="SemiBold" Text="Preset" />
+            <ui:Card Padding="16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Wand24" VerticalAlignment="Center" Margin="0,0,12,0" />
+                        <ComboBox Width="240" VerticalAlignment="Center"
+                                  ItemsSource="{Binding ViewModel.ProfileNames}"
+                                  SelectedItem="{Binding ViewModel.SelectedProfile, Mode=TwoWay}" />
+                        <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon Delete24}" Content="Löschen"
+                                   Command="{Binding ViewModel.DeleteProfileCommand}" ToolTip="Eigenes Profil löschen" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="36,10,0,0">
+                        <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Eigenes Profil:" />
+                        <ui:TextBox Width="200" Margin="8,0,0,0" PlaceholderText="Name…"
+                                    Text="{Binding ViewModel.NewProfileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon Save24}" Content="Speichern"
+                                   Command="{Binding ViewModel.SaveProfileCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </ui:Card>
+
+            <!-- Bearbeitung (Karten nebeneinander) -->
+            <WrapPanel Margin="0,18,0,0">
+                <ui:Card Width="352" Margin="0,0,12,12" Padding="16">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Equalizer" Margin="0,0,0,8" />
+                        <CheckBox Content="High-Pass aktiv" IsChecked="{Binding ViewModel.HighPassEnabled, Mode=TwoWay}" />
+                        <TextBlock Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.HighPassHz, StringFormat='High-Pass: {0:F0} Hz'}" />
+                        <Slider Minimum="20" Maximum="200" Value="{Binding ViewModel.HighPassHz, Mode=TwoWay}" />
+                        <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.LowShelfGainDb, StringFormat='Bass: {0:+0.0;-0.0;0} dB'}" />
+                        <Slider Minimum="-12" Maximum="12" Value="{Binding ViewModel.LowShelfGainDb, Mode=TwoWay}" />
+                        <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.MidGainDb, StringFormat='Mitten: {0:+0.0;-0.0;0} dB'}" />
+                        <Slider Minimum="-12" Maximum="12" Value="{Binding ViewModel.MidGainDb, Mode=TwoWay}" />
+                        <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.HighShelfGainDb, StringFormat='Höhen: {0:+0.0;-0.0;0} dB'}" />
+                        <Slider Minimum="-12" Maximum="12" Value="{Binding ViewModel.HighShelfGainDb, Mode=TwoWay}" />
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Width="352" Margin="0,0,12,12" Padding="16">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Kompressor" Margin="0,0,0,8" />
+                        <CheckBox Content="Kompressor aktiv" IsChecked="{Binding ViewModel.CompressorEnabled, Mode=TwoWay}" />
+                        <TextBlock Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.ThresholdDb, StringFormat='Threshold: {0:F0} dB'}" />
+                        <Slider Minimum="-48" Maximum="0" Value="{Binding ViewModel.ThresholdDb, Mode=TwoWay}" />
+                        <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.Ratio, StringFormat='Ratio: {0:F1}:1'}" />
+                        <Slider Minimum="1" Maximum="20" Value="{Binding ViewModel.Ratio, Mode=TwoWay}" />
+                        <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.MakeupGainDb, StringFormat='Makeup: {0:+0.0;-0.0;0} dB'}" />
+                        <Slider Minimum="0" Maximum="24" Value="{Binding ViewModel.MakeupGainDb, Mode=TwoWay}" />
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Width="352" Margin="0,0,12,12" Padding="16">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Loudness (LUFS)" Margin="0,0,0,8" />
+                        <CheckBox Content="Auf Ziel-Lautheit normalisieren" IsChecked="{Binding ViewModel.NormalizeLoudness, Mode=TwoWay}" />
+                        <TextBlock Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.TargetLufs, StringFormat='Ziel: {0:F0} LUFS (Streaming ≈ -14)'}" />
+                        <Slider Minimum="-24" Maximum="-6" Value="{Binding ViewModel.TargetLufs, Mode=TwoWay}" />
+                        <ui:Button Margin="0,12,0,0" Icon="{ui:SymbolIcon Pulse24}" Content="LUFS messen" Command="{Binding ViewModel.AnalyzeCommand}" />
+                    </StackPanel>
+                </ui:Card>
+            </WrapPanel>
+
+            <!-- Aktionen -->
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <ui:Button Appearance="Primary" Icon="{ui:SymbolIcon Save24}" Content="Mastern &amp; exportieren" Command="{Binding ViewModel.ExportCommand}" />
+                <ui:ProgressRing Margin="16,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
+                                 Visibility="{Binding ViewModel.IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

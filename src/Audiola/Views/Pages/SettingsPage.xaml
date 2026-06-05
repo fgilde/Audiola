@@ -1,0 +1,167 @@
+<Page
+    x:Class="Audiola.Views.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d"
+    Title="SettingsPage">
+
+    <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Einstellungen" />
+
+            <!-- Demucs -->
+            <TextBlock Margin="0,24,0,8" FontWeight="SemiBold" Text="Stem-Trennung (Demucs)" />
+
+            <ui:CardControl Icon="{ui:SymbolIcon Code24}" Margin="0,0,0,8">
+                <ui:CardControl.Header>
+                    <StackPanel>
+                        <TextBlock Text="Python-Pfad" FontWeight="Medium" />
+                        <TextBlock
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            FontSize="12"
+                            Text="z. B. python, py oder Pfad zu venv\Scripts\python.exe" />
+                    </StackPanel>
+                </ui:CardControl.Header>
+                <ui:TextBox Width="280" Text="{Binding ViewModel.PythonPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            </ui:CardControl>
+
+            <ui:CardControl Icon="{ui:SymbolIcon BrainCircuit24}" Margin="0,0,0,8">
+                <ui:CardControl.Header>
+                    <TextBlock Text="Demucs-Modell" FontWeight="Medium" />
+                </ui:CardControl.Header>
+                <ComboBox
+                    Width="200"
+                    ItemsSource="{Binding ViewModel.AvailableModels}"
+                    SelectedItem="{Binding ViewModel.DemucsModel, Mode=TwoWay}" />
+            </ui:CardControl>
+
+            <ui:CardControl Icon="{ui:SymbolIcon Folder24}" Margin="0,0,0,8">
+                <ui:CardControl.Header>
+                    <TextBlock Text="Ausgabeordner" FontWeight="Medium" />
+                </ui:CardControl.Header>
+                <StackPanel Orientation="Horizontal">
+                    <ui:TextBox Width="280" Text="{Binding ViewModel.OutputDirectory, Mode=TwoWay}" />
+                    <ui:Button Margin="8,0,0,0" Content="…" Command="{Binding ViewModel.BrowseOutputCommand}" />
+                </StackPanel>
+            </ui:CardControl>
+
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <ui:Button
+                    Icon="{ui:SymbolIcon Play24}"
+                    Content="Demucs pruefen"
+                    Command="{Binding ViewModel.CheckDemucsCommand}" />
+                <TextBlock
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Center"
+                    Text="{Binding ViewModel.DemucsStatus}" />
+            </StackPanel>
+
+            <!-- ElevenLabs Voice-Changer -->
+            <TextBlock Margin="0,28,0,8" FontWeight="SemiBold" Text="Stimme tauschen (ElevenLabs)" />
+
+            <ui:InfoBar
+                Margin="0,0,0,8"
+                IsOpen="True"
+                IsClosable="False"
+                Severity="Informational"
+                Title="Hinweis"
+                Message="Nur eigene oder lizenzierte Zielstimmen verwenden. Das Nachbilden einer fremden Person ohne deren Einwilligung ist nicht zulässig." />
+
+            <ui:CardControl Icon="{ui:SymbolIcon Key24}" Margin="0,0,0,8">
+                <ui:CardControl.Header>
+                    <StackPanel>
+                        <TextBlock Text="API-Key" FontWeight="Medium" />
+                        <TextBlock
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            FontSize="12"
+                            Text="ElevenLabs xi-api-key" />
+                    </StackPanel>
+                </ui:CardControl.Header>
+                <ui:TextBox Width="280" Text="{Binding ViewModel.ElevenLabsApiKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            </ui:CardControl>
+
+            <ui:CardControl Icon="{ui:SymbolIcon PersonVoice24}" Margin="0,0,0,8">
+                <ui:CardControl.Header>
+                    <StackPanel>
+                        <TextBlock Text="Zielstimme" FontWeight="Medium" />
+                        <TextBlock
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            FontSize="12"
+                            Text="Stimme auswählen oder Voice-ID manuell eintragen" />
+                    </StackPanel>
+                </ui:CardControl.Header>
+                <StackPanel Orientation="Horizontal">
+                    <ComboBox
+                        Width="240"
+                        ItemsSource="{Binding ViewModel.Voices}"
+                        DisplayMemberPath="Display"
+                        SelectedItem="{Binding ViewModel.SelectedVoice, Mode=TwoWay}" />
+                    <ui:Button
+                        Margin="8,0,0,0"
+                        Icon="{ui:SymbolIcon ArrowSync24}"
+                        Content="Laden"
+                        Command="{Binding ViewModel.RefreshVoicesCommand}"
+                        IsEnabled="{Binding ViewModel.IsVoiceBusy, Converter={StaticResource InverseBooleanConverter}}"
+                        ToolTip="Stimmen vom Konto abrufen" />
+                </StackPanel>
+            </ui:CardControl>
+
+            <ui:CardControl Icon="{ui:SymbolIcon Edit24}" Margin="0,0,0,8">
+                <ui:CardControl.Header>
+                    <TextBlock Text="Voice-ID (manuell)" FontWeight="Medium" />
+                </ui:CardControl.Header>
+                <ui:TextBox Width="280" Text="{Binding ViewModel.ElevenLabsVoiceId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            </ui:CardControl>
+
+            <ui:CardControl Icon="{ui:SymbolIcon MicRecord24}" Margin="0,0,0,8">
+                <ui:CardControl.Header>
+                    <StackPanel>
+                        <TextBlock Text="Eigene Stimme erstellen" FontWeight="Medium" />
+                        <TextBlock
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            FontSize="12"
+                            Text="Aus einer Aufnahme oder vorhandenen WAV (Instant Voice Cloning)" />
+                    </StackPanel>
+                </ui:CardControl.Header>
+                <StackPanel HorizontalAlignment="Right">
+                    <ui:TextBox
+                        Width="280"
+                        PlaceholderText="Name der neuen Stimme"
+                        Text="{Binding ViewModel.NewVoiceName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Right">
+                        <ui:Button
+                            Icon="{ui:SymbolIcon Mic24}"
+                            Content="{Binding ViewModel.RecordButtonText}"
+                            Command="{Binding ViewModel.ToggleRecordCommand}"
+                            Appearance="{Binding ViewModel.IsRecording, Converter={StaticResource RecordAppearanceConverter}}" />
+                        <ui:Button
+                            Margin="8,0,0,0"
+                            Icon="{ui:SymbolIcon FolderArrowUp24}"
+                            Content="Aus WAV erstellen"
+                            Command="{Binding ViewModel.CreateVoiceFromFileCommand}"
+                            IsEnabled="{Binding ViewModel.IsVoiceBusy, Converter={StaticResource InverseBooleanConverter}}" />
+                        <ui:ProgressRing
+                            Width="22" Height="22" Margin="8,0,0,0" IsIndeterminate="True"
+                            Visibility="{Binding ViewModel.IsVoiceBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    </StackPanel>
+                    <TextBlock
+                        Margin="0,6,0,0"
+                        HorizontalAlignment="Right"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        FontSize="12"
+                        Text="{Binding ViewModel.VoiceStatus}" />
+                </StackPanel>
+            </ui:CardControl>
+
+            <!-- Darstellung -->
+            <TextBlock Margin="0,28,0,8" FontWeight="SemiBold" Text="Darstellung" />
+            <StackPanel Orientation="Horizontal">
+                <ui:Button Icon="{ui:SymbolIcon WeatherSunny28}" Content="Hell" Command="{Binding ViewModel.SetThemeLightCommand}" />
+                <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon WeatherMoon28}" Content="Dunkel" Command="{Binding ViewModel.SetThemeDarkCommand}" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

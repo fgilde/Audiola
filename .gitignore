@@ -1,0 +1,14 @@
+## .NET / Visual Studio
+bin/
+obj/
+*.user
+.vs/
+*.suo
+
+## Build-Artefakte
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+## Rider
+.idea/

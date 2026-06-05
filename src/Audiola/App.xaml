@@ -1,0 +1,25 @@
+<Application
+    x:Class="Audiola.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:wpf="clr-namespace:System.Windows.Controls;assembly=PresentationFramework"
+    xmlns:conv="clr-namespace:Audiola.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Dark" />
+                <ui:ControlsDictionary />
+            </ResourceDictionary.MergedDictionaries>
+            <wpf:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <conv:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
+            <conv:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+            <conv:RecordAppearanceConverter x:Key="RecordAppearanceConverter" />
+            <conv:StringToBrushConverter x:Key="StringToBrushConverter" />
+            <conv:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+            <conv:SecondsToWidthConverter x:Key="SecondsToWidthConverter" />
+            <conv:SecondsToMarginConverter x:Key="SecondsToMarginConverter" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
