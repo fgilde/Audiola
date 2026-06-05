@@ -35,8 +35,14 @@
             </ui:TitleBar.Icon>
         </ui:TitleBar>
 
-        <!-- Menüleiste -->
-        <Menu Grid.Row="1" Margin="8,0" Background="Transparent">
+        <!-- Menüleiste + nahtlose Echtzeit-Visualisierung -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <controls:SpectrumControl x:Name="Spectrum" Grid.Column="1" Margin="24,2,16,2" Height="30" VerticalAlignment="Center" />
+        <Menu Grid.Column="0" Margin="8,0" Background="Transparent">
             <MenuItem Header="_Datei">
                 <MenuItem Header="Audiodatei öffnen…" Click="OpenFile_Click" />
                 <MenuItem Header="Audio ins Studio hinzufügen…" Click="AddToStudio_Click" />
@@ -63,11 +69,16 @@
                 <MenuItem Header="Über Audiola" Click="About_Click" />
             </MenuItem>
         </Menu>
+        </Grid>
 
         <ui:NavigationView
             x:Name="RootNavigation"
             Grid.Row="2"
-            IsBackButtonVisible="Visible"
+            IsBackButtonVisible="Collapsed"
+            IsPaneToggleVisible="True"
+            IsPaneOpen="True"
+            OpenPaneLength="220"
+            CompactPaneLength="48"
             MenuItemsSource="{Binding ViewModel.MenuItems}"
             FooterMenuItemsSource="{Binding ViewModel.FooterMenuItems}"
             PaneDisplayMode="Left" />

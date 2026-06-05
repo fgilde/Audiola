@@ -46,6 +46,56 @@
                            Command="{Binding ViewModel.UndoCommand}" ToolTip="Rückgängig (Strg+Z)" />
                 <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon ArrowRedo24}"
                            Command="{Binding ViewModel.RedoCommand}" ToolTip="Wiederholen (Strg+Y)" />
+                <ToggleButton x:Name="HistoryToggle" Margin="0,0,4,0" Padding="8,0" VerticalAlignment="Center"
+                              IsChecked="{Binding ViewModel.ShowHistory, Mode=TwoWay}" ToolTip="Verlauf anzeigen">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="History24" />
+                        <TextBlock Margin="6,0,0,0" Text="Verlauf" />
+                    </StackPanel>
+                </ToggleButton>
+                <Popup PlacementTarget="{Binding ElementName=HistoryToggle}" Placement="Bottom" StaysOpen="False"
+                       IsOpen="{Binding ViewModel.ShowHistory, Mode=TwoWay}" AllowsTransparency="True" PopupAnimation="Fade">
+                    <Border Margin="0,4,0,0" Width="320" MaxHeight="360" CornerRadius="8" Padding="6"
+                            Background="{DynamicResource ApplicationBackgroundBrush}"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Margin="6,4,6,6" FontWeight="SemiBold"
+                                       Text="Verlauf — Klick springt zum Stand" />
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding ViewModel.History}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                                    Margin="0,1" Padding="8,5" BorderThickness="0" Background="Transparent"
+                                                    Command="{Binding DataContext.ViewModel.JumpToHistoryCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                    CommandParameter="{Binding}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ui:SymbolIcon Symbol="Circle24" FontSize="10" VerticalAlignment="Center"
+                                                                   Visibility="{Binding IsCurrent, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                                   Foreground="#5B8CFF" Margin="0,0,8,0" />
+                                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsUndone}" Value="True">
+                                                                <Setter Property="Opacity" Value="0.45" />
+                                                                <Setter Property="FontStyle" Value="Italic" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+                </Popup>
                 <Border Width="1" Margin="6,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
 
                 <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Play24}" Command="{Binding ViewModel.PlayPauseCommand}" ToolTip="Abspielen / Pause" />

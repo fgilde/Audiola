@@ -149,7 +149,6 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
     private double _dragStartX;
     private double _dragStartOffset;
     private bool _moved;
-    private bool _undoPushed;
 
     // ---- Variationen-Provider anwenden ----
     private async void Variations_All_Click(object sender, RoutedEventArgs e)
@@ -219,7 +218,6 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         _dragStartX = e.GetPosition(LanesArea).X;
         _dragStartOffset = clip.TimelineOffsetSeconds;
         _moved = false;
-        _undoPushed = false;
 
         // Modus anhand der Position innerhalb des Clips bestimmen.
         var local = e.GetPosition(fe).X;
@@ -247,11 +245,7 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         var pps = ViewModel.PixelsPerSecond;
         if (pps <= 0) return;
         var x = e.GetPosition(LanesArea).X;
-        if (Math.Abs(x - _dragStartX) > 2 && !_moved)
-        {
-            _moved = true;
-            if (!_undoPushed) { ViewModel.PushUndo(); _undoPushed = true; } // ein Undo-Schritt pro Geste
-        }
+        if (Math.Abs(x - _dragStartX) > 2) _moved = true;
 
         switch (_dragMode)
         {
@@ -297,12 +291,17 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
             if (targetIdx >= 0 && targetIdx < ViewModel.Tracks.Count && targetIdx != currentIdx)
             {
                 ViewModel.MoveClipToTrack(clip, targetIdx, newOffset);
+                ViewModel.Commit("Clip auf andere Spur");
                 e.Handled = true;
                 return;
             }
         }
 
-        if (_moved) ViewModel.CommitClips();
+        if (_moved)
+        {
+            ViewModel.CommitClips();
+            ViewModel.Commit(_dragMode == DragMode.Move ? "Clip verschoben" : "Clip getrimmt");
+        }
         e.Handled = true;
     }
 }

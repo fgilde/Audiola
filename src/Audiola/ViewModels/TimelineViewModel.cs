@@ -30,6 +30,12 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// <summary>Registrierte Variations-Provider (z. B. „Studio-Effekte", „Internal", Python …).</summary>
     public IReadOnlyList<IAudioVariationProvider> VariationProviders { get; }
 
+    /// <summary>Echtzeit-Spektrum (0..1 je Band) im Wiedergabe-Takt — für die Header-Visualisierung.</summary>
+    public event EventHandler<float[]>? SpectrumUpdated;
+
+    /// <summary>Verlauf-Panel ein-/ausblenden.</summary>
+    [ObservableProperty] private bool _showHistory;
+
     public ObservableCollection<StemTrackViewModel> Tracks { get; } = [];
 
     [ObservableProperty] private double _pixelsPerSecond = 40;
@@ -178,6 +184,10 @@ public sealed partial class TimelineViewModel : ObservableObject
 
         _engine.PositionChanged += (_, _) => UpdatePlayhead();
         _engine.StateChanged += (_, _) => IsPlaying = _engine.IsPlaying;
+        _engine.SpectrumUpdated += (_, bands) => SpectrumUpdated?.Invoke(this, bands);
+
+        _states.Add(new HistoryState(Capture(), "Start"));
+        RebuildHistory();
 
         // „Geändert"-Erkennung: Struktur- und Eigenschaftsänderungen markieren das Projekt als dirty.
         Tracks.CollectionChanged += (_, e) =>
@@ -253,7 +263,6 @@ public sealed partial class TimelineViewModel : ObservableObject
     {
         if (_session.CurrentStemSet is not { } set) return;
 
-        PushUndo();
         var added = new List<StemTrackViewModel>();
         foreach (var stem in set.Stems)
         {
@@ -264,6 +273,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         OnPropertyChanged(nameof(HasTracks));
         _ = LoadPeaksAsync(added);
         if (HasTracks) _transport.SetMode(TransportMode.StemMix);
+        if (added.Count > 0) Commit("Stems übernommen");
     }
 
     /// <summary>Öffnet einen Dialog und fügt gewählte Audiodateien als neue Spuren hinzu.</summary>
@@ -291,7 +301,6 @@ public sealed partial class TimelineViewModel : ObservableObject
         try { t = await LoadClipDataAsync(path); }
         catch { return; }
 
-        PushUndo();
         StemTrackViewModel track;
         if (trackIndex >= 0 && trackIndex < Tracks.Count)
         {
@@ -321,6 +330,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         RecomputeDuration();
         CommitClips();
         if (HasTracks) _transport.SetMode(TransportMode.StemMix);
+        Commit("Audio hinzugefügt");
     }
 
     private readonly record struct AudioTrackData(float[] Peaks, double Seconds);
@@ -452,7 +462,6 @@ public sealed partial class TimelineViewModel : ObservableObject
         var t = _engine.Position.TotalSeconds;
         if (t <= clip.TimelineOffsetSeconds + 0.02 || t >= clip.EndSeconds - 0.02) return;
 
-        PushUndo();
         var track = clip.Track;
         var rel = t - clip.TimelineOffsetSeconds; // Sekunden in den Clip hinein
         var srcTotal = clip.SourceTotalSeconds <= 0 ? clip.LengthSeconds : clip.SourceTotalSeconds;
@@ -491,16 +500,17 @@ public sealed partial class TimelineViewModel : ObservableObject
 
         SelectedClip = null;
         CommitClips();
+        Commit("Clip geteilt");
     }
 
     [RelayCommand]
     private void DeleteSelected()
     {
         if (SelectedClip is null) return;
-        PushUndo();
         SelectedClip.Track.Clips.Remove(SelectedClip);
         SelectedClip = null;
         CommitClips();
+        Commit("Clip gelöscht");
     }
 
     /// <summary>True, wenn der markierte Bereich einen Teil des gewählten Clips abdeckt.</summary>
@@ -513,7 +523,6 @@ public sealed partial class TimelineViewModel : ObservableObject
         var clip = SelectedClip;
         if (clip is null || ClipRegionSeconds(clip) is not { } region) return;
 
-        PushUndo();
         var track = clip.Track;
         var srcTotal = clip.SourceTotalSeconds <= 0 ? clip.LengthSeconds : clip.SourceTotalSeconds;
         var idx = track.Clips.IndexOf(clip);
@@ -570,6 +579,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         ClearSelection();
         RecomputeDuration();
         CommitClips();
+        Commit("Bereich ausgeschnitten");
     }
 
     [ObservableProperty] private bool _isSeparating;
@@ -630,7 +640,6 @@ public sealed partial class TimelineViewModel : ObservableObject
             }
             var stemList = stems.ToList();
 
-            PushUndo();
             var insertAt = Tracks.IndexOf(track) + 1;
             foreach (var stem in stemList)
             {
@@ -655,6 +664,7 @@ public sealed partial class TimelineViewModel : ObservableObject
             OnPropertyChanged(nameof(HasTracks));
             RecomputeDuration();
             CommitClips();
+            Commit("Stems getrennt");
             var detected = string.Join(", ", stemList.Select(s => StemName(s.Kind)));
             _snackbar.Show("Stems hinzugefügt",
                 detectContent ? $"Erkannt: {detected} ({stemList.Count} Spuren)." : $"{stemList.Count} Spuren aus „{track.Name}“.",
@@ -696,11 +706,11 @@ public sealed partial class TimelineViewModel : ObservableObject
     private void DeleteTrack(StemTrackViewModel? track)
     {
         if (track is null) return;
-        PushUndo();
         Tracks.Remove(track);
         OnPropertyChanged(nameof(HasTracks));
         RecomputeDuration();
         CommitClips();
+        Commit("Spur gelöscht");
     }
 
     private const double MinClipSeconds = 0.05;
@@ -859,13 +869,13 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// <summary>Ersetzt die Quelle eines Clips durch einen bearbeiteten Puffer (Editor-Bake / Voice-Change).</summary>
     public void ReplaceClipFromBuffer(ClipViewModel clip, float[] samples, int sampleRate)
     {
-        PushUndo();
         System.IO.Directory.CreateDirectory(ClipFxDir);
         var temp = System.IO.Path.Combine(ClipFxDir, $"edit_{Guid.NewGuid():N}.wav");
         AudioEdits.WriteWav(temp, samples, sampleRate);
         var lenSec = (double)(samples.Length / 2) / sampleRate;
         ReplaceSelectedClipSource(clip, temp, samples, lenSec);
         CommitClips();
+        Commit("Clip ersetzt");
     }
 
     private void ReplaceSelectedClipSource(ClipViewModel clip, string temp, float[] outBuf, double lenSec)
@@ -911,7 +921,6 @@ public sealed partial class TimelineViewModel : ObservableObject
         var targets = clips.Where(c => !string.IsNullOrEmpty(c.SourcePath)).ToList();
         if (targets.Count == 0) return;
 
-        PushUndo();
         try
         {
             foreach (var clip in targets)
@@ -955,6 +964,7 @@ public sealed partial class TimelineViewModel : ObservableObject
             }
 
             CommitClips();
+            Commit($"Variationen ({provider.Name})");
             _snackbar.Show("Variationen angewendet",
                 $"{provider.Name}: {variationIds.Count} Variation(en) auf {targets.Count} Clip(s).",
                 ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
@@ -1113,10 +1123,10 @@ public sealed partial class TimelineViewModel : ObservableObject
 
         _suppressDirty = false;
         IsDirty = false;
-        ClearHistory();
+        ResetHistory("Projekt geladen");
     }
 
-    // ---- Undo / Redo (Snapshot-basiert, im Speicher) ----
+    // ---- Verlauf (Undo / Redo / Sprung zu Zustand) ----
 
     private sealed record ClipSnap(string SourcePath, double SourceTotalSeconds, float[] SourcePeaks,
         double TimelineOffsetSeconds, double SourceStartSeconds, double LengthSeconds, float[] Peaks,
@@ -1127,13 +1137,17 @@ public sealed partial class TimelineViewModel : ObservableObject
         float[] Peaks, List<ClipSnap> Clips);
 
     private sealed record StudioSnapshot(List<TrackSnap> Tracks, double MasterVolume);
+    private sealed record HistoryState(StudioSnapshot Snap, string Label);
 
-    private readonly List<StudioSnapshot> _undo = [];
-    private readonly List<StudioSnapshot> _redo = [];
-    private const int MaxUndo = 60;
+    private readonly List<HistoryState> _states = [];
+    private int _index;             // aktueller Zustand in _states
+    private const int MaxStates = 80;
 
-    public bool CanUndo => _undo.Count > 0;
-    public bool CanRedo => _redo.Count > 0;
+    /// <summary>Anzeigeliste des Verlaufs (für das Verlauf-Panel).</summary>
+    public ObservableCollection<HistoryEntryViewModel> History { get; } = [];
+
+    public bool CanUndo => _index > 0;
+    public bool CanRedo => _index < _states.Count - 1;
 
     private StudioSnapshot Capture() => new(
         Tracks.Select(t => new TrackSnap(
@@ -1144,14 +1158,67 @@ public sealed partial class TimelineViewModel : ObservableObject
                 c.GainDb, c.FadeInSeconds, c.FadeOutSeconds)).ToList())).ToList(),
         MasterVolume);
 
-    /// <summary>Vor einer Bearbeitung den aktuellen Zustand für Undo sichern.</summary>
-    public void PushUndo()
+    /// <summary>Nimmt den aktuellen (bereits geänderten) Zustand als neuen Verlaufseintrag auf.</summary>
+    public void Commit(string label)
     {
-        _undo.Add(Capture());
-        if (_undo.Count > MaxUndo) _undo.RemoveAt(0);
-        _redo.Clear();
+        // Redo-Zweig verwerfen, neuen Stand anhängen.
+        if (_index < _states.Count - 1)
+            _states.RemoveRange(_index + 1, _states.Count - _index - 1);
+        _states.Add(new HistoryState(Capture(), label));
+        if (_states.Count > MaxStates + 1) _states.RemoveAt(0);
+        _index = _states.Count - 1;
         IsDirty = true;
-        NotifyUndoRedo();
+        RebuildHistory();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanUndo))]
+    private void Undo()
+    {
+        if (_index <= 0) return;
+        _index--;
+        Restore(_states[_index].Snap);
+        IsDirty = true;
+        RebuildHistory();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRedo))]
+    private void Redo()
+    {
+        if (_index >= _states.Count - 1) return;
+        _index++;
+        Restore(_states[_index].Snap);
+        IsDirty = true;
+        RebuildHistory();
+    }
+
+    /// <summary>Springt direkt zu einem bestimmten Verlaufseintrag.</summary>
+    [RelayCommand]
+    private void JumpToHistory(HistoryEntryViewModel? entry)
+    {
+        if (entry is null || entry.Index < 0 || entry.Index >= _states.Count || entry.Index == _index) return;
+        _index = entry.Index;
+        Restore(_states[_index].Snap);
+        IsDirty = true;
+        RebuildHistory();
+    }
+
+    private void ResetHistory(string label)
+    {
+        _states.Clear();
+        _states.Add(new HistoryState(Capture(), label));
+        _index = 0;
+        RebuildHistory();
+    }
+
+    private void RebuildHistory()
+    {
+        History.Clear();
+        for (var i = 0; i < _states.Count; i++)
+            History.Add(new HistoryEntryViewModel(i, _states[i].Label, i == _index, i > _index));
+        OnPropertyChanged(nameof(CanUndo));
+        OnPropertyChanged(nameof(CanRedo));
+        UndoCommand.NotifyCanExecuteChanged();
+        RedoCommand.NotifyCanExecuteChanged();
     }
 
     private void Restore(StudioSnapshot snap)
@@ -1191,54 +1258,15 @@ public sealed partial class TimelineViewModel : ObservableObject
         CommitClips();
     }
 
-    [RelayCommand(CanExecute = nameof(CanUndo))]
-    private void Undo()
-    {
-        if (_undo.Count == 0) return;
-        _redo.Add(Capture());
-        var snap = _undo[^1];
-        _undo.RemoveAt(_undo.Count - 1);
-        Restore(snap);
-        IsDirty = true;
-        NotifyUndoRedo();
-    }
-
-    [RelayCommand(CanExecute = nameof(CanRedo))]
-    private void Redo()
-    {
-        if (_redo.Count == 0) return;
-        _undo.Add(Capture());
-        var snap = _redo[^1];
-        _redo.RemoveAt(_redo.Count - 1);
-        Restore(snap);
-        IsDirty = true;
-        NotifyUndoRedo();
-    }
-
-    private void NotifyUndoRedo()
-    {
-        OnPropertyChanged(nameof(CanUndo));
-        OnPropertyChanged(nameof(CanRedo));
-        UndoCommand.NotifyCanExecuteChanged();
-        RedoCommand.NotifyCanExecuteChanged();
-    }
-
-    private void ClearHistory()
-    {
-        _undo.Clear();
-        _redo.Clear();
-        NotifyUndoRedo();
-    }
-
     /// <summary>Legt eine neue, leere Spur an (z. B. um Parts dorthin zu verschieben).</summary>
     [RelayCommand]
     private void AddEmptyTrack()
     {
-        PushUndo();
         var track = StemTrackViewModel.ForFile("", $"Spur {Tracks.Count + 1}", Palette[Tracks.Count % Palette.Length]);
         Tracks.Add(track);
         OnPropertyChanged(nameof(HasTracks));
         SelectedClip = null;
+        Commit("Leere Spur");
     }
 
     /// <summary>Nach dem Ziehen: Offsets in die Wiedergabe übernehmen.</summary>

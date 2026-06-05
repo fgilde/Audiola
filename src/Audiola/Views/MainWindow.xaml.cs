@@ -46,6 +46,9 @@ public partial class MainWindow : FluentWindow
         // Erst navigieren, wenn das NavigationView-Template angewandt ist.
         Loaded += (_, _) => RootNavigation.Navigate(typeof(Views.Pages.HomePage));
         Closing += OnWindowClosing;
+
+        // Echtzeit-Spektrum in der Menüleiste (folgt dem Studio-Mix).
+        App.GetService<ViewModels.TimelineViewModel>().SpectrumUpdated += (_, bands) => Spectrum.SetLevels(bands);
     }
 
     private void Transport_WaveformMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

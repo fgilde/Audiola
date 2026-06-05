@@ -17,12 +17,26 @@ public sealed class StemMixerEngine : IDisposable
     private readonly List<ClipSampleProvider> _clips = [];
     private CountingSampleProvider? _counter;
     private VolumeSampleProvider? _master;
+    private SpectrumSampleProvider? _spectrum;
     private readonly LiveEqProcessor _liveEq;
     private readonly LiveMasterProcessor _liveMaster;
     private float _masterVolume = 1f;
     private IReadOnlyList<StemTrackViewModel> _tracks = [];
     private int _sampleRate = 44100;
     private int _channels = 2;
+
+    // ---- Echtzeit-Spektrum ----
+    public const int SpectrumBands = 48;
+    private const int FftSize = 1024;
+    private readonly float[] _fftRe = new float[FftSize];
+    private readonly float[] _fftIm = new float[FftSize];
+    private readonly float[] _hann = new float[FftSize];
+    private readonly float[] _mono = new float[FftSize];
+    private readonly float[] _bands = new float[SpectrumBands];
+    private int[] _bandOfBin = [];
+
+    /// <summary>Wird im Wiedergabe-Takt mit den geglätteten Spektrum-Bändern (0..1) ausgelöst.</summary>
+    public event EventHandler<float[]>? SpectrumUpdated;
 
     /// <summary>Master-Lautstärke (0..1.5), wirkt live auf die gesamte Wiedergabe.</summary>
     public float MasterVolume
@@ -35,12 +49,16 @@ public sealed class StemMixerEngine : IDisposable
     {
         _liveEq = liveEq;
         _liveMaster = liveMaster;
+        for (var i = 0; i < FftSize; i++)
+            _hann[i] = (float)(0.5 * (1 - Math.Cos(2 * Math.PI * i / (FftSize - 1))));
+
         _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
         _timer.Tick += (_, _) =>
         {
             if (LoopEnabled && LoopEnd > LoopStart && Position >= LoopEnd)
                 Position = LoopStart;
             UpdateMeters();
+            UpdateSpectrum();
             PositionChanged?.Invoke(this, EventArgs.Empty);
         };
     }
@@ -91,7 +109,9 @@ public sealed class StemMixerEngine : IDisposable
         _liveMaster.Configure(_sampleRate);
         ISampleProvider chain = new LiveEqSampleProvider(_master, _liveEq);      // Master-EQ
         chain = new LiveMasterSampleProvider(chain, _liveMaster);                // Mastering-Vorschau
-        _counter = new CountingSampleProvider(chain);
+        _spectrum = new SpectrumSampleProvider(chain);                           // Tap für die Spektrum-Anzeige
+        BuildBandMapping(_sampleRate);
+        _counter = new CountingSampleProvider(_spectrum);
         _output = new WaveOutEvent();
         _output.Init(_counter.ToWaveProvider());
         _output.PlaybackStopped += OnPlaybackStopped;
@@ -210,6 +230,7 @@ public sealed class StemMixerEngine : IDisposable
         _output?.Pause();
         _timer.Stop();
         ZeroMeters();
+        ZeroSpectrum();
         SetPlaying(false);
     }
 
@@ -219,6 +240,7 @@ public sealed class StemMixerEngine : IDisposable
         _timer.Stop();
         Position = TimeSpan.Zero;
         ZeroMeters();
+        ZeroSpectrum();
         SetPlaying(false);
         PositionChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -251,6 +273,63 @@ public sealed class StemMixerEngine : IDisposable
         foreach (var t in _tracks) { t.MeterPeak = 0; t.Level = 0; }
     }
 
+    // ---- Spektrum ----
+
+    /// <summary>Ordnet jeden FFT-Bin (1..FftSize/2) logarithmisch einem Anzeige-Band zu.</summary>
+    private void BuildBandMapping(int sampleRate)
+    {
+        var bins = FftSize / 2;
+        _bandOfBin = new int[bins + 1];
+        double minF = 30, maxF = Math.Min(sampleRate / 2.0, 18000);
+        var logMin = Math.Log(minF);
+        var logMax = Math.Log(maxF);
+        for (var bin = 1; bin <= bins; bin++)
+        {
+            var f = bin * sampleRate / (double)FftSize;
+            f = Math.Clamp(f, minF, maxF);
+            var t = (Math.Log(f) - logMin) / (logMax - logMin);
+            _bandOfBin[bin] = Math.Clamp((int)(t * SpectrumBands), 0, SpectrumBands - 1);
+        }
+    }
+
+    private void UpdateSpectrum()
+    {
+        if (!IsPlaying || _spectrum is null || _bandOfBin.Length == 0)
+            return;
+
+        _spectrum.CopyLatest(_mono);
+        for (var i = 0; i < FftSize; i++)
+        {
+            _fftRe[i] = _mono[i] * _hann[i];
+            _fftIm[i] = 0f;
+        }
+        Audiola.Dsp.Fft.Forward(_fftRe, _fftIm);
+
+        Span<float> peak = stackalloc float[SpectrumBands];
+        for (var bin = 1; bin <= FftSize / 2; bin++)
+        {
+            var mag = MathF.Sqrt(_fftRe[bin] * _fftRe[bin] + _fftIm[bin] * _fftIm[bin]);
+            var band = _bandOfBin[bin];
+            if (mag > peak[band]) peak[band] = mag;
+        }
+
+        for (var b = 0; b < SpectrumBands; b++)
+        {
+            // In dB normalisieren (−60..0 dB → 0..1).
+            var db = peak[b] > 1e-6f ? 20f * MathF.Log10(peak[b]) : -120f;
+            var v = Math.Clamp((db + 60f) / 60f, 0f, 1f);
+            _bands[b] = v > _bands[b] ? v : _bands[b] * 0.82f; // schneller rauf, langsam runter
+        }
+
+        SpectrumUpdated?.Invoke(this, _bands);
+    }
+
+    private void ZeroSpectrum()
+    {
+        Array.Clear(_bands);
+        SpectrumUpdated?.Invoke(this, _bands);
+    }
+
     private void Unload()
     {
         _timer.Stop();
@@ -267,6 +346,7 @@ public sealed class StemMixerEngine : IDisposable
         _clips.Clear();
         _counter = null;
         _master = null;
+        _spectrum = null;
         _tracks = [];
         IsPlaying = false;
         Duration = TimeSpan.Zero;
