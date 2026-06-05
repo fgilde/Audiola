@@ -123,6 +123,75 @@ VARIANTS = {
         "aecho=0.75:0.82:38:0.065,"
         "alimiter=limit=0.965"
     ),
+       "40": (
+        "suno_cleanup_subtle",
+        "highpass=f=32,"
+        "lowpass=f=16800,"
+        "equalizer=f=3500:t=q:w=1.2:g=-0.8,"
+        "equalizer=f=7200:t=q:w=1.1:g=-1.2,"
+        "equalizer=f=11500:t=q:w=1.4:g=-1.0,"
+        "acompressor=threshold=-14dB:ratio=1.12:attack=18:release=150:knee=4:makeup=1,"
+        "stereotools=mlev=0.98:slev=0.74,"
+        "aecho=0.82:0.88:19:0.025,"
+        "alimiter=limit=0.982"
+    ),
+
+    "41": (
+        "suno_cleanup_medium",
+        "highpass=f=38,"
+        "lowpass=f=15500,"
+        "equalizer=f=2800:t=q:w=1.1:g=-0.8,"
+        "equalizer=f=5200:t=q:w=1.3:g=-1.2,"
+        "equalizer=f=8500:t=q:w=1.4:g=-1.8,"
+        "equalizer=f=12500:t=q:w=1.2:g=-1.4,"
+        "acompressor=threshold=-15dB:ratio=1.18:attack=14:release=125:knee=3:makeup=1,"
+        "stereotools=phase=6:mlev=0.96:slev=0.64,"
+        "aecho=0.78:0.84:31:0.045,"
+        "alimiter=limit=0.972"
+    ),
+
+    "42": (
+        "suno_cleanup_heavy",
+        "highpass=f=45,"
+        "lowpass=f=13800,"
+        "equalizer=f=2400:t=q:w=1.0:g=-1.0,"
+        "equalizer=f=4100:t=q:w=1.2:g=-1.5,"
+        "equalizer=f=7600:t=q:w=1.5:g=-2.2,"
+        "equalizer=f=10800:t=q:w=1.4:g=-2.0,"
+        "acompressor=threshold=-16dB:ratio=1.28:attack=9:release=95:knee=3:makeup=1,"
+        "stereotools=phase=10:mlev=0.94:slev=0.52,"
+        "aecho=0.74:0.80:42:0.065,"
+        "alimiter=limit=0.958"
+    ),
+
+    "43": (
+        "suno_cleanup_parallel_room",
+        "asplit=2[dry][wet];"
+        "[wet]highpass=f=180,lowpass=f=8200,aecho=0.78:0.84:72:0.055,volume=0.08[wet2];"
+        "[dry]highpass=f=32,lowpass=f=16500,equalizer=f=7800:t=q:w=1.3:g=-1.4[dry2];"
+        "[dry2][wet2]amix=inputs=2:duration=first:weights=1 1[out]"
+    ),
+
+    "44": (
+        "suno_cleanup_resample_phase",
+        "aresample=44100,"
+        "aresample=48000,"
+        "stereotools=phase=7:mlev=0.97:slev=0.70,"
+        "lowpass=f=16200,"
+        "alimiter=limit=0.98"
+    ),
+
+    "45": (
+        "suno_cleanup_best_quality",
+        "highpass=f=30,"
+        "lowpass=f=17200,"
+        "equalizer=f=6500:t=q:w=1.2:g=-0.9,"
+        "equalizer=f=10500:t=q:w=1.5:g=-1.1,"
+        "acompressor=threshold=-13dB:ratio=1.1:attack=22:release=170:knee=5:makeup=1,"
+        "stereotools=mlev=0.99:slev=0.78,"
+        "aecho=0.84:0.89:17:0.022,"
+        "alimiter=limit=0.984"
+    )
 }
 
 

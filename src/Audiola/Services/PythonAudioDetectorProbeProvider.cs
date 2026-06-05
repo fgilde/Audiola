@@ -28,7 +28,7 @@ public sealed class PythonAudioDetectorProbeProvider(string pythonExe, string sc
         new AudioVariation("21", "Combined Stronger Fingerprint Shift", "Stärkere Kombination mehrerer Fingerprint-Faktoren bei noch brauchbarer Qualität."),
         new AudioVariation("22", "Combined Warm Reamp Style", "Warme, reamp-artige Kombivariante mit Höhenbegrenzung und Dynamikänderung."),
 
-        new AudioVariation("23", "Resample 44.1 → 48", "Resampling erst auf 44.1 kHz und zurück auf 48 kHz. Testet Resampling-Artefakte."),
+        new AudioVariation("23", "Resample 44.1 -> 48", "Resampling erst auf 44.1 kHz und zurück auf 48 kHz. Testet Resampling-Artefakte."),
         new AudioVariation("24", "Micro Pitch Shift", "Minimale Tonhöhenverschiebung mit Tempo-Korrektur. Testet Pitch-/Formant-nahe Fingerprints."),
         new AudioVariation("25", "Micro Timing Shift", "Minimale Timing-/Resampling-Änderung. Testet zeitbasierte Fingerprints."),
         new AudioVariation("26", "Subtle Pink Noise Bed", "Sehr dezentes pinkes Rauschen als analog wirkender Noise Floor."),
@@ -41,5 +41,12 @@ public sealed class PythonAudioDetectorProbeProvider(string pythonExe, string sc
         new AudioVariation("31", "Tiny Room Parallel", "Mischt sehr leise einen kleinen Raum-/Delay-Anteil parallel dazu. Meist musikalischer als 30."),
 
         new AudioVariation("32", "Combined Quality Preserving", "Beste Allround-Variante: mehrere subtile Änderungen mit möglichst wenig Qualitätsverlust."),
-        new AudioVariation("33", "Combined Heavy Fingerprint Shift", "Deutlichere Fingerprint-Verschiebung. Eher Diagnose-Variante als finaler Master.")
+        new AudioVariation("33", "Combined Heavy Fingerprint Shift", "Deutlichere Fingerprint-Verschiebung. Eher Diagnose-Variante als finaler Master."),
+
+        new AudioVariation("40", "Suno Cleanup Subtle", "Suno-spezifischer Cleanup-Test mit leichtem Höhen-Rolloff, kleinen EQ-Dips, Stereo-Anpassung und sanfter Dynamikänderung."),
+        new AudioVariation("41", "Suno Cleanup Medium", "Stärkerer Cleanup-Test gegen Höhen-/Sibilanz-Artefakte, Stereo-Pattern, Phasenmerkmale und glatte Dynamik."),
+        new AudioVariation("42", "Suno Cleanup Heavy", "Deutlicher Diagnose-Eingriff gegen mögliche Suno-ähnliche Spektral-, Stereo- und Dynamikmuster. Nicht unbedingt final-master-tauglich."),
+        new AudioVariation("43", "Suno Cleanup Parallel Room", "Mischt einen leisen bandbegrenzten Raumanteil parallel dazu und verändert den Dry-Anteil. Testet Raum-/Hall- und Spektral-Fingerprint."),
+        new AudioVariation("44", "Suno Cleanup Resample Phase", "Kombiniert Resampling, leichte Phasenänderung, Stereo-Anpassung und Höhenbegrenzung."),
+        new AudioVariation("45", "Suno Cleanup Best Quality", "Qualitätsschonendster Suno-Cleanup-Modus. Guter erster Kandidat für einen brauchbaren alternativen Master.")
     ]);
