@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using Audiola.Services;
@@ -37,6 +38,12 @@ public partial class App : Application
 
             // Audio-Variations-Provider (weitere Implementierungen hier registrieren):
             services.AddSingleton<IAudioVariationProvider, StudioEffectsVariationProvider>();
+            services.AddSingleton<IAudioVariationProvider, ComplexManipulationVariationProvider>();
+
+            var pythonDetectorProvider = new PythonAudioDetectorProbeProvider(pythonExe: "python", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "audio_detector_probe.py"));
+            if(pythonDetectorProvider.ScriptExists)
+                services.AddSingleton<IAudioVariationProvider>(pythonDetectorProvider);
+            
             services.AddSingleton<IStemMixService, StemMixService>();
             services.AddSingleton<StemMixerEngine>();
             services.AddSingleton<IMasteringService, MasteringService>();

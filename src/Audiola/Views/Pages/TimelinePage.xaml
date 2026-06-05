@@ -112,16 +112,8 @@
                 <Border Width="1" Margin="16,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding ViewModel.ClipEffectScope}" Margin="0,0,0,4" />
-                    <WrapPanel>
-                        <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Sparkle24}" Content="Hall" Command="{Binding ViewModel.ClipReverbCommand}" />
-                        <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon SoundWaveCircle24}" Content="Echo" Command="{Binding ViewModel.ClipEchoCommand}" />
-                        <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Gauge24}" Content="Norm." Command="{Binding ViewModel.ClipNormalizeCommand}" ToolTip="Normalisieren" />
-                        <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon ArrowSync24}" Content="Reverse" Command="{Binding ViewModel.ClipReverseCommand}" ToolTip="Umkehren" />
-                        <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon MicSparkle24}" Content="Vocal-Cleanup" Command="{Binding ViewModel.ClipVocalCleanupCommand}"
-                                   ToolTip="Glättet Vocals: De-Esser, Härte zähmen, sanfte Kompression" />
-                        <ui:Button Icon="{ui:SymbolIcon Wand24}" Content="Variationen…" Click="ClipVariations_Click"
-                                   ToolTip="Variationen-Provider auf diesen Clip anwenden" />
-                    </WrapPanel>
+                    <ui:Button Icon="{ui:SymbolIcon Wand24}" Content="Variationen / Effekte…" Click="ClipVariations_Click"
+                               ToolTip="Provider + Variationen wählen (Hall, Echo, Cleanup … – auf den markierten Bereich oder den ganzen Clip)" />
                 </StackPanel>
 
                 <Border Width="1" Margin="16,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
@@ -288,13 +280,8 @@
                                                             ToolTip="Ziehen zum Verschieben · Klick zum Auswählen · Rechtsklick für Aktionen">
                                                         <Border.ContextMenu>
                                                             <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
-                                                                <MenuItem Header="Vocal-Cleanup" Command="{Binding ViewModel.ClipVocalCleanupCommand}" />
-                                                                <MenuItem Header="Hall" Command="{Binding ViewModel.ClipReverbCommand}" />
-                                                                <MenuItem Header="Echo" Command="{Binding ViewModel.ClipEchoCommand}" />
-                                                                <MenuItem Header="Normalisieren" Command="{Binding ViewModel.ClipNormalizeCommand}" />
-                                                                <MenuItem Header="Umkehren (Reverse)" Command="{Binding ViewModel.ClipReverseCommand}" />
+                                                                <MenuItem Header="Variationen / Effekte…" Click="ClipVariations_Click" />
                                                                 <MenuItem Header="Stimme tauschen (ElevenLabs · Sprache)" Command="{Binding ViewModel.ClipVoiceChangeCommand}" />
-                                                                <MenuItem Header="Variationen…" Click="ClipVariations_Click" />
                                                                 <Separator />
                                                                 <MenuItem Header="Markierten Bereich ausschneiden" Command="{Binding ViewModel.CutRegionCommand}" />
                                                                 <MenuItem Header="Am Playhead teilen" Command="{Binding ViewModel.SplitAtPlayheadCommand}" />

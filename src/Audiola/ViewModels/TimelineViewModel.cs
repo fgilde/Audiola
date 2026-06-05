@@ -745,16 +745,12 @@ public sealed partial class TimelineViewModel : ObservableObject
         clip.Peaks = SlicePeaks(clip.SourcePeaks, fStart, fEnd);
     }
 
-    // ---- Clip-Effekte (backen den Effekt destruktiv in den Clip) ----
+    // ---- Clip-Bearbeitung (backen destruktiv in den Clip) ----
+    // Einzel-Effekte (Hall/Echo/…) gibt es als Variationen im „Studio-Effekte"-Provider
+    // (Button/Kontextmenü „Variationen…"); ApplyClipEffect entfällt dadurch.
 
     private static readonly string ClipFxDir =
         System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Audiola", "clipfx");
-
-    [RelayCommand] private Task ClipReverb() => ApplyClipEffect((seg, sr, a, b) => AudioEffects.Reverb(seg, a, b, sr, 0.3));
-    [RelayCommand] private Task ClipEcho() => ApplyClipEffect((seg, sr, a, b) => AudioEffects.Echo(seg, a, b, sr));
-    [RelayCommand] private Task ClipNormalize() => ApplyClipEffect((seg, sr, a, b) => AudioEffects.Normalize(seg, a, b, -1));
-    [RelayCommand] private Task ClipReverse() => ApplyClipEffect((seg, sr, a, b) => AudioEffects.Reverse(seg, a, b));
-    [RelayCommand] private Task ClipVocalCleanup() => ApplyClipEffect((seg, sr, a, b) => AudioEffects.VocalCleanup(seg, a, b, sr, 1.0));
 
     /// <summary>
     /// Bereich (in Clip-relativen Sekunden), auf den Clip-Operationen wirken: Schnittmenge
@@ -860,42 +856,6 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
     }
 
-    private async Task ApplyClipEffect(Func<float[], int, int, int, float[]> transform)
-    {
-        var clip = SelectedClip;
-        if (clip is null) return;
-        PushUndo();
-
-        var path = clip.SourcePath;
-        var srcStart = clip.SourceStartSeconds;
-        var len = clip.LengthSeconds;
-        var region = ClipRegionSeconds(clip);
-
-        var result = await Task.Run(() =>
-        {
-            var (samples, sr) = AudioProcessingHelper.ReadStereo(path);
-            var startS = (int)Math.Clamp((long)(srcStart * sr) * 2, 0, samples.Length);
-            var lenS = (int)Math.Clamp((long)(len * sr) * 2, 0, samples.Length - startS);
-            var seg = new float[lenS];
-            Array.Copy(samples, startS, seg, 0, lenS);
-
-            // Effekt nur auf den (ggf. markierten) Bereich anwenden — Rest bleibt unverändert.
-            var lenFrames = lenS / 2;
-            var a = region is null ? 0 : (int)Math.Clamp((long)(region.Value.aSec * sr), 0, lenFrames);
-            var b = region is null ? lenFrames : (int)Math.Clamp((long)(region.Value.bSec * sr), 0, lenFrames);
-
-            var outBuf = transform(seg, sr, a, b);
-            System.IO.Directory.CreateDirectory(ClipFxDir);
-            var temp = System.IO.Path.Combine(ClipFxDir, $"clip_{Guid.NewGuid():N}.wav");
-            AudioEdits.WriteWav(temp, outBuf, sr);
-            return (temp, outBuf, lenSec: (double)(outBuf.Length / 2) / sr);
-        });
-
-        // Clip auf das gebackene Material umstellen (SourcePath ist init-only → Clip ersetzen).
-        ReplaceSelectedClipSource(clip, result.temp, result.outBuf, result.lenSec);
-        CommitClips();
-    }
-
     /// <summary>Ersetzt die Quelle eines Clips durch einen bearbeiteten Puffer (Editor-Bake / Voice-Change).</summary>
     public void ReplaceClipFromBuffer(ClipViewModel clip, float[] samples, int sampleRate)
     {
@@ -958,28 +918,40 @@ public sealed partial class TimelineViewModel : ObservableObject
             {
                 var srcStart = clip.SourceStartSeconds;
                 var len = clip.LengthSeconds;
-                var (seg, sr) = await Task.Run(() =>
+                var region = ClipRegionSeconds(clip); // markierter Bereich (∩ Clip) oder null = ganzer Clip
+
+                var prep = await Task.Run(() =>
                 {
                     var (all, rate) = AudioProcessingHelper.ReadStereo(clip.SourcePath);
                     var startS = (int)Math.Clamp((long)(srcStart * rate) * 2, 0, all.Length);
                     var lenS = (int)Math.Clamp((long)(len * rate) * 2, 0, all.Length - startS);
-                    var s = new float[lenS];
-                    Array.Copy(all, startS, s, 0, lenS);
-                    return (s, rate);
+                    var seg = new float[lenS];
+                    Array.Copy(all, startS, seg, 0, lenS);
+
+                    var frames = lenS / 2;
+                    var a = region is null ? 0 : (int)Math.Clamp((long)(region.Value.aSec * rate), 0, frames);
+                    var b = region is null ? frames : (int)Math.Clamp((long)(region.Value.bSec * rate), 0, frames);
+                    return (seg, rate, aS: a * 2, bS: b * 2, whole: a == 0 && b == frames);
                 });
 
+                // Nur den (ggf. markierten) Bereich durch die Variationskette schicken …
+                var sub = prep.whole ? prep.seg : prep.seg[prep.aS..prep.bS];
                 foreach (var id in variationIds)
-                    seg = await provider.ApplyAsync(id, seg, sr);
+                    sub = await provider.ApplyAsync(id, sub, prep.rate);
+
+                // … und wieder einsetzen (Rest des Clips bleibt unverändert).
+                var newSeg = prep.whole ? sub : AudioProcessingHelper.SpliceStereo(prep.seg, prep.aS, prep.bS, sub);
+                var sr = prep.rate;
 
                 var temp = await Task.Run(() =>
                 {
                     System.IO.Directory.CreateDirectory(ClipFxDir);
                     var t = System.IO.Path.Combine(ClipFxDir, $"var_{Guid.NewGuid():N}.wav");
-                    AudioEdits.WriteWav(t, seg, sr);
+                    AudioEdits.WriteWav(t, newSeg, sr);
                     return t;
                 });
 
-                ReplaceClipSource(clip, temp, seg, (double)(seg.Length / 2) / sr);
+                ReplaceClipSource(clip, temp, newSeg, (double)(newSeg.Length / 2) / sr);
             }
 
             CommitClips();
