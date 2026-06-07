@@ -39,6 +39,7 @@ public partial class App : Application
             // Audio-Variations-Provider (weitere Implementierungen hier registrieren):
             services.AddSingleton<IAudioVariationProvider, StudioEffectsVariationProvider>();
             services.AddSingleton<IAudioVariationProvider, ComplexManipulationVariationProvider>();
+            services.AddSingleton<IAudioVariationProvider, AudioHumanizationProvider>();
 
             var pythonDetectorProvider = new PythonAudioDetectorProbeProvider(pythonExe: "python", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "audio_detector_probe.py"));
             if(pythonDetectorProvider.ScriptExists)

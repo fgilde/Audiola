@@ -51,7 +51,7 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
                 var p = e.GetPosition(LanesArea);
                 var pps = ViewModel.PixelsPerSecond;
                 if (pps > 0) offset = p.X / pps;
-                var idx = (int)(p.Y / 108);
+                var idx = (int)(p.Y / Math.Max(1, ViewModel.LaneHeight));
                 if (idx >= 0 && idx < ViewModel.Tracks.Count) trackIndex = idx;
             }
             await ViewModel.AddAudioFileAsync(file, trackIndex, offset);
@@ -66,7 +66,6 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
     }
 
     // ---- Bereich direkt auf den Spuren aufziehen (Drag = Auswahl, Klick = Seek) ----
-    private const double LaneH = 108;
     private bool _laneSelecting;
     private double _laneDownSeconds;
     private bool _laneMoved;
@@ -74,7 +73,7 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
 
     private ViewModels.StemTrackViewModel? TrackAtY(double y)
     {
-        var i = (int)(y / LaneH);
+        var i = (int)(y / Math.Max(1, ViewModel.LaneHeight));
         return i >= 0 && i < ViewModel.Tracks.Count ? ViewModel.Tracks[i] : null;
     }
 
@@ -174,6 +173,43 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         await ViewModel.ApplyVariationsAsync(dlg.SelectedProvider, dlg.SelectedVariationIds, clips);
     }
 
+    // ---- Fade-Griffe: an der Kante nach unten ziehen = Ein-/Ausblenden ----
+    private ClipViewModel? _fadeClip;
+    private double _fadeStartY, _fadeStartVal;
+    private bool _fadeIsIn;
+
+    private void FadeIn_Down(object sender, MouseButtonEventArgs e) => StartFade(sender, e, true);
+    private void FadeOut_Down(object sender, MouseButtonEventArgs e) => StartFade(sender, e, false);
+
+    private void StartFade(object sender, MouseButtonEventArgs e, bool isIn)
+    {
+        if (sender is not System.Windows.FrameworkElement fe || fe.DataContext is not ClipViewModel clip) return;
+        _fadeClip = clip;
+        _fadeIsIn = isIn;
+        _fadeStartY = e.GetPosition(LanesArea).Y;
+        _fadeStartVal = isIn ? clip.FadeInSeconds : clip.FadeOutSeconds;
+        fe.CaptureMouse();
+        e.Handled = true; // nicht den Clip verschieben
+    }
+
+    private void Fade_Move(object sender, MouseEventArgs e)
+    {
+        if (_fadeClip is null) return;
+        var dy = e.GetPosition(LanesArea).Y - _fadeStartY;
+        var f = _fadeStartVal + dy / Math.Max(1, ViewModel.LaneHeight) * _fadeClip.LengthSeconds;
+        f = Math.Clamp(f, 0, _fadeClip.LengthSeconds);
+        if (_fadeIsIn) _fadeClip.FadeInSeconds = f; else _fadeClip.FadeOutSeconds = f;
+    }
+
+    private void Fade_Up(object sender, MouseButtonEventArgs e)
+    {
+        if (_fadeClip is null) return;
+        if (sender is System.Windows.FrameworkElement fe) fe.ReleaseMouseCapture();
+        _fadeClip = null;
+        ViewModel.Commit(_fadeIsIn ? "Fade-In" : "Fade-Out");
+        e.Handled = true;
+    }
+
     // Rechtsklick wählt den Clip aus, damit das Kontextmenü darauf wirkt.
     private void Clip_RightDown(object sender, MouseButtonEventArgs e)
     {
@@ -261,8 +297,6 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         }
     }
 
-    private const double LaneHeight = 108;
-
     private void Clip_Up(object sender, MouseButtonEventArgs e)
     {
         if (_clipRangeSelecting)
@@ -283,7 +317,7 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         if (_dragMode == DragMode.Move && _moved)
         {
             var pos = e.GetPosition(LanesArea);
-            var targetIdx = (int)(pos.Y / LaneHeight);
+            var targetIdx = (int)(pos.Y / Math.Max(1, ViewModel.LaneHeight));
             var currentIdx = ViewModel.Tracks.IndexOf(clip.Track);
             var pps = ViewModel.PixelsPerSecond;
             var newOffset = pps > 0 ? _dragStartOffset + (pos.X - _dragStartX) / pps : clip.TimelineOffsetSeconds;

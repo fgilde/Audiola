@@ -77,6 +77,12 @@ public sealed partial class MasteringViewModel : ObservableObject
     [ObservableProperty] private string _newProfileName = "";
     public System.Collections.ObjectModel.ObservableCollection<string> ProfileNames { get; } = [];
 
+    // Stapelverarbeitung (Bulk)
+    [ObservableProperty] private bool _bulkOverwrite;
+    [ObservableProperty] private string _bulkPattern = "{name}_mastered";
+    [ObservableProperty] private bool _isBulkRunning;
+    [ObservableProperty] private string _bulkStatus = "";
+
     public MasteringViewModel(SessionState session, IMasteringService mastering, ISnackbarService snackbar,
         TimelineViewModel timeline, StemMixerEngine engine, LiveMasterProcessor liveMaster, TransportViewModel transport,
         ISettingsService settings)
@@ -241,6 +247,73 @@ public sealed partial class MasteringViewModel : ObservableObject
     {
         AnalyzeCommand.NotifyCanExecuteChanged();
         ExportCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>
+    /// Mastert mehrere ausgewählte Dateien mit den aktuell aktiven Einstellungen.
+    /// Pattern (<c>{name}</c>) bildet den Ausgabenamen; optional werden die Originale überschrieben.
+    /// </summary>
+    [RelayCommand]
+    private async Task BulkMasterAsync()
+    {
+        var dlg = new OpenFileDialog
+        {
+            Title = "Dateien für Bulk-Mastering wählen",
+            Multiselect = true,
+            Filter = "Audiodateien|*.wav;*.mp3;*.flac;*.aiff;*.m4a;*.ogg|Alle Dateien|*.*"
+        };
+        if (dlg.ShowDialog() != true || dlg.FileNames.Length == 0) return;
+
+        var files = dlg.FileNames;
+        var settings = BuildSettings();
+        var overwrite = BulkOverwrite;
+        var pattern = string.IsNullOrWhiteSpace(BulkPattern) ? "{name}_mastered" : BulkPattern.Trim();
+
+        IsBulkRunning = true;
+        int ok = 0, fail = 0;
+        try
+        {
+            for (var i = 0; i < files.Length; i++)
+            {
+                var input = files[i];
+                BulkStatus = $"Mastere {i + 1}/{files.Length}: {Path.GetFileName(input)} …";
+                try
+                {
+                    var dir = Path.GetDirectoryName(input)!;
+                    var ext = Path.GetExtension(input);
+                    var baseName = Path.GetFileNameWithoutExtension(input);
+                    var outPath = overwrite
+                        ? input
+                        : Path.Combine(dir, pattern.Replace("{name}", baseName) + ext);
+
+                    // Wenn Ziel = Quelle: über eine temporäre Datei schreiben (Original nicht korrumpieren).
+                    if (string.Equals(outPath, input, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var tmpDir = Path.Combine(Path.GetTempPath(), "Audiola", "bulk");
+                        Directory.CreateDirectory(tmpDir);
+                        var tmp = Path.Combine(tmpDir, $"{Guid.NewGuid():N}{ext}");
+                        await _mastering.ProcessAndExportAsync(input, tmp, settings);
+                        File.Copy(tmp, input, overwrite: true);
+                        try { File.Delete(tmp); } catch { /* egal */ }
+                    }
+                    else
+                    {
+                        await _mastering.ProcessAndExportAsync(input, outPath, settings);
+                    }
+                    ok++;
+                }
+                catch { fail++; }
+            }
+
+            BulkStatus = $"Fertig: {ok} gemastert{(fail > 0 ? $", {fail} fehlgeschlagen" : "")}.";
+            _snackbar.Show("Bulk-Mastering fertig", BulkStatus,
+                fail == 0 ? ControlAppearance.Success : ControlAppearance.Caution,
+                new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(5));
+        }
+        finally
+        {
+            IsBulkRunning = false;
+        }
     }
 
     private MasteringSettings BuildSettings() => new()

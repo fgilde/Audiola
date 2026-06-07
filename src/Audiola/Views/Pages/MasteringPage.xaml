@@ -114,6 +114,35 @@
                 <ui:ProgressRing Margin="16,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
                                  Visibility="{Binding ViewModel.IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
             </StackPanel>
+
+            <!-- Stapelverarbeitung -->
+            <TextBlock Margin="0,24,0,8" FontWeight="SemiBold" Text="Stapelverarbeitung (mehrere Dateien)" />
+            <ui:Card Padding="16">
+                <StackPanel>
+                    <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"
+                               Text="Mehrere Dateien mit den aktuell eingestellten Mastering-Werten verarbeiten. Die Ausgabe wird neben der Quelldatei gespeichert." />
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <TextBlock VerticalAlignment="Center" Width="150" Text="Ausgabe-Namensmuster:" />
+                        <ui:TextBox Width="220" PlaceholderText="{}{name}_mastered"
+                                    IsEnabled="{Binding ViewModel.BulkOverwrite, Converter={StaticResource InverseBooleanConverter}}"
+                                    Text="{Binding ViewModel.BulkPattern, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    ToolTip="{}{name} wird durch den Dateinamen ersetzt; die Endung bleibt erhalten." />
+                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="z. B. {}{name}_mastered" />
+                    </StackPanel>
+                    <CheckBox Margin="0,10,0,0" Content="Originale überschreiben (Namensmuster wird ignoriert)"
+                              IsChecked="{Binding ViewModel.BulkOverwrite, Mode=TwoWay}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <ui:Button Appearance="Primary" Icon="{ui:SymbolIcon FolderArrowUp24}" Content="Dateien wählen &amp; alle mastern"
+                                   Command="{Binding ViewModel.BulkMasterCommand}"
+                                   IsEnabled="{Binding ViewModel.IsBulkRunning, Converter={StaticResource InverseBooleanConverter}}" />
+                        <ui:ProgressRing Width="22" Height="22" Margin="12,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
+                                         Visibility="{Binding ViewModel.IsBulkRunning, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.BulkStatus}" />
+                    </StackPanel>
+                </StackPanel>
+            </ui:Card>
         </StackPanel>
     </ScrollViewer>
 </Page>

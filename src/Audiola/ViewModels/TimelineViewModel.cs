@@ -50,6 +50,9 @@ public sealed partial class TimelineViewModel : ObservableObject
     [ObservableProperty] private double _masterVolume = 1.0;
     [ObservableProperty] private bool _showMixer;
 
+    /// <summary>Höhe einer Spur in Pixeln (für größere Wellenform-Darstellung).</summary>
+    [ObservableProperty] private double _laneHeight = 108;
+
     /// <summary>Auswahl-Werkzeug: Ziehen in den Spuren markiert einen Bereich, statt Clips zu verschieben.</summary>
     [ObservableProperty] private bool _rangeSelectMode;
 
@@ -711,6 +714,41 @@ public sealed partial class TimelineViewModel : ObservableObject
         RecomputeDuration();
         CommitClips();
         Commit("Spur gelöscht");
+    }
+
+    /// <summary>Exportiert eine einzelne Spur (gerendert mit ihrer Lautstärke/Pan) als Audiodatei.</summary>
+    [RelayCommand]
+    private async Task ExportTrack(StemTrackViewModel? track)
+    {
+        if (track is null) return;
+        var end = track.Clips.Count > 0 ? track.Clips.Max(c => c.EndSeconds) : track.LengthSeconds;
+        if (end <= 0.01) return;
+
+        var safe = string.Join("_", track.Name.Split(System.IO.Path.GetInvalidFileNameChars()));
+        var dialog = new SaveFileDialog
+        {
+            Title = "Spur exportieren",
+            Filter = AudioExporter.SaveFilter,
+            FileName = $"{safe}.wav"
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        var single = new List<StemTrackViewModel> { track };
+        try
+        {
+            await Task.Run(() =>
+            {
+                var (samples, sr) = _engine.RenderRange(single, TimeSpan.Zero, TimeSpan.FromSeconds(end));
+                AudioExporter.Export(new FloatArraySampleProvider(samples, sr, 2), dialog.FileName);
+            });
+            _snackbar.Show("Spur exportiert", System.IO.Path.GetFileName(dialog.FileName),
+                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Show("Export fehlgeschlagen", ex.Message,
+                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
+        }
     }
 
     private const double MinClipSeconds = 0.05;
