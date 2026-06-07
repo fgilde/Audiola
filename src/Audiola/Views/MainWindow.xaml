@@ -14,6 +14,7 @@
     WindowBackdropType="Mica"
     WindowCornerPreference="Round"
     WindowStartupLocation="CenterScreen"
+    Icon="pack://application:,,,/Assets/audiola.png"
     AllowDrop="True"
     DragOver="OnDragOver"
     Drop="OnFileDrop">
@@ -31,7 +32,7 @@
             Title="Audiola"
             Grid.ColumnSpan="2">
             <ui:TitleBar.Icon>
-                <ui:SymbolIcon Symbol="MusicNote224" />
+                <ui:ImageIcon Source="pack://application:,,,/Assets/audiola.png" />
             </ui:TitleBar.Icon>
         </ui:TitleBar>
 
@@ -66,6 +67,8 @@
                 <MenuItem Header="Stopp" Click="StopPlay_Click" />
             </MenuItem>
             <MenuItem Header="_Hilfe">
+                <MenuItem Header="Nach Updates suchen…" Click="CheckUpdates_Click" />
+                <Separator />
                 <MenuItem Header="Über Audiola" Click="About_Click" />
             </MenuItem>
         </Menu>

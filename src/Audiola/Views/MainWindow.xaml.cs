@@ -15,6 +15,7 @@ public partial class MainWindow : FluentWindow
     private readonly INavigationService _navigationService;
     private readonly ITrackLoader _trackLoader;
     private readonly ISnackbarService _snackbarService;
+    private readonly UpdateService _updates = new();
 
     public MainWindowViewModel ViewModel { get; }
 
@@ -46,6 +47,9 @@ public partial class MainWindow : FluentWindow
         // Erst navigieren, wenn das NavigationView-Template angewandt ist.
         Loaded += (_, _) => RootNavigation.Navigate(typeof(Views.Pages.HomePage));
         Closing += OnWindowClosing;
+
+        // Leises Auto-Update beim Start (nur in installierter Version).
+        Loaded += async (_, _) => await AutoUpdateAsync();
 
         // Echtzeit-Spektrum in der Menüleiste (folgt dem Studio-Mix).
         App.GetService<ViewModels.TimelineViewModel>().SpectrumUpdated += (_, bands) => Spectrum.SetLevels(bands);
@@ -212,6 +216,53 @@ public partial class MainWindow : FluentWindow
     }
 
     private void Exit_Click(object sender, RoutedEventArgs e) => System.Windows.Application.Current.Shutdown();
+
+    /// <summary>Beim Start still nach Updates suchen und ggf. anwenden (nur installierte Version).</summary>
+    private async Task AutoUpdateAsync()
+    {
+        try
+        {
+            var info = await _updates.CheckAsync();
+            if (info is null) return;
+            if (await _updates.DownloadAsync(info))
+                _updates.ApplyAndRestart(info);
+        }
+        catch { /* Update-Fehler dürfen den Start nicht stören */ }
+    }
+
+    private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_updates.IsManaged)
+        {
+            _snackbarService.Show("Updates",
+                "Automatische Updates gibt es nur in der installierten Version (Setup von GitHub).",
+                ControlAppearance.Secondary, new SymbolIcon(SymbolRegular.Info24), TimeSpan.FromSeconds(5));
+            return;
+        }
+
+        _snackbarService.Show("Updates", "Suche nach Updates …",
+            ControlAppearance.Secondary, new SymbolIcon(SymbolRegular.ArrowSync24), TimeSpan.FromSeconds(2));
+
+        var info = await _updates.CheckAsync();
+        if (info is null)
+        {
+            _snackbarService.Show("Updates", "Du hast die neueste Version.",
+                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+            return;
+        }
+
+        var newVer = info.TargetFullRelease.Version.ToString();
+        var ask = System.Windows.MessageBox.Show(
+            $"Eine neue Version ist verfügbar: v{newVer}.\n\nJetzt herunterladen und neu starten?",
+            "Audiola-Update", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Information);
+        if (ask != System.Windows.MessageBoxResult.Yes) return;
+
+        if (await _updates.DownloadAsync(info))
+            _updates.ApplyAndRestart(info);
+        else
+            _snackbarService.Show("Update fehlgeschlagen", "Siehe audiola.log.",
+                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
+    }
 
     private async void About_Click(object sender, RoutedEventArgs e)
     {

@@ -9,12 +9,22 @@
     <RootNamespace>Audiola</RootNamespace>
     <AssemblyName>Audiola</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon></ApplicationIcon>
+    <ApplicationIcon>Assets\audiola.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
+    <Version>0.1.0</Version>
+    <!-- Velopack muss seine Install/Update-Hooks vor dem WPF-Start ausführen — siehe Program.cs. -->
+    <StartupObject>Audiola.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Eingebettet, damit Fenster-/Taskleisten-Icon zur Laufzeit per pack-URI auflösbar ist. -->
+    <Resource Include="Assets\audiola.ico" />
+    <Resource Include="Assets\audiola.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="WPF-UI" Version="3.0.5" />
+    <PackageReference Include="Velopack" Version="0.0.1298" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
     <PackageReference Include="NAudio" Version="2.3.0" />

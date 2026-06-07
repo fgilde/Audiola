@@ -90,6 +90,8 @@ public partial class App : Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        try
+        {
         base.OnStartup(e);
         await Host.StartAsync();
 
@@ -101,6 +103,13 @@ public partial class App : Application
 
         var window = GetService<MainWindow>();
         window.Show();
+        }
+        catch (Exception ex)
+        {
+            try { File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "audiola.log"),
+                $"[{DateTimeOffset.UtcNow:O}] [OnStartup] {ex}\n\n"); } catch { }
+            throw;
+        }
     }
 
     protected override async void OnExit(ExitEventArgs e)

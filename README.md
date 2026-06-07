@@ -1,74 +1,63 @@
-# Audiola
+<div align="center">
+  <img src="assets/logo.png" alt="Audiola" width="220" />
 
-Ein modernes Windows-Audio-Tool mit **WPF Fluent UI** (WPF-UI / Mica) zum Bearbeiten von
-Audiodateien, **Trennen in Stems** (Vocals / Drums / Bass / Other) und **Neumischen**.
+  <h1>Audiola</h1>
 
-## Funktionen
+  <p>A modern Windows audio studio — edit audio, separate stems, remix and master.<br/>
+  Built with .NET 9, WPF and a Fluent (WPF-UI / Mica) interface.</p>
+</div>
 
-- 🎵 Audiodateien laden & abspielen (WAV, MP3, FLAC, AIFF, M4A, OGG) via NAudio
-- 📈 Wellenform-Anzeige mit Klick-zum-Springen
-- 🎚️ Transport (Play / Pause / Stop), Lautstärke, Positionsanzeige
-- 🧩 **Stems & Mix** (eine Arbeitsfläche): lokale Stem-Trennung mit **Demucs** (Meta),
-  dann schicke Stem-Liste mit An/Aus-Checkbox, Lautstärke, Panorama, Mute, Solo —
-  **Live-Wiedergabe nur der aktiven Stems** (sample-synchron) mit Transport & Seek
-- 💾 Export als **WAV (Standard), MP3 oder AAC/M4A** — Format einfach im Windows-
-  Speichern-Dialog wählbar (MP3/AAC via Windows Media Foundation)
-- 🎚️ **Mastering**: EQ (HP/Low-Shelf/Peak/High-Shelf), Kompressor, LUFS-Messung &
-  Normalisierung (BS.1770 / EBU R128)
-- ✨ **Klangvariation**: erzeugt songnahe Varianten mit subtiler Klangneigung,
-  Praesenz-, Stereo-, Saettigungs- und Textur-Anpassung sowie reproduzierbarem Seed
-- 🔎 **Provenienz & KI-Erkennung**: liest eingebettete Herkunfts-/Wasserzeichen-Daten
-  (C2PA, XMP, ID3, Generator-Spuren) aus und erklärt, warum ein Track als KI erkannt
-  werden kann — reine Analyse, optional mit `c2patool` für volle C2PA-Manifeste
-- 🌙 Fluent-Design mit Dark/Light-Theme und Mica-Hintergrund
+---
 
-## Voraussetzungen
+## Features
 
-- **.NET 9 SDK** (Windows)
-- Für die Stem-Trennung: **Python** mit Demucs
+- 🎛️ **Multitrack Studio** — a timeline workspace: import audio, cut/split/trim clips, move clips between tracks, fade-in/out handles, per-track region selection, resizable track height.
+- 🧩 **AI stem separation (Demucs)** — automatic content detection and up to **6 stems** (vocals / drums / bass / guitar / piano / other), added straight to the timeline.
+- 🎙️ **Vocal cleanup** — de-esser, harshness taming and gentle compression for cleaner vocals.
+- 🗣️ **Voice changer** — ElevenLabs speech-to-speech (spoken voice; bring your own / licensed voice).
+- 🎚️ **Mastering** — EQ → compressor → LUFS loudness (BS.1770 / EBU R128) with live **A/B preview**, presets, savable custom profiles and **batch/bulk processing** of many files.
+- 📊 **Real-time spectrum** visualization in the header, master EQ, mixer panel and VU meters.
+- 🧪 **Variation providers** — a pluggable effect framework (`IAudioVariationProvider`) applied to a clip, track or the whole mix.
+- ↩️ **Full undo/redo** with a visual history you can jump to, and a native **project format** (`.audiola`) that bundles stems, clips, effects and settings — no re-extraction needed.
+- 💾 **Export** as WAV / MP3 / AAC-M4A, plus per-track export.
+- 🌙 Fluent design with a Dark theme and Mica backdrop.
+
+## Install
+
+Download the latest **`Audiola-win-Setup.exe`** from the [**Releases**](https://github.com/fgilde/Audiola/releases) page and run it. Audiola **updates itself automatically** on launch (powered by [Velopack](https://velopack.io)).
+
+## Stem separation setup (optional)
+
+Stem separation runs the local **Demucs** model via Python:
 
 ```powershell
-# Demucs + WAV-Schreib-Backend installieren
+# Demucs + a WAV writer backend
 pip install -U demucs soundfile
 
-# Falls die Trennung am Ende mit "Couldn't find appropriate backend" abbricht,
-# passt die torchaudio-Version nicht zur torch-Version. Passendes CPU-Paar erzwingen:
+# If separation finishes computing but fails with "Couldn't find appropriate backend",
+# the torchaudio version doesn't match torch. Force a matching CPU pair:
 pip install "torchaudio==2.8.0" --index-url https://download.pytorch.org/whl/cpu
 ```
 
-> `soundfile` ist nötig, weil torchaudio 2.8 auf Windows sonst kein Backend zum
-> Speichern der Stem-WAVs findet (die Trennung rechnet sonst durch und scheitert erst
-> am Schreiben mit Exit-Code 1).
+In the app's **Settings**, set the Python path (e.g. `python`, `py` or a venv path) and use **“Check Demucs”** to verify. The first separation downloads the model and can take a few minutes on CPU (much faster with a CUDA GPU).
 
-In den **Einstellungen** der App den Python-Pfad eintragen (z. B. `python`, `py`
-oder ein venv-Pfad) und über „Demucs prüfen" die Verfügbarkeit testen.
+## Build from source
 
-> Hinweis: Die erste Trennung lädt das Demucs-Modell herunter und kann auf CPU
-> mehrere Minuten dauern. Mit CUDA-fähiger GPU geht es deutlich schneller.
-
-## Bauen & Starten
+Requires the **.NET 9 SDK** on Windows.
 
 ```powershell
-dotnet build Audiola.sln -c Debug
 dotnet run --project src/Audiola/Audiola.csproj
 ```
 
-## Projektstruktur
+## Releasing
 
-```
-src/Audiola/
-├─ Models/        AudioTrack, Stem, StemSet
-├─ Services/      Wiedergabe (NAudio), Wellenform, Demucs, Mixdown, Settings
-├─ ViewModels/    MVVM (CommunityToolkit.Mvvm), geteilter SessionState
-├─ Views/         FluentWindow + Seiten (Home, Editor, Stems, Mixer, Settings)
-├─ Controls/      WaveformControl (eigene Render-Logik)
-└─ Converters/    Visibility-Converter
+Pushing a tag triggers the GitHub Actions workflow, which publishes the app, builds the **Velopack** installer and attaches it (plus the update feed) to a GitHub release:
+
+```powershell
+git tag v0.1.0
+git push origin v0.1.0
 ```
 
-## Architektur
+## Tech stack
 
-- **MVVM** mit `CommunityToolkit.Mvvm` (Source-Generatoren für `ObservableProperty` / `RelayCommand`).
-- **Dependency Injection** über `Microsoft.Extensions.Hosting`; Navigation, Snackbar
-  und Dialoge kommen aus WPF-UI 3.0.5.
-- **Stem-Trennung** ruft Demucs als externen Prozess (`python -m demucs`) auf und
-  liest die erzeugten WAV-Dateien aus `<Ausgabe>/<modell>/<track>/`.
+.NET 9 · WPF · [WPF-UI](https://github.com/lepoco/wpfui) (Fluent) · [NAudio](https://github.com/naudio/NAudio) · CommunityToolkit.Mvvm · [Velopack](https://velopack.io) · [Demucs](https://github.com/facebookresearch/demucs)
