@@ -1,0 +1,440 @@
+@page "/studio"
+@using System.Text
+@using System.Globalization
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject Audiola.Web.Services.AppState State
+@inject IDialogService Dialog
+
+<PageTitle>Studio</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Studio — Spuren, Wellenform &amp; Mix</MudText>
+
+<MudPaper Class="pa-3 mb-3">
+    <div class="d-flex align-center flex-wrap" style="gap:16px">
+        <InputFile OnChange="OnFile" />
+        <MudCheckBox T="bool" @bind-Value="_auto" Label="6 Stems" Dense="true" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Separate"
+                   Disabled="@(_fileBytes is null || _busy)">Stems trennen</MudButton>
+        <MudDivider Vertical="true" FlexItem="true" />
+        <MudIcon Icon="@Icons.Material.Filled.ZoomIn" />
+        <MudSlider T="int" Min="8" Max="120" Step="2" @bind-Value="_pps" Style="max-width:160px" />
+        <MudDivider Vertical="true" FlexItem="true" />
+        <MudCheckBox T="bool" @bind-Value="_master" @bind-Value:after="OnMixChanged" Label="Mastern" Dense="true" />
+        @if (_master)
+        {
+            <MudText Typo="Typo.caption">@_targetLufs LUFS</MudText>
+            <MudSlider T="double" Min="-24" Max="-6" Step="1" @bind-Value="_targetLufs" @bind-Value:after="OnMixChanged" Style="max-width:140px" />
+        }
+        <MudDivider Vertical="true" FlexItem="true" />
+        <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SaveProject" Disabled="@(_sessionId is null)">Projekt speichern</MudButton>
+        <InputFile id="loadProject" OnChange="LoadProject" style="display:none" accept=".audiola" />
+        <MudButton HtmlTag="label" for="loadProject" Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.FolderOpen">Projekt laden</MudButton>
+    </div>
+    @if (_busy)
+    {
+        <MudProgressLinear Indeterminate="true" Class="mt-2" />
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@_status</MudText>
+    }
+</MudPaper>
+
+@if (_tracks.Count > 0)
+{
+    <MudPaper Class="pa-0 mb-3" Style="overflow:hidden">
+        <div style="display:flex">
+            <!-- Spurköpfe -->
+            <div style="flex:0 0 230px; background:var(--mud-palette-surface);">
+                <div style="height:@(RulerH)px; border-bottom:1px solid #333;"></div>
+                @foreach (var t in _tracks)
+                {
+                    <div style="height:@(LaneH)px; border-bottom:1px solid #2a2a2a; padding:6px 8px; box-sizing:border-box;">
+                        <div class="d-flex align-center" style="gap:6px">
+                            <span style="width:10px;height:10px;border-radius:2px;background:@StemColor(t.Kind);"></span>
+                            <MudText Typo="Typo.body2" Style="font-weight:600">@t.Kind</MudText>
+                        </div>
+                        <div class="d-flex align-center" style="gap:4px">
+                            <MudIcon Icon="@Icons.Material.Filled.VolumeUp" Size="Size.Small" />
+                            <MudSlider T="double" Min="0" Max="1.5" Step="0.05" @bind-Value="t.Volume" @bind-Value:after="OnMixChanged" Style="max-width:80px" />
+                            <MudToggleIconButton @bind-Toggled="t.Muted" @bind-Toggled:after="OnMixChanged" Icon="@Icons.Material.Filled.VolumeOff" ToggledIcon="@Icons.Material.Filled.VolumeMute" Size="Size.Small" />
+                            <MudToggleIconButton @bind-Toggled="t.Solo" @bind-Toggled:after="OnMixChanged" Icon="@Icons.Material.Outlined.Headphones" ToggledIcon="@Icons.Material.Filled.Headphones" Size="Size.Small" />
+                            <MudIconButton Icon="@Icons.Material.Filled.AutoFixHigh" Size="Size.Small"
+                                           OnClick="@(() => OpenVariations(t))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Download" Size="Size.Small"
+                                           OnClick="@(() => ExportTrack(t))" />
+                        </div>
+                        <MudSlider T="double" Min="-1" Max="1" Step="0.1" @bind-Value="t.Pan" @bind-Value:after="OnMixChanged" Style="max-width:200px" />
+                    </div>
+                }
+            </div>
+            <!-- Lanes (scrollbar) -->
+            <div style="flex:1; overflow-x:auto; background:#15151b;">
+                <div style="position:relative; width:@(TotalWidth)px;">
+                    <!-- Lineal -->
+                    <div style="height:@(RulerH)px; position:relative; border-bottom:1px solid #333; cursor:pointer;" @onclick="SeekClick">
+                        @foreach (var s in Ticks())
+                        {
+                            <div style="position:absolute; left:@(Px(s))px; top:0; bottom:0; border-left:1px solid #3a3a44;"></div>
+                            <span style="position:absolute; left:@(Px(s) + 3)px; top:4px; font-size:10px; color:#9aa;">@Mmss(s)</span>
+                        }
+                    </div>
+                    <!-- Wellenformen -->
+                    @foreach (var t in _tracks)
+                    {
+                        <div style="height:@(LaneH)px; border-bottom:1px solid #2a2a2a; opacity:@(t.Muted ? "0.35" : "1"); position:relative; cursor:crosshair;"
+                             @onmousedown="@(e => StartSel(t, e))" @onmousemove="@(e => MoveSel(t, e))" @onmouseup="EndSel">
+                            <svg width="@(Px(t.Duration))" height="@(LaneH - 2)" viewBox="0 0 @(Math.Max(1, (t.Peaks?.Length ?? 0) / 2)) 100"
+                                 preserveAspectRatio="none" style="display:block; pointer-events:none">
+                                <path d="@WavePath(t.Peaks)" fill="@StemColor(t.Kind)" fill-opacity="0.85" />
+                            </svg>
+                            @if (_selTrack == t && SelW > 0.001)
+                            {
+                                <div style="position:absolute; top:0; left:@(Px(SelMin))px; width:@(Px(SelW))px; height:100%; background:rgba(91,140,255,0.28); border-left:2px solid #5B8CFF; border-right:2px solid #5B8CFF; pointer-events:none;"></div>
+                            }
+                        </div>
+                    }
+                    <!-- Playhead -->
+                    <div style="position:absolute; top:0; left:@(Px(_playhead))px; width:2px; height:@(RulerH + LaneH * _tracks.Count)px; background:#ff5b5b; pointer-events:none;"></div>
+                </div>
+            </div>
+        </div>
+    </MudPaper>
+
+    <MudPaper Class="pa-2 d-flex align-center" style="gap:10px">
+        <MudIconButton Icon="@(_playing ? Icons.Material.Filled.Pause : Icons.Material.Filled.PlayArrow)"
+                       Color="Color.Primary" OnClick="TogglePlay" Disabled="@_busy" Title="Abspielen/Pause" />
+        <MudIconButton Icon="@Icons.Material.Filled.Stop" OnClick="StopPlay" Title="Stopp" />
+        <MudText Typo="Typo.body2" Style="font-variant-numeric:tabular-nums">@Mmss(_playhead) / @Mmss(MaxDuration)</MudText>
+        <MudDivider Vertical="true" FlexItem="true" />
+        <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.AutoFixHigh"
+                   OnClick="@(() => OpenVariations(null))" Disabled="@(_providers.Count == 0)">Variationen auf alle</MudButton>
+        @if (_mixDirty)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">Mix wird beim Play neu gerendert</MudChip>
+        }
+        <audio @ref="_audio" style="display:none" @ontimeupdate="OnTimeUpdate" @onended="OnEnded"></audio>
+    </MudPaper>
+
+    @if (_selTrack is not null)
+    {
+        <MudPaper Class="pa-2 mt-2 d-flex align-center flex-wrap" Style="gap:8px">
+            <MudIcon Icon="@Icons.Material.Filled.ContentCut" Size="Size.Small" />
+            <MudText Typo="Typo.body2"><b>@_selTrack.Kind</b> · @Mmss(SelMin)–@Mmss(SelMin + SelW)</MudText>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => Edit("trim"))" Disabled="@_busy">Beschneiden</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => Edit("delete"))" Disabled="@_busy">Löschen</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => Edit("silence"))" Disabled="@_busy">Stille</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => Edit("fadein"))" Disabled="@_busy">Fade-In</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => Edit("fadeout"))" Disabled="@_busy">Fade-Out</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => Edit("normalize"))" Disabled="@_busy">Normalisieren</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => Edit("reverse"))" Disabled="@_busy">Umkehren</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="ClearSel">Auswahl aufheben</MudButton>
+        </MudPaper>
+    }
+}
+
+@code {
+    private const int LaneH = 84;
+    private const int RulerH = 26;
+
+    private sealed class Track
+    {
+        public string Kind { get; set; } = "";
+        public string File { get; set; } = "";
+        public double Volume { get; set; } = 1.0;
+        public double Pan { get; set; }
+        public bool Muted { get; set; }
+        public bool Solo { get; set; }
+        public float[] Peaks { get; set; } = [];
+        public double Duration { get; set; }
+    }
+
+    private byte[]? _fileBytes;
+    private string? _fileName;
+    private bool _auto;
+    private bool _busy;
+    private string _status = "";
+    private string? _sessionId;
+    private readonly List<Track> _tracks = new();
+    private int _pps = 30;
+    private bool _master;
+    private double _targetLufs = -14;
+    private string? _mixUrl;
+    private double _playhead;
+    private ElementReference _audio;
+    private bool _playing;
+    private bool _mixDirty = true;
+    private List<VariationProviderDto> _providers = new();
+
+    // Bereichsauswahl (Schnitt/Effekte)
+    private Track? _selTrack;
+    private double _selStart, _selEnd;
+    private bool _dragging;
+    private double SelMin => Math.Min(_selStart, _selEnd);
+    private double SelW => Math.Abs(_selEnd - _selStart);
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Über „Datei öffnen" geladene Datei übernehmen.
+        if (State.HasFile) { _fileBytes = State.FileBytes; _fileName = State.FileName; }
+        try { _providers = await Http.GetFromJsonAsync<List<VariationProviderDto>>("/api/variations") ?? new(); }
+        catch { /* API evtl. noch nicht bereit */ }
+    }
+
+    private async Task OpenVariations(Track? track)
+    {
+        if (_providers.Count == 0) return;
+        var pars = new DialogParameters
+        {
+            ["Providers"] = _providers,
+            ["ScopeLabel"] = track is null ? "Auf alle Spuren anwenden" : $"Spur: {track.Kind}"
+        };
+        var dlg = await Dialog.ShowAsync<VariationDialog>("Variationen / Effekte", pars);
+        var res = await dlg.Result;
+        if (res is { Canceled: false, Data: VariationChoice c } && c.Ids.Count > 0)
+        {
+            var targets = track is null ? _tracks.ToList() : new List<Track> { track };
+            foreach (var tr in targets) await ApplyVariation(tr, c.Provider, c.Ids);
+        }
+    }
+
+    private async Task ExportTrack(Track t)
+    {
+        if (_sessionId is null) return;
+        var url = $"{Http.BaseAddress}api/session/{_sessionId}/file/{Uri.EscapeDataString(t.File)}";
+        await JS.InvokeVoidAsync("audiolaAudio.downloadUrl", url, $"{t.Kind}.wav");
+    }
+
+    private void OnMixChanged() => _mixDirty = true;
+
+    private async Task TogglePlay()
+    {
+        if (_playing) { await JS.InvokeVoidAsync("audiolaAudio.pause", _audio); _playing = false; return; }
+        if (_mixUrl is null || _mixDirty) await LoadMix();
+        if (_mixUrl is null) return;
+        await JS.InvokeVoidAsync("audiolaAudio.play", _audio);
+        _playing = true;
+    }
+
+    private async Task StopPlay()
+    {
+        await JS.InvokeVoidAsync("audiolaAudio.pause", _audio);
+        await JS.InvokeVoidAsync("audiolaAudio.seek", _audio, 0);
+        _playhead = 0; _playing = false;
+    }
+
+    private void OnEnded() => _playing = false;
+
+    private async Task ApplyVariation(Track t, string provider, List<string> ids)
+    {
+        if (_sessionId is null || ids.Count == 0) return;
+        _busy = true; _status = $"Wende {provider} auf {t.Kind} an...";
+        try
+        {
+            var resp = await Http.PostAsJsonAsync($"/api/session/{_sessionId}/apply-variation",
+                new { file = t.File, provider, ids });
+            if (resp.IsSuccessStatusCode)
+            {
+                var r = await resp.Content.ReadFromJsonAsync<PeaksResult>();
+                if (r is not null) { t.Peaks = r.Peaks ?? t.Peaks; t.Duration = r.DurationSeconds; }
+                _mixDirty = true; _status = "";
+            }
+            else _status = $"Fehler {(int)resp.StatusCode}";
+        }
+        catch (Exception ex) { _status = "Fehler: " + ex.Message; }
+        finally { _busy = false; StateHasChanged(); }
+    }
+
+    private sealed record PeaksResult(double DurationSeconds, float[] Peaks);
+
+    // ---- Bereichsauswahl per Maus-Drag auf der Spur ----
+    private void StartSel(Track t, MouseEventArgs e)
+    {
+        _selTrack = t; _selStart = Math.Clamp(e.OffsetX / _pps, 0, t.Duration); _selEnd = _selStart; _dragging = true;
+    }
+    private void MoveSel(Track t, MouseEventArgs e)
+    {
+        if (_dragging && _selTrack == t) _selEnd = Math.Clamp(e.OffsetX / _pps, 0, t.Duration);
+    }
+    private void EndSel() => _dragging = false;
+    private void ClearSel() { _selTrack = null; _dragging = false; }
+
+    private async Task Edit(string op)
+    {
+        if (_selTrack is null || _sessionId is null) return;
+        var t = _selTrack;
+        double a = SelMin, b = SelMin + SelW;
+        if (b - a < 0.001 && op is not ("normalize" or "reverse")) { _status = "Bereich zu kurz."; return; }
+        _busy = true; _status = $"{op} auf {t.Kind} …";
+        try
+        {
+            var resp = await Http.PostAsJsonAsync($"/api/session/{_sessionId}/edit",
+                new { file = t.File, op, startSeconds = a, endSeconds = b });
+            if (resp.IsSuccessStatusCode)
+            {
+                var r = await resp.Content.ReadFromJsonAsync<PeaksResult>();
+                if (r is not null) { t.Peaks = r.Peaks ?? t.Peaks; t.Duration = r.DurationSeconds; }
+                _mixDirty = true; _status = ""; ClearSel();
+            }
+            else _status = $"Fehler {(int)resp.StatusCode}";
+        }
+        catch (Exception ex) { _status = "Fehler: " + ex.Message; }
+        finally { _busy = false; StateHasChanged(); }
+    }
+
+    // ---- Projekt speichern / laden (.audiola) ----
+    private async Task SaveProject()
+    {
+        if (_sessionId is null) return;
+        var req = new
+        {
+            master = _master,
+            targetLufs = _targetLufs,
+            pixelsPerSecond = (double)_pps,
+            tracks = _tracks.Select(t => new { file = t.File, volume = t.Volume, pan = t.Pan, muted = t.Muted, solo = t.Solo, offsetSeconds = 0.0 })
+        };
+        var resp = await Http.PostAsJsonAsync($"/api/session/{_sessionId}/project", req);
+        if (!resp.IsSuccessStatusCode) { _status = $"Speichern fehlgeschlagen ({(int)resp.StatusCode})"; return; }
+        var bytes = await resp.Content.ReadAsByteArrayAsync();
+        var url = await JS.InvokeAsync<string>("audiolaAudio.makeUrl", bytes);
+        await JS.InvokeVoidAsync("audiolaAudio.downloadUrl", url, "projekt.audiola");
+        await JS.InvokeVoidAsync("audiolaAudio.revoke", url);
+    }
+
+    private async Task LoadProject(InputFileChangeEventArgs e)
+    {
+        _busy = true; _status = "Lade Projekt …"; _tracks.Clear(); _mixUrl = null; ClearSel();
+        try
+        {
+            using var ms = new MemoryStream();
+            await e.File.OpenReadStream(maxAllowedSize: 500L * 1024 * 1024).CopyToAsync(ms);
+            using var form = new MultipartFormDataContent();
+            form.Add(new ByteArrayContent(ms.ToArray()), "file", e.File.Name);
+            var resp = await Http.PostAsync("/api/project/load", form);
+            if (!resp.IsSuccessStatusCode) { _status = $"Laden fehlgeschlagen ({(int)resp.StatusCode})"; return; }
+            var r = await resp.Content.ReadFromJsonAsync<LoadProjectResult>();
+            _sessionId = r?.SessionId;
+            _master = r?.Master ?? false;
+            _targetLufs = r?.TargetLufs ?? -14;
+            foreach (var t in r?.Tracks ?? new())
+                _tracks.Add(new Track
+                {
+                    Kind = t.Kind, File = t.File, Volume = t.Volume, Pan = t.Pan,
+                    Muted = t.Muted, Solo = t.Solo, Duration = t.DurationSeconds, Peaks = t.Peaks ?? []
+                });
+            _mixDirty = true; _playhead = 0; _playing = false; _status = "";
+        }
+        catch (Exception ex) { _status = "Fehler: " + ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private sealed record LoadProjectResult(string SessionId, List<LoadTrackDto> Tracks, bool Master, double TargetLufs);
+    private sealed record LoadTrackDto(string Kind, string File, double Volume, double Pan, bool Muted, bool Solo,
+        double OffsetSeconds, double DurationSeconds, float[] Peaks);
+
+    private double MaxDuration => _tracks.Count == 0 ? 0 : _tracks.Max(t => t.Duration);
+    private double TotalWidth => Math.Max(200, MaxDuration * _pps);
+    private double Px(double seconds) => seconds * _pps;
+
+    private async Task OnFile(InputFileChangeEventArgs e)
+    {
+        _fileName = e.File.Name;
+        using var ms = new MemoryStream();
+        await e.File.OpenReadStream(maxAllowedSize: 300L * 1024 * 1024).CopyToAsync(ms);
+        _fileBytes = ms.ToArray();
+        State.SetFile(_fileBytes, _fileName);
+    }
+
+    private async Task Separate()
+    {
+        if (_fileBytes is null) return;
+        _busy = true; _status = "Trenne Stems (Demucs) … das kann einige Minuten dauern."; _tracks.Clear(); _mixUrl = null;
+        try
+        {
+            using var form = new MultipartFormDataContent();
+            var content = new ByteArrayContent(_fileBytes);
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/wav");
+            form.Add(content, "file", _fileName ?? "input.wav");
+            var resp = await Http.PostAsync($"/api/separate?auto={_auto.ToString().ToLowerInvariant()}", form);
+            if (!resp.IsSuccessStatusCode) { _status = $"Fehler {(int)resp.StatusCode}. API/Demucs ok?"; return; }
+            var r = await resp.Content.ReadFromJsonAsync<SeparateResult>();
+            _sessionId = r?.SessionId;
+            foreach (var s in r?.Stems ?? new())
+                _tracks.Add(new Track { Kind = s.Kind, File = s.File, Duration = s.DurationSeconds, Peaks = s.Peaks ?? [] });
+            _mixDirty = true; _playing = false; _playhead = 0;
+        }
+        catch (Exception ex) { _status = "Fehler: " + ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task LoadMix()
+    {
+        if (_sessionId is null) return;
+        _busy = true; _status = "Rendere Mix …";
+        try
+        {
+            var req = new
+            {
+                sessionId = _sessionId,
+                master = _master,
+                targetLufs = _targetLufs,
+                tracks = _tracks.Select(t => new { file = t.File, volume = t.Volume, pan = t.Pan, muted = t.Muted, solo = t.Solo, offsetSeconds = 0.0 })
+            };
+            var resp = await Http.PostAsJsonAsync("/api/mix", req);
+            if (!resp.IsSuccessStatusCode) { _status = $"Mix-Fehler {(int)resp.StatusCode}"; return; }
+            var bytes = await resp.Content.ReadAsByteArrayAsync();
+            if (_mixUrl is not null) await JS.InvokeVoidAsync("audiolaAudio.revoke", _mixUrl);
+            _mixUrl = await JS.InvokeAsync<string>("audiolaAudio.makeUrl", bytes);
+            await JS.InvokeVoidAsync("audiolaAudio.setSrc", _audio, _mixUrl);
+            _mixDirty = false; _status = "";
+        }
+        catch (Exception ex) { _status = "Fehler: " + ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task OnTimeUpdate()
+    {
+        _playhead = await JS.InvokeAsync<double>("audiolaAudio.time", _audio);
+    }
+
+    private async Task SeekClick(MouseEventArgs e)
+    {
+        var t = e.OffsetX / _pps;
+        _playhead = t;
+        await JS.InvokeVoidAsync("audiolaAudio.seek", _audio, t);
+    }
+
+    private IEnumerable<double> Ticks()
+    {
+        var step = _pps >= 60 ? 1 : _pps >= 30 ? 2 : _pps >= 16 ? 5 : 10;
+        for (double s = 0; s <= MaxDuration; s += step) yield return s;
+    }
+
+    private static string Mmss(double s) => TimeSpan.FromSeconds(s).ToString(@"m\:ss");
+
+    private static string StemColor(string kind) => kind.ToLowerInvariant() switch
+    {
+        "vocals" => "#FF6B6B",
+        "drums" => "#FFB454",
+        "bass" => "#5B8CFF",
+        "guitar" => "#54D6A0",
+        "piano" => "#6BD6FF",
+        _ => "#9B8CFF"
+    };
+
+    private static string WavePath(float[] peaks)
+    {
+        if (peaks is null || peaks.Length < 2) return "";
+        var n = peaks.Length / 2;
+        var sb = new StringBuilder(n * 12);
+        sb.Append("M0,").Append(Y(peaks[1]));
+        for (var i = 1; i < n; i++) sb.Append(" L").Append(i).Append(',').Append(Y(peaks[2 * i + 1]));   // Max-Kante
+        for (var i = n - 1; i >= 0; i--) sb.Append(" L").Append(i).Append(',').Append(Y(peaks[2 * i])); // Min-Kante
+        sb.Append(" Z");
+        return sb.ToString();
+    }
+
+    private static string Y(float v) => (50 - Math.Clamp(v, -1f, 1f) * 48).ToString("0.#", CultureInfo.InvariantCulture);
+
+    private sealed record SeparateResult(string SessionId, List<StemDto> Stems);
+    private sealed record StemDto(string Kind, string File, double DurationSeconds, float[] Peaks);
+}

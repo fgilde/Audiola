@@ -1,0 +1,43 @@
+@page "/"
+@inject Audiola.Web.Services.AppState State
+@inject NavigationManager Nav
+
+<PageTitle>Audiola</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Class="pa-8 d-flex flex-column align-center" Elevation="2">
+        <MudIcon Icon="@Icons.Material.Filled.GraphicEq" Style="font-size:4rem" Color="Color.Primary" />
+        <MudText Typo="Typo.h4" Class="mt-3">Willkommen bei Audiola</MudText>
+        <MudText Align="Align.Center" Color="Color.Secondary" Class="mt-1">
+            Audiodateien öffnen, in Stems trennen, mischen, Effekte/Variationen anwenden und mastern.
+        </MudText>
+
+        <div class="mt-6">
+            <InputFile id="openFile" OnChange="OnFile" style="display:none" />
+            <MudButton HtmlTag="label" for="openFile" Variant="Variant.Filled" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.FolderOpen" Size="Size.Large">Datei öffnen</MudButton>
+        </div>
+
+        @if (State.HasFile)
+        {
+            <MudPaper Class="pa-3 mt-6" Outlined="true" Style="width:100%">
+                <MudText Typo="Typo.subtitle2">Geladen</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@State.FileName</MudText>
+                <div class="mt-2 d-flex" style="gap:8px">
+                    <MudButton Href="/studio" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.GraphicEq">Zum Studio</MudButton>
+                    <MudButton Href="/mastering" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Tune">Mastern</MudButton>
+                </div>
+            </MudPaper>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private async Task OnFile(InputFileChangeEventArgs e)
+    {
+        using var ms = new MemoryStream();
+        await e.File.OpenReadStream(maxAllowedSize: 300L * 1024 * 1024).CopyToAsync(ms);
+        State.SetFile(ms.ToArray(), e.File.Name);
+        Nav.NavigateTo("/studio");
+    }
+}

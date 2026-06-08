@@ -1,0 +1,208 @@
+@page "/equalizer"
+@using System.Globalization
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject Audiola.Web.Services.AppState State
+
+<PageTitle>Equalizer</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Equalizer — 4-Band</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">Low-Shelf · Peak · Peak · High-Shelf — Kurve live, dann anwenden &amp; exportieren.</MudText>
+
+<MudPaper Class="pa-3 mb-3 d-flex align-center flex-wrap" Style="gap:16px">
+    <InputFile id="eqFile" OnChange="OnFile" style="display:none" />
+    <MudButton HtmlTag="label" for="eqFile" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FolderOpen">Datei wählen</MudButton>
+    <MudText Typo="Typo.body2">@(_name ?? "keine Datei")</MudText>
+    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.RestartAlt" OnClick="Reset">Zurücksetzen</MudButton>
+</MudPaper>
+
+<!-- Live-Kurve -->
+<MudPaper Class="pa-2 mb-3" Style="background:#15151b">
+    <svg width="100%" height="200" viewBox="0 0 1000 200" preserveAspectRatio="none" style="display:block">
+        <line x1="0" y1="100" x2="1000" y2="100" stroke="#444" stroke-width="1" />
+        <line x1="0" y1="50" x2="1000" y2="50" stroke="#2a2a2a" stroke-width="1" />
+        <line x1="0" y1="150" x2="1000" y2="150" stroke="#2a2a2a" stroke-width="1" />
+        <path d="@CurvePath()" fill="none" stroke="#5B8CFF" stroke-width="2.5" />
+        @foreach (var b in _bands)
+        {
+            <circle cx="@FreqX(b.Frequency).ToString(CultureInfo.InvariantCulture)"
+                    cy="@GainY(b.GainDb).ToString(CultureInfo.InvariantCulture)"
+                    r="6" fill="@b.Color" />
+        }
+    </svg>
+</MudPaper>
+
+<MudGrid>
+    @foreach (var b in _bands)
+    {
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-3" Style="height:100%">
+                <div class="d-flex align-center" style="gap:6px">
+                    <span style="width:10px;height:10px;border-radius:50%;background:@b.Color"></span>
+                    <MudText Typo="Typo.subtitle2">@b.Label</MudText>
+                </div>
+                <MudText Typo="Typo.caption">Frequenz: @b.Frequency.ToString("0") Hz</MudText>
+                <MudSlider T="double" Min="@b.MinFreq" Max="@b.MaxFreq" Step="1" @bind-Value="b.Frequency" />
+                <MudText Typo="Typo.caption">Gain: @b.GainDb.ToString("+0.0;-0.0;0") dB</MudText>
+                <MudSlider T="double" Min="-15" Max="15" Step="0.5" @bind-Value="b.GainDb" />
+                @if (b.Peaking)
+                {
+                    <MudText Typo="Typo.caption">Q: @b.Q.ToString("0.0")</MudText>
+                    <MudSlider T="double" Min="0.3" Max="6" Step="0.1" @bind-Value="b.Q" />
+                }
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+
+<div class="d-flex align-center mt-3" style="gap:12px">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Equalizer"
+               OnClick="Apply" Disabled="@(_bytes is null || _busy)">Anwenden &amp; abspielen</MudButton>
+    @if (_url is not null)
+    {
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Download" Href="@_url" download="audiola-eq.wav">Exportieren</MudButton>
+    }
+    @if (_busy) { <MudProgressCircular Indeterminate="true" Size="Size.Small" /> }
+</div>
+
+<audio @ref="_audio" controls class="mt-3" style="width:100%; @(_url is null ? "display:none" : "")"></audio>
+
+@code {
+    private byte[]? _bytes;
+    private string? _name;
+    private string? _url;
+    private bool _busy;
+    private ElementReference _audio;
+    private const int Fs = 44100;
+
+    private sealed class BandVm
+    {
+        public string Type = "Peaking";          // LowShelf | Peaking | HighShelf
+        public string Label = "";
+        public string Color = "#5B8CFF";
+        public double Frequency;
+        public double GainDb;
+        public double Q = 1.0;
+        public double MinFreq = 20;
+        public double MaxFreq = 20000;
+        public bool Peaking => Type == "Peaking";
+    }
+
+    private readonly List<BandVm> _bands = new()
+    {
+        new BandVm { Type = "LowShelf",  Label = "Low-Shelf", Color = "#FF6B6B", Frequency = 100,   MinFreq = 30,   MaxFreq = 400 },
+        new BandVm { Type = "Peaking",   Label = "Tief-Mitten", Color = "#FFB454", Frequency = 500,  MinFreq = 120,  MaxFreq = 2000 },
+        new BandVm { Type = "Peaking",   Label = "Hoch-Mitten", Color = "#5B8CFF", Frequency = 3000, MinFreq = 1000, MaxFreq = 8000 },
+        new BandVm { Type = "HighShelf", Label = "High-Shelf", Color = "#9B8CFF", Frequency = 10000, MinFreq = 4000, MaxFreq = 18000 },
+    };
+
+    protected override void OnInitialized()
+    {
+        if (State.HasFile) { _bytes = State.FileBytes; _name = State.FileName; }
+    }
+
+    private async Task OnFile(InputFileChangeEventArgs e)
+    {
+        _name = e.File.Name;
+        using var ms = new MemoryStream();
+        await e.File.OpenReadStream(maxAllowedSize: 300L * 1024 * 1024).CopyToAsync(ms);
+        _bytes = ms.ToArray();
+        State.SetFile(_bytes, _name);
+    }
+
+    private void Reset() { foreach (var b in _bands) b.GainDb = 0; }
+
+    private async Task Apply()
+    {
+        if (_bytes is null) return;
+        _busy = true;
+        try
+        {
+            var bands = _bands.Select(b => new { type = b.Type, frequency = b.Frequency, gainDb = b.GainDb, q = b.Q });
+            var json = System.Text.Json.JsonSerializer.Serialize(bands);
+            using var form = new MultipartFormDataContent();
+            var content = new ByteArrayContent(_bytes);
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/wav");
+            form.Add(content, "file", _name ?? "input.wav");
+            form.Add(new StringContent(json), "bands");
+            var resp = await Http.PostAsync("/api/eq", form);
+            if (!resp.IsSuccessStatusCode) return;
+            var bytes = await resp.Content.ReadAsByteArrayAsync();
+            if (_url is not null) await JS.InvokeVoidAsync("audiolaAudio.revoke", _url);
+            _url = await JS.InvokeAsync<string>("audiolaAudio.makeUrl", bytes);
+            await JS.InvokeVoidAsync("audiolaAudio.setSrc", _audio, _url);
+        }
+        finally { _busy = false; }
+    }
+
+    // ---- Live-Kurve (RBJ-Biquad-Magnitude, gespiegelt aus Core.Dsp.Biquad) ----
+    private const double FMin = 20, FMax = 20000;
+
+    private static double FreqX(double f) =>
+        (Math.Log10(Math.Clamp(f, FMin, FMax)) - Math.Log10(FMin)) / (Math.Log10(FMax) - Math.Log10(FMin)) * 1000.0;
+
+    private static double GainY(double db) => 100.0 - Math.Clamp(db, -15, 15) / 15.0 * 90.0;
+
+    private string CurvePath()
+    {
+        var sb = new System.Text.StringBuilder();
+        const int n = 160;
+        for (var i = 0; i <= n; i++)
+        {
+            var t = (double)i / n;
+            var f = Math.Pow(10, Math.Log10(FMin) + t * (Math.Log10(FMax) - Math.Log10(FMin)));
+            double db = 0;
+            foreach (var b in _bands) db += BandMagnitudeDb(b, f);
+            var x = t * 1000.0;
+            var y = GainY(db);
+            sb.Append(i == 0 ? "M" : "L").Append(x.ToString("0.#", CultureInfo.InvariantCulture))
+              .Append(' ').Append(y.ToString("0.#", CultureInfo.InvariantCulture)).Append(' ');
+        }
+        return sb.ToString();
+    }
+
+    private static double BandMagnitudeDb(BandVm band, double freq)
+    {
+        var (b0, b1, b2, a0, a1, a2) = Coeffs(band);
+        var w = 2 * Math.PI * freq / Fs;
+        double cw = Math.Cos(w), sw = Math.Sin(w), c2 = Math.Cos(2 * w), s2 = Math.Sin(2 * w);
+        var numRe = b0 + b1 * cw + b2 * c2;
+        var numIm = -(b1 * sw + b2 * s2);
+        var denRe = a0 + a1 * cw + a2 * c2;
+        var denIm = -(a1 * sw + a2 * s2);
+        var num = Math.Sqrt(numRe * numRe + numIm * numIm);
+        var den = Math.Sqrt(denRe * denRe + denIm * denIm);
+        return den < 1e-12 ? 0 : 20 * Math.Log10(num / den);
+    }
+
+    private static (double, double, double, double, double, double) Coeffs(BandVm band)
+    {
+        var a = Math.Pow(10, band.GainDb / 40);
+        var w0 = 2 * Math.PI * band.Frequency / Fs;
+        var cos = Math.Cos(w0);
+        var q = band.Type == "Peaking" ? (band.Q <= 0 ? 1.0 : band.Q) : 0.707;
+        var alpha = Math.Sin(w0) / (2 * q);
+        var tsa = 2 * Math.Sqrt(a) * alpha;
+
+        switch (band.Type)
+        {
+            case "LowShelf":
+                return (a * ((a + 1) - (a - 1) * cos + tsa),
+                        2 * a * ((a - 1) - (a + 1) * cos),
+                        a * ((a + 1) - (a - 1) * cos - tsa),
+                        (a + 1) + (a - 1) * cos + tsa,
+                        -2 * ((a - 1) + (a + 1) * cos),
+                        (a + 1) + (a - 1) * cos - tsa);
+            case "HighShelf":
+                return (a * ((a + 1) + (a - 1) * cos + tsa),
+                        -2 * a * ((a - 1) + (a + 1) * cos),
+                        a * ((a + 1) + (a - 1) * cos - tsa),
+                        (a + 1) - (a - 1) * cos + tsa,
+                        2 * ((a - 1) - (a + 1) * cos),
+                        (a + 1) - (a - 1) * cos - tsa);
+            default: // Peaking
+                return (1 + alpha * a, -2 * cos, 1 - alpha * a,
+                        1 + alpha / a, -2 * cos, 1 - alpha / a);
+        }
+    }
+}

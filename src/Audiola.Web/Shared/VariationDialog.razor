@@ -1,0 +1,52 @@
+@using Audiola.Web.Services
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">@ScopeLabel</MudText>
+        <MudSelect T="string" Label="Provider" @bind-Value="_provider" @bind-Value:after="OnProviderChanged" Dense="true">
+            @foreach (var p in Providers)
+            {
+                <MudSelectItem Value="@p.Provider">@p.Provider</MudSelectItem>
+            }
+        </MudSelect>
+        <MudText Typo="Typo.caption" Class="mt-3">Variationen (mehrere möglich)</MudText>
+        <div style="max-height:320px; overflow:auto">
+            @foreach (var v in CurrentVariations)
+            {
+                <MudCheckBox T="bool" Dense="true" Value="@_checked.Contains(v.Id)"
+                             ValueChanged="@((bool b) => Toggle(v.Id, b))">
+                    <MudText Typo="Typo.body2">@v.Name</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@v.Description</MudText>
+                </MudCheckBox>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Abbrechen</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Apply" Disabled="@(_checked.Count == 0)">Anwenden</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public List<VariationProviderDto> Providers { get; set; } = new();
+    [Parameter] public string ScopeLabel { get; set; } = "";
+
+    private string? _provider;
+    private readonly HashSet<string> _checked = new();
+
+    protected override void OnInitialized() => _provider = Providers.FirstOrDefault()?.Provider;
+
+    private List<VariationItemDto> CurrentVariations =>
+        Providers.FirstOrDefault(p => p.Provider == _provider)?.Variations ?? new();
+
+    private void OnProviderChanged() => _checked.Clear();
+
+    private void Toggle(string id, bool on)
+    {
+        if (on) _checked.Add(id); else _checked.Remove(id);
+    }
+
+    private void Apply() => MudDialog.Close(DialogResult.Ok(new VariationChoice(_provider!, _checked.ToList())));
+    private void Cancel() => MudDialog.Cancel();
+}

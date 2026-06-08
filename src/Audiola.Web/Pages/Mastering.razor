@@ -1,0 +1,196 @@
+@page "/mastering"
+@using System.Globalization
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject Audiola.Web.Services.AppState State
+
+<PageTitle>Mastering</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Mastering</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">EQ → Kompressor → Loudness (LUFS) — wie im Desktop-Client.</MudText>
+
+<MudPaper Class="pa-3 mb-3 d-flex align-center flex-wrap" Style="gap:16px">
+    <InputFile id="masterFile" OnChange="OnFile" style="display:none" />
+    <MudButton HtmlTag="label" for="masterFile" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FolderOpen">Datei wählen</MudButton>
+    <MudText Typo="Typo.body2">@(_name ?? "keine Datei")</MudText>
+</MudPaper>
+
+<MudPaper Class="pa-3 mb-3 d-flex align-center flex-wrap" Style="gap:12px">
+    <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" />
+    <MudSelect T="string" Label="Preset" @bind-Value="_selectedProfile" @bind-Value:after="ApplyProfile" Style="min-width:240px" Dense="true">
+        @foreach (var p in _profiles)
+        {
+            <MudSelectItem Value="@p.Name">@p.Name @(p.Builtin ? "" : " (eigen)")</MudSelectItem>
+        }
+    </MudSelect>
+    <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+               OnClick="DeleteProfile" Disabled="@(!IsUserProfile)">Löschen</MudButton>
+    <MudDivider Vertical="true" FlexItem="true" />
+    <MudTextField T="string" @bind-Value="_newProfileName" Label="Eigenes Profil" Placeholder="Name…" Style="max-width:200px" Dense="true" />
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveProfile"
+               Disabled="@string.IsNullOrWhiteSpace(_newProfileName)">Speichern</MudButton>
+</MudPaper>
+
+<MudGrid>
+    <MudItem xs="12" md="4">
+        <MudPaper Class="pa-4" Style="height:100%">
+            <MudText Typo="Typo.h6" Class="mb-2">Equalizer</MudText>
+            <MudText Typo="Typo.caption">High-Pass: @_highPass.ToString("0") Hz</MudText>
+            <MudSlider T="double" Min="20" Max="200" @bind-Value="_highPass" />
+            <MudText Typo="Typo.caption">Bass: @_lowShelf.ToString("+0.0;-0.0;0") dB</MudText>
+            <MudSlider T="double" Min="-12" Max="12" Step="0.5" @bind-Value="_lowShelf" />
+            <MudText Typo="Typo.caption">Mitten: @_mid.ToString("+0.0;-0.0;0") dB</MudText>
+            <MudSlider T="double" Min="-12" Max="12" Step="0.5" @bind-Value="_mid" />
+            <MudText Typo="Typo.caption">Höhen: @_highShelf.ToString("+0.0;-0.0;0") dB</MudText>
+            <MudSlider T="double" Min="-12" Max="12" Step="0.5" @bind-Value="_highShelf" />
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" md="4">
+        <MudPaper Class="pa-4" Style="height:100%">
+            <MudText Typo="Typo.h6" Class="mb-2">Kompressor</MudText>
+            <MudCheckBox T="bool" @bind-Value="_compressor" Label="Kompressor aktiv" />
+            <MudText Typo="Typo.caption">Threshold: @_threshold.ToString("0") dB</MudText>
+            <MudSlider T="double" Min="-48" Max="0" @bind-Value="_threshold" />
+            <MudText Typo="Typo.caption">Ratio: @_ratio.ToString("0.0"):1</MudText>
+            <MudSlider T="double" Min="1" Max="20" Step="0.5" @bind-Value="_ratio" />
+            <MudText Typo="Typo.caption">Makeup: @_makeup.ToString("+0.0;-0.0;0") dB</MudText>
+            <MudSlider T="double" Min="0" Max="24" Step="0.5" @bind-Value="_makeup" />
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" md="4">
+        <MudPaper Class="pa-4" Style="height:100%">
+            <MudText Typo="Typo.h6" Class="mb-2">Loudness (LUFS)</MudText>
+            <MudCheckBox T="bool" @bind-Value="_normalize" Label="Auf Ziel-Lautheit normalisieren" />
+            <MudText Typo="Typo.caption">Ziel: @_targetLufs.ToString("0") LUFS (Streaming ≈ −14)</MudText>
+            <MudSlider T="double" Min="-24" Max="-6" @bind-Value="_targetLufs" />
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<div class="d-flex align-center mt-3" style="gap:12px">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune"
+               OnClick="DoMaster" Disabled="@(_bytes is null || _busy)">Mastern &amp; abspielen</MudButton>
+    @if (_url is not null)
+    {
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Download" Href="@_url" download="audiola-master.wav">Exportieren</MudButton>
+    }
+    @if (_busy) { <MudProgressCircular Indeterminate="true" Size="Size.Small" /> }
+</div>
+
+<audio @ref="_audio" controls class="mt-3" style="width:100%; @(_url is null ? "display:none" : "")"></audio>
+
+@code {
+    private byte[]? _bytes;
+    private string? _name;
+    private string? _url;
+    private bool _busy;
+    private ElementReference _audio;
+
+    private double _targetLufs = -14, _highPass = 30, _lowShelf = 0, _mid = 0, _highShelf = 0,
+                   _threshold = -18, _ratio = 2, _makeup = 0;
+    private bool _normalize = true, _compressor = true;
+
+    private List<ProfileDto> _profiles = new();
+    private string? _selectedProfile;
+    private string _newProfileName = "";
+    private bool IsUserProfile => _profiles.FirstOrDefault(p => p.Name == _selectedProfile)?.Builtin == false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (State.HasFile) { _bytes = State.FileBytes; _name = State.FileName; }
+        await LoadProfiles();
+    }
+
+    private async Task LoadProfiles()
+    {
+        try { _profiles = await Http.GetFromJsonAsync<List<ProfileDto>>("/api/mastering-profiles") ?? new(); }
+        catch { /* API evtl. nicht bereit */ }
+    }
+
+    private void ApplyProfile()
+    {
+        var p = _profiles.FirstOrDefault(x => x.Name == _selectedProfile);
+        if (p?.Settings is not { } s) return;
+        _highPass = s.HighPassHz;
+        _lowShelf = s.LowShelfGainDb;
+        _mid = s.MidGainDb;
+        _highShelf = s.HighShelfGainDb;
+        _threshold = s.ThresholdDb;
+        _ratio = s.Ratio;
+        _makeup = s.MakeupGainDb;
+        _targetLufs = s.TargetLufs;
+        _normalize = s.NormalizeLoudness;
+        _compressor = s.CompressorEnabled;
+    }
+
+    private async Task SaveProfile()
+    {
+        if (string.IsNullOrWhiteSpace(_newProfileName)) return;
+        var settings = new
+        {
+            highPassEnabled = _highPass > 0,
+            highPassHz = _highPass,
+            lowShelfGainDb = _lowShelf,
+            midGainDb = _mid,
+            highShelfGainDb = _highShelf,
+            compressorEnabled = _compressor,
+            thresholdDb = _threshold,
+            ratio = _ratio,
+            makeupGainDb = _makeup,
+            normalizeLoudness = _normalize,
+            targetLufs = _targetLufs
+        };
+        await Http.PostAsJsonAsync("/api/mastering-profiles", new { name = _newProfileName.Trim(), settings });
+        var saved = _newProfileName.Trim();
+        _newProfileName = "";
+        await LoadProfiles();
+        _selectedProfile = saved;
+    }
+
+    private async Task DeleteProfile()
+    {
+        if (!IsUserProfile || _selectedProfile is null) return;
+        await Http.DeleteAsync($"/api/mastering-profiles/{Uri.EscapeDataString(_selectedProfile)}");
+        _selectedProfile = null;
+        await LoadProfiles();
+    }
+
+    private sealed record ProfileDto(string Name, string Description, bool Builtin, MasterSettingsDto? Settings);
+    private sealed record MasterSettingsDto(bool HighPassEnabled, double HighPassHz, double LowShelfGainDb,
+        double MidGainDb, double HighShelfGainDb, bool CompressorEnabled, double ThresholdDb, double Ratio,
+        double MakeupGainDb, bool NormalizeLoudness, double TargetLufs);
+
+    private async Task OnFile(InputFileChangeEventArgs e)
+    {
+        _name = e.File.Name;
+        using var ms = new MemoryStream();
+        await e.File.OpenReadStream(maxAllowedSize: 300L * 1024 * 1024).CopyToAsync(ms);
+        _bytes = ms.ToArray();
+        State.SetFile(_bytes, _name);
+    }
+
+    private async Task DoMaster()
+    {
+        if (_bytes is null) return;
+        _busy = true;
+        try
+        {
+            string F(double d) => d.ToString(CultureInfo.InvariantCulture);
+            var q = $"/api/master?targetLufs={F(_targetLufs)}&normalize={_normalize.ToString().ToLowerInvariant()}" +
+                    $"&compressor={_compressor.ToString().ToLowerInvariant()}&highPassHz={F(_highPass)}" +
+                    $"&lowShelfGainDb={F(_lowShelf)}&midGainDb={F(_mid)}&highShelfGainDb={F(_highShelf)}" +
+                    $"&thresholdDb={F(_threshold)}&ratio={F(_ratio)}&makeupGainDb={F(_makeup)}";
+            using var form = new MultipartFormDataContent();
+            var content = new ByteArrayContent(_bytes);
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/wav");
+            form.Add(content, "file", _name ?? "input.wav");
+            var resp = await Http.PostAsync(q, form);
+            if (!resp.IsSuccessStatusCode) return;
+            var bytes = await resp.Content.ReadAsByteArrayAsync();
+            if (_url is not null) await JS.InvokeVoidAsync("audiolaAudio.revoke", _url);
+            _url = await JS.InvokeAsync<string>("audiolaAudio.makeUrl", bytes);
+            await JS.InvokeVoidAsync("audiolaAudio.setSrc", _audio, _url);
+        }
+        finally { _busy = false; }
+    }
+}

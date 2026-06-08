@@ -1,0 +1,44 @@
+@page "/settings"
+@inject HttpClient Http
+
+<PageTitle>Einstellungen</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Einstellungen</MudText>
+
+<MudPaper Class="pa-4" MaxWidth="600px">
+    <MudText Typo="Typo.subtitle1">Backend (API)</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary">@Http.BaseAddress?.ToString()</MudText>
+
+    <MudButton Class="mt-3" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.NetworkCheck"
+               OnClick="Test" Disabled="@_busy">Verbindung testen</MudButton>
+    @if (_status is not null)
+    {
+        <MudAlert Class="mt-3" Severity="@_severity" Dense="true">@_status</MudAlert>
+    }
+
+    <MudDivider Class="my-4" />
+    <MudText Typo="Typo.subtitle2">Stem-Trennung</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary">
+        Läuft serverseitig über Demucs (Python). Python-Pfad/Modell werden in der API
+        (Audiola.Core SettingsService) konfiguriert. Erste Trennung lädt das Modell und dauert auf CPU einige Minuten.
+    </MudText>
+</MudPaper>
+
+@code {
+    private bool _busy;
+    private string? _status;
+    private Severity _severity = Severity.Info;
+
+    private async Task Test()
+    {
+        _busy = true; _status = null;
+        try
+        {
+            var r = await Http.GetAsync("/api/variations");
+            if (r.IsSuccessStatusCode) { _severity = Severity.Success; _status = "Verbindung OK – API erreichbar."; }
+            else { _severity = Severity.Warning; _status = $"Antwort {(int)r.StatusCode}."; }
+        }
+        catch (Exception ex) { _severity = Severity.Error; _status = "Nicht erreichbar: " + ex.Message; }
+        finally { _busy = false; }
+    }
+}

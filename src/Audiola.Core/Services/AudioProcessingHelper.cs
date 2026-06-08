@@ -3,7 +3,7 @@ using NAudio.Wave.SampleProviders;
 
 namespace Audiola.Services;
 
-internal static class AudioProcessingHelper
+public static class AudioProcessingHelper
 {
     public static (float[] Samples, int SampleRate) ReadStereo(string filePath)
     {

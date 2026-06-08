@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audiola.Web</title>
+    <base href="/" />
+    <link rel="preload" id="webassembly" />
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="Audiola.Web.styles.css" rel="stylesheet" />
+    <!-- MudBlazor + MudBlazor.Extensions -->
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link id="mudex-styles" href="_content/MudBlazor.Extensions/mudBlazorExtensions.min.css" rel="stylesheet" />
+    <script src="_content/MudBlazor.Extensions/js/components/MudExAppLoader.min.js"></script>
+    <script>
+        window.audiolaAudio = {
+            time: el => el && isFinite(el.currentTime) ? el.currentTime : 0,
+            seek: (el, t) => { if (el) el.currentTime = t; },
+            setSrc: (el, url) => { if (el) { el.src = url; el.load(); } },
+            play: el => { if (el) el.play(); },
+            pause: el => { if (el) el.pause(); },
+            makeUrl: bytes => URL.createObjectURL(new Blob([bytes], { type: 'audio/wav' })),
+            revoke: url => { try { URL.revokeObjectURL(url); } catch (e) { } },
+            downloadUrl: (url, name) => {
+                const a = document.createElement('a');
+                a.href = url; a.download = name || 'download';
+                document.body.appendChild(a); a.click(); a.remove();
+            }
+        };
+    </script>
+    <script type="importmap"></script>
+</head>
+
+<body>
+    <div id="app">
+        <svg class="loading-progress">
+            <circle r="40%" cx="50%" cy="50%" />
+            <circle r="40%" cx="50%" cy="50%" />
+        </svg>
+        <div class="loading-progress-text"></div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+</body>
+
+</html>

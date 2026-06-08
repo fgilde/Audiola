@@ -1,0 +1,143 @@
+@page "/variations"
+@inject HttpClient Http
+
+<PageTitle>Audiola</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Audio mastern &amp; Variationen</MudText>
+<MudText Typo="Typo.body2" Class="mb-4" Color="Color.Secondary">
+    Datei hochladen, mit den gleichen Logiken wie die Desktop-App verarbeiten und direkt anhören.
+</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <InputFile OnChange="OnFile" />
+    @if (_fileName is not null)
+    {
+        <MudText Typo="Typo.body2" Class="mt-2">Datei: @_fileName (@((_fileBytes?.Length ?? 0) / 1024) KB)</MudText>
+    }
+</MudPaper>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudText Typo="Typo.h6">Mastering</MudText>
+    <MudText Typo="Typo.body2">Ziel-Lautheit: @_targetLufs LUFS</MudText>
+    <MudSlider T="double" Min="-24" Max="-6" Step="1" @bind-Value="_targetLufs" />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Master"
+               Disabled="@(_fileBytes is null || _busy)">Mastern &amp; abspielen</MudButton>
+</MudPaper>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudText Typo="Typo.h6">Variationen</MudText>
+    @foreach (var p in _providers)
+    {
+        <MudText Typo="Typo.subtitle2" Class="mt-3">@p.ProviderName</MudText>
+        @foreach (var v in p.Variations)
+        {
+            <MudCheckBox T="bool" Dense="true" Label="@($"{v.Name} — {v.Description}")"
+                         Value="@IsChecked(p.ProviderName, v.Id)"
+                         ValueChanged="@(b => SetChecked(p.ProviderName, v.Id, b))" />
+        }
+        <MudButton Size="Size.Small" Variant="Variant.Outlined" Class="mt-1"
+                   OnClick="@(() => ApplyVariations(p.ProviderName))"
+                   Disabled="@(_fileBytes is null || _busy)">Anwenden &amp; abspielen</MudButton>
+    }
+</MudPaper>
+
+@if (_busy)
+{
+    <MudProgressLinear Indeterminate="true" Class="mb-4" />
+}
+
+@if (_audioSrc is not null)
+{
+    <MudPaper Class="pa-4">
+        <MudExAudioPlayer Src="@_audioSrc" />
+    </MudPaper>
+}
+
+@code {
+    private record VarItem(string Id, string Name, string Description);
+    private record Provider(string ProviderName, List<VarItem> Variations);
+
+    private List<Provider> _providers = new();
+    private byte[]? _fileBytes;
+    private string? _fileName;
+    private string? _audioSrc;
+    private double _targetLufs = -14;
+    private bool _busy;
+    private readonly HashSet<string> _checked = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var raw = await Http.GetFromJsonAsync<List<ProviderDto>>("/api/variations");
+            if (raw is not null)
+                _providers = raw.Select(p => new Provider(p.Provider,
+                    p.Variations.Select(v => new VarItem(v.Id, v.Name, v.Description)).ToList())).ToList();
+        }
+        catch { /* API evtl. noch nicht gestartet */ }
+    }
+
+    private async Task OnFile(InputFileChangeEventArgs e)
+    {
+        var f = e.File;
+        _fileName = f.Name;
+        using var ms = new MemoryStream();
+        await f.OpenReadStream(maxAllowedSize: 300L * 1024 * 1024).CopyToAsync(ms);
+        _fileBytes = ms.ToArray();
+    }
+
+    private bool IsChecked(string p, string id) => _checked.Contains($"{p}|{id}");
+    private void SetChecked(string p, string id, bool on)
+    {
+        var key = $"{p}|{id}";
+        if (on) _checked.Add(key); else _checked.Remove(key);
+    }
+
+    private async Task Master()
+    {
+        if (_fileBytes is null) return;
+        _busy = true;
+        try
+        {
+            using var form = BuildForm();
+            var resp = await Http.PostAsync($"/api/master?targetLufs={_targetLufs}", form);
+            await SetAudioFromResponse(resp);
+        }
+        finally { _busy = false; }
+    }
+
+    private async Task ApplyVariations(string provider)
+    {
+        if (_fileBytes is null) return;
+        var ids = string.Join(",", _checked.Where(k => k.StartsWith(provider + "|")).Select(k => k.Split('|')[1]));
+        if (ids.Length == 0) return;
+        _busy = true;
+        try
+        {
+            using var form = BuildForm();
+            var resp = await Http.PostAsync(
+                $"/api/apply-variation?provider={Uri.EscapeDataString(provider)}&ids={Uri.EscapeDataString(ids)}", form);
+            await SetAudioFromResponse(resp);
+        }
+        finally { _busy = false; }
+    }
+
+    private MultipartFormDataContent BuildForm()
+    {
+        var form = new MultipartFormDataContent();
+        var content = new ByteArrayContent(_fileBytes!);
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/wav");
+        form.Add(content, "file", _fileName ?? "input.wav");
+        return form;
+    }
+
+    private async Task SetAudioFromResponse(HttpResponseMessage resp)
+    {
+        if (!resp.IsSuccessStatusCode) { _audioSrc = null; return; }
+        var bytes = await resp.Content.ReadAsByteArrayAsync();
+        _audioSrc = "data:audio/wav;base64," + Convert.ToBase64String(bytes);
+    }
+
+    private record ProviderDto(string Provider, List<VarDto> Variations);
+    private record VarDto(string Id, string Name, string Description);
+}
