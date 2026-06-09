@@ -71,6 +71,9 @@ public partial class App : Application
             services.AddSingleton<EqualizerViewModel>();
             services.AddSingleton<MasteringPage>();
             services.AddSingleton<MasteringViewModel>();
+            services.AddSingleton<SpatialPreviewEngine>();
+            services.AddSingleton<SpatialAudioPage>();
+            services.AddSingleton<SpatialAudioViewModel>();
             services.AddSingleton<VariationPage>();
             services.AddSingleton<VariationViewModel>();
             services.AddSingleton<ProvenancePage>();

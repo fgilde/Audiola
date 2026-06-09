@@ -1,0 +1,162 @@
+<Page
+    x:Class="Audiola.Views.Pages.SpatialAudioPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d"
+    Title="SpatialAudioPage">
+
+    <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel MaxWidth="1120" HorizontalAlignment="Left">
+            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Spatial Audio (3D / Immersive)" />
+            <TextBlock
+                Margin="0,2,0,0" TextWrapping="Wrap"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="Platziere die Studio-Spuren im Raum und rendere einen binauralen 3D-Mix (Kopfhörer) oder eine Mehrkanal-WAV (5.1 / 7.1 / 7.1.4 Atmos-Bett-Layout)." />
+            <ui:InfoBar Margin="0,12,0,0" IsOpen="True" IsClosable="False" Severity="Informational"
+                        Title="Hinweis zu Dolby Atmos"
+                        Message="Zertifiziertes Dolby-Atmos-Bitstream braucht Dolbys lizenzierten Encoder. Hier wird der räumliche Klang erzeugt: binaural (HRTF) bzw. als 7.1.4-Mehrkanal-WAV, die du in einen Atmos-Renderer/DAW importieren kannst." />
+
+            <Grid Margin="0,18,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 3D-Radar -->
+                <ui:Card Grid.Column="0" Padding="16" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Bühne (Draufsicht)" Margin="0,0,0,8" />
+                        <Grid Width="220" Height="220">
+                            <Ellipse Width="200" Height="200" Stroke="#2E3340" StrokeThickness="1.5" />
+                            <Ellipse Width="134" Height="134" Stroke="#262A34" StrokeThickness="1" />
+                            <Ellipse Width="68" Height="68" Stroke="#262A34" StrokeThickness="1" />
+                            <Line X1="110" Y1="10" X2="110" Y2="210" Stroke="#23272F" StrokeThickness="1" />
+                            <Line X1="10" Y1="110" X2="210" Y2="110" Stroke="#23272F" StrokeThickness="1" />
+                            <!-- Hörer -->
+                            <ui:SymbolIcon Symbol="Person24" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="VORN" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-2,0,0"
+                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                            <!-- Quellen-Punkte -->
+                            <ItemsControl ItemsSource="{Binding ViewModel.Sources}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><Canvas Width="220" Height="220" /></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style TargetType="ContentPresenter">
+                                        <Setter Property="Canvas.Left" Value="{Binding RadarX}" />
+                                        <Setter Property="Canvas.Top" Value="{Binding RadarY}" />
+                                    </Style>
+                                </ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Ellipse Width="{Binding DotSize}" Height="{Binding DotSize}"
+                                                 Fill="{Binding AccentBrush}" Stroke="White" StrokeThickness="1"
+                                                 ToolTip="{Binding Name}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                        <TextBlock Margin="0,6,0,0" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="Punktgröße = Höhe (Elevation). Ringe = Distanz." />
+                    </StackPanel>
+                </ui:Card>
+
+                <!-- Steuerung -->
+                <ui:Card Grid.Column="1" Margin="12,0,0,0" Padding="16" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Ausgabe" Margin="0,0,0,8" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock VerticalAlignment="Center" Width="150" Text="Mehrkanal-Layout:" />
+                            <ComboBox Width="220" VerticalAlignment="Center"
+                                      ItemsSource="{Binding ViewModel.Layouts}"
+                                      SelectedItem="{Binding ViewModel.SelectedLayout, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock VerticalAlignment="Center" Width="150"
+                                       Text="{Binding ViewModel.RoomAmount, StringFormat='Raum/Hall: {0:P0}'}" />
+                            <Slider Width="220" Minimum="0" Maximum="0.6" Value="{Binding ViewModel.RoomAmount, Mode=TwoWay}" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <ui:Button Appearance="Secondary" Icon="{ui:SymbolIcon Headphones24}" Content="Live-Vorschau"
+                                       Command="{Binding ViewModel.PreviewCommand}" />
+                            <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon Stop24}" Content="Stopp"
+                                       Command="{Binding ViewModel.StopPreviewCommand}" />
+                            <ui:Button Margin="8,0,0,0" Appearance="Secondary" Icon="{ui:SymbolIcon Sparkle24}" Content="Automatisch ausrichten"
+                                       Command="{Binding ViewModel.AutoArrangeCommand}" />
+                            <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon ArrowReset24}" Content="Zurücksetzen"
+                                       Command="{Binding ViewModel.ResetPositionsCommand}" />
+                            <ui:ProgressRing Width="22" Height="22" Margin="12,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
+                                             Visibility="{Binding ViewModel.IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </StackPanel>
+                        <TextBlock Margin="0,6,0,0" FontSize="11" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="Während die Live-Vorschau läuft, wirken Azimut/Höhe/Distanz/Pegel sofort. (Raum/Hall wird nur beim Export hinzugefügt.)" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <ui:Button Appearance="Primary" Icon="{ui:SymbolIcon Headphones24}" Content="Binaural exportieren"
+                                       Command="{Binding ViewModel.ExportBinauralCommand}" />
+                            <ui:Button Appearance="Primary" Margin="8,0,0,0" Icon="{ui:SymbolIcon Speaker224}" Content="Mehrkanal-WAV exportieren"
+                                       Command="{Binding ViewModel.ExportMultichannelCommand}" />
+                        </StackPanel>
+
+                        <TextBlock Margin="0,12,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.StatusText}" />
+                    </StackPanel>
+                </ui:Card>
+            </Grid>
+
+            <!-- Quellen / Positionen -->
+            <TextBlock Margin="0,22,0,8" FontWeight="SemiBold" Text="Spuren positionieren" />
+            <ItemsControl ItemsSource="{Binding ViewModel.Sources}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <ui:Card Margin="0,0,0,10" Padding="14">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <Border Width="12" Height="12" CornerRadius="3" Background="{Binding AccentBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Margin="8,0,0,0" FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding Name}" />
+                                    <CheckBox Margin="16,0,0,0" Content="Stumm" IsChecked="{Binding Muted, Mode=TwoWay}" />
+                                </StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                   Text="{Binding AzimuthDeg, StringFormat='Azimut: {0:F0}°'}" />
+                                        <Slider Minimum="-180" Maximum="180" Value="{Binding AzimuthDeg, Mode=TwoWay}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                        <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                   Text="{Binding ElevationDeg, StringFormat='Höhe: {0:F0}°'}" />
+                                        <Slider Minimum="0" Maximum="90" Value="{Binding ElevationDeg, Mode=TwoWay}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                                        <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                   Text="{Binding Distance, StringFormat='Distanz: {0:F2}'}" />
+                                        <Slider Minimum="0.3" Maximum="2.5" Value="{Binding Distance, Mode=TwoWay}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="3">
+                                        <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                   Text="{Binding GainDb, StringFormat='Pegel: {0:+0.0;-0.0;0} dB'}" />
+                                        <Slider Minimum="-12" Maximum="12" Value="{Binding GainDb, Mode=TwoWay}" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </ui:Card>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

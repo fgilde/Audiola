@@ -64,6 +64,28 @@
                 <ui:Card Width="352" Margin="0,0,12,12" Padding="16">
                     <StackPanel>
                         <TextBlock FontWeight="SemiBold" Text="Equalizer" Margin="0,0,0,8" />
+                        <!-- Live-Frequenzgang -->
+                        <Border Height="118" Margin="0,0,0,10" CornerRadius="8" ClipToBounds="True">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#1E2230" Offset="0" />
+                                    <GradientStop Color="#14161E" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Viewbox Stretch="Fill">
+                                <Canvas Width="1000" Height="200">
+                                    <Line X1="0" Y1="100" X2="1000" Y2="100" Stroke="#3A3F4C" StrokeThickness="1.5" />
+                                    <Line X1="0" Y1="55" X2="1000" Y2="55" Stroke="#262A34" StrokeThickness="1" />
+                                    <Line X1="0" Y1="145" X2="1000" Y2="145" Stroke="#262A34" StrokeThickness="1" />
+                                    <Polyline Points="{Binding ViewModel.EqCurve}" StrokeThickness="3.5"
+                                              StrokeLineJoin="Round" Stroke="#6FA0FF">
+                                        <Polyline.Effect>
+                                            <DropShadowEffect Color="#5B8CFF" BlurRadius="12" ShadowDepth="0" Opacity="0.7" />
+                                        </Polyline.Effect>
+                                    </Polyline>
+                                </Canvas>
+                            </Viewbox>
+                        </Border>
                         <CheckBox Content="High-Pass aktiv" IsChecked="{Binding ViewModel.HighPassEnabled, Mode=TwoWay}" />
                         <TextBlock Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                    Text="{Binding ViewModel.HighPassHz, StringFormat='High-Pass: {0:F0} Hz'}" />
@@ -99,6 +121,22 @@
                 <ui:Card Width="352" Margin="0,0,12,12" Padding="16">
                     <StackPanel>
                         <TextBlock FontWeight="SemiBold" Text="Loudness (LUFS)" Margin="0,0,0,8" />
+                        <!-- LUFS-Lehre: Eingangslautheit auf der Skala −24 … −6 -->
+                        <Grid Height="14" Margin="0,0,0,10">
+                            <Border CornerRadius="7" Background="#20242E" />
+                            <ProgressBar Minimum="0" Maximum="1" Value="{Binding ViewModel.InputLufsPercent}"
+                                         Background="Transparent" BorderThickness="0">
+                                <ProgressBar.Foreground>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                        <GradientStop Color="#2E7D32" Offset="0.0" />
+                                        <GradientStop Color="#C0CA33" Offset="0.6" />
+                                        <GradientStop Color="#E53935" Offset="1.0" />
+                                    </LinearGradientBrush>
+                                </ProgressBar.Foreground>
+                            </ProgressBar>
+                        </Grid>
+                        <TextBlock Margin="0,0,0,2" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding ViewModel.InputLufsLabel, StringFormat='Eingang: {0}'}" />
                         <CheckBox Content="Auf Ziel-Lautheit normalisieren" IsChecked="{Binding ViewModel.NormalizeLoudness, Mode=TwoWay}" />
                         <TextBlock Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                    Text="{Binding ViewModel.TargetLufs, StringFormat='Ziel: {0:F0} LUFS (Streaming ≈ -14)'}" />
@@ -129,6 +167,15 @@
                                     ToolTip="{}{name} wird durch den Dateinamen ersetzt; die Endung bleibt erhalten." />
                         <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12"
                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="z. B. {}{name}_mastered" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <TextBlock VerticalAlignment="Center" Width="150" Text="Ausgabeformat:" />
+                        <ComboBox Width="220" VerticalAlignment="Center"
+                                  ItemsSource="{Binding ViewModel.BulkFormats}"
+                                  SelectedItem="{Binding ViewModel.BulkFormat, Mode=TwoWay}"
+                                  ToolTip="Zielformat erzwingen – z. B. MP3 in WAV umwandeln. „Wie Original“ behält die Endung der Quelldatei." />
+                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="z. B. MP3 → WAV" />
                     </StackPanel>
                     <CheckBox Margin="0,10,0,0" Content="Originale überschreiben (Namensmuster wird ignoriert)"
                               IsChecked="{Binding ViewModel.BulkOverwrite, Mode=TwoWay}" />

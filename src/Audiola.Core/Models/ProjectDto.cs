@@ -19,6 +19,27 @@ public sealed class ProjectDto
 
     /// <summary>Name des gewählten Mastering-Profils (optional).</summary>
     public string? MasteringProfile { get; set; }
+
+    /// <summary>Spatial-Audio-Positionen/Layout (null = nicht eingerichtet).</summary>
+    public ProjectSpatialDto? Spatial { get; set; }
+}
+
+/// <summary>Gespeicherter Spatial-Audio-Zustand (3D-Positionen + Ausgabe-Layout).</summary>
+public sealed class ProjectSpatialDto
+{
+    public string Layout { get; set; } = "7.1.4 (Atmos-Bett)";
+    public double RoomAmount { get; set; } = 0.18;
+    public List<ProjectSpatialSourceDto> Sources { get; set; } = [];
+}
+
+public sealed class ProjectSpatialSourceDto
+{
+    public string Name { get; set; } = "";
+    public double AzimuthDeg { get; set; }
+    public double ElevationDeg { get; set; }
+    public double Distance { get; set; } = 1.0;
+    public double GainDb { get; set; }
+    public bool Muted { get; set; }
 }
 
 public sealed class ProjectTrackDto

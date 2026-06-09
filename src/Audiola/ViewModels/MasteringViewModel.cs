@@ -1,4 +1,7 @@
 using System.IO;
+using System.Windows;
+using System.Windows.Media;
+using Audiola.Dsp;
 using Audiola.Models;
 using Audiola.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -83,6 +86,26 @@ public sealed partial class MasteringViewModel : ObservableObject
     [ObservableProperty] private bool _isBulkRunning;
     [ObservableProperty] private string _bulkStatus = "";
 
+    // Ausgabeformat für die Stapelverarbeitung (z. B. MP3 → WAV konvertieren).
+    public IReadOnlyList<string> BulkFormats { get; } =
+        ["Wie Original", "WAV (.wav)", "MP3 (.mp3)", "AAC / M4A (.m4a)"];
+    [ObservableProperty] private string _bulkFormat = "Wie Original";
+
+    private static string? ExtForFormat(string fmt) => fmt switch
+    {
+        "WAV (.wav)" => ".wav",
+        "MP3 (.mp3)" => ".mp3",
+        "AAC / M4A (.m4a)" => ".m4a",
+        _ => null // Wie Original
+    };
+
+    // Live-EQ-Kurve (Magnitudengang im 1000×200-Koordinatenraum für die Vorschau).
+    [ObservableProperty] private PointCollection _eqCurve = new();
+
+    // LUFS-Anzeige (0..1 über den Slider-Bereich −24..−6) für die Loudness-Lehre.
+    [ObservableProperty] private double _inputLufsPercent;
+    [ObservableProperty] private string _inputLufsLabel = "—";
+
     public MasteringViewModel(SessionState session, IMasteringService mastering, ISnackbarService snackbar,
         TimelineViewModel timeline, StemMixerEngine engine, LiveMasterProcessor liveMaster, TransportViewModel transport,
         ISettingsService settings)
@@ -96,6 +119,47 @@ public sealed partial class MasteringViewModel : ObservableObject
         Transport = transport;
         _settings = settings;
         RebuildProfileNames();
+        UpdateEqCurve();
+    }
+
+    /// <summary>Berechnet den kombinierten Magnitudengang (HP + Shelves + Mitte) für die Vorschaukurve.</summary>
+    private void UpdateEqCurve()
+    {
+        const int sr = 44100, n = 160;
+        const double w = 1000.0, h = 200.0, halfH = h / 2.0, span = halfH - 10.0;
+        double logMin = Math.Log10(20), logMax = Math.Log10(20000);
+
+        var chain = new List<Biquad>();
+        if (HighPassEnabled) chain.Add(Biquad.HighPass(sr, HighPassHz, 0.707));
+        chain.Add(Biquad.LowShelf(sr, LowShelfHz, 0.707, LowShelfGainDb));
+        chain.Add(Biquad.Peaking(sr, MidHz, MidQ, MidGainDb));
+        chain.Add(Biquad.HighShelf(sr, HighShelfHz, 0.707, HighShelfGainDb));
+
+        var pts = new PointCollection(n + 1);
+        for (var i = 0; i <= n; i++)
+        {
+            double t = (double)i / n;
+            double f = Math.Pow(10, logMin + t * (logMax - logMin));
+            double db = 0;
+            foreach (var b in chain) db += b.MagnitudeDb(f, sr);
+            double y = halfH - Math.Clamp(db, -15, 15) / 15.0 * span;
+            pts.Add(new Point(t * w, y));
+        }
+        pts.Freeze();
+        EqCurve = pts;
+    }
+
+    /// <summary>Aktualisiert die LUFS-Lehre (Eingangslautheit relativ zum Slider-Bereich).</summary>
+    private void UpdateLufsGauge()
+    {
+        if (double.IsInfinity(_inputLufs))
+        {
+            InputLufsPercent = 0;
+            InputLufsLabel = "—";
+            return;
+        }
+        InputLufsPercent = Math.Clamp((_inputLufs - (-24)) / ((-6) - (-24)), 0, 1);
+        InputLufsLabel = $"{_inputLufs:F1} LUFS";
     }
 
     private void RebuildProfileNames()
@@ -209,6 +273,8 @@ public sealed partial class MasteringViewModel : ObservableObject
         var gainDb = NormalizeLoudness && !double.IsInfinity(_inputLufs) ? TargetLufs - _inputLufs : 0;
         _liveMaster.SetSettings(BuildSettings(), gainDb);
         _liveMaster.Enabled = PreviewMaster;
+        UpdateEqCurve();
+        UpdateLufsGauge();
     }
 
     partial void OnPreviewMasterChanged(bool value)
@@ -268,6 +334,7 @@ public sealed partial class MasteringViewModel : ObservableObject
         var settings = BuildSettings();
         var overwrite = BulkOverwrite;
         var pattern = string.IsNullOrWhiteSpace(BulkPattern) ? "{name}_mastered" : BulkPattern.Trim();
+        var chosenExt = ExtForFormat(BulkFormat); // null = Endung der Quelldatei beibehalten
 
         IsBulkRunning = true;
         int ok = 0, fail = 0;
@@ -280,10 +347,10 @@ public sealed partial class MasteringViewModel : ObservableObject
                 try
                 {
                     var dir = Path.GetDirectoryName(input)!;
-                    var ext = Path.GetExtension(input);
+                    var ext = chosenExt ?? Path.GetExtension(input);
                     var baseName = Path.GetFileNameWithoutExtension(input);
                     var outPath = overwrite
-                        ? input
+                        ? Path.Combine(dir, baseName + ext)
                         : Path.Combine(dir, pattern.Replace("{name}", baseName) + ext);
 
                     // Wenn Ziel = Quelle: über eine temporäre Datei schreiben (Original nicht korrumpieren).
