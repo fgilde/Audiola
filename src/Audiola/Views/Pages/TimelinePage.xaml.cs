@@ -214,15 +214,18 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         if (ViewModel.SelectedClip is null) return;
         var dlg = new Audiola.Views.Dialogs.VoiceSwapDialog { Owner = System.Windows.Window.GetWindow(this) };
         if (dlg.ShowDialog() == true && dlg.Result is { } r)
-            await ViewModel.ChangeSelectedClipVoiceAsync(r.VoiceId, r.Temporary);
+            await ViewModel.ChangeSelectedClipVoiceAsync(r);
     }
+
+    // ---- Transkription (Whisper → LRC) ----
+    private async void Transcribe_Click(object sender, RoutedEventArgs e) => await ViewModel.TranscribeSelectedClipAsync();
 
     // ---- Spur aus Text (TTS) ----
     private async void AddTts_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new Audiola.Views.Dialogs.TextToSpeechDialog { Owner = System.Windows.Window.GetWindow(this) };
         if (dlg.ShowDialog() == true && dlg.Result is { } r)
-            await ViewModel.AddTextToSpeechTrackAsync(dlg.Text, r.VoiceId, dlg.Speed, dlg.Stability, dlg.Similarity, r.Temporary);
+            await ViewModel.AddTextToSpeechTrackAsync(dlg.Text, r, dlg.Speed, dlg.Stability, dlg.Similarity);
     }
 
     private async System.Threading.Tasks.Task OpenVariationsAsync(IReadOnlyList<ClipViewModel> clips, string scope)

@@ -11,13 +11,14 @@ public partial class TextToSpeechDialog : FluentWindow
 
     public TextToSpeechDialog()
     {
-        _vm = new VoiceSourceViewModel(App.GetService<IVoiceChangeService>(), App.GetService<IAudioRecorder>());
+        _vm = new VoiceSourceViewModel(App.GetService<IVoiceChangeService>(), App.GetService<IAudioRecorder>(),
+            App.GetService<IVoiceProfileStore>());
         DataContext = _vm;
         InitializeComponent();
         Loaded += async (_, _) => await _vm.LoadVoicesAsync();
     }
 
-    public (string VoiceId, bool Temporary)? Result { get; private set; }
+    public VoiceChoice? Result { get; private set; }
     public string Text => TextInput.Text;
     public double Speed => SpeedSlider.Value;
     public double Stability => StabilitySlider.Value;

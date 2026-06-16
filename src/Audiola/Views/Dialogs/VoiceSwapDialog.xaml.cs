@@ -11,14 +11,15 @@ public partial class VoiceSwapDialog : FluentWindow
 
     public VoiceSwapDialog()
     {
-        _vm = new VoiceSourceViewModel(App.GetService<IVoiceChangeService>(), App.GetService<IAudioRecorder>());
+        _vm = new VoiceSourceViewModel(App.GetService<IVoiceChangeService>(), App.GetService<IAudioRecorder>(),
+            App.GetService<IVoiceProfileStore>());
         DataContext = _vm;
         InitializeComponent();
         Loaded += async (_, _) => await _vm.LoadVoicesAsync();
     }
 
-    /// <summary>Aufgelöste Zielstimme (VoiceId) + ob sie nach Gebrauch gelöscht werden soll.</summary>
-    public (string VoiceId, bool Temporary)? Result { get; private set; }
+    /// <summary>Aufgelöste Zielstimme (lokal oder ElevenLabs).</summary>
+    public VoiceChoice? Result { get; private set; }
 
     private async void Ok_Click(object sender, RoutedEventArgs e)
     {

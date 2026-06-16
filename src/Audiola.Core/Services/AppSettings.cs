@@ -38,4 +38,19 @@ public sealed class AppSettings
 
     /// <summary>ElevenLabs Speech-to-Speech-Modell.</summary>
     public string ElevenLabsModelId { get; set; } = "eleven_multilingual_sts_v2";
+
+    // ---- Lokale Voice-Engine (VoiceBox-artig, Python-Sidecar) ----
+
+    /// <summary>Rechen-Gerät für lokale Modelle: "auto", "cuda", "cpu" oder "directml".</summary>
+    public string VoiceDevice { get; set; } = "auto";
+
+    /// <summary>Verzeichnis für heruntergeladene lokale Modelle.</summary>
+    public string VoiceModelsDirectory { get; set; } =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Audiola", "voice-models");
+
+    /// <summary>Standard-TTS-Modell für die lokale Sprachsynthese.</summary>
+    public string LocalTtsModel { get; set; } = "kokoro";
+
+    /// <summary>Whisper-Modellgröße für die Transkription: tiny/base/small/medium/large-v3/turbo.</summary>
+    public string WhisperModel { get; set; } = "base";
 }

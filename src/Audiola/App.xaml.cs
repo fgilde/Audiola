@@ -32,6 +32,9 @@ public partial class App : Application
             services.AddSingleton<IAudioPlayerService, NAudioPlayerService>();
             services.AddSingleton<IStemSeparationService, DemucsStemSeparationService>();
             services.AddSingleton<IVoiceChangeService, ElevenLabsVoiceChangeService>();
+            services.AddSingleton<IPythonEnvironment, PythonEnvironmentService>();
+            services.AddSingleton<ILocalVoiceService, PythonLocalVoiceService>();
+            services.AddSingleton<IVoiceProfileStore, VoiceProfileStore>();
             services.AddSingleton<IAudioRecorder, AudioRecorder>();
             services.AddSingleton<IProjectService, ProjectService>();
             services.AddSingleton<ProjectWorkspace>();
@@ -74,6 +77,8 @@ public partial class App : Application
             services.AddSingleton<SpatialPreviewEngine>();
             services.AddSingleton<SpatialAudioPage>();
             services.AddSingleton<SpatialAudioViewModel>();
+            services.AddSingleton<VoicesPage>();
+            services.AddSingleton<VoicesViewModel>();
             services.AddSingleton<VariationPage>();
             services.AddSingleton<VariationViewModel>();
             services.AddSingleton<ProvenancePage>();

@@ -8,93 +8,109 @@
     mc:Ignorable="d" Loaded="OnLoaded">
 
     <StackPanel>
-        <!-- Quelle wählen -->
+        <!-- Engine -->
         <StackPanel Orientation="Horizontal" Margin="2,0,0,10">
-            <RadioButton x:Name="ModePick" GroupName="vsrc" Content="Stimme wählen" IsChecked="True"
-                         Checked="Mode_Checked" Margin="0,0,18,0" />
-            <RadioButton x:Name="ModeRec" GroupName="vsrc" Content="Eigene aufnehmen"
-                         Checked="Mode_Checked" Margin="0,0,18,0" />
-            <RadioButton x:Name="ModeFile" GroupName="vsrc" Content="Audio-Datei hochladen"
-                         Checked="Mode_Checked" />
+            <RadioButton x:Name="EngEleven" GroupName="veng" Content="ElevenLabs (Cloud)" IsChecked="True"
+                         Checked="Engine_Checked" Margin="0,0,18,0" />
+            <RadioButton x:Name="EngLocal" GroupName="veng" Content="Lokal (eigene Stimmen)" Checked="Engine_Checked" />
         </StackPanel>
 
-        <!-- Panel: vorhandene Stimme wählen -->
-        <StackPanel x:Name="PanelPick">
-            <DockPanel LastChildFill="True" Margin="0,0,0,6">
-                <ui:Button DockPanel.Dock="Right" Margin="8,0,0,0" Icon="{ui:SymbolIcon ArrowSync24}"
-                           Command="{Binding LoadVoicesCommand}" ToolTip="Stimmen neu laden" />
-                <TextBlock VerticalAlignment="Center" FontWeight="Medium" Text="Verfügbare Stimmen" />
-            </DockPanel>
-            <Border CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                <ListBox Height="190" Background="Transparent" BorderThickness="0"
-                         ItemsSource="{Binding VoicesView}" SelectedItem="{Binding SelectedVoice, Mode=TwoWay}">
-                    <ListBox.GroupStyle>
-                        <GroupStyle>
-                            <GroupStyle.HeaderTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="4,8,0,2"
-                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                </DataTemplate>
-                            </GroupStyle.HeaderTemplate>
-                        </GroupStyle>
-                    </ListBox.GroupStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}" Margin="8,1" TextTrimming="CharacterEllipsis" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Border>
-            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                <ui:ProgressRing Width="16" Height="16" IsIndeterminate="True"
-                                 Visibility="{Binding IsLoadingVoices, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" FontSize="12"
-                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding Status}" />
+        <!-- ElevenLabs -->
+        <StackPanel x:Name="PanelEleven">
+            <StackPanel Orientation="Horizontal" Margin="2,0,0,10">
+                <RadioButton x:Name="ModePick" GroupName="vsrc" Content="Stimme wählen" IsChecked="True"
+                             Checked="Mode_Checked" Margin="0,0,18,0" />
+                <RadioButton x:Name="ModeRec" GroupName="vsrc" Content="Eigene aufnehmen"
+                             Checked="Mode_Checked" Margin="0,0,18,0" />
+                <RadioButton x:Name="ModeFile" GroupName="vsrc" Content="Audio-Datei hochladen"
+                             Checked="Mode_Checked" />
+            </StackPanel>
+
+            <StackPanel x:Name="PanelPick">
+                <DockPanel LastChildFill="True" Margin="0,0,0,6">
+                    <ui:Button DockPanel.Dock="Right" Margin="8,0,0,0" Icon="{ui:SymbolIcon ArrowSync24}"
+                               Command="{Binding LoadVoicesCommand}" ToolTip="Stimmen neu laden" />
+                    <TextBlock VerticalAlignment="Center" FontWeight="Medium" Text="Verfügbare Stimmen" />
+                </DockPanel>
+                <Border CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                    <ListBox Height="170" Background="Transparent" BorderThickness="0"
+                             ItemsSource="{Binding VoicesView}" SelectedItem="{Binding SelectedVoice, Mode=TwoWay}">
+                        <ListBox.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="4,8,0,2"
+                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ListBox.GroupStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" Margin="8,1" TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                    <ui:ProgressRing Width="16" Height="16" IsIndeterminate="True"
+                                     Visibility="{Binding IsLoadingVoices, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" FontSize="12"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding Status}" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel x:Name="PanelRec" Visibility="Collapsed">
+                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="Nimm ein paar Sätze auf. Beim „Übernehmen“ wird daraus eine Stimme erzeugt (geklont)." />
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <ui:Button Width="180" Command="{Binding ToggleRecordCommand}">
+                        <ui:Button.Style>
+                            <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                <Setter Property="Content" Value="● Aufnahme starten" />
+                                <Setter Property="Appearance" Value="Secondary" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRecording}" Value="True">
+                                        <Setter Property="Content" Value="■ Aufnahme stoppen" />
+                                        <Setter Property="Appearance" Value="Danger" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:Button.Style>
+                    </ui:Button>
+                    <ui:SymbolIcon Symbol="Mic24" Margin="10,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding Status}" />
+                <ui:TextBox Margin="0,10,0,0" PlaceholderText="Name der Stimme"
+                            Text="{Binding NewVoiceName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <CheckBox Margin="0,8,0,0" IsChecked="{Binding KeepVoice, Mode=TwoWay}"
+                          Content="Stimme im ElevenLabs-Konto behalten (sonst nach Gebrauch löschen)" />
+            </StackPanel>
+
+            <StackPanel x:Name="PanelFile" Visibility="Collapsed">
+                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="Wähle eine Audiodatei mit der gewünschten Stimme. Beim „Übernehmen“ wird daraus eine Stimme erzeugt (geklont)." />
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <ui:Button Content="Datei wählen…" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding BrowseFileCommand}" />
+                    <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding UploadPath, TargetNullValue='keine Datei gewählt'}" />
+                </StackPanel>
+                <ui:TextBox Margin="0,10,0,0" PlaceholderText="Name der Stimme"
+                            Text="{Binding NewVoiceName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <CheckBox Margin="0,8,0,0" IsChecked="{Binding KeepVoice, Mode=TwoWay}"
+                          Content="Stimme im ElevenLabs-Konto behalten (sonst nach Gebrauch löschen)" />
             </StackPanel>
         </StackPanel>
 
-        <!-- Panel: aufnehmen -->
-        <StackPanel x:Name="PanelRec" Visibility="Collapsed">
-            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Text="Nimm ein paar Sätze auf. Beim „Übernehmen“ wird daraus eine Stimme erzeugt (geklont)." />
-            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                <ui:Button Width="180" Command="{Binding ToggleRecordCommand}">
-                    <ui:Button.Style>
-                        <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
-                            <Setter Property="Content" Value="● Aufnahme starten" />
-                            <Setter Property="Appearance" Value="Secondary" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsRecording}" Value="True">
-                                    <Setter Property="Content" Value="■ Aufnahme stoppen" />
-                                    <Setter Property="Appearance" Value="Danger" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ui:Button.Style>
-                </ui:Button>
-                <ui:SymbolIcon Symbol="Mic24" Margin="10,0,0,0" VerticalAlignment="Center" />
-            </StackPanel>
-            <TextBlock Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding Status}" />
-            <TextBlock Margin="0,12,0,2" FontWeight="Medium" Text="Name der neuen Stimme" />
-            <ui:TextBox Text="{Binding NewVoiceName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            <CheckBox Margin="0,10,0,0" IsChecked="{Binding KeepVoice, Mode=TwoWay}"
-                      Content="Stimme im ElevenLabs-Konto behalten (sonst nach Gebrauch löschen)" />
-        </StackPanel>
-
-        <!-- Panel: Audio-Datei -->
-        <StackPanel x:Name="PanelFile" Visibility="Collapsed">
-            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Text="Wähle eine Audiodatei mit der gewünschten Stimme. Beim „Übernehmen“ wird daraus eine Stimme erzeugt (geklont)." />
-            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                <ui:Button Content="Datei wählen…" Icon="{ui:SymbolIcon FolderOpen24}" Command="{Binding BrowseFileCommand}" />
-                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                           Text="{Binding UploadPath, TargetNullValue='keine Datei gewählt'}" />
-            </StackPanel>
-            <TextBlock Margin="0,12,0,2" FontWeight="Medium" Text="Name der neuen Stimme" />
-            <ui:TextBox Text="{Binding NewVoiceName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            <CheckBox Margin="0,10,0,0" IsChecked="{Binding KeepVoice, Mode=TwoWay}"
-                      Content="Stimme im ElevenLabs-Konto behalten (sonst nach Gebrauch löschen)" />
+        <!-- Lokal -->
+        <StackPanel x:Name="PanelLocal" Visibility="Collapsed">
+            <TextBlock FontWeight="Medium" Text="Lokale Stimme wählen" Margin="0,0,0,6" />
+            <ComboBox ItemsSource="{Binding LocalProfiles}" SelectedItem="{Binding SelectedLocalProfile, Mode=TwoWay}"
+                      DisplayMemberPath="Name" />
+            <TextBlock Margin="0,8,0,0" FontSize="12" TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="Lokale Stimmen werden unter „Stimmen“ erstellt und laufen über die lokale Engine (CUDA/CPU). „Spur aus Text“ funktioniert mit jedem lokalen Modell; der lokale Stimmtausch nutzt seed-vc (Sprache + Gesang, erhält die Melodie)." />
         </StackPanel>
     </StackPanel>
 </UserControl>

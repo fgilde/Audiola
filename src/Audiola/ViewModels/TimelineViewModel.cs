@@ -25,6 +25,8 @@ public sealed partial class TimelineViewModel : ObservableObject
     private readonly TransportViewModel _transport;
     private readonly IStemSeparationService _separation;
     private readonly IVoiceChangeService _voiceChange;
+    private readonly ILocalVoiceService _localVoice;
+    private readonly ISettingsService _settings;
     private readonly ISnackbarService _snackbar;
 
     /// <summary>Registrierte Variations-Provider (z. B. „Studio-Effekte", „Internal", Python …).</summary>
@@ -173,6 +175,8 @@ public sealed partial class TimelineViewModel : ObservableObject
         TransportViewModel transport,
         IStemSeparationService separation,
         IVoiceChangeService voiceChange,
+        ILocalVoiceService localVoice,
+        ISettingsService settings,
         IEnumerable<IAudioVariationProvider> variationProviders,
         ISnackbarService snackbar)
     {
@@ -182,6 +186,8 @@ public sealed partial class TimelineViewModel : ObservableObject
         _transport = transport;
         _separation = separation;
         _voiceChange = voiceChange;
+        _localVoice = localVoice;
+        _settings = settings;
         VariationProviders = variationProviders.ToList();
         _snackbar = snackbar;
 
@@ -758,6 +764,9 @@ public sealed partial class TimelineViewModel : ObservableObject
                 var (samples, sr) = _engine.RenderRange(single, TimeSpan.Zero, TimeSpan.FromSeconds(end));
                 AudioExporter.Export(new FloatArraySampleProvider(samples, sr, 2), dialog.FileName);
             });
+            // Falls für die Spur ein Transkript vorliegt: als Lyrics einbetten (+ .lrc daneben).
+            if (!string.IsNullOrWhiteSpace(track.Lrc))
+                LyricsEmbedder.Embed(dialog.FileName, track.Lrc, track.Name);
             _snackbar.Show("Spur exportiert", System.IO.Path.GetFileName(dialog.FileName),
                 ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
         }
@@ -912,8 +921,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _snackbar.Show("Voice-Change fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(6));
+            Audiola.Services.UiError.Show("Stimmtausch fehlgeschlagen", ex.Message);
         }
         finally
         {
@@ -925,10 +933,15 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// Wie <see cref="ClipVoiceChange"/>, aber mit explizit gewählter Zielstimme (aus dem Dialog).
     /// Löscht die Stimme danach, wenn sie nur temporär (geklont) war.
     /// </summary>
-    public async Task ChangeSelectedClipVoiceAsync(string voiceId, bool deleteAfter)
+    public async Task ChangeSelectedClipVoiceAsync(VoiceChoice choice)
     {
         var clip = SelectedClip;
-        if (clip is null || IsVoiceChanging || string.IsNullOrWhiteSpace(voiceId)) return;
+        if (clip is null || IsVoiceChanging || choice is null) return;
+
+        var voiceId = choice.ElevenVoiceId ?? "";
+        var deleteAfter = choice.TemporaryEleven;
+        if (choice.IsLocal) { if (choice.LocalProfile is null) return; }
+        else if (string.IsNullOrWhiteSpace(voiceId)) return;
 
         var path = clip.SourcePath;
         var srcStart = clip.SourceStartSeconds;
@@ -967,7 +980,9 @@ public sealed partial class TimelineViewModel : ObservableObject
                 return (temp: t, seg, aS, bS, rate, inPeak, whole: a == 0 && b == lenFrames);
             });
 
-            var (outSamples, outSr) = await _voiceChange.ChangeAsync(prep.temp, voiceId);
+            var (outSamples, outSr) = choice.IsLocal
+                ? await _localVoice.ChangeVoiceAsync(prep.temp, choice.LocalProfile!)
+                : await _voiceChange.ChangeAsync(prep.temp, voiceId);
 
             // STS-Ausgabe auf den Originalpegel angleichen (verhindert Übersteuern/zu laut).
             MatchPeak(outSamples, prep.inPeak);
@@ -989,8 +1004,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _snackbar.Show("Voice-Change fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(6));
+            Audiola.Services.UiError.Show("Stimmtausch fehlgeschlagen", ex.Message);
         }
         finally
         {
@@ -999,16 +1013,29 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
     }
 
-    /// <summary>Erzeugt aus Text per ElevenLabs-TTS Audio und legt es als neue Spur an.</summary>
-    public async Task AddTextToSpeechTrackAsync(string text, string voiceId,
-        double speed, double stability, double similarity, bool deleteAfter)
+    /// <summary>Erzeugt aus Text Audio (lokal oder ElevenLabs) und legt es als neue Spur an.</summary>
+    public async Task AddTextToSpeechTrackAsync(string text, VoiceChoice choice,
+        double speed, double stability, double similarity)
     {
-        if (string.IsNullOrWhiteSpace(text) || string.IsNullOrWhiteSpace(voiceId) || IsVoiceChanging) return;
+        if (string.IsNullOrWhiteSpace(text) || choice is null || IsVoiceChanging) return;
 
         IsVoiceChanging = true;
         try
         {
-            var (samples, sr) = await _voiceChange.SpeakAsync(text, voiceId, speed, stability, similarity);
+            float[] samples; int sr;
+            if (choice.IsLocal)
+            {
+                if (choice.LocalProfile is null) { return; }
+                (samples, sr) = await _localVoice.SpeakAsync(text, choice.LocalProfile, speed);
+            }
+            else
+            {
+                var voiceId = choice.ElevenVoiceId ?? "";
+                if (string.IsNullOrWhiteSpace(voiceId)) return;
+                try { (samples, sr) = await _voiceChange.SpeakAsync(text, voiceId, speed, stability, similarity); }
+                finally { if (choice.TemporaryEleven) try { await _voiceChange.DeleteVoiceAsync(voiceId); } catch { } }
+            }
+
             var dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Audiola", "voice");
             System.IO.Directory.CreateDirectory(dir);
             var temp = System.IO.Path.Combine(dir, $"tts_{Guid.NewGuid():N}.wav");
@@ -1021,14 +1048,60 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _snackbar.Show("Text-zu-Sprache fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(6));
+            Audiola.Services.UiError.Show("Text-zu-Sprache fehlgeschlagen", ex.Message);
         }
         finally
         {
             IsVoiceChanging = false;
-            if (deleteAfter) try { await _voiceChange.DeleteVoiceAsync(voiceId); } catch { /* Aufräumen */ }
         }
+    }
+
+    [ObservableProperty] private bool _isTranscribing;
+
+    /// <summary>Transkribiert den ausgewählten Clip (Whisper) und speichert das Ergebnis als LRC.</summary>
+    public async Task TranscribeSelectedClipAsync()
+    {
+        var clip = SelectedClip;
+        if (clip is null || string.IsNullOrEmpty(clip.SourcePath) || IsTranscribing) return;
+
+        IsTranscribing = true;
+        try
+        {
+            var model = string.IsNullOrWhiteSpace(_settings.Current.WhisperModel) ? "base" : _settings.Current.WhisperModel;
+            var segments = await _localVoice.TranscribeAsync(clip.SourcePath, model);
+            if (segments.Count == 0)
+            {
+                _snackbar.Show("Keine Sprache erkannt", "Das Transkript ist leer.",
+                    ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(4));
+                return;
+            }
+
+            // Am Projekt speichern (wird beim Export der Spur als Lyrics eingebettet).
+            var lrc = LrcWriter.ToLrc(segments, clip.Track.Name);
+            clip.Track.Lrc = lrc;
+
+            // Optional zusätzlich als Datei sichern.
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Transkript zusätzlich als Datei speichern (optional)",
+                Filter = "LRC-Lyrics (*.lrc)|*.lrc|Text (*.txt)|*.txt",
+                FileName = System.IO.Path.GetFileNameWithoutExtension(clip.SourcePath) + ".lrc"
+            };
+            if (dialog.ShowDialog() == true)
+            {
+                var content = dialog.FileName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
+                    ? LrcWriter.ToPlainText(segments) : lrc;
+                await System.IO.File.WriteAllTextAsync(dialog.FileName, content);
+            }
+
+            _snackbar.Show("Transkribiert", $"{segments.Count} Segmente — wird beim Export der Spur eingebettet.",
+                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(4));
+        }
+        catch (Exception ex)
+        {
+            Audiola.Services.UiError.Show("Transkription fehlgeschlagen", ex.Message);
+        }
+        finally { IsTranscribing = false; }
     }
 
     /// <summary>Skaliert <paramref name="samples"/> so, dass ihr Spitzenpegel dem Original entspricht.</summary>
@@ -1187,7 +1260,8 @@ public sealed partial class TimelineViewModel : ObservableObject
                 Pan = t.Pan,
                 IsEnabled = t.IsEnabled,
                 IsMuted = t.IsMuted,
-                IsSolo = t.IsSolo
+                IsSolo = t.IsSolo,
+                Lrc = t.Lrc
             };
 
             if (t.Clips.Count == 0 && !string.IsNullOrEmpty(t.Model.FilePath))
@@ -1239,6 +1313,7 @@ public sealed partial class TimelineViewModel : ObservableObject
             t.IsEnabled = td.IsEnabled;
             t.IsMuted = td.IsMuted;
             t.IsSolo = td.IsSolo;
+            t.Lrc = td.Lrc;
 
             foreach (var cd in td.Clips)
             {

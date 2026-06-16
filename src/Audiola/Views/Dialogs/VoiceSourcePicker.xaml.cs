@@ -8,9 +8,20 @@ public partial class VoiceSourcePicker : UserControl
 {
     public VoiceSourcePicker() => InitializeComponent();
 
-    private void OnLoaded(object sender, RoutedEventArgs e) => SyncMode();
+    private void OnLoaded(object sender, RoutedEventArgs e) { SyncEngine(); SyncMode(); }
 
     private void Mode_Checked(object sender, RoutedEventArgs e) => SyncMode();
+
+    private void Engine_Checked(object sender, RoutedEventArgs e) => SyncEngine();
+
+    private void SyncEngine()
+    {
+        if (PanelEleven is null || PanelLocal is null) return;
+        var local = EngLocal.IsChecked == true;
+        PanelEleven.Visibility = local ? Visibility.Collapsed : Visibility.Visible;
+        PanelLocal.Visibility = local ? Visibility.Visible : Visibility.Collapsed;
+        if (DataContext is VoiceSourceViewModel vm) vm.EngineMode = local ? 1 : 0;
+    }
 
     private void SyncMode()
     {

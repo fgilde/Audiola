@@ -88,6 +88,10 @@ public sealed partial class StemTrackViewModel : ObservableObject
     [ObservableProperty]
     private bool _isSelectedTrack;
 
+    /// <summary>Transkript dieser Spur als LRC-Text (wird beim Export eingebettet).</summary>
+    [ObservableProperty]
+    private string? _lrc;
+
     [ObservableProperty]
     private double _volume;
 

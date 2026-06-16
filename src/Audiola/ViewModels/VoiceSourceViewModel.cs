@@ -2,12 +2,23 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Windows.Data;
+using Audiola.Models;
 using Audiola.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 
 namespace Audiola.ViewModels;
+
+/// <summary>Aufgelöste Stimmen-Auswahl: lokale Stimme oder ElevenLabs.</summary>
+public sealed class VoiceChoice
+{
+    public string Engine { get; init; } = "elevenlabs"; // "elevenlabs" | "local"
+    public string? ElevenVoiceId { get; init; }
+    public bool TemporaryEleven { get; init; }
+    public VoiceProfile? LocalProfile { get; init; }
+    public bool IsLocal => Engine == "local";
+}
 
 /// <summary>
 /// Wiederverwendbare Stimmen-Quelle: vorhandene ElevenLabs-Stimme wählen, eigene Stimme
@@ -18,14 +29,23 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
 {
     private readonly IVoiceChangeService _voice;
     private readonly IAudioRecorder _recorder;
+    private readonly IVoiceProfileStore _profiles;
 
-    public VoiceSourceViewModel(IVoiceChangeService voice, IAudioRecorder recorder)
+    public VoiceSourceViewModel(IVoiceChangeService voice, IAudioRecorder recorder, IVoiceProfileStore profiles)
     {
         _voice = voice;
         _recorder = recorder;
+        _profiles = profiles;
         VoicesView = CollectionViewSource.GetDefaultView(_voices);
         VoicesView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(VoiceInfo.CategoryLabel)));
+        foreach (var p in profiles.Profiles.Where(p => p.IsLocal)) LocalProfiles.Add(p);
     }
+
+    /// <summary>0 = ElevenLabs, 1 = lokale Stimme.</summary>
+    [ObservableProperty] private int _engineMode;
+
+    public ObservableCollection<VoiceProfile> LocalProfiles { get; } = [];
+    [ObservableProperty] private VoiceProfile? _selectedLocalProfile;
 
     private readonly ObservableCollection<VoiceInfo> _voices = [];
     public ICollectionView VoicesView { get; }
@@ -104,15 +124,24 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
     /// Liefert die zu verwendende Voice-ID. Bei Aufnahme/Upload wird geklont; das zweite
     /// Tupel-Feld sagt, ob die Stimme danach wieder gelöscht werden soll (temporär).
     /// </summary>
-    public async Task<(string VoiceId, bool Temporary)?> ResolveAsync()
+    public async Task<VoiceChoice?> ResolveAsync()
     {
         IsResolving = true;
         try
         {
+            // Lokale, bereits erstellte Stimme.
+            if (EngineMode == 1)
+            {
+                if (SelectedLocalProfile is null) { Status = "Bitte eine lokale Stimme wählen (oder unter „Stimmen“ erstellen)."; return null; }
+                return new VoiceChoice { Engine = "local", LocalProfile = SelectedLocalProfile };
+            }
+
+            // ElevenLabs.
             switch (Mode)
             {
                 case 0:
-                    return SelectedVoice is null ? null : (SelectedVoice.Id, false);
+                    return SelectedVoice is null ? null
+                        : new VoiceChoice { Engine = "elevenlabs", ElevenVoiceId = SelectedVoice.Id, TemporaryEleven = false };
                 case 1:
                 case 2:
                     var sample = Mode == 1 ? RecordedPath : UploadPath;
@@ -124,7 +153,7 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
                     Status = "Stimme wird erstellt (Klonen) …";
                     var id = await _voice.CreateVoiceFromSamplesAsync(NewVoiceName, [sample]);
                     if (string.IsNullOrEmpty(id)) { Status = "Klonen fehlgeschlagen."; return null; }
-                    return (id, !KeepVoice);
+                    return new VoiceChoice { Engine = "elevenlabs", ElevenVoiceId = id, TemporaryEleven = !KeepVoice };
                 default:
                     return null;
             }
