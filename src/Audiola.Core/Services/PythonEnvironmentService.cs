@@ -41,12 +41,13 @@ public sealed class PythonEnvironmentService : IPythonEnvironment
     }
 
     public async Task InstallAsync(IReadOnlyList<string> packages, string? indexUrl = null,
-        IProgress<string>? progress = null, CancellationToken ct = default)
+        IProgress<string>? progress = null, CancellationToken ct = default, bool forceReinstall = false)
     {
         if (packages.Count == 0) return;
         await EnsureAsync(progress, ct);
 
         var args = new List<string> { "-m", "pip", "install", "--upgrade" };
+        if (forceReinstall) args.Add("--force-reinstall");
         if (!string.IsNullOrWhiteSpace(indexUrl)) { args.Add("--index-url"); args.Add(indexUrl); }
         args.AddRange(packages);
 

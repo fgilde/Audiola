@@ -101,6 +101,15 @@ public partial class App : Application
         try
         {
         base.OnStartup(e);
+
+        // Mausrad-Weiterleitung: ein ScrollViewer, der selbst nicht (vertikal) scrollen kann,
+        // gibt das Mausrad an den übergeordneten Scroller (z. B. NavigationView) weiter.
+        // Behebt das „verschachtelte ScrollViewer schluckt das Wheel"-Problem global.
+        System.Windows.EventManager.RegisterClassHandler(
+            typeof(System.Windows.Controls.ScrollViewer),
+            System.Windows.Input.Mouse.PreviewMouseWheelEvent,
+            new System.Windows.Input.MouseWheelEventHandler(OnScrollViewerPreviewWheel));
+
         await Host.StartAsync();
 
         // Studio-Akzentfarbe.
@@ -117,6 +126,24 @@ public partial class App : Application
             try { File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "audiola.log"),
                 $"[{DateTimeOffset.UtcNow:O}] [OnStartup] {ex}\n\n"); } catch { }
             throw;
+        }
+    }
+
+    private static void OnScrollViewerPreviewWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    {
+        if (e.Handled || sender is not System.Windows.Controls.ScrollViewer sv) return;
+        // Kann diese Ansicht vertikal scrollen? Dann normal behandeln lassen.
+        if (sv.ScrollableHeight > 0) return;
+
+        // Sonst: Event an das übergeordnete Element weiterreichen (bubbelt zum NavigationView-Scroller).
+        e.Handled = true;
+        if (System.Windows.Media.VisualTreeHelper.GetParent(sv) is System.Windows.UIElement parent)
+        {
+            parent.RaiseEvent(new System.Windows.Input.MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
+            {
+                RoutedEvent = System.Windows.UIElement.MouseWheelEvent,
+                Source = sv
+            });
         }
     }
 

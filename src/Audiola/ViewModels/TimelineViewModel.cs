@@ -951,6 +951,16 @@ public sealed partial class TimelineViewModel : ObservableObject
         IsVoiceChanging = true;
         try
         {
+            // Fortschritt (Bereitstellung + Konvertierung) sichtbar in der Statuszeile.
+            var prog = choice.IsLocal ? new Progress<string>(s => SeparationStatus = s) : null;
+            if (choice.IsLocal)
+            {
+                IsSeparating = true;
+                SeparationStatus = "Bereite lokalen Stimmtausch vor (seed-vc — erster Lauf lädt das Modell) …";
+                await _localVoice.DownloadModelAsync("seed-vc", prog);
+                SeparationStatus = "Stimmtausch läuft (seed-vc) … das kann auf CPU lange dauern.";
+            }
+
             var prep = await Task.Run(() =>
             {
                 var (all, rate) = AudioProcessingHelper.ReadStereo(path);
@@ -981,7 +991,7 @@ public sealed partial class TimelineViewModel : ObservableObject
             });
 
             var (outSamples, outSr) = choice.IsLocal
-                ? await _localVoice.ChangeVoiceAsync(prep.temp, choice.LocalProfile!)
+                ? await _localVoice.ChangeVoiceAsync(prep.temp, choice.LocalProfile!, prog)
                 : await _voiceChange.ChangeAsync(prep.temp, voiceId);
 
             // STS-Ausgabe auf den Originalpegel angleichen (verhindert Übersteuern/zu laut).
@@ -1009,6 +1019,8 @@ public sealed partial class TimelineViewModel : ObservableObject
         finally
         {
             IsVoiceChanging = false;
+            IsSeparating = false;
+            SeparationStatus = "";
             if (deleteAfter) try { await _voiceChange.DeleteVoiceAsync(voiceId); } catch { /* Aufräumen */ }
         }
     }

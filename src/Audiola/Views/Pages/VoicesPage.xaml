@@ -16,18 +16,41 @@
 
             <!-- Engine / Gerät -->
             <ui:Card Margin="0,16,0,0" Padding="16">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <ui:SymbolIcon Symbol="Settings24" VerticalAlignment="Center" Margin="0,0,12,0" />
-                    <TextBlock VerticalAlignment="Center" Text="Rechen-Gerät:" Margin="0,0,8,0" />
-                    <ComboBox Width="140" VerticalAlignment="Center" ItemsSource="{Binding ViewModel.Devices}"
-                              SelectedItem="{Binding ViewModel.SelectedDevice, Mode=TwoWay}" />
-                    <TextBlock VerticalAlignment="Center" Margin="24,0,8,0" Text="Whisper-Modell (Transkription):" />
-                    <ComboBox Width="120" VerticalAlignment="Center" ItemsSource="{Binding ViewModel.WhisperModels}"
-                              SelectedItem="{Binding ViewModel.WhisperModel, Mode=TwoWay}" />
-                    <ui:ProgressRing Width="20" Height="20" Margin="16,0,0,0" IsIndeterminate="True" VerticalAlignment="Center"
-                                     Visibility="{Binding ViewModel.IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                    <TextBlock VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                               Text="{Binding ViewModel.Status}" />
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Settings24" VerticalAlignment="Center" Margin="0,0,12,0" />
+                        <TextBlock VerticalAlignment="Center" Text="Rechen-Gerät:" Margin="0,0,8,0" />
+                        <ComboBox Width="140" VerticalAlignment="Center" ItemsSource="{Binding ViewModel.Devices}"
+                                  SelectedItem="{Binding ViewModel.SelectedDevice, Mode=TwoWay}" />
+                        <TextBlock VerticalAlignment="Center" Margin="24,0,8,0" Text="Whisper-Modell (Transkription):" />
+                        <ComboBox Width="120" VerticalAlignment="Center" ItemsSource="{Binding ViewModel.WhisperModels}"
+                                  SelectedItem="{Binding ViewModel.WhisperModel, Mode=TwoWay}" />
+                        <ui:ProgressRing Width="20" Height="20" Margin="16,0,0,0" IsIndeterminate="True" VerticalAlignment="Center"
+                                         Visibility="{Binding ViewModel.IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <TextBlock VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="{Binding ViewModel.Status}" />
+                    </StackPanel>
+
+                    <!-- GPU-Status / CUDA -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,12,0,0">
+                        <ui:SymbolIcon Symbol="DeveloperBoard24" VerticalAlignment="Center" Margin="0,0,12,0" />
+                        <TextBlock VerticalAlignment="Center" Text="{Binding ViewModel.GpuStatus}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ViewModel.CudaActive, RelativeSource={RelativeSource AncestorType=Page}}" Value="True">
+                                            <Setter Property="Foreground" Value="#54D6A0" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <ui:Button Margin="14,0,0,0" Icon="{ui:SymbolIcon ArrowSync24}" Content="GPU prüfen"
+                                   Command="{Binding ViewModel.CheckGpuCommand}" />
+                        <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon ArrowDownload24}" Content="CUDA-Torch installieren"
+                                   Command="{Binding ViewModel.InstallCudaTorchCommand}" />
+                    </StackPanel>
                 </StackPanel>
             </ui:Card>
 

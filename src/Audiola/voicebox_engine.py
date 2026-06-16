@@ -212,6 +212,20 @@ def cmd_transcribe(args):
         sys.exit(1)
 
 
+def cmd_gpu_check(args):
+    info = {"torch": False, "cuda": False, "device_name": "", "torch_version": ""}
+    try:
+        import torch
+        info["torch"] = True
+        info["torch_version"] = torch.__version__
+        info["cuda"] = bool(torch.cuda.is_available())
+        if info["cuda"]:
+            info["device_name"] = torch.cuda.get_device_name(0)
+    except Exception as e:
+        info["error"] = str(e)
+    print(json.dumps(info))
+
+
 def cmd_vc(args):
     """Speech-to-Speech / Singing Voice Conversion.
 
@@ -228,15 +242,23 @@ def cmd_vc(args):
     inf = os.path.join(seedvc_repo(args.models_dir), "inference.py")
     if os.path.isfile(inf):
         import subprocess, tempfile, glob, shutil
-        log(f"Stimmtausch via seed-vc auf {dev} …")
         work = tempfile.mkdtemp(prefix="seedvc_")
-        cmd = [sys.executable, inf,
+        steps = "30" if dev == "cuda" else "10"   # CPU: weniger Schritte, sonst extrem langsam
+        if dev != "cuda":
+            log("Hinweis: seed-vc läuft auf CPU sehr langsam — für brauchbare Geschwindigkeit CUDA-GPU nutzen.")
+        log(f"Stimmtausch via seed-vc auf {dev} (Diffusionsschritte={steps}) …")
+        cmd = [sys.executable, "-u", inf,
                "--source", args.input, "--target", args.speaker, "--output", work,
-               "--diffusion-steps", "30", "--f0-condition", "True", "--auto-f0-adjust", "True"]
-        r = subprocess.run(cmd, cwd=seedvc_repo(args.models_dir))
+               "--diffusion-steps", steps, "--f0-condition", "True", "--auto-f0-adjust", "True"]
+        # Ausgabe live durchreichen, damit man den Fortschritt sieht (kein stilles Puffern).
+        proc = subprocess.Popen(cmd, cwd=seedvc_repo(args.models_dir),
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+        for line in proc.stdout:
+            log(line.rstrip())
+        proc.wait()
         wavs = sorted(glob.glob(os.path.join(work, "*.wav")), key=os.path.getmtime)
-        if r.returncode != 0 or not wavs:
-            log("seed-vc inference fehlgeschlagen.")
+        if proc.returncode != 0 or not wavs:
+            log(f"seed-vc inference fehlgeschlagen (Code {proc.returncode}).")
             sys.exit(1)
         shutil.copy(wavs[-1], args.out)
         log("Fertig.")
@@ -279,6 +301,7 @@ def main():
     tt.add_argument("--models-dir", default=""); tt.add_argument("--speed", default="1.0")
     tr = sub.add_parser("transcribe"); tr.add_argument("--input", required=True); tr.add_argument("--model", default="base"); tr.add_argument("--device", default="auto")
     vc = sub.add_parser("vc"); vc.add_argument("--input", required=True); vc.add_argument("--speaker", default=""); vc.add_argument("--out", required=True); vc.add_argument("--device", default="auto"); vc.add_argument("--models-dir", default="")
+    sub.add_parser("gpu-check")
 
     args = p.parse_args()
     {
@@ -287,6 +310,7 @@ def main():
         "tts": cmd_tts,
         "transcribe": cmd_transcribe,
         "vc": cmd_vc,
+        "gpu-check": cmd_gpu_check,
     }[args.cmd](args)
 
 

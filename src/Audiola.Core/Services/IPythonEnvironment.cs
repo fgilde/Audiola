@@ -15,9 +15,9 @@ public interface IPythonEnvironment
     /// <summary>Legt die Umgebung an (falls nötig) und aktualisiert pip.</summary>
     Task EnsureAsync(IProgress<string>? progress = null, CancellationToken ct = default);
 
-    /// <summary>Installiert Pakete in die verwaltete Umgebung (optional von einem Index-URL).</summary>
+    /// <summary>Installiert Pakete in die verwaltete Umgebung (optional von einem Index-URL, optional erzwungen).</summary>
     Task InstallAsync(IReadOnlyList<string> packages, string? indexUrl = null,
-        IProgress<string>? progress = null, CancellationToken ct = default);
+        IProgress<string>? progress = null, CancellationToken ct = default, bool forceReinstall = false);
 
     /// <summary>Installiert aus einer requirements.txt (für repo-basierte Modelle wie seed-vc).</summary>
     Task InstallRequirementsAsync(string requirementsFile, IProgress<string>? progress = null, CancellationToken ct = default);

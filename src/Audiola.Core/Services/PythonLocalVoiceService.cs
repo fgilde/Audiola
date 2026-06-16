@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using Audiola.Models;
@@ -16,6 +18,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
     private readonly ISettingsService _settings;
     private readonly IPythonEnvironment _env;
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(15) };
 
     public PythonLocalVoiceService(ISettingsService settings, IPythonEnvironment env)
     {
@@ -89,6 +92,13 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
     {
         RequireScript();
 
+        // seed-vc ist repo-basiert: klonen + requirements installieren.
+        if (string.Equals(modelId, "seed-vc", StringComparison.OrdinalIgnoreCase))
+        {
+            await ProvisionSeedVcAsync(progress, ct);
+            return;
+        }
+
         // 1) Isolierte Umgebung sicherstellen.
         await _env.EnsureAsync(progress, ct);
 
@@ -111,6 +121,59 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
             throw new InvalidOperationException($"Download fehlgeschlagen: {Short(err)}");
     }
 
+    /// <summary>Stellt seed-vc bereit: Repo als ZIP laden + entpacken (kein Git nötig) + torch + requirements ins venv.</summary>
+    private async Task ProvisionSeedVcAsync(IProgress<string>? progress, CancellationToken ct)
+    {
+        await _env.EnsureAsync(progress, ct);
+        Directory.CreateDirectory(ModelsDir);
+        var repo = Path.Combine(ModelsDir, "seed-vc");
+        var inf = Path.Combine(repo, "inference.py");
+
+        if (!File.Exists(inf))
+        {
+            progress?.Report("Lade seed-vc herunter …");
+            var zipPath = Path.Combine(ModelsDir, $"_seedvc_{Guid.NewGuid():N}.zip");
+            var extractDir = Path.Combine(ModelsDir, $"_extract_{Guid.NewGuid():N}");
+            try
+            {
+                using (var resp = await Http.GetAsync(
+                    "https://github.com/Plachtaa/seed-vc/archive/refs/heads/main.zip",
+                    HttpCompletionOption.ResponseHeadersRead, ct))
+                {
+                    resp.EnsureSuccessStatusCode();
+                    await using var fs = File.Create(zipPath);
+                    await resp.Content.CopyToAsync(fs, ct);
+                }
+
+                progress?.Report("Entpacke seed-vc …");
+                ZipFile.ExtractToDirectory(zipPath, extractDir);
+                var inner = Directory.GetDirectories(extractDir).FirstOrDefault() ?? extractDir; // seed-vc-main
+                if (Directory.Exists(repo)) Directory.Delete(repo, recursive: true);
+                Directory.Move(inner, repo);
+            }
+            finally
+            {
+                try { if (File.Exists(zipPath)) File.Delete(zipPath); } catch { }
+                try { if (Directory.Exists(extractDir)) Directory.Delete(extractDir, true); } catch { }
+            }
+
+            if (!File.Exists(inf))
+                throw new InvalidOperationException("seed-vc konnte nicht bereitgestellt werden (inference.py fehlt nach dem Entpacken).");
+        }
+
+        // Abhängigkeiten nur einmal installieren (Marker), nicht bei jedem Tausch.
+        var depsMarker = Path.Combine(repo, ".audiola_deps_ok");
+        if (!File.Exists(depsMarker))
+        {
+            var cuda = string.Equals(Device, "cuda", StringComparison.OrdinalIgnoreCase);
+            await _env.InstallAsync(["torch", "torchvision", "torchaudio"],
+                cuda ? "https://download.pytorch.org/whl/cu121" : null, progress, ct);
+            await _env.InstallRequirementsAsync(Path.Combine(repo, "requirements.txt"), progress, ct);
+            await _env.InstallAsync(["hf_xet"], null, progress, ct); // schnellerer HF-Download, entfernt die Warnung
+            try { File.WriteAllText(depsMarker, "ok"); } catch { }
+        }
+    }
+
     private static IReadOnlyList<string> PackagesFor(string modelId) => modelId switch
     {
         "qwen3-tts" => ["qwen-tts", "soundfile", "numpy"],
@@ -120,6 +183,30 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         _ when modelId.StartsWith("whisper-", StringComparison.OrdinalIgnoreCase) => ["faster-whisper"],
         _ => []
     };
+
+    public async Task<GpuStatus> CheckGpuAsync(CancellationToken ct = default)
+    {
+        if (!_env.Exists) return new GpuStatus(false, false, "", "Python-Umgebung noch nicht eingerichtet (erst ein Modell „Laden“).");
+        if (!ScriptAvailable) return new GpuStatus(false, false, "", "Sidecar-Skript fehlt.");
+        try
+        {
+            var (code, stdout, err) = await RunAsync(["gpu-check"], null, ct);
+            if (code != 0) return new GpuStatus(false, false, "", Short(err));
+            var g = JsonSerializer.Deserialize<GpuDto>(ExtractJson(stdout), JsonOpts);
+            if (g is null) return new GpuStatus(false, false, "", "Keine Antwort.");
+            return new GpuStatus(g.Torch, g.Cuda, g.Device_Name ?? "", g.Error);
+        }
+        catch (Exception ex) { return new GpuStatus(false, false, "", ex.Message); }
+    }
+
+    public async Task InstallCudaTorchAsync(IProgress<string>? progress = null, CancellationToken ct = default)
+    {
+        await _env.EnsureAsync(progress, ct);
+        progress?.Report("Installiere CUDA-Variante von torch/torchvision/torchaudio … (groß, dauert)");
+        // Alle drei zusammen aus demselben Index → passende ABI (sonst „Einsprungpunkt nicht gefunden").
+        await _env.InstallAsync(["torch", "torchvision", "torchaudio"], "https://download.pytorch.org/whl/cu121",
+            progress, ct, forceReinstall: true);
+    }
 
     public async Task<(float[] Samples, int SampleRate)> SpeakAsync(string text, VoiceProfile profile, double speed, CancellationToken ct = default)
     {
@@ -140,17 +227,37 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         return AudioProcessingHelper.ReadStereo(outWav);
     }
 
-    public async Task<(float[] Samples, int SampleRate)> ChangeVoiceAsync(string inputWav, VoiceProfile profile, CancellationToken ct = default)
+    public async Task<(float[] Samples, int SampleRate)> ChangeVoiceAsync(string inputWav, VoiceProfile profile,
+        IProgress<string>? progress = null, CancellationToken ct = default)
     {
         RequireScript();
         var speaker = profile.SamplePaths.FirstOrDefault(File.Exists)
             ?? throw new InvalidOperationException("Diese lokale Stimme hat kein Referenz-Sample für den Stimmtausch.");
         var outWav = TempWav("vc");
-        var (code, _, err) = await RunAsync(
-            ["vc", "--input", inputWav, "--speaker", speaker, "--device", Device, "--models-dir", ModelsDir, "--out", outWav],
-            null, ct);
+
+        // Sicherheits-Timeout, damit es nicht endlos hängt (CPU-Diffusion kann extrem lange dauern).
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        cts.CancelAfter(TimeSpan.FromMinutes(30));
+
+        int code; string err;
+        try
+        {
+            (code, _, err) = await RunAsync(
+                ["vc", "--input", inputWav, "--speaker", speaker, "--device", Device, "--models-dir", ModelsDir, "--out", outWav],
+                progress, cts.Token);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw new InvalidOperationException(
+                "Lokaler Stimmtausch abgebrochen (Zeitüberschreitung nach 30 Min). seed-vc ist auf CPU sehr langsam — " +
+                "bitte eine CUDA-GPU verwenden (Gerät in „Stimmen“ auf cuda) oder einen kürzeren Bereich markieren.");
+        }
+
         if (code != 0 || !File.Exists(outWav))
-            throw new InvalidOperationException($"Lokaler Stimmtausch fehlgeschlagen: {Short(err)}");
+        {
+            var detail = err.Length > 1500 ? err[^1500..] : err;
+            throw new InvalidOperationException($"Lokaler Stimmtausch fehlgeschlagen:\n{detail}");
+        }
         return AudioProcessingHelper.ReadStereo(outWav);
     }
 
@@ -219,7 +326,15 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
-        await process.WaitForExitAsync(ct);
+        try
+        {
+            await process.WaitForExitAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            try { process.Kill(entireProcessTree: true); } catch { /* schon beendet */ }
+            throw;
+        }
         return (process.ExitCode, stdout.ToString(), stderr.ToString());
     }
 
@@ -233,6 +348,14 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         public string? Capability { get; set; }
         public int SizeMb { get; set; }
         public bool Installed { get; set; }
+    }
+    private sealed class GpuDto
+    {
+        public bool Torch { get; set; }
+        public bool Cuda { get; set; }
+        public string? Device_Name { get; set; }
+        public string? Torch_Version { get; set; }
+        public string? Error { get; set; }
     }
     private sealed class TranscriptResponse { public List<SegmentDto>? Segments { get; set; } }
     private sealed class SegmentDto { public double Start { get; set; } public double End { get; set; } public string? Text { get; set; } }

@@ -50,6 +50,8 @@ public sealed partial class VoicesViewModel : ObservableObject
     [ObservableProperty] private string _whisperModel;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _status = "";
+    [ObservableProperty] private string _gpuStatus = "GPU-Status: noch nicht geprüft.";
+    [ObservableProperty] private bool _cudaActive;
 
     // Vorschau
     [ObservableProperty] private string _previewText = "Hallo, das ist ein Test der lokalen Stimme.";
@@ -75,7 +77,37 @@ public sealed partial class VoicesViewModel : ObservableObject
         _settings.Save();
     }
 
-    public async Task InitAsync() => await LoadModelsAsync();
+    public async Task InitAsync()
+    {
+        await LoadModelsAsync();
+        await CheckGpu();
+    }
+
+    [RelayCommand]
+    private async Task CheckGpu()
+    {
+        try
+        {
+            var g = await _local.CheckGpuAsync();
+            CudaActive = g.CudaAvailable;
+            GpuStatus = "GPU: " + g.Summary;
+        }
+        catch (Exception ex) { GpuStatus = "GPU-Check fehlgeschlagen: " + ex.Message; }
+    }
+
+    [RelayCommand]
+    private async Task InstallCudaTorch()
+    {
+        IsBusy = true; Status = "Installiere CUDA-Torch …";
+        try
+        {
+            await _local.InstallCudaTorchAsync(new Progress<string>(s => Status = s));
+            await CheckGpu();
+            Status = "Fertig.";
+        }
+        catch (Exception ex) { Status = "Fehler."; UiError.Show("CUDA-Torch-Installation fehlgeschlagen", ex.Message); }
+        finally { IsBusy = false; }
+    }
 
     [RelayCommand]
     private async Task LoadModelsAsync()

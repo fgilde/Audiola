@@ -15,6 +15,16 @@ public sealed record LocalVoiceModel(
 /// <summary>Ein Transkript-Abschnitt (Sekunden) für LRC/Untertitel.</summary>
 public sealed record TranscriptSegment(double Start, double End, string Text);
 
+/// <summary>Status der lokalen GPU-Unterstützung (torch/CUDA).</summary>
+public sealed record GpuStatus(bool TorchInstalled, bool CudaAvailable, string DeviceName, string? Detail)
+{
+    public string Summary => !TorchInstalled
+        ? "torch noch nicht installiert — Modell „Laden“ oder „CUDA-Torch installieren“."
+        : CudaAvailable
+            ? $"CUDA aktiv: {DeviceName}"
+            : "CUDA NICHT verfügbar — es läuft auf CPU (langsam). „CUDA-Torch installieren“ versuchen.";
+}
+
 /// <summary>
 /// Lokale Voice-Engine über einen Python-Sidecar (VoiceBox-artig): Modelle herunterladen,
 /// Text-zu-Sprache (optional mit Zero-Shot-Cloning) und Whisper-Transkription — auf CUDA oder CPU.
@@ -33,11 +43,18 @@ public interface ILocalVoiceService
     /// <summary>Lädt ein Modell herunter / installiert es lokal.</summary>
     Task DownloadModelAsync(string modelId, IProgress<string>? progress = null, CancellationToken ct = default);
 
+    /// <summary>Prüft torch/CUDA in der verwalteten Umgebung.</summary>
+    Task<GpuStatus> CheckGpuAsync(CancellationToken ct = default);
+
+    /// <summary>Installiert die CUDA-Variante von torch/torchaudio in die verwaltete Umgebung.</summary>
+    Task InstallCudaTorchAsync(IProgress<string>? progress = null, CancellationToken ct = default);
+
     /// <summary>Text-zu-Sprache mit einem lokalen Profil; liefert Stereo-Float + Samplerate.</summary>
     Task<(float[] Samples, int SampleRate)> SpeakAsync(string text, VoiceProfile profile, double speed, CancellationToken ct = default);
 
-    /// <summary>Speech-to-Speech (Stimmtausch) lokal — wirft, falls (noch) nicht unterstützt.</summary>
-    Task<(float[] Samples, int SampleRate)> ChangeVoiceAsync(string inputWav, VoiceProfile profile, CancellationToken ct = default);
+    /// <summary>Speech-to-Speech (Stimmtausch) lokal über seed-vc; meldet Fortschritt live.</summary>
+    Task<(float[] Samples, int SampleRate)> ChangeVoiceAsync(string inputWav, VoiceProfile profile,
+        IProgress<string>? progress = null, CancellationToken ct = default);
 
     /// <summary>Transkribiert eine Audiodatei via Whisper in Zeit-Segmente.</summary>
     Task<IReadOnlyList<TranscriptSegment>> TranscribeAsync(string inputWav, string whisperModel, CancellationToken ct = default);
