@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows;
 using Audiola.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -22,11 +23,8 @@ public sealed partial class HomeViewModel : ObservableObject
     [ObservableProperty]
     private bool _isLoading;
 
-    /// <summary>Anzeigeobjekte für „Zuletzt geöffnet“ (voller Pfad + Dateiname).</summary>
-    public ObservableCollection<RecentFile> RecentFiles { get; } = [];
-
-    /// <summary>Zuletzt geöffnete Projekte (.audiola).</summary>
-    public ObservableCollection<RecentFile> RecentProjects { get; } = [];
+    public ObservableCollection<RecentItem> RecentFiles { get; } = [];
+    public ObservableCollection<RecentItem> RecentProjects { get; } = [];
 
     public bool HasRecent => RecentFiles.Count > 0;
     public bool HasRecentProjects => RecentProjects.Count > 0;
@@ -56,7 +54,7 @@ public sealed partial class HomeViewModel : ObservableObject
     {
         RecentFiles.Clear();
         foreach (var path in _loader.RecentFiles)
-            RecentFiles.Add(new RecentFile(path, Path.GetFileName(path)));
+            RecentFiles.Add(new RecentItem(path, Path.GetFileName(path), isProject: false));
         OnPropertyChanged(nameof(HasRecent));
     }
 
@@ -65,28 +63,8 @@ public sealed partial class HomeViewModel : ObservableObject
     {
         RecentProjects.Clear();
         foreach (var path in _workspace.RecentProjects)
-            RecentProjects.Add(new RecentFile(path, Path.GetFileNameWithoutExtension(path)));
+            RecentProjects.Add(new RecentItem(path, Path.GetFileNameWithoutExtension(path), isProject: true));
         OnPropertyChanged(nameof(HasRecentProjects));
-    }
-
-    [RelayCommand]
-    private async Task OpenRecentProjectAsync(RecentFile? project)
-    {
-        if (project is null) return;
-        IsLoading = true;
-        try
-        {
-            await _workspace.OpenAsync(project.Path);
-            _navigation.Navigate(typeof(Views.Pages.TimelinePage));
-            _snackbar.Show("Projekt geladen", project.FileName, ControlAppearance.Success,
-                new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(2));
-        }
-        catch (Exception ex)
-        {
-            _snackbar.Show("Öffnen fehlgeschlagen", ex.Message, ControlAppearance.Danger,
-                new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(4));
-        }
-        finally { IsLoading = false; }
     }
 
     [RelayCommand]
@@ -101,11 +79,72 @@ public sealed partial class HomeViewModel : ObservableObject
             await Load(dialog.FileName);
     }
 
+    // ---- Einheitliche Aktionen für beide Listen ----
+
     [RelayCommand]
-    private async Task OpenRecentAsync(RecentFile? file)
+    private async Task OpenAsync(RecentItem? item)
     {
-        if (file is not null)
-            await Load(file.Path);
+        if (item is null) return;
+        if (item.IsProject)
+        {
+            IsLoading = true;
+            try
+            {
+                await _workspace.OpenAsync(item.Path);
+                _navigation.Navigate(typeof(Views.Pages.TimelinePage));
+                _snackbar.Show("Projekt geladen", item.Name, ControlAppearance.Success,
+                    new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(2));
+            }
+            catch (Exception ex)
+            {
+                _snackbar.Show("Öffnen fehlgeschlagen", ex.Message, ControlAppearance.Danger,
+                    new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(4));
+            }
+            finally { IsLoading = false; }
+        }
+        else
+        {
+            await Load(item.Path);
+        }
+    }
+
+    [RelayCommand]
+    private void Remove(RecentItem? item)
+    {
+        if (item is null) return;
+        if (item.IsProject) _workspace.RemoveRecent(item.Path);
+        else _loader.RemoveRecent(item.Path);
+    }
+
+    [RelayCommand]
+    private void Delete(RecentItem? item)
+    {
+        if (item is null) return;
+        var what = item.IsProject ? "Projektdatei" : "Audiodatei";
+        if (!Confirm($"{what} wirklich von der Festplatte löschen?\n\n{item.Path}")) return;
+        TryDelete(item.Path, item.IsProject ? "Projekt gelöscht" : "Datei gelöscht");
+        if (item.IsProject) _workspace.RemoveRecent(item.Path);
+        else _loader.RemoveRecent(item.Path);
+    }
+
+    private static bool Confirm(string message) =>
+        System.Windows.MessageBox.Show(message, "Löschen bestätigen",
+            System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning)
+            == System.Windows.MessageBoxResult.Yes;
+
+    private void TryDelete(string path, string okText)
+    {
+        try
+        {
+            if (File.Exists(path)) File.Delete(path);
+            _snackbar.Show(okText, Path.GetFileName(path), ControlAppearance.Success,
+                new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(2));
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Show("Löschen fehlgeschlagen", ex.Message, ControlAppearance.Danger,
+                new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(4));
+        }
     }
 
     private async Task Load(string path)
@@ -131,4 +170,42 @@ public sealed partial class HomeViewModel : ObservableObject
     }
 }
 
-public sealed record RecentFile(string Path, string FileName);
+/// <summary>Eintrag in „Letzte Projekte"/„Zuletzt geöffnet" inkl. Detailangaben.</summary>
+public sealed class RecentItem
+{
+    public string Path { get; }
+    public string Name { get; }
+    public string Folder { get; }
+    public bool Exists { get; }
+    public bool IsProject { get; }
+    public string DetailsText { get; }
+
+    public Wpf.Ui.Controls.SymbolRegular IconSymbol =>
+        IsProject ? Wpf.Ui.Controls.SymbolRegular.FolderOpen24 : Wpf.Ui.Controls.SymbolRegular.MusicNote224;
+
+    public RecentItem(string path, string name, bool isProject)
+    {
+        Path = path;
+        Name = name;
+        IsProject = isProject;
+        Folder = System.IO.Path.GetDirectoryName(path) ?? "";
+        try
+        {
+            var fi = new FileInfo(path);
+            Exists = fi.Exists;
+            DetailsText = Exists
+                ? $"{FormatSize(fi.Length)}  ·  {fi.LastWriteTime:dd.MM.yyyy HH:mm}"
+                : "Datei fehlt";
+        }
+        catch { Exists = false; DetailsText = "Datei fehlt"; }
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        string[] units = ["B", "KB", "MB", "GB"];
+        double size = bytes;
+        var i = 0;
+        while (size >= 1024 && i < units.Length - 1) { size /= 1024; i++; }
+        return $"{size:0.#} {units[i]}";
+    }
+}

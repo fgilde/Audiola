@@ -5,6 +5,17 @@ public sealed record VoiceInfo(string Id, string Name, string Category)
 {
     /// <summary>Anzeigename inkl. Kategorie (für Dropdowns).</summary>
     public string Display => string.IsNullOrEmpty(Category) ? Name : $"{Name}  ({Category})";
+
+    /// <summary>Deutsche Kategorie-Überschrift für die Gruppierung im Dropdown.</summary>
+    public string CategoryLabel => Category switch
+    {
+        "premade" => "Standard",
+        "cloned" => "Eigene (geklont)",
+        "professional" => "Professionell",
+        "generated" => "Generiert",
+        "famous" => "Prominente",
+        _ => string.IsNullOrEmpty(Category) ? "Sonstige" : Category
+    };
 }
 
 /// <summary>
@@ -17,11 +28,24 @@ public interface IVoiceChangeService
     /// <summary>True, wenn API-Key und Ziel-Voice-ID hinterlegt sind.</summary>
     bool IsConfigured { get; }
 
+    /// <summary>True, wenn (mindestens) ein API-Key hinterlegt ist.</summary>
+    bool HasApiKey { get; }
+
     /// <summary>
     /// Schickt die Audiodatei an den Dienst und liefert das Ergebnis als
-    /// interleaved Stereo-Float-Puffer samt Samplerate zurück.
+    /// interleaved Stereo-Float-Puffer samt Samplerate zurück (Ziel = Stimme aus den Einstellungen).
     /// </summary>
     Task<(float[] Samples, int SampleRate)> ChangeAsync(string inputWavPath, CancellationToken ct = default);
+
+    /// <summary>Speech-to-Speech mit explizit gewählter Zielstimme.</summary>
+    Task<(float[] Samples, int SampleRate)> ChangeAsync(string inputWavPath, string voiceId, CancellationToken ct = default);
+
+    /// <summary>Text-to-Speech mit gewählter Stimme; liefert Stereo-Float + Samplerate.</summary>
+    Task<(float[] Samples, int SampleRate)> SpeakAsync(string text, string voiceId,
+        double speed, double stability, double similarity, CancellationToken ct = default);
+
+    /// <summary>Löscht eine (temporär geklonte) Stimme wieder aus dem Konto.</summary>
+    Task DeleteVoiceAsync(string voiceId, CancellationToken ct = default);
 
     /// <summary>Liste der verfügbaren Stimmen des Kontos (für die Auswahl).</summary>
     Task<IReadOnlyList<VoiceInfo>> GetVoicesAsync(CancellationToken ct = default);

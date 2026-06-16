@@ -13,6 +13,9 @@ public interface ITrackLoader
 
     event EventHandler? RecentChanged;
 
+    /// <summary>Entfernt einen Pfad aus der „Zuletzt geöffnet"-Liste.</summary>
+    void RemoveRecent(string path);
+
     /// <summary>Lädt die Datei; wirft bei Fehler eine Exception.</summary>
     Task<AudioTrack> LoadAsync(string filePath, CancellationToken ct = default);
 }

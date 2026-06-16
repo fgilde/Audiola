@@ -52,18 +52,26 @@ public sealed class ClipSampleProvider : ISampleProvider
             Array.Clear(buffer, offset, sil);
             _silenceRemaining -= sil;
             produced += sil;
-            if (produced >= count) return produced;
         }
 
-        if (_srcRemaining <= 0) return produced; // Clip zu Ende
+        if (produced < count && _srcRemaining > 0)
+        {
+            var toRead = (int)Math.Min(count - produced, _srcRemaining);
+            var read = _source.Read(buffer, offset + produced, toRead);
+            ApplyGainAndFades(buffer, offset + produced, read, _srcLenSamples - _srcRemaining);
+            _srcRemaining -= read;
+            produced += read;
+        }
 
-        var toRead = (int)Math.Min(count - produced, _srcRemaining);
-        var read = _source.Read(buffer, offset + produced, toRead);
+        // Nach Clip-Ende mit Stille auffüllen (immer count zurückgeben). Sonst entfernt der
+        // MixingSampleProvider diesen Eingang dauerhaft, und der Clip wäre nach Seek/Neustart stumm.
+        if (produced < count)
+        {
+            Array.Clear(buffer, offset + produced, count - produced);
+            produced = count;
+        }
 
-        ApplyGainAndFades(buffer, offset + produced, read, _srcLenSamples - _srcRemaining);
-
-        _srcRemaining -= read;
-        return produced + read;
+        return produced;
     }
 
     /// <summary>Wendet Clip-Gain und Ein-/Ausblendung live an (interleaved-Positionen).</summary>

@@ -10,101 +10,114 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:Audiola.Views.Pages">
 
+    <Page.Resources>
+        <!-- Eintrag in einer Recent-Liste: Öffnen-Button + Entfernen/Löschen -->
+        <DataTemplate x:Key="RecentItemTemplate">
+            <Border Margin="0,0,0,8" Padding="4" CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            Padding="8,6" BorderThickness="0" Background="Transparent"
+                            Command="{Binding DataContext.ViewModel.OpenCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                            CommandParameter="{Binding}" ToolTip="{Binding Path}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <ui:SymbolIcon Grid.Column="0" Symbol="{Binding IconSymbol}" FontSize="22" VerticalAlignment="Center" Margin="2,0,12,0" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Folder}" FontSize="11" TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                <TextBlock Text="{Binding DetailsText}" FontSize="11" Margin="0,2,0,0"
+                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
+                        </Grid>
+                    </Button>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,4,0">
+                        <Button Width="32" Height="32" Padding="0" Background="Transparent" BorderThickness="0"
+                                Command="{Binding DataContext.ViewModel.RemoveCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                CommandParameter="{Binding}" ToolTip="Aus Liste entfernen">
+                            <ui:SymbolIcon Symbol="Dismiss24" FontSize="15" />
+                        </Button>
+                        <Button Width="32" Height="32" Padding="0" Background="Transparent" BorderThickness="0"
+                                Command="{Binding DataContext.ViewModel.DeleteCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                CommandParameter="{Binding}" ToolTip="Datei von der Festplatte löschen">
+                            <ui:SymbolIcon Symbol="Delete24" FontSize="15" Foreground="#FF6B6B" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Page.Resources>
+
     <Grid Margin="42,24,42,24">
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="640">
-            <ui:SymbolIcon Symbol="MusicNote224" FontSize="64" HorizontalAlignment="Center" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-            <TextBlock
-                Margin="0,16,0,4"
-                HorizontalAlignment="Center"
-                FontSize="28"
-                FontWeight="SemiBold"
-                Text="Willkommen bei Audiola" />
+        <!-- Kopf -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock FontSize="26" FontWeight="SemiBold" Text="Willkommen bei Audiola" />
+                <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="Audiodateien bearbeiten, in Stems trennen und neu mischen — oder eine Datei ins Fenster ziehen." />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <ui:ProgressRing Margin="0,0,12,0" Width="22" Height="22" IsIndeterminate="True"
+                                 Visibility="{Binding ViewModel.IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <ui:Button Appearance="Primary" Icon="{ui:SymbolIcon FolderOpen24}" Content="Audiodatei öffnen"
+                           Command="{Binding ViewModel.OpenFileCommand}" />
+            </StackPanel>
+        </Grid>
 
-            <TextBlock
-                HorizontalAlignment="Center"
-                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                TextAlignment="Center"
-                TextWrapping="Wrap"
-                Text="Audiodateien bearbeiten, in Stems trennen und neu mischen." />
-
-            <ui:Button
-                Margin="0,28,0,0"
-                HorizontalAlignment="Center"
-                Appearance="Primary"
-                Icon="{ui:SymbolIcon FolderOpen24}"
-                Content="Audiodatei oeffnen"
-                Command="{Binding ViewModel.OpenFileCommand}" />
-
-            <TextBlock
-                Margin="0,10,0,0"
-                HorizontalAlignment="Center"
-                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                FontSize="12"
-                Text="… oder Datei per Drag &amp; Drop ins Fenster ziehen" />
-
-            <ui:ProgressRing
-                Margin="0,20,0,0"
-                HorizontalAlignment="Center"
-                IsIndeterminate="True"
-                Visibility="{Binding ViewModel.IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        <!-- Zwei Spalten: Projekte links, Songs rechts -->
+        <Grid Grid.Row="1" Margin="0,22,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="24" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
             <!-- Letzte Projekte -->
-            <StackPanel Margin="0,28,0,0"
-                        Visibility="{Binding ViewModel.HasRecentProjects, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <TextBlock FontWeight="SemiBold" Text="Letzte Projekte" Margin="0,0,0,8" />
-                <ItemsControl ItemsSource="{Binding ViewModel.RecentProjects}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <ui:Button
-                                Margin="0,0,0,6"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Left"
-                                Appearance="Secondary"
-                                Icon="{ui:SymbolIcon FolderOpen24}"
-                                Content="{Binding FileName}"
-                                Command="{Binding DataContext.ViewModel.OpenRecentProjectCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                CommandParameter="{Binding}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-
-            <!-- Zuletzt geöffnet -->
-            <StackPanel Margin="0,28,0,0"
-                        Visibility="{Binding ViewModel.HasRecent, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <TextBlock FontWeight="SemiBold" Text="Zuletzt geöffnet (Dateien)" Margin="0,0,0,8" />
-                <ItemsControl ItemsSource="{Binding ViewModel.RecentFiles}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <ui:Button
-                                Margin="0,0,0,6"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Left"
-                                Appearance="Secondary"
-                                Icon="{ui:SymbolIcon MusicNote224}"
-                                Content="{Binding FileName}"
-                                Command="{Binding DataContext.ViewModel.OpenRecentCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                CommandParameter="{Binding}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-
-            <Border
-                Margin="0,28,0,0"
-                Padding="16"
-                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                CornerRadius="8"
-                Visibility="{Binding ViewModel.Session.HasTrack, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <StackPanel>
-                    <TextBlock FontWeight="SemiBold" Text="Aktuell geladen" />
-                    <TextBlock
-                        Margin="0,4,0,0"
-                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                        Text="{Binding ViewModel.Session.CurrentTrack.FileName}" />
+            <DockPanel Grid.Column="0">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
+                    <ui:SymbolIcon Symbol="FolderOpen24" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Letzte Projekte" VerticalAlignment="Center" />
                 </StackPanel>
-            </Border>
-        </StackPanel>
+                <TextBlock DockPanel.Dock="Top" Margin="2,0,0,8" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                           Text="Noch keine Projekte gespeichert."
+                           Visibility="{Binding ViewModel.HasRecentProjects, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding ViewModel.RecentProjects}" ItemTemplate="{StaticResource RecentItemTemplate}" />
+                </ScrollViewer>
+            </DockPanel>
+
+            <!-- Letzte Songs / Dateien -->
+            <DockPanel Grid.Column="2">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
+                    <ui:SymbolIcon Symbol="MusicNote224" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Zuletzt geöffnete Songs" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Top" Margin="2,0,0,8" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                           Text="Noch keine Dateien geöffnet."
+                           Visibility="{Binding ViewModel.HasRecent, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding ViewModel.RecentFiles}" ItemTemplate="{StaticResource RecentItemTemplate}" />
+                </ScrollViewer>
+            </DockPanel>
+        </Grid>
     </Grid>
 </Page>

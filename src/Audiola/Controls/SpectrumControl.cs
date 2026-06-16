@@ -71,17 +71,24 @@ public sealed class SpectrumControl : FrameworkElement
     {
         double w = ActualWidth, h = ActualHeight;
         var n = _current.Length;
-        if (n == 0 || w <= 0 || h <= 0) return;
+        if (n < 2 || w <= 0 || h <= 0) return;
 
-        const double gap = 2;
-        var barW = Math.Max(1.0, (w - gap * (n - 1)) / n);
-        for (var i = 0; i < n; i++)
+        // Glatte, gespiegelte Fläche um die Mittellinie — wirkt flüssiger als Einzelbalken
+        // und skaliert sauber, auch wenn das Element nur sehr klein ist.
+        var center = h / 2;
+        var half = h / 2 * 0.92;
+        var dx = w / (n - 1);
+
+        double Y(int i, int sign) => center - sign * Math.Clamp(_current[i], 0f, 1f) * half;
+
+        var geo = new StreamGeometry();
+        using (var ctx = geo.Open())
         {
-            var lv = Math.Clamp(_current[i], 0f, 1f);
-            var bh = lv * h;
-            if (bh < 0.8) continue;
-            var x = i * (barW + gap);
-            dc.DrawRoundedRectangle(_barBrush, null, new Rect(x, h - bh, barW, bh), 1.2, 1.2);
+            ctx.BeginFigure(new Point(0, Y(0, 1)), true, true);
+            for (var i = 1; i < n; i++) ctx.LineTo(new Point(i * dx, Y(i, 1)), true, true);
+            for (var i = n - 1; i >= 0; i--) ctx.LineTo(new Point(i * dx, Y(i, -1)), true, true);
         }
+        geo.Freeze();
+        dc.DrawGeometry(_barBrush, null, geo);
     }
 }

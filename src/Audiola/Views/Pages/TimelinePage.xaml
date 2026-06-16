@@ -14,6 +14,25 @@
         <KeyBinding Modifiers="Control" Key="Y" Command="{Binding ViewModel.RedoCommand}" />
     </Page.InputBindings>
 
+    <Page.Resources>
+        <Style x:Key="ToolGroup" TargetType="Border">
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="8,3,8,5" />
+            <Setter Property="Margin" Value="0,0,8,6" />
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+        </Style>
+        <Style x:Key="ToolGroupCaption" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="9" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="2,0,0,3" />
+            <Setter Property="Opacity" Value="0.6" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        </Style>
+        <Style x:Key="ToolBtn" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+            <Setter Property="Margin" Value="0,0,4,0" />
+        </Style>
+    </Page.Resources>
+
     <Grid Margin="42,24,42,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -34,108 +53,159 @@
         <Border Margin="0,14,0,0" Padding="8,6" CornerRadius="10"
                 Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
             <WrapPanel Orientation="Horizontal">
-                <ui:Button Margin="0,0,4,0" Appearance="Primary" Icon="{ui:SymbolIcon Add24}"
-                           Command="{Binding ViewModel.AddAudioCommand}" ToolTip="Audiodatei als Spur hinzufügen" />
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon AddSquare24}"
-                           Command="{Binding ViewModel.AddEmptyTrackCommand}" ToolTip="Leere Spur anlegen (Parts dorthin verschieben)" />
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Layer24}"
-                           Command="{Binding ViewModel.ImportStemsCommand}" ToolTip="Aktuelle Stems als Spuren übernehmen" />
-                <Border Width="1" Margin="6,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
 
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon ArrowUndo24}"
-                           Command="{Binding ViewModel.UndoCommand}" ToolTip="Rückgängig (Strg+Z)" />
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon ArrowRedo24}"
-                           Command="{Binding ViewModel.RedoCommand}" ToolTip="Wiederholen (Strg+Y)" />
-                <ToggleButton x:Name="HistoryToggle" Margin="0,0,4,0" Padding="8,0" VerticalAlignment="Center"
-                              IsChecked="{Binding ViewModel.ShowHistory, Mode=TwoWay}" ToolTip="Verlauf anzeigen">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="History24" />
-                        <TextBlock Margin="6,0,0,0" Text="Verlauf" />
+                <!-- Spuren -->
+                <Border Style="{StaticResource ToolGroup}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource ToolGroupCaption}" Text="SPUREN" />
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Style="{StaticResource ToolBtn}" Appearance="Primary" Icon="{ui:SymbolIcon Add24}"
+                                       Command="{Binding ViewModel.AddAudioCommand}" ToolTip="Audiodatei als Spur hinzufügen" />
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon AddSquare24}"
+                                       Command="{Binding ViewModel.AddEmptyTrackCommand}" ToolTip="Leere Spur anlegen (Parts dorthin verschieben)" />
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon Layer24}"
+                                       Command="{Binding ViewModel.ImportStemsCommand}" ToolTip="Aktuelle Stems als Spuren übernehmen" />
+                            <ui:Button Icon="{ui:SymbolIcon TextField24}" Click="AddTts_Click"
+                                       ToolTip="Spur aus Text erzeugen (Sprache über ElevenLabs – Stimme wählen, aufnehmen oder hochladen)" />
+                        </StackPanel>
                     </StackPanel>
-                </ToggleButton>
-                <Popup PlacementTarget="{Binding ElementName=HistoryToggle}" Placement="Bottom" StaysOpen="False"
-                       IsOpen="{Binding ViewModel.ShowHistory, Mode=TwoWay}" AllowsTransparency="True" PopupAnimation="Fade">
-                    <Border Margin="0,4,0,0" Width="320" MaxHeight="360" CornerRadius="8" Padding="6"
-                            Background="{DynamicResource ApplicationBackgroundBrush}"
-                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                        <DockPanel>
-                            <TextBlock DockPanel.Dock="Top" Margin="6,4,6,6" FontWeight="SemiBold"
-                                       Text="Verlauf — Klick springt zum Stand" />
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding ViewModel.History}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                                                    Margin="0,1" Padding="8,5" BorderThickness="0" Background="Transparent"
-                                                    Command="{Binding DataContext.ViewModel.JumpToHistoryCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                    CommandParameter="{Binding}">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <ui:SymbolIcon Symbol="Circle24" FontSize="10" VerticalAlignment="Center"
-                                                                   Visibility="{Binding IsCurrent, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                                   Foreground="#5B8CFF" Margin="0,0,8,0" />
-                                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
-                                                </StackPanel>
-                                                <Button.Style>
-                                                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsCurrent}" Value="True">
-                                                                <Setter Property="FontWeight" Value="SemiBold" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding IsUndone}" Value="True">
-                                                                <Setter Property="Opacity" Value="0.45" />
-                                                                <Setter Property="FontStyle" Value="Italic" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Button.Style>
-                                            </Button>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-                        </DockPanel>
-                    </Border>
-                </Popup>
-                <Border Width="1" Margin="6,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
+                </Border>
 
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Play24}" Command="{Binding ViewModel.PlayPauseCommand}" ToolTip="Abspielen / Pause" />
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Stop24}" Command="{Binding ViewModel.StopCommand}" ToolTip="Stopp" />
-                <ui:ToggleSwitch Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding ViewModel.LoopEnabled, Mode=TwoWay}" ToolTip="Auswahl loopen" />
-                <Border Width="1" Margin="6,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
+                <!-- Verlauf -->
+                <Border Style="{StaticResource ToolGroup}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource ToolGroupCaption}" Text="VERLAUF" />
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon ArrowUndo24}"
+                                       Command="{Binding ViewModel.UndoCommand}" ToolTip="Rückgängig (Strg+Z)" />
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon ArrowRedo24}"
+                                       Command="{Binding ViewModel.RedoCommand}" ToolTip="Wiederholen (Strg+Y)" />
+                            <ToggleButton x:Name="HistoryToggle" Padding="8,0" VerticalAlignment="Center"
+                                          IsChecked="{Binding ViewModel.ShowHistory, Mode=TwoWay}" ToolTip="Verlauf anzeigen">
+                                <ui:SymbolIcon Symbol="History24" />
+                            </ToggleButton>
+                            <Popup PlacementTarget="{Binding ElementName=HistoryToggle}" Placement="Bottom" StaysOpen="False"
+                                   IsOpen="{Binding ViewModel.ShowHistory, Mode=TwoWay}" AllowsTransparency="True" PopupAnimation="Fade">
+                                <Border Margin="0,4,0,0" Width="320" MaxHeight="360" CornerRadius="8" Padding="6"
+                                        Background="{DynamicResource ApplicationBackgroundBrush}"
+                                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Top" Margin="6,4,6,6" FontWeight="SemiBold"
+                                                   Text="Verlauf — Klick springt zum Stand" />
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <ItemsControl ItemsSource="{Binding ViewModel.History}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                                                Margin="0,1" Padding="8,5" BorderThickness="0" Background="Transparent"
+                                                                Command="{Binding DataContext.ViewModel.JumpToHistoryCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <ui:SymbolIcon Symbol="Circle24" FontSize="10" VerticalAlignment="Center"
+                                                                               Visibility="{Binding IsCurrent, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                                               Foreground="#5B8CFF" Margin="0,0,8,0" />
+                                                                <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                                                            </StackPanel>
+                                                            <Button.Style>
+                                                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding IsUndone}" Value="True">
+                                                                            <Setter Property="Opacity" Value="0.45" />
+                                                                            <Setter Property="FontStyle" Value="Italic" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </DockPanel>
+                                </Border>
+                            </Popup>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Cut24}" Command="{Binding ViewModel.SplitAtPlayheadCommand}" ToolTip="Clip am Playhead teilen" />
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon EraserSegment24}" Command="{Binding ViewModel.CutRegionCommand}" ToolTip="Markierten Bereich aus dem Clip herausschneiden" />
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Delete24}" Command="{Binding ViewModel.DeleteSelectedCommand}" ToolTip="Clip löschen" />
-                <ui:ToggleSwitch Margin="6,0,0,0" VerticalAlignment="Center" Content="Bereich"
-                                 IsChecked="{Binding ViewModel.RangeSelectMode, Mode=TwoWay}"
-                                 ToolTip="Auswahl-Werkzeug: in den Spuren ziehen, um einen Bereich zu markieren (Effekte/Cleanup wirken dann nur darauf)" />
-                <Border Width="1" Margin="6,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
+                <!-- Wiedergabe -->
+                <Border Style="{StaticResource ToolGroup}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource ToolGroupCaption}" Text="WIEDERGABE" />
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon Play24}" Command="{Binding ViewModel.PlayPauseCommand}" ToolTip="Abspielen / Pause" />
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon Stop24}" Command="{Binding ViewModel.StopCommand}" ToolTip="Stopp" />
+                            <ui:ToggleSwitch VerticalAlignment="Center" IsChecked="{Binding ViewModel.LoopEnabled, Mode=TwoWay}" ToolTip="Auswahl loopen" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon ZoomOut24}" Command="{Binding ViewModel.ZoomOutCommand}" ToolTip="Auszoomen" />
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon ZoomIn24}" Command="{Binding ViewModel.ZoomInCommand}" ToolTip="Einzoomen" />
-                <ui:SymbolIcon Symbol="AutoFitHeight24" VerticalAlignment="Center" Margin="2,0,0,0" />
-                <Slider Width="90" Margin="4,0,0,0" VerticalAlignment="Center" Minimum="80" Maximum="320"
-                        Value="{Binding ViewModel.LaneHeight, Mode=TwoWay}" ToolTip="Spurhöhe (Wellenform größer)" />
-                <ui:ToggleSwitch Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding ViewModel.SnapEnabled, Mode=TwoWay}" ToolTip="Einrasten" />
-                <ComboBox Width="72" Margin="6,0,0,0" VerticalAlignment="Center"
-                          ItemsSource="{Binding ViewModel.GridOptions}" SelectedItem="{Binding ViewModel.GridSeconds, Mode=TwoWay}"
-                          ToolTip="Rasterweite (s)" />
-                <Border Width="1" Margin="6,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
+                <!-- Bearbeiten -->
+                <Border Style="{StaticResource ToolGroup}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource ToolGroupCaption}" Text="BEARBEITEN" />
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon Cut24}" Command="{Binding ViewModel.SplitAtPlayheadCommand}" ToolTip="Clip am Playhead teilen" />
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon EraserSegment24}" Command="{Binding ViewModel.CutRegionCommand}" ToolTip="Markierten Bereich aus dem Clip herausschneiden" />
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon Delete24}" Command="{Binding ViewModel.DeleteSelectedCommand}" ToolTip="Clip löschen" />
+                            <ui:ToggleSwitch VerticalAlignment="Center" Content="Bereich"
+                                             IsChecked="{Binding ViewModel.RangeSelectMode, Mode=TwoWay}"
+                                             ToolTip="Auswahl-Werkzeug: in den Spuren ziehen, um einen Bereich zu markieren (Effekte/Cleanup wirken dann nur darauf)" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon SelectObjectSkew24}" Command="{Binding ViewModel.ClearSelectionCommand}" ToolTip="Auswahl löschen" />
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Save24}" Command="{Binding ViewModel.ExportRangeCommand}" ToolTip="Auswahlbereich exportieren" />
-                <Border Width="1" Margin="6,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
+                <!-- Ansicht -->
+                <Border Style="{StaticResource ToolGroup}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource ToolGroupCaption}" Text="ANSICHT" />
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon ZoomOut24}" Command="{Binding ViewModel.ZoomOutCommand}" ToolTip="Auszoomen" />
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon ZoomIn24}" Command="{Binding ViewModel.ZoomInCommand}" ToolTip="Einzoomen" />
+                            <ui:SymbolIcon Symbol="AutoFitHeight24" VerticalAlignment="Center" Margin="2,0,0,0" />
+                            <Slider Width="80" Margin="4,0,0,0" VerticalAlignment="Center" Minimum="80" Maximum="320"
+                                    Value="{Binding ViewModel.LaneHeight, Mode=TwoWay}" ToolTip="Spurhöhe (Wellenform größer)" />
+                            <ui:ToggleSwitch Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding ViewModel.SnapEnabled, Mode=TwoWay}" ToolTip="Einrasten" />
+                            <ComboBox Width="64" Margin="6,0,0,0" VerticalAlignment="Center"
+                                      ItemsSource="{Binding ViewModel.GridOptions}" SelectedItem="{Binding ViewModel.GridSeconds, Mode=TwoWay}"
+                                      ToolTip="Rasterweite (s)" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                <ui:Button Margin="0,0,4,0" Icon="{ui:SymbolIcon Wand24}" Content="Variationen" Click="Variations_All_Click"
-                           ToolTip="Variationen-Provider auf das gesamte Audio (alle Spuren) anwenden" />
-                <Border Width="1" Margin="6,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
-                <ui:ToggleSwitch VerticalAlignment="Center" Content="Mixer" IsChecked="{Binding ViewModel.ShowMixer, Mode=TwoWay}" ToolTip="Mixer-Panel ein-/ausblenden" />
+                <!-- Auswahl -->
+                <Border Style="{StaticResource ToolGroup}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource ToolGroupCaption}" Text="AUSWAHL" />
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon SelectObjectSkew24}" Command="{Binding ViewModel.ClearSelectionCommand}" ToolTip="Auswahl löschen" />
+                            <ui:Button Icon="{ui:SymbolIcon Save24}" Command="{Binding ViewModel.ExportRangeCommand}" ToolTip="Auswahlbereich exportieren" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                <ui:ProgressRing Width="20" Height="20" Margin="12,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
-                                 Visibility="{Binding ViewModel.IsSeparating, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                <TextBlock VerticalAlignment="Center" Margin="6,0,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                           Text="{Binding ViewModel.SeparationStatus}"
-                           Visibility="{Binding ViewModel.IsSeparating, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <!-- Effekte & Ansicht -->
+                <Border Style="{StaticResource ToolGroup}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource ToolGroupCaption}" Text="EFFEKTE" />
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon Wand24}" Content="Variationen" Click="Variations_All_Click"
+                                       ToolTip="Variationen-Provider auf das gesamte Audio (alle Spuren) anwenden" />
+                            <ui:ToggleSwitch VerticalAlignment="Center" Content="Mixer" IsChecked="{Binding ViewModel.ShowMixer, Mode=TwoWay}" ToolTip="Mixer-Panel ein-/ausblenden" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:ProgressRing Width="20" Height="20" Margin="6,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
+                                     Visibility="{Binding ViewModel.IsSeparating, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <TextBlock VerticalAlignment="Center" Margin="6,0,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding ViewModel.SeparationStatus}"
+                               Visibility="{Binding ViewModel.IsSeparating, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                </StackPanel>
             </WrapPanel>
         </Border>
 
@@ -171,12 +241,12 @@
 
                 <Border Width="1" Margin="16,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Stimme (ElevenLabs · nur Sprache)" Margin="0,0,0,4" />
+                    <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Stimme (ElevenLabs)" Margin="0,0,0,4" />
                     <StackPanel Orientation="Horizontal">
                         <ui:Button Icon="{ui:SymbolIcon PersonVoice24}" Content="Stimme tauschen"
-                                   Command="{Binding ViewModel.ClipVoiceChangeCommand}"
+                                   Click="ClipVoiceChange_Click"
                                    IsEnabled="{Binding ViewModel.IsVoiceChanging, Converter={StaticResource InverseBooleanConverter}}"
-                                   ToolTip="Speech-to-Speech über ElevenLabs – nur für gesprochene Stimme (kein Gesang), nur eigene/lizenzierte Stimmen. Mit Auswahl wirkt es nur auf den markierten Bereich." />
+                                   ToolTip="Speech-to-Speech über ElevenLabs – Stimme im Dialog wählen, aufnehmen oder hochladen. Performance/Timing/Betonung (auch Gesang) bleiben erhalten, die Klangfarbe wird ersetzt. Am besten auf einer isolierten Vocal-Spur. Mit Auswahl wirkt es nur auf den markierten Bereich." />
                         <ui:ProgressRing Width="20" Height="20" Margin="8,0,0,0" IsIndeterminate="True"
                                          Visibility="{Binding ViewModel.IsVoiceChanging, Converter={StaticResource BooleanToVisibilityConverter}}" />
                     </StackPanel>
@@ -218,11 +288,21 @@
             <!-- Zeit-Lineal: oben fixiert, scrollt horizontal mit den Lanes -->
             <ScrollViewer x:Name="RulerScroll" Grid.Row="0" Grid.Column="1" Background="#FF15151B"
                           HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
-                <controls:TimelineRulerControl
-                    x:Name="Ruler" Cursor="IBeam"
-                    MouseLeftButtonDown="Ruler_Down" MouseMove="Ruler_Move" MouseLeftButtonUp="Ruler_Up"
-                    PixelsPerSecond="{Binding ViewModel.PixelsPerSecond}"
-                    DurationSeconds="{Binding ViewModel.DurationSeconds}" />
+                <Grid>
+                    <controls:TimelineRulerControl
+                        x:Name="Ruler" Cursor="IBeam"
+                        MouseLeftButtonDown="Ruler_Down" MouseMove="Ruler_Move" MouseLeftButtonUp="Ruler_Up"
+                        PixelsPerSecond="{Binding ViewModel.PixelsPerSecond}"
+                        DurationSeconds="{Binding ViewModel.DurationSeconds}" />
+                    <!-- Ziehbarer Playhead-Griff -->
+                    <Border Width="14" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"
+                            Margin="{Binding ViewModel.PlayheadMargin}" Background="#FFFF5B5B"
+                            CornerRadius="3" Cursor="SizeWE" ToolTip="Abspielposition ziehen"
+                            MouseLeftButtonDown="Playhead_Down" MouseMove="Playhead_Move" MouseLeftButtonUp="Playhead_Up">
+                        <Border.RenderTransform><TranslateTransform X="-7" /></Border.RenderTransform>
+                        <Path Data="M 4,6 L 10,6 L 7,12 Z" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </Grid>
             </ScrollViewer>
 
             <!-- Spurköpfe: links fixiert, scrollen vertikal mit den Lanes -->
@@ -232,9 +312,26 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border Height="{Binding DataContext.ViewModel.LaneHeight, RelativeSource={RelativeSource AncestorType=Page}}"
-                                    Margin="0,0,6,0" CornerRadius="8"
+                                    Margin="0,0,6,0" CornerRadius="8" BorderThickness="2"
                                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                    PreviewMouseLeftButtonDown="TrackHeader_Down"
                                     Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Page}}">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="Transparent" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSelectedTrack}" Value="True">
+                                                <Setter Property="BorderBrush" Value="#5B8CFF" />
+                                                <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+                                                <Setter Property="Effect">
+                                                    <Setter.Value>
+                                                        <DropShadowEffect Color="#5B8CFF" BlurRadius="14" ShadowDepth="0" Opacity="0.8" />
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <Border.ContextMenu>
                                     <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
                                         <MenuItem Header="Stems trennen → automatisch (erkennen + beste Qualität)"
@@ -326,6 +423,10 @@
                                     <!-- Spurzeile in voller Timeline-Breite; Clips werden per Margin positioniert -->
                                     <Grid Height="{Binding DataContext.ViewModel.LaneHeight, RelativeSource={RelativeSource AncestorType=Page}}"
                                           Width="{Binding DataContext.ViewModel.ContentWidth, RelativeSource={RelativeSource AncestorType=Page}}">
+                                        <!-- Hervorhebung der ausgewählten Spur -->
+                                        <Border IsHitTestVisible="False" Background="#142A6CFF"
+                                                BorderBrush="#5B8CFF" BorderThickness="3,0,0,0"
+                                                Visibility="{Binding IsSelectedTrack, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                         <ItemsControl ItemsSource="{Binding Clips}">
                                             <ItemsControl.ItemsPanel>
                                                 <ItemsPanelTemplate><Grid /></ItemsPanelTemplate>
@@ -344,7 +445,7 @@
                                                         <Border.ContextMenu>
                                                             <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
                                                                 <MenuItem Header="Variationen / Effekte…" Click="ClipVariations_Click" />
-                                                                <MenuItem Header="Stimme tauschen (ElevenLabs · Sprache)" Command="{Binding ViewModel.ClipVoiceChangeCommand}" />
+                                                                <MenuItem Header="Stimme tauschen (ElevenLabs · Sprache)" Click="ClipVoiceChange_Click" />
                                                                 <Separator />
                                                                 <MenuItem Header="Markierten Bereich ausschneiden" Command="{Binding ViewModel.CutRegionCommand}" />
                                                                 <MenuItem Header="Am Playhead teilen" Command="{Binding ViewModel.SplitAtPlayheadCommand}" />

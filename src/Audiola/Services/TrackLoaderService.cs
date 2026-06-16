@@ -42,6 +42,12 @@ public sealed class TrackLoaderService : ITrackLoader
         return track;
     }
 
+    public void RemoveRecent(string path)
+    {
+        var n = _settings.Current.RecentFiles.RemoveAll(p => string.Equals(p, path, StringComparison.OrdinalIgnoreCase));
+        if (n > 0) { _settings.Save(); RecentChanged?.Invoke(this, EventArgs.Empty); }
+    }
+
     private void AddRecent(string filePath)
     {
         var list = _settings.Current.RecentFiles;

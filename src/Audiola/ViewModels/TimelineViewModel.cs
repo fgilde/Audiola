@@ -217,8 +217,10 @@ public sealed partial class TimelineViewModel : ObservableObject
     {
         t.PropertyChanged += (_, e) =>
         {
-            // Pegel-Updates (Wiedergabe) und Auswahl-Markierung sind keine Bearbeitung.
-            if (e.PropertyName is not (nameof(StemTrackViewModel.Level) or nameof(StemTrackViewModel.IsSelectionTrack)))
+            // Pegel-Updates (Wiedergabe) und Auswahl-Markierungen sind keine Bearbeitung.
+            if (e.PropertyName is not (nameof(StemTrackViewModel.Level)
+                or nameof(StemTrackViewModel.IsSelectionTrack)
+                or nameof(StemTrackViewModel.IsSelectedTrack)))
                 MarkDirty();
         };
         t.Clips.CollectionChanged += (_, e) =>
@@ -407,6 +409,21 @@ public sealed partial class TimelineViewModel : ObservableObject
             foreach (var c in t.Clips)
                 c.IsSelected = ReferenceEquals(c, clip);
         SelectedClip = clip;
+        SelectTrack(clip?.Track);
+    }
+
+    /// <summary>Aktuell ausgewählte Spur (für spurbezogene Werkzeuge + hervorgehobene Anzeige).</summary>
+    [ObservableProperty] private StemTrackViewModel? _selectedTrack;
+
+    public bool HasSelectedTrack => SelectedTrack is not null;
+    partial void OnSelectedTrackChanged(StemTrackViewModel? value)
+        => OnPropertyChanged(nameof(HasSelectedTrack));
+
+    /// <summary>Markiert eine Spur als ausgewählt (null = keine).</summary>
+    public void SelectTrack(StemTrackViewModel? track)
+    {
+        foreach (var t in Tracks) t.IsSelectedTrack = ReferenceEquals(t, track);
+        SelectedTrack = track;
     }
 
     /// <summary>Während des Ziehens: Clip-Offset visuell setzen (ohne Engine-Reload).</summary>
@@ -902,6 +919,127 @@ public sealed partial class TimelineViewModel : ObservableObject
         {
             IsVoiceChanging = false;
         }
+    }
+
+    /// <summary>
+    /// Wie <see cref="ClipVoiceChange"/>, aber mit explizit gewählter Zielstimme (aus dem Dialog).
+    /// Löscht die Stimme danach, wenn sie nur temporär (geklont) war.
+    /// </summary>
+    public async Task ChangeSelectedClipVoiceAsync(string voiceId, bool deleteAfter)
+    {
+        var clip = SelectedClip;
+        if (clip is null || IsVoiceChanging || string.IsNullOrWhiteSpace(voiceId)) return;
+
+        var path = clip.SourcePath;
+        var srcStart = clip.SourceStartSeconds;
+        var len = clip.LengthSeconds;
+        var region = ClipRegionSeconds(clip);
+
+        IsVoiceChanging = true;
+        try
+        {
+            var prep = await Task.Run(() =>
+            {
+                var (all, rate) = AudioProcessingHelper.ReadStereo(path);
+                var startS = (int)Math.Clamp((long)(srcStart * rate) * 2, 0, all.Length);
+                var lenS = (int)Math.Clamp((long)(len * rate) * 2, 0, all.Length - startS);
+                var seg = new float[lenS];
+                Array.Copy(all, startS, seg, 0, lenS);
+
+                var lenFrames = lenS / 2;
+                var a = region is null ? 0 : (int)Math.Clamp((long)(region.Value.aSec * rate), 0, lenFrames);
+                var b = region is null ? lenFrames : (int)Math.Clamp((long)(region.Value.bSec * rate), 0, lenFrames);
+                var aS = a * 2;
+                var bS = b * 2;
+
+                var sub = new float[bS - aS];
+                Array.Copy(seg, aS, sub, 0, sub.Length);
+
+                // Spitzenpegel des Originalausschnitts merken, um die laute STS-Ausgabe
+                // darauf zurückzuskalieren (sonst „doppelt so laut“ / Clipping).
+                var inPeak = 0f;
+                foreach (var v in sub) inPeak = Math.Max(inPeak, Math.Abs(v));
+
+                var dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Audiola", "voice");
+                System.IO.Directory.CreateDirectory(dir);
+                var t = System.IO.Path.Combine(dir, $"in_{Guid.NewGuid():N}.wav");
+                AudioEdits.WriteWav(t, sub, rate);
+                return (temp: t, seg, aS, bS, rate, inPeak, whole: a == 0 && b == lenFrames);
+            });
+
+            var (outSamples, outSr) = await _voiceChange.ChangeAsync(prep.temp, voiceId);
+
+            // STS-Ausgabe auf den Originalpegel angleichen (verhindert Übersteuern/zu laut).
+            MatchPeak(outSamples, prep.inPeak);
+
+            if (prep.whole)
+            {
+                ReplaceClipFromBuffer(clip, outSamples, outSr);
+            }
+            else
+            {
+                var outRes = AudioProcessingHelper.Resample(outSamples, outSr, prep.rate);
+                var newBuf = AudioProcessingHelper.SpliceStereo(prep.seg, prep.aS, prep.bS, outRes);
+                ReplaceClipFromBuffer(clip, newBuf, prep.rate);
+            }
+
+            _snackbar.Show("Stimme getauscht",
+                prep.whole ? "Der Clip wurde ersetzt." : "Der markierte Bereich wurde ersetzt.",
+                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Show("Voice-Change fehlgeschlagen", ex.Message,
+                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(6));
+        }
+        finally
+        {
+            IsVoiceChanging = false;
+            if (deleteAfter) try { await _voiceChange.DeleteVoiceAsync(voiceId); } catch { /* Aufräumen */ }
+        }
+    }
+
+    /// <summary>Erzeugt aus Text per ElevenLabs-TTS Audio und legt es als neue Spur an.</summary>
+    public async Task AddTextToSpeechTrackAsync(string text, string voiceId,
+        double speed, double stability, double similarity, bool deleteAfter)
+    {
+        if (string.IsNullOrWhiteSpace(text) || string.IsNullOrWhiteSpace(voiceId) || IsVoiceChanging) return;
+
+        IsVoiceChanging = true;
+        try
+        {
+            var (samples, sr) = await _voiceChange.SpeakAsync(text, voiceId, speed, stability, similarity);
+            var dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Audiola", "voice");
+            System.IO.Directory.CreateDirectory(dir);
+            var temp = System.IO.Path.Combine(dir, $"tts_{Guid.NewGuid():N}.wav");
+            AudioEdits.WriteWav(temp, samples, sr);
+
+            await AddAudioFileAsync(temp, -1, 0);
+
+            _snackbar.Show("Sprache erzeugt", "Neue Spur aus Text hinzugefügt.",
+                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Show("Text-zu-Sprache fehlgeschlagen", ex.Message,
+                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(6));
+        }
+        finally
+        {
+            IsVoiceChanging = false;
+            if (deleteAfter) try { await _voiceChange.DeleteVoiceAsync(voiceId); } catch { /* Aufräumen */ }
+        }
+    }
+
+    /// <summary>Skaliert <paramref name="samples"/> so, dass ihr Spitzenpegel dem Original entspricht.</summary>
+    private static void MatchPeak(float[] samples, float targetPeak)
+    {
+        if (targetPeak <= 1e-6f) return;
+        var peak = 0f;
+        foreach (var v in samples) peak = Math.Max(peak, Math.Abs(v));
+        if (peak <= 1e-6f) return;
+        var gain = Math.Clamp(targetPeak / peak, 0.05f, 4f);
+        for (var i = 0; i < samples.Length; i++) samples[i] *= gain;
     }
 
     /// <summary>Ersetzt die Quelle eines Clips durch einen bearbeiteten Puffer (Editor-Bake / Voice-Change).</summary>

@@ -56,7 +56,16 @@ public sealed class StemMixerEngine : IDisposable
         _timer.Tick += (_, _) =>
         {
             if (LoopEnabled && LoopEnd > LoopStart && Position >= LoopEnd)
+            {
                 Position = LoopStart;
+            }
+            else if (!LoopEnabled && Duration > TimeSpan.Zero
+                     && Position >= Duration + TimeSpan.FromMilliseconds(250))
+            {
+                // Clips füllen jetzt mit Stille auf (kein 0-Ende mehr), darum positionsbasiert stoppen.
+                Stop();
+                return;
+            }
             UpdateMeters();
             UpdateSpectrum();
             PositionChanged?.Invoke(this, EventArgs.Empty);

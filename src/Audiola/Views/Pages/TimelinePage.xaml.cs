@@ -15,6 +15,54 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         ViewModel = viewModel;
         DataContext = this;
         InitializeComponent();
+        ViewModel.PropertyChanged += Vm_PropertyChanged;
+    }
+
+    // ---- Auto-Scroll: Playhead bei Wiedergabe im sichtbaren Bereich halten ----
+    private void Vm_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ViewModel.PlayheadMargin) && ViewModel.IsPlaying)
+            EnsurePlayheadVisible();
+    }
+
+    private void EnsurePlayheadVisible()
+    {
+        var x = ViewModel.PlayheadMargin.Left;
+        var left = LaneScroll.HorizontalOffset;
+        var vw = LaneScroll.ViewportWidth;
+        if (vw <= 0) return;
+        if (x > left + vw - 60) LaneScroll.ScrollToHorizontalOffset(Math.Max(0, x - 60)); // rechte Kante → umblättern
+        else if (x < left + 20) LaneScroll.ScrollToHorizontalOffset(Math.Max(0, x - 20));
+    }
+
+    // ---- Playhead ziehen (Scrubbing) ----
+    private bool _scrubbing;
+
+    private void Playhead_Down(object sender, MouseButtonEventArgs e)
+    {
+        _scrubbing = true;
+        if (sender is UIElement el) el.CaptureMouse();
+        ViewModel.SeekToPixel(e.GetPosition(Ruler).X);
+        e.Handled = true;
+    }
+
+    private void Playhead_Move(object sender, MouseEventArgs e)
+    {
+        if (_scrubbing) ViewModel.SeekToPixel(e.GetPosition(Ruler).X);
+    }
+
+    private void Playhead_Up(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is UIElement el) el.ReleaseMouseCapture();
+        _scrubbing = false;
+        e.Handled = true;
+    }
+
+    // ---- Spur auswählen (Kopf anklicken) ----
+    private void TrackHeader_Down(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: ViewModels.StemTrackViewModel t })
+            ViewModel.SelectTrack(t);
     }
 
     public void OnNavigatedTo() => ViewModel.OnActivated();
@@ -87,6 +135,7 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         _laneMoved = false;
         _laneDownSeconds = pos.X / pps;
         _laneTrack = TrackAtY(pos.Y);
+        if (_laneTrack is not null) ViewModel.SelectTrack(_laneTrack);
         ViewModel.SetSelection(_laneDownSeconds, _laneDownSeconds, _laneTrack);
         fe.CaptureMouse();
     }
@@ -157,6 +206,23 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
     {
         if (ViewModel.SelectedClip is { } c)
             await OpenVariationsAsync([c], "Ausgewählter Clip");
+    }
+
+    // ---- Stimme tauschen (Dialog: wählen / aufnehmen / hochladen) ----
+    private async void ClipVoiceChange_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedClip is null) return;
+        var dlg = new Audiola.Views.Dialogs.VoiceSwapDialog { Owner = System.Windows.Window.GetWindow(this) };
+        if (dlg.ShowDialog() == true && dlg.Result is { } r)
+            await ViewModel.ChangeSelectedClipVoiceAsync(r.VoiceId, r.Temporary);
+    }
+
+    // ---- Spur aus Text (TTS) ----
+    private async void AddTts_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new Audiola.Views.Dialogs.TextToSpeechDialog { Owner = System.Windows.Window.GetWindow(this) };
+        if (dlg.ShowDialog() == true && dlg.Result is { } r)
+            await ViewModel.AddTextToSpeechTrackAsync(dlg.Text, r.VoiceId, dlg.Speed, dlg.Stability, dlg.Similarity, r.Temporary);
     }
 
     private async System.Threading.Tasks.Task OpenVariationsAsync(IReadOnlyList<ClipViewModel> clips, string scope)

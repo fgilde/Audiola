@@ -62,6 +62,13 @@ public sealed class ProjectWorkspace
         AddRecent(path);
     }
 
+    /// <summary>Entfernt ein Projekt aus der „Letzte Projekte"-Liste.</summary>
+    public void RemoveRecent(string path)
+    {
+        var n = _settings.Current.RecentProjects.RemoveAll(p => string.Equals(p, path, StringComparison.OrdinalIgnoreCase));
+        if (n > 0) { _settings.Save(); RecentChanged?.Invoke(this, EventArgs.Empty); }
+    }
+
     private void AddRecent(string path)
     {
         var list = _settings.Current.RecentProjects;

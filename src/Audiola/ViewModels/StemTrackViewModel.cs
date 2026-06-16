@@ -84,6 +84,10 @@ public sealed partial class StemTrackViewModel : ObservableObject
     [ObservableProperty]
     private bool _isSelectionTrack;
 
+    /// <summary>True, wenn diese Spur die aktuell ausgewählte ist (hervorgehobene Anzeige).</summary>
+    [ObservableProperty]
+    private bool _isSelectedTrack;
+
     [ObservableProperty]
     private double _volume;
 
