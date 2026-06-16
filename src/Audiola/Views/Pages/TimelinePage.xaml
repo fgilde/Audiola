@@ -340,6 +340,11 @@
                                         <MenuItem Header="Stems trennen → 4 (schnell)"
                                                   Command="{Binding ViewModel.SeparateTrackCommand}"
                                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                        <MenuItem Header="Trennen (HQ · audio-separator)">
+                                            <MenuItem Header="RoFormer (Vocals / Instrumental)" Tag="roformer" Click="SeparateHq_Click" />
+                                            <MenuItem Header="Demucs 6 Stems (Gitarre / Klavier)" Tag="demucs6s" Click="SeparateHq_Click" />
+                                            <MenuItem Header="Karaoke (Lead / Background)" Tag="karaoke" Click="SeparateHq_Click" />
+                                        </MenuItem>
                                         <Separator />
                                         <MenuItem Header="Spur duplizieren"
                                                   Command="{Binding ViewModel.DuplicateTrackCommand}"

@@ -11,8 +11,8 @@ public sealed class AppSettings
     /// </summary>
     public string PythonPath { get; set; } = "python";
 
-    /// <summary>Demucs-Modellname (htdemucs ist Standard und gut ausbalanciert).</summary>
-    public string DemucsModel { get; set; } = "htdemucs";
+    /// <summary>Demucs-Modellname (htdemucs_ft = fine-tuned, spürbar besser bei gleicher Geschwindigkeit).</summary>
+    public string DemucsModel { get; set; } = "htdemucs_ft";
 
     /// <summary>Ausgabeverzeichnis fuer extrahierte Stems.</summary>
     public string OutputDirectory { get; set; } =

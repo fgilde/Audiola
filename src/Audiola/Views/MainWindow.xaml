@@ -50,7 +50,12 @@
                 <MenuItem Header="Audio ins Studio hinzufügen…" Click="AddToStudio_Click" />
                 <Separator />
                 <MenuItem Header="Projekt öffnen…" Click="OpenProject_Click" />
-                <MenuItem Header="Projekt speichern…" Click="SaveProject_Click" />
+                <MenuItem Header="Projekt speichern" InputGestureText="Strg+S" Click="SaveProjectQuick_Click"
+                          IsEnabled="{Binding Transport.HasTrack}" />
+                <MenuItem Header="Projekt speichern unter…" Click="SaveProjectAs_Click"
+                          IsEnabled="{Binding Transport.HasTrack}" />
+                <MenuItem Header="Projekt schließen" Click="CloseProject_Click"
+                          IsEnabled="{Binding Transport.HasTrack}" />
                 <Separator />
                 <MenuItem Header="Beenden" Click="Exit_Click" />
             </MenuItem>

@@ -24,6 +24,8 @@ public sealed partial class TimelineViewModel : ObservableObject
     private readonly IWaveformService _waveform;
     private readonly TransportViewModel _transport;
     private readonly IStemSeparationService _separation;
+    private IAdvancedSeparationService? _advSep;
+    public IAdvancedSeparationService AdvSep => _advSep ??= App.GetService<IAdvancedSeparationService>();
     private readonly IVoiceChangeService _voiceChange;
     private readonly ILocalVoiceService _localVoice;
     private readonly ISettingsService _settings;
@@ -708,6 +710,81 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
     }
 
+    /// <summary>Hochwertige Trennung über audio-separator (RoFormer/Demucs/Karaoke) für eine Spur.</summary>
+    public async Task SeparateTrackHqAsync(StemTrackViewModel? track, string modelKey)
+    {
+        if (track is null || IsSeparating) return;
+        var clip = track.Clips.FirstOrDefault();
+        if (clip is null) return;
+        var model = AdvSep.Models.FirstOrDefault(m => m.Key == modelKey);
+        if (model is null) return;
+
+        var path = clip.SourcePath;
+        var offset = clip.TimelineOffsetSeconds;
+
+        IsSeparating = true;
+        SeparationStatus = $"HQ-Trennung ({model.Name}) – erster Lauf lädt Modell …";
+        try
+        {
+            var prog = new Progress<string>(line =>
+            {
+                var m = System.Text.RegularExpressions.Regex.Match(line, @"(\d{1,3})%");
+                SeparationStatus = m.Success ? $"HQ-Trennung … {m.Groups[1].Value} %" : $"HQ-Trennung ({model.Name}) …";
+            });
+
+            var stems = await AdvSep.SeparateAsync(path, model.ModelFilename, prog);
+            if (stems.Count == 0)
+            {
+                _snackbar.Show("Keine Stems", "Die Trennung hat nichts erzeugt.",
+                    ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(4));
+                return;
+            }
+
+            var insertAt = Tracks.IndexOf(track) + 1;
+            foreach (var s in stems)
+            {
+                var data = await _waveform.LoadAsync(s.FilePath, 4000);
+                var dur = data.Duration.TotalSeconds;
+                var t = StemTrackViewModel.ForFile(s.FilePath, $"{s.Name} ◂ {track.Name}", ColorForStemName(s.Name));
+                t.LengthSeconds = dur;
+                t.Clips.Add(new ClipViewModel
+                {
+                    Track = t, SourcePath = s.FilePath, SourceTotalSeconds = dur, SourcePeaks = data.Peaks,
+                    TimelineOffsetSeconds = offset, SourceStartSeconds = 0, LengthSeconds = dur, Peaks = data.Peaks
+                });
+                Tracks.Insert(insertAt++, t);
+            }
+
+            OnPropertyChanged(nameof(HasTracks));
+            RecomputeDuration();
+            CommitClips();
+            Commit("HQ-Stems getrennt");
+            _snackbar.Show("Stems hinzugefügt", $"{stems.Count} Spuren ({model.Name}).",
+                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(4));
+        }
+        catch (Exception ex)
+        {
+            Audiola.Services.UiError.Show("HQ-Trennung fehlgeschlagen", ex.Message);
+        }
+        finally
+        {
+            IsSeparating = false;
+            SeparationStatus = "";
+        }
+    }
+
+    private static string ColorForStemName(string name)
+    {
+        var n = name.ToLowerInvariant();
+        if (n.Contains("vocal")) return "#FF6B6B";
+        if (n.Contains("drum")) return "#FFB454";
+        if (n.Contains("bass")) return "#5B8CFF";
+        if (n.Contains("gitar") || n.Contains("guitar")) return "#54D6A0";
+        if (n.Contains("klavier") || n.Contains("piano")) return "#6BD6FF";
+        if (n.Contains("instrument")) return "#9B8CFF";
+        return "#9B8CFF";
+    }
+
     private static string StemName(Audiola.Models.StemKind k) => k switch
     {
         Audiola.Models.StemKind.Vocals => "Vocals",
@@ -1293,6 +1370,23 @@ public sealed partial class TimelineViewModel : ObservableObject
     // ---- Projekt speichern/laden (.audiola) ----
 
     /// <summary>Baut den serialisierbaren Projektzustand aus den aktuellen Spuren/Clips.</summary>
+    /// <summary>Schließt das Projekt: leert die Spuren und setzt den Studio-Zustand zurück.</summary>
+    public void CloseProject()
+    {
+        _suppressDirty = true;
+        Tracks.Clear();
+        SelectedClip = null;
+        SelectTrack(null);
+        _engine.Load(Tracks);   // Load([]) entlädt sauber
+        DurationSeconds = 0;
+        CurrentProjectPath = null;
+        OnPropertyChanged(nameof(HasTracks));
+        UpdateContentWidth();
+        UpdatePlayhead();
+        _suppressDirty = false;
+        IsDirty = false;
+    }
+
     public Audiola.Models.ProjectDto BuildProjectDto()
     {
         var dto = new Audiola.Models.ProjectDto

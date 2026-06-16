@@ -53,6 +53,11 @@ public partial class MainWindow : FluentWindow
 
         // Echtzeit-Spektrum in der Menüleiste (folgt dem Studio-Mix).
         App.GetService<ViewModels.TimelineViewModel>().SpectrumUpdated += (_, bands) => Spectrum.SetLevels(bands);
+
+        // Strg+S → Projekt speichern.
+        InputBindings.Add(new System.Windows.Input.KeyBinding(
+            new CommunityToolkit.Mvvm.Input.RelayCommand(() => SaveProjectQuick_Click(this, new RoutedEventArgs())),
+            System.Windows.Input.Key.S, System.Windows.Input.ModifierKeys.Control));
     }
 
     private void Transport_WaveformMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -93,16 +98,34 @@ public partial class MainWindow : FluentWindow
 
     private const string ProjectFilter = "Audiola-Projekt|*.audiola|Alle Dateien|*.*";
 
-    private async void SaveProject_Click(object sender, RoutedEventArgs e)
+    private async void SaveProjectQuick_Click(object sender, RoutedEventArgs e)
     {
-        var ws = App.GetService<ProjectWorkspace>();
-        if (!ws.HasContent)
-        {
-            _snackbarService.Show("Nichts zu speichern", "Im Studio sind keine Spuren geladen.",
-                ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(4));
-            return;
-        }
+        if (!EnsureHasContent()) return;
+        await TrySaveAsync(forceDialog: false); // zum aktuellen Pfad, sonst Dialog
+    }
+
+    private async void SaveProjectAs_Click(object sender, RoutedEventArgs e)
+    {
+        if (!EnsureHasContent()) return;
         await TrySaveAsync(forceDialog: true);
+    }
+
+    private async void CloseProject_Click(object sender, RoutedEventArgs e)
+    {
+        if (!App.GetService<ProjectWorkspace>().HasContent) return;
+        if (!await ConfirmDiscardAsync()) return;
+        App.GetService<ViewModels.TimelineViewModel>().CloseProject();
+        _navigationService.Navigate(typeof(Views.Pages.HomePage));
+        _snackbarService.Show("Projekt geschlossen", "Das Studio ist jetzt leer.",
+            ControlAppearance.Secondary, new SymbolIcon(SymbolRegular.Info24), TimeSpan.FromSeconds(2));
+    }
+
+    private bool EnsureHasContent()
+    {
+        if (App.GetService<ProjectWorkspace>().HasContent) return true;
+        _snackbarService.Show("Nichts zu speichern", "Im Studio sind keine Spuren geladen.",
+            ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(4));
+        return false;
     }
 
     private async void OpenProject_Click(object sender, RoutedEventArgs e)

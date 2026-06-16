@@ -212,6 +212,35 @@ def cmd_transcribe(args):
         sys.exit(1)
 
 
+def cmd_separate(args):
+    """Hochwertige Stem-Trennung über das Paket `audio-separator` (UVR-Modelle: RoFormer, Demucs, Karaoke)."""
+    import re
+    log(f"Lade Trenn-Modell '{args.model}' …")
+    try:
+        from audio_separator.separator import Separator
+    except ImportError:
+        log("Paket 'audio-separator' fehlt. (Wird von der App installiert.)")
+        sys.exit(1)
+    try:
+        os.makedirs(args.out_dir, exist_ok=True)
+        sep = Separator(output_dir=args.out_dir, output_format="WAV")
+        sep.load_model(model_filename=args.model)
+        log("Trenne … (kann je nach Modell etwas dauern)")
+        outputs = sep.separate(args.input)
+
+        files = []
+        for f in outputs:
+            full = f if os.path.isabs(f) else os.path.join(args.out_dir, f)
+            base = os.path.basename(full)
+            m = re.search(r"\(([^)]+)\)", base)
+            stem = m.group(1) if m else os.path.splitext(base)[0]
+            files.append({"path": full, "stem": stem})
+        print(json.dumps({"files": files}))
+    except Exception as e:
+        log(f"Trennung fehlgeschlagen: {e}")
+        sys.exit(1)
+
+
 def cmd_gpu_check(args):
     info = {"torch": False, "cuda": False, "device_name": "", "torch_version": ""}
     try:
@@ -307,6 +336,7 @@ def main():
     tr = sub.add_parser("transcribe"); tr.add_argument("--input", required=True); tr.add_argument("--model", default="base"); tr.add_argument("--device", default="auto")
     vc = sub.add_parser("vc"); vc.add_argument("--input", required=True); vc.add_argument("--speaker", default=""); vc.add_argument("--out", required=True); vc.add_argument("--device", default="auto"); vc.add_argument("--models-dir", default=""); vc.add_argument("--diffusion-steps", default="30"); vc.add_argument("--auto-f0-adjust", default="False")
     sub.add_parser("gpu-check")
+    sp = sub.add_parser("separate"); sp.add_argument("--input", required=True); sp.add_argument("--out-dir", required=True); sp.add_argument("--model", required=True)
 
     args = p.parse_args()
     {
@@ -316,6 +346,7 @@ def main():
         "transcribe": cmd_transcribe,
         "vc": cmd_vc,
         "gpu-check": cmd_gpu_check,
+        "separate": cmd_separate,
     }[args.cmd](args)
 
 

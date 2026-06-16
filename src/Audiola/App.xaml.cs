@@ -31,6 +31,7 @@ public partial class App : Application
             services.AddSingleton<LiveMasterProcessor>();
             services.AddSingleton<IAudioPlayerService, NAudioPlayerService>();
             services.AddSingleton<IStemSeparationService, DemucsStemSeparationService>();
+            services.AddSingleton<IAdvancedSeparationService, AudioSeparatorService>();
             services.AddSingleton<IVoiceChangeService, ElevenLabsVoiceChangeService>();
             services.AddSingleton<IPythonEnvironment, PythonEnvironmentService>();
             services.AddSingleton<ILocalVoiceService, PythonLocalVoiceService>();
