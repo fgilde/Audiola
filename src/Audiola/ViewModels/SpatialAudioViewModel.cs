@@ -23,6 +23,7 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
     private readonly TimelineViewModel _timeline;
     private readonly ISnackbarService _snackbar;
     private readonly SpatialPreviewEngine _preview;
+    private readonly StemMixerEngine _engine;
 
     /// <summary>Beim Projekt-Laden gesetzt; wird beim nächsten Aufbau der Quellen übernommen.</summary>
     private ProjectSpatialDto? _pendingSpatial;
@@ -37,11 +38,12 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
     [ObservableProperty] private bool _isPreviewing;
     [ObservableProperty] private string _statusText = "Quelle wird vorbereitet …";
 
-    public SpatialAudioViewModel(TimelineViewModel timeline, ISnackbarService snackbar, SpatialPreviewEngine preview)
+    public SpatialAudioViewModel(TimelineViewModel timeline, ISnackbarService snackbar, SpatialPreviewEngine preview, StemMixerEngine engine)
     {
         _timeline = timeline;
         _snackbar = snackbar;
         _preview = preview;
+        _engine = engine;
         _preview.Stopped += (_, _) => System.Windows.Application.Current?.Dispatcher.Invoke(() => IsPreviewing = false);
     }
 
@@ -61,48 +63,87 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
     /// Aktive Studio-Spuren übernehmen. Reihenfolge: geladene Projekt-Werte (einmalig) →
     /// vorhandene Positionen (beim erneuten Öffnen erhalten) → sinnvolle Standardwerte.
     /// </summary>
-    public void PrepareFromStudio()
+    public void PrepareFromStudio() => _ = PrepareCoreAsync();
+
+    private async Task PrepareCoreAsync()
     {
         StopPreview();
-        var prev = new Dictionary<string, SpatialSourceViewModel>();
-        foreach (var s in Sources) prev[s.FilePath] = s;
-
-        var built = new List<SpatialSourceViewModel>();
-        var idx = 0;
-        foreach (var t in _timeline.Tracks)
+        var dur = _timeline.DurationSeconds;
+        if (_timeline.Tracks.Count == 0 || dur <= 0.01)
         {
-            var path = t.Model.FilePath;
-            if (string.IsNullOrEmpty(path) || !File.Exists(path)) continue;
-
-            var src = new SpatialSourceViewModel(path, t.DisplayName, t.AccentColor);
-            if (_pendingSpatial is { } ps && idx < ps.Sources.Count)
-            {
-                var d = ps.Sources[idx];
-                src.AzimuthDeg = d.AzimuthDeg; src.ElevationDeg = d.ElevationDeg;
-                src.Distance = d.Distance; src.GainDb = d.GainDb; src.Muted = d.Muted;
-            }
-            else if (prev.TryGetValue(path, out var existing))
-            {
-                src.AzimuthDeg = existing.AzimuthDeg; src.ElevationDeg = existing.ElevationDeg;
-                src.Distance = existing.Distance; src.GainDb = existing.GainDb; src.Muted = existing.Muted;
-            }
-            else
-            {
-                var (az, el) = DefaultPlacement(t.Name, idx);
-                src.AzimuthDeg = az; src.ElevationDeg = el;
-            }
-            built.Add(src);
-            idx++;
+            Sources.Clear();
+            StatusText = "Keine Spuren — im Studio Stems laden oder trennen.";
+            UpdateCommands();
+            return;
         }
 
-        Sources.Clear();
-        foreach (var s in built) Sources.Add(s);
-        _pendingSpatial = null;
+        // Vorhandene Positionen nach Spurname merken (die gerenderten Pfade ändern sich jedes Mal).
+        var prev = new Dictionary<string, SpatialSourceViewModel>();
+        foreach (var s in Sources) prev[s.Name] = s;
 
-        StatusText = Sources.Count == 0
-            ? "Keine Spuren — im Studio Stems laden oder trennen."
-            : $"{Sources.Count} Spuren bereit — Positionen ziehen, dann Vorschau/Export.";
+        var tracks = _timeline.Tracks.ToList();
+        var pending = _pendingSpatial;
+        var dir = Path.Combine(Path.GetTempPath(), "Audiola", "spatial-src");
+        Directory.CreateDirectory(dir);
+
+        IsBusy = true;
+        StatusText = "Bereite Spuren vor (rendern – inkl. Stimmtausch & Verschiebungen) …";
         UpdateCommands();
+        try
+        {
+            // Jede Spur EXAKT so rendern, wie sie im Studio klingt (Clips, Offset, Fades, Stimmtausch).
+            var built = await Task.Run(() =>
+            {
+                var list = new List<(string Path, string Name, string Color)>();
+                foreach (var t in tracks)
+                {
+                    if (t.Clips.Count == 0 && string.IsNullOrEmpty(t.Model.FilePath)) continue;
+                    try
+                    {
+                        var (samples, sr) = _engine.RenderRange([t], TimeSpan.Zero, TimeSpan.FromSeconds(dur));
+                        var temp = Path.Combine(dir, $"{Guid.NewGuid():N}.wav");
+                        AudioEdits.WriteWav(temp, samples, sr);
+                        list.Add((temp, t.DisplayName, t.AccentColor));
+                    }
+                    catch { /* Spur überspringen */ }
+                }
+                return list;
+            });
+
+            var newSources = new List<SpatialSourceViewModel>();
+            var idx = 0;
+            foreach (var (path, name, color) in built)
+            {
+                var src = new SpatialSourceViewModel(path, name, color);
+                if (pending is { } ps && idx < ps.Sources.Count)
+                {
+                    var d = ps.Sources[idx];
+                    src.AzimuthDeg = d.AzimuthDeg; src.ElevationDeg = d.ElevationDeg;
+                    src.Distance = d.Distance; src.GainDb = d.GainDb; src.Muted = d.Muted;
+                }
+                else if (prev.TryGetValue(name, out var ex))
+                {
+                    src.AzimuthDeg = ex.AzimuthDeg; src.ElevationDeg = ex.ElevationDeg;
+                    src.Distance = ex.Distance; src.GainDb = ex.GainDb; src.Muted = ex.Muted;
+                }
+                else
+                {
+                    var (az, el) = DefaultPlacement(name, idx);
+                    src.AzimuthDeg = az; src.ElevationDeg = el;
+                }
+                newSources.Add(src);
+                idx++;
+            }
+
+            Sources.Clear();
+            foreach (var s in newSources) Sources.Add(s);
+            _pendingSpatial = null;
+            StatusText = Sources.Count == 0
+                ? "Keine abspielbaren Spuren."
+                : $"{Sources.Count} Spuren bereit — Punkte ziehen oder Regler nutzen.";
+        }
+        catch (Exception ex) { StatusText = "Fehler: " + ex.Message; }
+        finally { IsBusy = false; UpdateCommands(); }
     }
 
     /// <summary>Aktuellen Spatial-Zustand für die Projektdatei serialisieren (null = nichts eingerichtet).</summary>

@@ -47,8 +47,14 @@ public sealed partial class StemTrackViewModel : ObservableObject
 
     public string DisplayName => Name;
 
-    /// <summary>Akzentfarbe je Stem-Typ fuer die Liste.</summary>
-    public string AccentColor => CustomColorHex ?? _stem.Kind switch
+    /// <summary>Vom Benutzer gewählte Akzentfarbe (überschreibt Standard/Stem-Farbe).</summary>
+    [ObservableProperty]
+    private string? _customColor;
+
+    partial void OnCustomColorChanged(string? value) => OnPropertyChanged(nameof(AccentColor));
+
+    /// <summary>Akzentfarbe: Benutzerwahl → Datei-Farbe → Stem-Typ.</summary>
+    public string AccentColor => CustomColor ?? CustomColorHex ?? _stem.Kind switch
     {
         StemKind.Vocals => "#FF6B6B",
         StemKind.Drums => "#FFB454",

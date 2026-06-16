@@ -228,6 +228,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
     }
 
     public async Task<(float[] Samples, int SampleRate)> ChangeVoiceAsync(string inputWav, VoiceProfile profile,
+        int diffusionSteps = 50, bool autoF0Adjust = false,
         IProgress<string>? progress = null, CancellationToken ct = default)
     {
         RequireScript();
@@ -243,7 +244,9 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         try
         {
             (code, _, err) = await RunAsync(
-                ["vc", "--input", inputWav, "--speaker", speaker, "--device", Device, "--models-dir", ModelsDir, "--out", outWav],
+                ["vc", "--input", inputWav, "--speaker", speaker, "--device", Device, "--models-dir", ModelsDir, "--out", outWav,
+                 "--diffusion-steps", diffusionSteps.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                 "--auto-f0-adjust", autoF0Adjust ? "True" : "False"],
                 progress, cts.Token);
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)

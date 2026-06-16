@@ -29,7 +29,7 @@
                 <ui:Card Grid.Column="0" Padding="16" VerticalAlignment="Top">
                     <StackPanel>
                         <TextBlock FontWeight="SemiBold" Text="Bühne (Draufsicht)" Margin="0,0,0,8" />
-                        <Grid Width="220" Height="220">
+                        <Grid x:Name="RadarArea" Width="220" Height="220">
                             <Ellipse Width="200" Height="200" Stroke="#2E3340" StrokeThickness="1.5" />
                             <Ellipse Width="134" Height="134" Stroke="#262A34" StrokeThickness="1" />
                             <Ellipse Width="68" Height="68" Stroke="#262A34" StrokeThickness="1" />
@@ -55,7 +55,8 @@
                                     <DataTemplate>
                                         <Ellipse Width="{Binding DotSize}" Height="{Binding DotSize}"
                                                  Fill="{Binding AccentBrush}" Stroke="White" StrokeThickness="1"
-                                                 ToolTip="{Binding Name}" />
+                                                 Cursor="SizeAll" ToolTip="{Binding Name}"
+                                                 MouseLeftButtonDown="Dot_Down" MouseMove="Dot_Move" MouseLeftButtonUp="Dot_Up" />
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

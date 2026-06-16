@@ -739,6 +739,48 @@ public sealed partial class TimelineViewModel : ObservableObject
         Commit("Spur gelöscht");
     }
 
+    /// <summary>Dupliziert eine Spur samt Clips und Einstellungen (direkt darunter eingefügt).</summary>
+    [RelayCommand]
+    private void DuplicateTrack(StemTrackViewModel? track)
+    {
+        if (track is null) return;
+
+        var copy = StemTrackViewModel.ForFile(track.Model.FilePath, track.Name + " (Kopie)", track.AccentColor);
+        copy.Volume = track.Volume;
+        copy.Pan = track.Pan;
+        copy.IsEnabled = track.IsEnabled;
+        copy.IsMuted = track.IsMuted;
+        copy.IsSolo = track.IsSolo;
+        copy.Lrc = track.Lrc;
+        copy.StartOffsetSeconds = track.StartOffsetSeconds;
+        copy.LengthSeconds = track.LengthSeconds;
+        copy.Peaks = track.Peaks;
+
+        foreach (var c in track.Clips)
+            copy.Clips.Add(new ClipViewModel
+            {
+                Track = copy,
+                SourcePath = c.SourcePath,
+                SourceTotalSeconds = c.SourceTotalSeconds,
+                SourcePeaks = c.SourcePeaks,
+                TimelineOffsetSeconds = c.TimelineOffsetSeconds,
+                SourceStartSeconds = c.SourceStartSeconds,
+                LengthSeconds = c.LengthSeconds,
+                Peaks = c.Peaks,
+                GainDb = c.GainDb,
+                FadeInSeconds = c.FadeInSeconds,
+                FadeOutSeconds = c.FadeOutSeconds
+            });
+
+        var idx = Tracks.IndexOf(track);
+        Tracks.Insert(idx < 0 ? Tracks.Count : idx + 1, copy);
+        OnPropertyChanged(nameof(HasTracks));
+        RecomputeDuration();
+        CommitClips();
+        if (HasTracks) _transport.SetMode(TransportMode.StemMix);
+        Commit("Spur dupliziert");
+    }
+
     /// <summary>Exportiert eine einzelne Spur (gerendert mit ihrer Lautstärke/Pan) als Audiodatei.</summary>
     [RelayCommand]
     private async Task ExportTrack(StemTrackViewModel? track)
@@ -991,7 +1033,7 @@ public sealed partial class TimelineViewModel : ObservableObject
             });
 
             var (outSamples, outSr) = choice.IsLocal
-                ? await _localVoice.ChangeVoiceAsync(prep.temp, choice.LocalProfile!, prog)
+                ? await _localVoice.ChangeVoiceAsync(prep.temp, choice.LocalProfile!, choice.DiffusionSteps, choice.AutoF0Adjust, prog)
                 : await _voiceChange.ChangeAsync(prep.temp, voiceId);
 
             // STS-Ausgabe auf den Originalpegel angleichen (verhindert Übersteuern/zu laut).

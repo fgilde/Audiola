@@ -52,8 +52,13 @@ public interface ILocalVoiceService
     /// <summary>Text-zu-Sprache mit einem lokalen Profil; liefert Stereo-Float + Samplerate.</summary>
     Task<(float[] Samples, int SampleRate)> SpeakAsync(string text, VoiceProfile profile, double speed, CancellationToken ct = default);
 
-    /// <summary>Speech-to-Speech (Stimmtausch) lokal über seed-vc; meldet Fortschritt live.</summary>
+    /// <summary>
+    /// Speech-to-Speech (Stimmtausch) lokal über seed-vc; meldet Fortschritt live.
+    /// Mehr <paramref name="diffusionSteps"/> = mehr Detail/Ausdruck; <paramref name="autoF0Adjust"/>=false
+    /// behält die Original-Melodie/Betonung exakt.
+    /// </summary>
     Task<(float[] Samples, int SampleRate)> ChangeVoiceAsync(string inputWav, VoiceProfile profile,
+        int diffusionSteps = 50, bool autoF0Adjust = false,
         IProgress<string>? progress = null, CancellationToken ct = default);
 
     /// <summary>Transkribiert eine Audiodatei via Whisper in Zeit-Segmente.</summary>

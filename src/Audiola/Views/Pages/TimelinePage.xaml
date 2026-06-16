@@ -341,6 +341,35 @@
                                                   Command="{Binding ViewModel.SeparateTrackCommand}"
                                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                                         <Separator />
+                                        <MenuItem Header="Spur duplizieren"
+                                                  Command="{Binding ViewModel.DuplicateTrackCommand}"
+                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                        <MenuItem Header="Farbe">
+                                            <MenuItem Header="Blau" Tag="#5B8CFF" Click="TrackColor_Click">
+                                                <MenuItem.Icon><Border Width="14" Height="14" CornerRadius="3" Background="#5B8CFF" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Rot" Tag="#FF6B6B" Click="TrackColor_Click">
+                                                <MenuItem.Icon><Border Width="14" Height="14" CornerRadius="3" Background="#FF6B6B" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Orange" Tag="#FFB454" Click="TrackColor_Click">
+                                                <MenuItem.Icon><Border Width="14" Height="14" CornerRadius="3" Background="#FFB454" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Grün" Tag="#54D6A0" Click="TrackColor_Click">
+                                                <MenuItem.Icon><Border Width="14" Height="14" CornerRadius="3" Background="#54D6A0" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Violett" Tag="#9B8CFF" Click="TrackColor_Click">
+                                                <MenuItem.Icon><Border Width="14" Height="14" CornerRadius="3" Background="#9B8CFF" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Pink" Tag="#FF8AD8" Click="TrackColor_Click">
+                                                <MenuItem.Icon><Border Width="14" Height="14" CornerRadius="3" Background="#FF8AD8" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Cyan" Tag="#6BD6FF" Click="TrackColor_Click">
+                                                <MenuItem.Icon><Border Width="14" Height="14" CornerRadius="3" Background="#6BD6FF" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Gelb" Tag="#D6C054" Click="TrackColor_Click">
+                                                <MenuItem.Icon><Border Width="14" Height="14" CornerRadius="3" Background="#D6C054" /></MenuItem.Icon>
+                                            </MenuItem>
+                                        </MenuItem>
                                         <MenuItem Header="Spur exportieren…"
                                                   Command="{Binding ViewModel.ExportTrackCommand}"
                                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />

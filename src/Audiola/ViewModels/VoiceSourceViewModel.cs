@@ -18,6 +18,10 @@ public sealed class VoiceChoice
     public bool TemporaryEleven { get; init; }
     public VoiceProfile? LocalProfile { get; init; }
     public bool IsLocal => Engine == "local";
+
+    // Lokaler Stimmtausch (seed-vc): Qualität/Ausdruck.
+    public int DiffusionSteps { get; init; } = 50;
+    public bool AutoF0Adjust { get; init; }
 }
 
 /// <summary>
@@ -46,6 +50,10 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
 
     public ObservableCollection<VoiceProfile> LocalProfiles { get; } = [];
     [ObservableProperty] private VoiceProfile? _selectedLocalProfile;
+
+    // Lokaler Stimmtausch-Feintuning (seed-vc)
+    [ObservableProperty] private double _diffusionSteps = 50;
+    [ObservableProperty] private bool _autoF0Adjust;
 
     private readonly ObservableCollection<VoiceInfo> _voices = [];
     public ICollectionView VoicesView { get; }
@@ -133,7 +141,13 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
             if (EngineMode == 1)
             {
                 if (SelectedLocalProfile is null) { Status = "Bitte eine lokale Stimme wählen (oder unter „Stimmen“ erstellen)."; return null; }
-                return new VoiceChoice { Engine = "local", LocalProfile = SelectedLocalProfile };
+                return new VoiceChoice
+                {
+                    Engine = "local",
+                    LocalProfile = SelectedLocalProfile,
+                    DiffusionSteps = (int)Math.Round(DiffusionSteps),
+                    AutoF0Adjust = AutoF0Adjust
+                };
             }
 
             // ElevenLabs.

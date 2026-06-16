@@ -243,13 +243,18 @@ def cmd_vc(args):
     if os.path.isfile(inf):
         import subprocess, tempfile, glob, shutil
         work = tempfile.mkdtemp(prefix="seedvc_")
-        steps = "30" if dev == "cuda" else "10"   # CPU: weniger Schritte, sonst extrem langsam
+        try:
+            steps = int(args.diffusion_steps)
+        except (TypeError, ValueError):
+            steps = 30
         if dev != "cuda":
+            steps = min(steps, 15)  # CPU: deckeln, sonst extrem langsam
             log("Hinweis: seed-vc läuft auf CPU sehr langsam — für brauchbare Geschwindigkeit CUDA-GPU nutzen.")
-        log(f"Stimmtausch via seed-vc auf {dev} (Diffusionsschritte={steps}) …")
+        auto_f0 = "True" if str(args.auto_f0_adjust).strip().lower() in ("1", "true", "yes") else "False"
+        log(f"Stimmtausch via seed-vc auf {dev} (Schritte={steps}, auto-f0={auto_f0}) …")
         cmd = [sys.executable, "-u", inf,
                "--source", args.input, "--target", args.speaker, "--output", work,
-               "--diffusion-steps", steps, "--f0-condition", "True", "--auto-f0-adjust", "True"]
+               "--diffusion-steps", str(steps), "--f0-condition", "True", "--auto-f0-adjust", auto_f0]
         # Ausgabe live durchreichen, damit man den Fortschritt sieht (kein stilles Puffern).
         proc = subprocess.Popen(cmd, cwd=seedvc_repo(args.models_dir),
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
@@ -300,7 +305,7 @@ def main():
     tt.add_argument("--speaker", default=""); tt.add_argument("--out", required=True); tt.add_argument("--device", default="auto")
     tt.add_argument("--models-dir", default=""); tt.add_argument("--speed", default="1.0")
     tr = sub.add_parser("transcribe"); tr.add_argument("--input", required=True); tr.add_argument("--model", default="base"); tr.add_argument("--device", default="auto")
-    vc = sub.add_parser("vc"); vc.add_argument("--input", required=True); vc.add_argument("--speaker", default=""); vc.add_argument("--out", required=True); vc.add_argument("--device", default="auto"); vc.add_argument("--models-dir", default="")
+    vc = sub.add_parser("vc"); vc.add_argument("--input", required=True); vc.add_argument("--speaker", default=""); vc.add_argument("--out", required=True); vc.add_argument("--device", default="auto"); vc.add_argument("--models-dir", default=""); vc.add_argument("--diffusion-steps", default="30"); vc.add_argument("--auto-f0-adjust", default="False")
     sub.add_parser("gpu-check")
 
     args = p.parse_args()

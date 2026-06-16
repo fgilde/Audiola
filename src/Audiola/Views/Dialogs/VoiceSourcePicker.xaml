@@ -111,6 +111,20 @@
             <TextBlock Margin="0,8,0,0" FontSize="12" TextWrapping="Wrap"
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                        Text="Lokale Stimmen werden unter „Stimmen“ erstellt und laufen über die lokale Engine (CUDA/CPU). „Spur aus Text“ funktioniert mit jedem lokalen Modell; der lokale Stimmtausch nutzt seed-vc (Sprache + Gesang, erhält die Melodie)." />
+
+            <!-- Feintuning für den lokalen Stimmtausch (Gesang) -->
+            <Border Margin="0,12,0,0" Padding="10" CornerRadius="6" Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <StackPanel>
+                    <TextBlock FontWeight="Medium" Text="Stimmtausch-Qualität (Gesang)" />
+                    <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding DiffusionSteps, StringFormat='Detail/Ausdruck (Diffusionsschritte): {0:F0}'}" />
+                    <Slider Minimum="15" Maximum="100" Value="{Binding DiffusionSteps, Mode=TwoWay}" />
+                    <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               Text="Mehr = natürlicher/ausdrucksstärker, aber langsamer (GPU empfohlen)." />
+                    <CheckBox Margin="0,8,0,0" IsChecked="{Binding AutoF0Adjust, Mode=TwoWay}"
+                              Content="Tonhöhe automatisch anpassen (aus = Original-Melodie/Betonung exakt behalten)" />
+                </StackPanel>
+            </Border>
         </StackPanel>
     </StackPanel>
 </UserControl>

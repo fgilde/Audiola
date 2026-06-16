@@ -58,6 +58,18 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         e.Handled = true;
     }
 
+    // ---- Spurfarbe setzen (Kontextmenü) ----
+    private void TrackColor_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.MenuItem { Tag: string hex }) return;
+        DependencyObject? d = (DependencyObject)sender;
+        while (d != null && d is not System.Windows.Controls.ContextMenu)
+            d = System.Windows.Media.VisualTreeHelper.GetParent(d) ?? LogicalTreeHelper.GetParent(d);
+        if (d is System.Windows.Controls.ContextMenu cm
+            && cm.PlacementTarget is FrameworkElement { DataContext: ViewModels.StemTrackViewModel t })
+            t.CustomColor = hex;
+    }
+
     // ---- Spur auswählen (Kopf anklicken) ----
     private void TrackHeader_Down(object sender, MouseButtonEventArgs e)
     {
