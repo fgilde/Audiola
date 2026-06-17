@@ -27,13 +27,15 @@ public sealed class StemMixerEngine : IDisposable
 
     // ---- Echtzeit-Spektrum ----
     public const int SpectrumBands = 48;
-    private const int FftSize = 1024;
+    private const int FftSize = 2048;
     private readonly float[] _fftRe = new float[FftSize];
     private readonly float[] _fftIm = new float[FftSize];
     private readonly float[] _hann = new float[FftSize];
     private readonly float[] _mono = new float[FftSize];
     private readonly float[] _bands = new float[SpectrumBands];
-    private int[] _bandOfBin = [];
+    private float _hannGain = 1f;            // Normierung: Summe des Hann-Fensters / 2
+    private int[] _bandLoBin = [];           // erster FFT-Bin je Anzeige-Band
+    private int[] _bandHiBin = [];           // letzter FFT-Bin je Anzeige-Band
 
     /// <summary>Wird im Wiedergabe-Takt mit den geglätteten Spektrum-Bändern (0..1) ausgelöst.</summary>
     public event EventHandler<float[]>? SpectrumUpdated;
@@ -49,8 +51,15 @@ public sealed class StemMixerEngine : IDisposable
     {
         _liveEq = liveEq;
         _liveMaster = liveMaster;
+        double hannSum = 0;
         for (var i = 0; i < FftSize; i++)
+        {
             _hann[i] = (float)(0.5 * (1 - Math.Cos(2 * Math.PI * i / (FftSize - 1))));
+            hannSum += _hann[i];
+        }
+        // Eine reine Sinuswelle voller Amplitude ergibt nach der Fensterung eine
+        // Bin-Magnitude von (Fenstersumme/2)·Amplitude → damit normieren wir auf 0..1.
+        _hannGain = (float)(hannSum / 2.0);
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
         _timer.Tick += (_, _) =>
@@ -284,26 +293,35 @@ public sealed class StemMixerEngine : IDisposable
 
     // ---- Spektrum ----
 
-    /// <summary>Ordnet jeden FFT-Bin (1..FftSize/2) logarithmisch einem Anzeige-Band zu.</summary>
+    /// <summary>
+    /// Bestimmt für jedes Anzeige-Band den Bereich von FFT-Bins (log-verteilt). Anders als
+    /// eine Bin→Band-Zuordnung lässt das keine leeren Bänder entstehen: schmale Bänder im
+    /// Bass teilen sich denselben Bin, statt Lücken zu hinterlassen.
+    /// </summary>
     private void BuildBandMapping(int sampleRate)
     {
         var bins = FftSize / 2;
-        _bandOfBin = new int[bins + 1];
-        double minF = 30, maxF = Math.Min(sampleRate / 2.0, 18000);
+        _bandLoBin = new int[SpectrumBands];
+        _bandHiBin = new int[SpectrumBands];
+        double minF = 40, maxF = Math.Min(sampleRate / 2.0, 16000);
         var logMin = Math.Log(minF);
         var logMax = Math.Log(maxF);
-        for (var bin = 1; bin <= bins; bin++)
+        for (var b = 0; b < SpectrumBands; b++)
         {
-            var f = bin * sampleRate / (double)FftSize;
-            f = Math.Clamp(f, minF, maxF);
-            var t = (Math.Log(f) - logMin) / (logMax - logMin);
-            _bandOfBin[bin] = Math.Clamp((int)(t * SpectrumBands), 0, SpectrumBands - 1);
+            var f0 = Math.Exp(logMin + (logMax - logMin) * b / SpectrumBands);
+            var f1 = Math.Exp(logMin + (logMax - logMin) * (b + 1) / SpectrumBands);
+            var lo = (int)Math.Floor(f0 * FftSize / sampleRate);
+            var hi = (int)Math.Ceiling(f1 * FftSize / sampleRate) - 1;
+            lo = Math.Clamp(lo, 1, bins);
+            hi = Math.Clamp(hi, lo, bins);
+            _bandLoBin[b] = lo;
+            _bandHiBin[b] = hi;
         }
     }
 
     private void UpdateSpectrum()
     {
-        if (!IsPlaying || _spectrum is null || _bandOfBin.Length == 0)
+        if (!IsPlaying || _spectrum is null || _bandLoBin.Length == 0)
             return;
 
         _spectrum.CopyLatest(_mono);
@@ -314,20 +332,34 @@ public sealed class StemMixerEngine : IDisposable
         }
         Audiola.Dsp.Fft.Forward(_fftRe, _fftIm);
 
-        Span<float> peak = stackalloc float[SpectrumBands];
-        for (var bin = 1; bin <= FftSize / 2; bin++)
-        {
-            var mag = MathF.Sqrt(_fftRe[bin] * _fftRe[bin] + _fftIm[bin] * _fftIm[bin]);
-            var band = _bandOfBin[bin];
-            if (mag > peak[band]) peak[band] = mag;
-        }
+        // Normierte Bin-Magnituden (0..~1 für Vollausschlag) vorab berechnen.
+        var bins = FftSize / 2;
+        Span<float> mag = stackalloc float[bins + 1];
+        var inv = 1f / Math.Max(1e-6f, _hannGain);
+        for (var bin = 1; bin <= bins; bin++)
+            mag[bin] = MathF.Sqrt(_fftRe[bin] * _fftRe[bin] + _fftIm[bin] * _fftIm[bin]) * inv;
 
         for (var b = 0; b < SpectrumBands; b++)
         {
-            // In dB normalisieren (−60..0 dB → 0..1).
-            var db = peak[b] > 1e-6f ? 20f * MathF.Log10(peak[b]) : -120f;
-            var v = Math.Clamp((db + 60f) / 60f, 0f, 1f);
-            _bands[b] = v > _bands[b] ? v : _bands[b] * 0.82f; // schneller rauf, langsam runter
+            // Mittel + Spitze im Bin-Bereich des Bandes mischen → ruhiger, aber lebendig.
+            float sum = 0, pk = 0;
+            var lo = _bandLoBin[b];
+            var hi = _bandHiBin[b];
+            for (var bin = lo; bin <= hi; bin++)
+            {
+                var m = mag[bin];
+                sum += m;
+                if (m > pk) pk = m;
+            }
+            var avg = sum / Math.Max(1, hi - lo + 1);
+            var val = 0.5f * avg + 0.5f * pk;
+
+            // In dB (−72..−12 dB → 0..1) + sanfter Höhen-Tilt, da Musik oben weniger Energie hat.
+            var db = val > 1e-6f ? 20f * MathF.Log10(val) : -120f;
+            db += b * (12f / SpectrumBands);                       // bis ~+12 dB im obersten Band
+            var v = Math.Clamp((db + 72f) / 60f, 0f, 1f);
+
+            _bands[b] = v > _bands[b] ? v : _bands[b] * 0.82f;     // schnell rauf, langsam runter
         }
 
         SpectrumUpdated?.Invoke(this, _bands);

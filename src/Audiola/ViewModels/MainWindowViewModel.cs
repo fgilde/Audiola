@@ -27,5 +27,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private ObservableCollection<object> _footerMenuItems =
     [
         new NavigationViewItem("Einstellungen", SymbolRegular.Settings24, typeof(Views.Pages.SettingsPage)),
+        new NavigationViewItem("Über", SymbolRegular.Info24, typeof(Views.Pages.AboutPage)),
     ];
 }

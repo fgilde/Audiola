@@ -88,6 +88,7 @@ public partial class App : Application
             services.AddSingleton<EvaluationViewModel>();
             services.AddSingleton<SettingsPage>();
             services.AddSingleton<SettingsViewModel>();
+            services.AddSingleton<AboutPage>();
         })
         .Build();
 

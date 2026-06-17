@@ -1,0 +1,89 @@
+<Page
+    x:Class="Audiola.Views.Pages.AboutPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d"
+    Title="AboutPage">
+
+    <Grid Margin="42,24,42,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Kopf -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Image Source="pack://application:,,,/Assets/audiola.png" Width="64" Height="64"
+                   VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
+            <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
+                <TextBlock FontSize="30" FontWeight="SemiBold" Text="Audiola" />
+                <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="{Binding VersionText}" />
+            </StackPanel>
+        </StackPanel>
+
+        <ui:DynamicScrollViewer Grid.Row="1" Margin="0,18,0,0" VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+
+                <!-- Beschreibung -->
+                <ui:Card Padding="18">
+                    <StackPanel>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Text="Modernes Audio-Studio" />
+                        <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="Mehrspur-Timeline, Stem-Trennung (Demucs &amp; audio-separator), Mixer, Mastering, Equalizer, räumliches Audio (Dolby-Atmos-/Binaural-Export), Stimmtausch &amp; Text-zu-Sprache (ElevenLabs sowie lokale Modelle) und Effekt-Bearbeitung." />
+                    </StackPanel>
+                </ui:Card>
+
+                <!-- Links -->
+                <ui:Card Margin="0,12,0,0" Padding="18">
+                    <StackPanel>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Text="Projekt &amp; Quellcode" />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <ui:SymbolIcon Symbol="CodeBlock24" VerticalAlignment="Center"
+                                           Margin="0,0,10,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            <TextBlock VerticalAlignment="Center">
+                                <Hyperlink NavigateUri="https://github.com/fgilde/Audiola"
+                                           RequestNavigate="OnRequestNavigate">https://github.com/fgilde/Audiola</Hyperlink>
+                            </TextBlock>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <ui:SymbolIcon Symbol="DocumentBulletList24" VerticalAlignment="Center"
+                                           Margin="0,0,10,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            <TextBlock VerticalAlignment="Center">
+                                <Hyperlink NavigateUri="https://github.com/fgilde/Audiola/issues"
+                                           RequestNavigate="OnRequestNavigate">Fehler melden / Feature vorschlagen</Hyperlink>
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:Card>
+
+                <!-- Technik -->
+                <ui:Card Margin="0,12,0,0" Padding="18">
+                    <StackPanel>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Text="Technik" />
+                        <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text=".NET 9 · WPF · WPF-UI (Fluent) · NAudio · CommunityToolkit.Mvvm · TagLibSharp · Velopack. Lokale KI-Komponenten laufen über eine verwaltete Python-Umgebung (Demucs, faster-whisper, seed-vc u. a.)." />
+                    </StackPanel>
+                </ui:Card>
+
+                <!-- Copyright -->
+                <ui:Card Margin="0,12,0,0" Padding="18">
+                    <StackPanel>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Text="Copyright" />
+                        <TextBlock Margin="0,8,0,0" FontWeight="SemiBold"
+                                   Text="{Binding CopyrightText}" />
+                        <TextBlock Margin="0,4,0,0" FontSize="12"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="Alle Rechte vorbehalten." />
+                    </StackPanel>
+                </ui:Card>
+
+            </StackPanel>
+        </ui:DynamicScrollViewer>
+    </Grid>
+</Page>

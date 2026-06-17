@@ -19,14 +19,14 @@ public partial class TextToSpeechDialog : FluentWindow
     }
 
     public VoiceChoice? Result { get; private set; }
-    public string Text => TextInput.Text;
+    public string Text => TtsTextInput.Text;
     public double Speed => SpeedSlider.Value;
     public double Stability => StabilitySlider.Value;
     public double Similarity => SimilaritySlider.Value;
 
     private async void Ok_Click(object sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(TextInput.Text)) return;
+        if (string.IsNullOrWhiteSpace(TtsTextInput.Text)) return;
         var r = await _vm.ResolveAsync();
         if (r is null) return;
         Result = r;

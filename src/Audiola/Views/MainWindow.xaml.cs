@@ -287,17 +287,8 @@ public partial class MainWindow : FluentWindow
                 ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
     }
 
-    private async void About_Click(object sender, RoutedEventArgs e)
-    {
-        var box = new Wpf.Ui.Controls.MessageBox
-        {
-            Title = "Über Audiola",
-            Content = "Audiola — modernes Audio-Studio\n\nMehrspur-Timeline, Stem-Trennung (Demucs), Mixer, " +
-                      "Mastering, EQ & Effekte.\n\n.NET 9 · WPF-UI · NAudio",
-            CloseButtonText = "Schließen"
-        };
-        await box.ShowDialogAsync();
-    }
+    private void About_Click(object sender, RoutedEventArgs e)
+        => _navigationService.Navigate(typeof(Views.Pages.AboutPage));
 
     private void OnDragOver(object sender, DragEventArgs e)
     {

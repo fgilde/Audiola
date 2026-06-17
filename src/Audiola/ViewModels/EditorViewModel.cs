@@ -40,6 +40,8 @@ public sealed partial class EditorViewModel : ObservableObject
 
     [ObservableProperty] private string _formatInfo = "";
     [ObservableProperty] private string _pathInfo = "";
+    [ObservableProperty] private string _displayName = "Keine Datei geladen";
+    [ObservableProperty] private IReadOnlyList<float>? _peaks;
     [ObservableProperty] private string _selectionInfo = "Keine Auswahl — auf der Wellenform ziehen, um einen Bereich zu markieren.";
     [ObservableProperty] private double _selectionStart = double.NaN;
     [ObservableProperty] private double _selectionEnd = double.NaN;
@@ -90,6 +92,16 @@ public sealed partial class EditorViewModel : ObservableObject
         Transport.SetMode(TransportMode.Original); // Editor-Vorschau hörbar
         OnPropertyChanged(nameof(HasClipTarget));
         BakeToStudioCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>Zurück ins Studio, ohne die Bearbeitung zu übernehmen (Zurück-Pfeil oben links).</summary>
+    [RelayCommand]
+    private void CloseEditor()
+    {
+        _targetClip = null;
+        OnPropertyChanged(nameof(HasClipTarget));
+        BakeToStudioCommand.NotifyCanExecuteChanged();
+        _navigation.Navigate(typeof(Views.Pages.TimelinePage));
     }
 
     [RelayCommand(CanExecute = nameof(HasClipTarget))]
@@ -388,11 +400,17 @@ public sealed partial class EditorViewModel : ObservableObject
         {
             FormatInfo = "";
             PathInfo = "";
+            DisplayName = "Keine Datei geladen";
+            Peaks = null;
             return;
         }
         var dur = TimeSpan.FromSeconds((double)AudioEdits.FrameCount(_buffer) / _sampleRate);
         FormatInfo = $"{_sampleRate} Hz  ·  Stereo  ·  {dur:mm\\:ss}";
         PathInfo = _originalPath ?? "";
+        DisplayName = string.IsNullOrEmpty(_originalPath) ? "Bearbeitung" : Path.GetFileName(_originalPath);
+        // Eigene Wellenform-Spitzen aus dem Arbeitspuffer — funktioniert auch im Clip-Modus,
+        // in dem die Sitzung (Session.CurrentTrack) bewusst nicht überschrieben wird.
+        Peaks = AudioEdits.ComputePeaks(_buffer);
     }
 
     private void NotifyAll()

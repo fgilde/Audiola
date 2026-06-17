@@ -6,8 +6,9 @@
     xmlns:local="clr-namespace:Audiola.Views.Dialogs"
     Title="Stimme tauschen"
     Width="540" Height="540"
+    MinWidth="420" MinHeight="420"
     WindowStartupLocation="CenterOwner"
-    ResizeMode="NoResize"
+    ResizeMode="CanResize"
     ExtendsContentIntoTitleBar="True"
     WindowBackdropType="Mica"
     WindowCornerPreference="Round">

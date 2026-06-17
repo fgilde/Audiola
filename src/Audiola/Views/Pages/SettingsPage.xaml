@@ -83,47 +83,14 @@
                 <ui:TextBox Width="280" Text="{Binding ViewModel.ElevenLabsApiKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             </ui:CardControl>
 
-            <ui:CardControl Icon="{ui:SymbolIcon PersonVoice24}" Margin="0,0,0,8">
-                <ui:CardControl.Header>
-                    <StackPanel>
-                        <TextBlock Text="Zielstimme" FontWeight="Medium" />
-                        <TextBlock
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            FontSize="12"
-                            Text="Stimme auswählen oder Voice-ID manuell eintragen" />
-                    </StackPanel>
-                </ui:CardControl.Header>
-                <StackPanel Orientation="Horizontal">
-                    <ComboBox
-                        Width="240"
-                        ItemsSource="{Binding ViewModel.Voices}"
-                        DisplayMemberPath="Display"
-                        SelectedItem="{Binding ViewModel.SelectedVoice, Mode=TwoWay}" />
-                    <ui:Button
-                        Margin="8,0,0,0"
-                        Icon="{ui:SymbolIcon ArrowSync24}"
-                        Content="Laden"
-                        Command="{Binding ViewModel.RefreshVoicesCommand}"
-                        IsEnabled="{Binding ViewModel.IsVoiceBusy, Converter={StaticResource InverseBooleanConverter}}"
-                        ToolTip="Stimmen vom Konto abrufen" />
-                </StackPanel>
-            </ui:CardControl>
-
-            <ui:CardControl Icon="{ui:SymbolIcon Edit24}" Margin="0,0,0,8">
-                <ui:CardControl.Header>
-                    <TextBlock Text="Voice-ID (manuell)" FontWeight="Medium" />
-                </ui:CardControl.Header>
-                <ui:TextBox Width="280" Text="{Binding ViewModel.ElevenLabsVoiceId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            </ui:CardControl>
-
             <ui:CardControl Icon="{ui:SymbolIcon MicRecord24}" Margin="0,0,0,8">
                 <ui:CardControl.Header>
                     <StackPanel>
-                        <TextBlock Text="Eigene Stimme erstellen" FontWeight="Medium" />
+                        <TextBlock Text="Eigene Stimme erstellen (ElevenLabs)" FontWeight="Medium" />
                         <TextBlock
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             FontSize="12"
-                            Text="Aus einer Aufnahme oder vorhandenen WAV (Instant Voice Cloning)" />
+                            Text="Aus einer Aufnahme oder vorhandenen WAV (ElevenLabs Instant Voice Cloning). Lokale Stimmen erstellst du auf der Seite „Stimmen“." />
                     </StackPanel>
                 </ui:CardControl.Header>
                 <StackPanel HorizontalAlignment="Right">

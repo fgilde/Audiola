@@ -41,12 +41,23 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Kopf -->
-        <StackPanel Grid.Row="0">
-            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Studio" />
-            <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Text="Mehrspur-Arbeitsfläche — Audiodateien hierher ziehen, Stems übernehmen, Clips schneiden &amp; mischen." />
-        </StackPanel>
+        <!-- Kopf + Mix-Export (oben rechts, auf Höhe des Titels) -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock FontSize="24" FontWeight="SemiBold" Text="Studio" />
+                <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="Mehrspur-Arbeitsfläche — Audiodateien hierher ziehen, Stems übernehmen, Clips schneiden &amp; mischen." />
+            </StackPanel>
+            <ui:Button Grid.Column="1" VerticalAlignment="Top" Appearance="Primary"
+                       Icon="{ui:SymbolIcon ArrowExportLtr24}" Content="Mix exportieren"
+                       Command="{Binding ViewModel.ExportMixCommand}"
+                       IsEnabled="{Binding ViewModel.HasTracks}"
+                       ToolTip="Den aktuellen Studio-Mix als Audiodatei speichern (WAV/MP3/…)" />
+        </Grid>
 
         <!-- Werkzeugleiste + Clip-Inspektor -->
         <StackPanel Grid.Row="1">
@@ -66,7 +77,7 @@
                             <ui:Button Style="{StaticResource ToolBtn}" Icon="{ui:SymbolIcon Layer24}"
                                        Command="{Binding ViewModel.ImportStemsCommand}" ToolTip="Aktuelle Stems als Spuren übernehmen" />
                             <ui:Button Icon="{ui:SymbolIcon TextField24}" Click="AddTts_Click"
-                                       ToolTip="Spur aus Text erzeugen (Sprache über ElevenLabs – Stimme wählen, aufnehmen oder hochladen)" />
+                                       ToolTip="Spur aus Text erzeugen (Sprache – Stimme im Dialog wählen: lokal oder ElevenLabs)" />
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -241,12 +252,12 @@
 
                 <Border Width="1" Margin="16,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Stimme (ElevenLabs)" Margin="0,0,0,4" />
+                    <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Stimme" Margin="0,0,0,4" />
                     <StackPanel Orientation="Horizontal">
                         <ui:Button Icon="{ui:SymbolIcon PersonVoice24}" Content="Stimme tauschen"
                                    Click="ClipVoiceChange_Click"
                                    IsEnabled="{Binding ViewModel.IsVoiceChanging, Converter={StaticResource InverseBooleanConverter}}"
-                                   ToolTip="Speech-to-Speech über ElevenLabs – Stimme im Dialog wählen, aufnehmen oder hochladen. Performance/Timing/Betonung (auch Gesang) bleiben erhalten, die Klangfarbe wird ersetzt. Am besten auf einer isolierten Vocal-Spur. Mit Auswahl wirkt es nur auf den markierten Bereich." />
+                                   ToolTip="Speech-to-Speech – Zielstimme im Dialog wählen (lokal oder ElevenLabs), aufnehmen oder hochladen. Performance/Timing/Betonung (auch Gesang) bleiben erhalten, die Klangfarbe wird ersetzt. Am besten auf einer isolierten Vocal-Spur. Mit Auswahl wirkt es nur auf den markierten Bereich." />
                         <ui:ProgressRing Width="20" Height="20" Margin="8,0,0,0" IsIndeterminate="True"
                                          Visibility="{Binding ViewModel.IsVoiceChanging, Converter={StaticResource BooleanToVisibilityConverter}}" />
                     </StackPanel>
@@ -395,7 +406,6 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
 
                                         <!-- Name (editierbar) + Aktiv + Löschen -->
@@ -422,13 +432,16 @@
 
                                         <Slider Grid.Row="1" Margin="0,2,0,0" Minimum="0" Maximum="1.5"
                                                 Value="{Binding Volume, Mode=TwoWay}" IsEnabled="{Binding IsEnabled}" ToolTip="Lautstärke" />
-                                        <Slider Grid.Row="2" Minimum="-1" Maximum="1"
-                                                Value="{Binding Pan, Mode=TwoWay}" IsEnabled="{Binding IsEnabled}" ToolTip="Panorama" />
 
-                                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,2,0,0">
-                                            <ToggleButton Width="32" Height="24" Padding="0" Content="M" IsChecked="{Binding IsMuted, Mode=TwoWay}" ToolTip="Mute" />
-                                            <ToggleButton Width="32" Height="24" Padding="0" Margin="6,0,0,0" Content="S" IsChecked="{Binding IsSolo, Mode=TwoWay}" ToolTip="Solo" />
-                                        </StackPanel>
+                                        <!-- Panorama + Mute/Solo in einer Zeile (spart Höhe, damit M/S nicht abschneidet) -->
+                                        <DockPanel Grid.Row="2" Margin="0,2,0,0" LastChildFill="True">
+                                            <ToggleButton DockPanel.Dock="Right" Width="30" Height="24" Padding="0" Margin="6,0,0,0"
+                                                          Content="S" IsChecked="{Binding IsSolo, Mode=TwoWay}" ToolTip="Solo" />
+                                            <ToggleButton DockPanel.Dock="Right" Width="30" Height="24" Padding="0" Margin="8,0,0,0"
+                                                          Content="M" IsChecked="{Binding IsMuted, Mode=TwoWay}" ToolTip="Mute" />
+                                            <Slider VerticalAlignment="Center" Minimum="-1" Maximum="1"
+                                                    Value="{Binding Pan, Mode=TwoWay}" IsEnabled="{Binding IsEnabled}" ToolTip="Panorama" />
+                                        </DockPanel>
                                     </Grid>
                                 </Grid>
                             </Border>
@@ -479,7 +492,7 @@
                                                         <Border.ContextMenu>
                                                             <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
                                                                 <MenuItem Header="Variationen / Effekte…" Click="ClipVariations_Click" />
-                                                                <MenuItem Header="Stimme tauschen (ElevenLabs · Sprache)" Click="ClipVoiceChange_Click" />
+                                                                <MenuItem Header="Stimme tauschen…" Click="ClipVoiceChange_Click" />
                                                 <MenuItem Header="Transkribieren (Whisper → LRC)" Click="Transcribe_Click" />
                                                                 <Separator />
                                                                 <MenuItem Header="Markierten Bereich ausschneiden" Command="{Binding ViewModel.CutRegionCommand}" />

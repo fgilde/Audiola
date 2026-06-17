@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using Audiola.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -28,15 +27,6 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private string _elevenLabsApiKey;
-
-    [ObservableProperty]
-    private string _elevenLabsVoiceId;
-
-    /// <summary>Im Konto verfügbare Stimmen (für die Auswahl).</summary>
-    public ObservableCollection<VoiceInfo> Voices { get; } = [];
-
-    [ObservableProperty]
-    private VoiceInfo? _selectedVoice;
 
     [ObservableProperty]
     private string _newVoiceName = "";
@@ -78,43 +68,13 @@ public sealed partial class SettingsViewModel : ObservableObject
         _demucsModel = settings.Current.DemucsModel;
         _outputDirectory = settings.Current.OutputDirectory;
         _elevenLabsApiKey = settings.Current.ElevenLabsApiKey;
-        _elevenLabsVoiceId = settings.Current.ElevenLabsVoiceId;
     }
 
     partial void OnPythonPathChanged(string value) { _settings.Current.PythonPath = value; _settings.Save(); }
     partial void OnDemucsModelChanged(string value) { _settings.Current.DemucsModel = value; _settings.Save(); }
     partial void OnOutputDirectoryChanged(string value) { _settings.Current.OutputDirectory = value; _settings.Save(); }
     partial void OnElevenLabsApiKeyChanged(string value) { _settings.Current.ElevenLabsApiKey = value?.Trim() ?? ""; _settings.Save(); }
-    partial void OnElevenLabsVoiceIdChanged(string value) { _settings.Current.ElevenLabsVoiceId = value?.Trim() ?? ""; _settings.Save(); }
     partial void OnIsRecordingChanged(bool value) => OnPropertyChanged(nameof(RecordButtonText));
-
-    partial void OnSelectedVoiceChanged(VoiceInfo? value)
-    {
-        if (value is not null && value.Id != ElevenLabsVoiceId)
-            ElevenLabsVoiceId = value.Id; // schreibt + speichert die Voice-ID
-    }
-
-    /// <summary>Lädt die Stimmen des Kontos und wählt die aktuell hinterlegte aus.</summary>
-    [RelayCommand]
-    private async Task RefreshVoicesAsync()
-    {
-        IsVoiceBusy = true;
-        VoiceStatus = "Lade Stimmen …";
-        try
-        {
-            var voices = await _voiceChange.GetVoicesAsync();
-            Voices.Clear();
-            foreach (var v in voices) Voices.Add(v);
-            SelectedVoice = Voices.FirstOrDefault(v => v.Id == _settings.Current.ElevenLabsVoiceId);
-            VoiceStatus = $"{Voices.Count} Stimmen geladen.";
-        }
-        catch (Exception ex)
-        {
-            VoiceStatus = "";
-            ShowError("Stimmen laden fehlgeschlagen", ex.Message);
-        }
-        finally { IsVoiceBusy = false; }
-    }
 
     /// <summary>Erstellt eine Stimme aus einer vorhandenen Audiodatei (Instant Voice Cloning).</summary>
     [RelayCommand]
@@ -164,11 +124,9 @@ public sealed partial class SettingsViewModel : ObservableObject
         try
         {
             var name = string.IsNullOrWhiteSpace(NewVoiceName) ? "Audiola-Stimme" : NewVoiceName.Trim();
-            var id = await _voiceChange.CreateVoiceFromSamplesAsync(name, paths);
-            await RefreshVoicesAsync();
-            SelectedVoice = Voices.FirstOrDefault(v => v.Id == id) ?? SelectedVoice;
-            VoiceStatus = $"Stimme '{name}' erstellt und ausgewählt.";
-            _snackbar.Show("Stimme erstellt", $"'{name}' steht jetzt zum Tauschen bereit.",
+            await _voiceChange.CreateVoiceFromSamplesAsync(name, paths);
+            VoiceStatus = $"Stimme '{name}' erstellt.";
+            _snackbar.Show("Stimme erstellt", $"'{name}' steht jetzt im Stimmtausch-Dialog bereit.",
                 ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(4));
         }
         catch (Exception ex)

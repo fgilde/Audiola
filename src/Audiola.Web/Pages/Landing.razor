@@ -1,0 +1,150 @@
+@page "/"
+@layout LandingLayout
+
+<PageTitle>Audiola — Modern Windows Audio Studio</PageTitle>
+
+@* ===================== TOP BAR ===================== *@
+<header class="nav">
+    <div class="container nav-inner">
+        <a class="brand" href="/">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span class="brand-name">Audiola</span>
+        </a>
+        <nav class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#screenshots">Screenshots</a>
+            <a class="nav-github" href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">GitHub</a>
+            <NavLink class="btn btn-primary btn-sm" href="@AppRoute">Open Web App</NavLink>
+        </nav>
+    </div>
+</header>
+
+@* ===================== HERO ===================== *@
+<section class="hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container hero-inner">
+        <div class="badge">Open source · Windows audio studio</div>
+        <h1 class="hero-title">Audiola</h1>
+        <p class="hero-tagline">Separate. Mix. Master. <span class="grad-text">All in one studio.</span></p>
+        <p class="hero-sub">
+            A modern Windows audio studio for multi-track editing, AI stem separation,
+            mastering, interactive EQ, spatial audio and local voice models — with a
+            companion web app that runs right in your browser.
+        </p>
+        <div class="hero-actions">
+            <a class="btn btn-primary btn-lg" href="https://github.com/fgilde/Audiola/releases/latest" target="_blank" rel="noopener">
+                <span class="btn-ico" aria-hidden="true">&#x2193;</span> Download
+            </a>
+            <NavLink class="btn btn-ghost btn-lg" href="@AppRoute">
+                Open Web App <span class="btn-ico" aria-hidden="true">&#x2192;</span>
+            </NavLink>
+            <a class="btn btn-link btn-lg" href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">
+                View on GitHub
+            </a>
+        </div>
+        <div class="hero-meta">EQ &rarr; Compressor &rarr; LUFS &nbsp;·&nbsp; Demucs stems &nbsp;·&nbsp; 7.1.4 multichannel &nbsp;·&nbsp; CUDA accelerated</div>
+    </div>
+</section>
+
+@* ===================== FEATURES ===================== *@
+<section id="features" class="section">
+    <div class="container">
+        <h2 class="section-title">Everything you need to shape your sound</h2>
+        <p class="section-lead">A full production toolchain — the same engine in the desktop app and the web client.</p>
+
+        <div class="feature-grid">
+            @foreach (var f in Features)
+            {
+                <article class="feature-card">
+                    <div class="feature-ico" aria-hidden="true">@f.Icon</div>
+                    <h3>@f.Title</h3>
+                    <p>@f.Description</p>
+                </article>
+            }
+        </div>
+    </div>
+</section>
+
+@* ===================== SCREENSHOTS ===================== *@
+<section id="screenshots" class="section section-alt">
+    <div class="container">
+        <h2 class="section-title">See it in action</h2>
+        <p class="section-lead">A premium, dark-mode interface tuned for focused audio work.</p>
+
+        <div class="shot-grid">
+            @foreach (var s in Screenshots)
+            {
+                <figure class="shot">
+                    <div class="shot-frame">
+                        <img src="@s.Src" alt="@s.Caption" loading="lazy"
+                             onerror="this.closest('.shot-frame').classList.add('shot-missing'); this.remove();" />
+                        <div class="shot-fallback" aria-hidden="true">
+                            <span>@s.Caption</span>
+                        </div>
+                    </div>
+                    <figcaption>@s.Caption</figcaption>
+                </figure>
+            }
+        </div>
+    </div>
+</section>
+
+@* ===================== CTA ===================== *@
+<section class="section cta">
+    <div class="container cta-inner">
+        <h2>Ready to start producing?</h2>
+        <p>Download the desktop studio for Windows, or jump straight into the web app.</p>
+        <div class="hero-actions">
+            <a class="btn btn-primary btn-lg" href="https://github.com/fgilde/Audiola/releases/latest" target="_blank" rel="noopener">Download latest release</a>
+            <NavLink class="btn btn-ghost btn-lg" href="@AppRoute">Open Web App</NavLink>
+        </div>
+    </div>
+</section>
+
+@* ===================== FOOTER ===================== *@
+<footer class="footer">
+    <div class="container footer-inner">
+        <span>&copy; Florian Gilde</span>
+        <a href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">GitHub</a>
+    </div>
+</footer>
+
+@code {
+    // Entry route into the existing Blazor tool (welcome / open-file screen).
+    private const string AppRoute = "/start";
+
+    private record Feature(string Icon, string Title, string Description);
+    private record Shot(string Src, string Caption);
+
+    private static readonly Feature[] Features =
+    {
+        new("▤", "Multi-track Studio",
+            "Arrange stems on a timeline, mix volume and pan, solo/mute, trim, fade and edit selections — then render and play instantly."),
+        new("✂", "Stem Separation",
+            "Split any track into vocals, drums, bass and more using Demucs and audio-separator, with 4- or 6-stem modes."),
+        new("≡", "Mastering",
+            "A complete EQ → Compressor → Loudness (LUFS) chain with built-in and custom presets for streaming-ready output."),
+        new("⌇", "Interactive Equalizer",
+            "A 4-band low-shelf / peak / peak / high-shelf EQ with a live frequency-response curve you can shape in real time."),
+        new("◉", "Spatial Audio",
+            "Render binaural mixes and multichannel layouts — 5.1, 7.1 and immersive 7.1.4 — for headphones and surround systems."),
+        new("♫", "Voices",
+            "Local text-to-speech models plus voice swapping via seed-vc and ElevenLabs, with optional CUDA acceleration."),
+        new("✎", "Transcription → LRC",
+            "Transcribe speech and vocals and export timed LRC lyric files synced to your audio."),
+        new("⚑", "Provenance Analysis",
+            "Inspect and report on audio provenance and metadata to better understand the material you're working with."),
+    };
+
+    private static readonly Shot[] Screenshots =
+    {
+        new("screenshots/new-voice-track.png", "Multi-track Studio"),
+        new("screenshots/change-variation.png", "Variations & Effects"),
+        new("screenshots/change-voice.png", "Voice Swap"),
+        new("screenshots/studio.png", "Timeline & Waveforms"),
+        new("screenshots/equalizer.png", "Interactive Equalizer"),
+        new("screenshots/mastering.png", "Mastering Chain"),
+        new("screenshots/spatial-audio.png", "Spatial Audio"),
+        new("screenshots/voices.png", "Local Voices"),
+    };
+}

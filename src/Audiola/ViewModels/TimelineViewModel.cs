@@ -157,6 +157,69 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Rendert den aktuellen Studio-Mix (alle aktiven Spuren mit allen Bearbeitungen) in eine
+    /// temporäre WAV und gibt deren Pfad zurück, oder <c>null</c> wenn keine Spuren vorhanden sind.
+    /// Wird z. B. von der Provenienz-Analyse genutzt, wenn kein einzelner Track geladen ist.
+    /// </summary>
+    public async Task<string?> RenderMixToTempFileAsync()
+    {
+        if (Tracks.Count == 0) return null;
+        var end = TimeSpan.FromSeconds(DurationSeconds);
+        var tracks = Tracks.ToList();
+        return await Task.Run(() =>
+        {
+            var (samples, sr) = _engine.RenderRange(tracks, TimeSpan.Zero, end);
+            var dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Audiola", "render");
+            System.IO.Directory.CreateDirectory(dir);
+            var path = System.IO.Path.Combine(dir, $"mix_{Guid.NewGuid():N}.wav");
+            AudioExporter.Export(new FloatArraySampleProvider(samples, sr, 2), path);
+            return path;
+        });
+    }
+
+    /// <summary>
+    /// Exportiert den kompletten Studio-Mix so, wie er gerade klingt — alle aktiven Spuren,
+    /// mit Lautstärke/Pan/Fades, Stimmtausch, Live-EQ und Mastering. Spart den Umweg über
+    /// die Mastering-Seite.
+    /// </summary>
+    [RelayCommand]
+    private async Task ExportMixAsync()
+    {
+        if (Tracks.Count == 0)
+        {
+            _snackbar.Show("Nichts zu exportieren", "Es sind keine Spuren im Studio.",
+                ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(3));
+            return;
+        }
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "Studio-Mix exportieren",
+            Filter = AudioExporter.SaveFilter,
+            FileName = "audiola-mix.wav"
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        var end = TimeSpan.FromSeconds(DurationSeconds);
+        var tracks = Tracks.ToList();
+        try
+        {
+            await Task.Run(() =>
+            {
+                var (samples, sr) = _engine.RenderRange(tracks, TimeSpan.Zero, end);
+                AudioExporter.Export(new FloatArraySampleProvider(samples, sr, 2), dialog.FileName);
+            });
+            _snackbar.Show("Mix exportiert", System.IO.Path.GetFileName(dialog.FileName),
+                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Show("Export fehlgeschlagen", ex.Message,
+                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
+        }
+    }
+
     public IReadOnlyList<double> GridOptions { get; } = [0.1, 0.25, 0.5, 1.0];
 
     /// <summary>Rastet Sekunden auf das Raster ein (falls aktiv) und klemmt auf ≥ 0.</summary>
@@ -969,88 +1032,10 @@ public sealed partial class TimelineViewModel : ObservableObject
     [ObservableProperty] private bool _isVoiceChanging;
 
     /// <summary>
-    /// Ersetzt die Stimme des ausgewählten Clips (oder des markierten Bereichs darin) über
-    /// ElevenLabs Speech-to-Speech. Hinweis: nur für eigene/lizenzierte Zielstimmen, und nur
-    /// für gesprochene Stimme geeignet (kein Gesang).
-    /// </summary>
-    [RelayCommand]
-    private async Task ClipVoiceChange()
-    {
-        var clip = SelectedClip;
-        if (clip is null || IsVoiceChanging) return;
-
-        if (!_voiceChange.IsConfigured)
-        {
-            _snackbar.Show("ElevenLabs nicht konfiguriert",
-                "Bitte API-Key und Voice-ID in den Einstellungen hinterlegen.",
-                ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(5));
-            return;
-        }
-
-        var path = clip.SourcePath;
-        var srcStart = clip.SourceStartSeconds;
-        var len = clip.LengthSeconds;
-        var region = ClipRegionSeconds(clip);
-
-        IsVoiceChanging = true;
-        try
-        {
-            // Clip-(Bereichs-)Ausschnitt als temporäre WAV exportieren.
-            var prep = await Task.Run(() =>
-            {
-                var (all, rate) = AudioProcessingHelper.ReadStereo(path);
-                var startS = (int)Math.Clamp((long)(srcStart * rate) * 2, 0, all.Length);
-                var lenS = (int)Math.Clamp((long)(len * rate) * 2, 0, all.Length - startS);
-                var seg = new float[lenS];
-                Array.Copy(all, startS, seg, 0, lenS);
-
-                var lenFrames = lenS / 2;
-                var a = region is null ? 0 : (int)Math.Clamp((long)(region.Value.aSec * rate), 0, lenFrames);
-                var b = region is null ? lenFrames : (int)Math.Clamp((long)(region.Value.bSec * rate), 0, lenFrames);
-                var aS = a * 2;
-                var bS = b * 2;
-
-                var sub = new float[bS - aS];
-                Array.Copy(seg, aS, sub, 0, sub.Length);
-
-                var dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Audiola", "voice");
-                System.IO.Directory.CreateDirectory(dir);
-                var t = System.IO.Path.Combine(dir, $"in_{Guid.NewGuid():N}.wav");
-                AudioEdits.WriteWav(t, sub, rate);
-                return (temp: t, seg, aS, bS, rate, whole: a == 0 && b == lenFrames);
-            });
-
-            var (outSamples, outSr) = await _voiceChange.ChangeAsync(prep.temp);
-
-            if (prep.whole)
-            {
-                ReplaceClipFromBuffer(clip, outSamples, outSr);
-            }
-            else
-            {
-                // Ergebnis auf die Clip-Rate bringen und in den Bereich einsetzen.
-                var outRes = AudioProcessingHelper.Resample(outSamples, outSr, prep.rate);
-                var newBuf = AudioProcessingHelper.SpliceStereo(prep.seg, prep.aS, prep.bS, outRes);
-                ReplaceClipFromBuffer(clip, newBuf, prep.rate);
-            }
-
-            _snackbar.Show("Stimme getauscht",
-                prep.whole ? "Der Clip wurde ersetzt." : "Der markierte Bereich wurde ersetzt.",
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
-        }
-        catch (Exception ex)
-        {
-            Audiola.Services.UiError.Show("Stimmtausch fehlgeschlagen", ex.Message);
-        }
-        finally
-        {
-            IsVoiceChanging = false;
-        }
-    }
-
-    /// <summary>
-    /// Wie <see cref="ClipVoiceChange"/>, aber mit explizit gewählter Zielstimme (aus dem Dialog).
-    /// Löscht die Stimme danach, wenn sie nur temporär (geklont) war.
+    /// Ersetzt die Stimme des ausgewählten Clips (oder des markierten Bereichs darin) per
+    /// Speech-to-Speech mit explizit gewählter Zielstimme (aus dem Stimmtausch-Dialog —
+    /// lokal über seed-vc oder über ElevenLabs). Performance/Timing/Betonung bleiben erhalten;
+    /// löscht die Stimme danach, wenn sie nur temporär (geklont) war.
     /// </summary>
     public async Task ChangeSelectedClipVoiceAsync(VoiceChoice choice)
     {

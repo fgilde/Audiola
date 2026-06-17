@@ -28,8 +28,9 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
 var app = builder.Build();
 app.UseCors();
 
-// WASM-Client (Audiola.Web) aus derselben App ausliefern.
-app.UseBlazorFrameworkFiles();
+// Der WASM-Client (Audiola.Web) wird über MapStaticAssets() weiter unten ausgeliefert.
+// In .NET 9+ ersetzt MapStaticAssets() das alte UseBlazorFrameworkFiles(); beide gleichzeitig
+// führen zu 404 auf die fingerprinted _framework-Dateien (z. B. dotnet.<hash>.js).
 app.UseRouting();
 
 var tmpDir = Path.Combine(Path.GetTempPath(), "Audiola", "api");

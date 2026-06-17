@@ -10,11 +10,12 @@ namespace Audiola.ViewModels;
 public sealed partial class ProvenanceViewModel : ObservableObject
 {
     private readonly IProvenanceService _provenance;
+    private readonly TimelineViewModel _timeline;
 
     public SessionState Session { get; }
 
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string _statusText = "Track laden oder Datei wählen, dann analysieren.";
+    [ObservableProperty] private string _statusText = "Track laden, Studio-Mix verwenden oder Datei wählen, dann analysieren.";
     [ObservableProperty] private string _assessment = "";
     [ObservableProperty] private string? _c2paRaw;
     [ObservableProperty] private bool _hasC2paRaw;
@@ -22,17 +23,57 @@ public sealed partial class ProvenanceViewModel : ObservableObject
 
     public ObservableCollection<Finding> Findings { get; } = [];
 
-    public ProvenanceViewModel(SessionState session, IProvenanceService provenance)
+    public ProvenanceViewModel(SessionState session, IProvenanceService provenance, TimelineViewModel timeline)
     {
         Session = session;
         _provenance = provenance;
+        _timeline = timeline;
+
+        // Button-Verfügbarkeit aktualisieren, sobald sich ein geladener Track oder die
+        // Studio-Spuren ändern (z. B. nach dem Öffnen eines Audiola-Projekts).
+        Session.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SessionState.HasTrack)) AnalyzeTrackCommand.NotifyCanExecuteChanged();
+        };
+        _timeline.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(TimelineViewModel.HasTracks)) AnalyzeTrackCommand.NotifyCanExecuteChanged();
+        };
     }
 
-    private bool CanAnalyzeTrack => Session.HasTrack && !IsBusy;
+    /// <summary>Analysiert werden kann ein geladener Track oder – sonst – der aktuelle Studio-Mix.</summary>
+    private bool CanAnalyzeTrack => (Session.HasTrack || _timeline.HasTracks) && !IsBusy;
 
     [RelayCommand(CanExecute = nameof(CanAnalyzeTrack))]
-    private Task AnalyzeTrackAsync()
-        => RunAnalysis(Session.CurrentTrack!.FilePath);
+    private async Task AnalyzeTrackAsync()
+    {
+        // Bevorzugt eine konkret geladene Datei; sonst den aktuellen Studio-Mix rendern.
+        if (Session.CurrentTrack?.FilePath is { } file)
+        {
+            await RunAnalysis(file);
+            return;
+        }
+
+        if (!_timeline.HasTracks) return;
+
+        IsBusy = true;
+        AnalyzeTrackCommand.NotifyCanExecuteChanged();
+        string? mix;
+        try
+        {
+            StatusText = "Studio-Mix wird gerendert …";
+            mix = await _timeline.RenderMixToTempFileAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusText = "Fehler beim Rendern des Mix: " + ex.Message;
+            IsBusy = false;
+            AnalyzeTrackCommand.NotifyCanExecuteChanged();
+            return;
+        }
+        IsBusy = false;
+        if (mix is not null) await RunAnalysis(mix);
+    }
 
     [RelayCommand]
     private async Task AnalyzeFileAsync()

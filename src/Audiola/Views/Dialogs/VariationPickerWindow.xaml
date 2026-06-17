@@ -5,8 +5,9 @@
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Title="Variationen anwenden"
     Width="480" Height="540"
+    MinWidth="380" MinHeight="420"
     WindowStartupLocation="CenterOwner"
-    ResizeMode="NoResize"
+    ResizeMode="CanResize"
     ExtendsContentIntoTitleBar="True"
     WindowBackdropType="Mica"
     WindowCornerPreference="Round">

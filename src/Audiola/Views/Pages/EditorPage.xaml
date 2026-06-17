@@ -17,14 +17,24 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Kopf -->
-        <StackPanel Grid.Row="0">
-            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Editor" />
-            <TextBlock
-                Margin="0,2,0,0"
-                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                Text="{Binding ViewModel.Session.CurrentTrack.FileName, FallbackValue='Keine Datei geladen', TargetNullValue='Keine Datei geladen'}" />
-        </StackPanel>
+        <!-- Kopf: Zurück-Button oben links + Spur-Titel -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <ui:Button Grid.Column="0" VerticalAlignment="Top" Margin="0,2,14,0"
+                       Appearance="Secondary" Icon="{ui:SymbolIcon ArrowLeft24}"
+                       Content="Zurück" Command="{Binding ViewModel.CloseEditorCommand}"
+                       ToolTip="Zurück ins Studio (ohne zu übernehmen)" />
+            <StackPanel Grid.Column="1">
+                <TextBlock FontSize="24" FontWeight="SemiBold" Text="Spur bearbeiten" />
+                <TextBlock
+                    Margin="0,2,0,0"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="{Binding ViewModel.DisplayName}" />
+            </StackPanel>
+        </Grid>
 
         <!-- Werkzeugleiste + Effekt-Einstellungen -->
         <StackPanel Grid.Row="1"
@@ -108,7 +118,7 @@
                     MouseLeftButtonDown="Waveform_MouseDown"
                     MouseMove="Waveform_MouseMove"
                     MouseLeftButtonUp="Waveform_MouseUp"
-                    Peaks="{Binding ViewModel.Session.CurrentTrack.Peaks}"
+                    Peaks="{Binding ViewModel.Peaks}"
                     Progress="{Binding ViewModel.Transport.Progress}"
                     SelectionStart="{Binding ViewModel.SelectionStart}"
                     SelectionEnd="{Binding ViewModel.SelectionEnd}"

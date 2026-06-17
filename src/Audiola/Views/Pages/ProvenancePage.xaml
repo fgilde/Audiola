@@ -28,8 +28,9 @@
 
         <!-- Aktionen -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,16,0,0">
-            <ui:Button Appearance="Primary" Icon="{ui:SymbolIcon DocumentSearch24}" Content="Geladenen Track analysieren"
-                       Command="{Binding ViewModel.AnalyzeTrackCommand}" />
+            <ui:Button Appearance="Primary" Icon="{ui:SymbolIcon DocumentSearch24}" Content="Track / Studio-Mix analysieren"
+                       Command="{Binding ViewModel.AnalyzeTrackCommand}"
+                       ToolTip="Analysiert den geladenen Track – oder, falls keiner geladen ist, den aktuellen Studio-Mix." />
             <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon FolderOpen24}" Content="Datei wählen …"
                        Command="{Binding ViewModel.AnalyzeFileCommand}" />
             <ui:ProgressRing Margin="16,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
