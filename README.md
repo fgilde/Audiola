@@ -6,17 +6,17 @@
 
 ### A modern Windows audio studio — arrange, separate, remix, master and master in 3D.
 
-A full audio-production studio for Windows built on **.NET 9 + WPF (Fluent / WPF-UI)**, with a companion **.NET 10 Blazor WebAssembly** web app. Drag a song in, split it into stems, edit on a multitrack timeline, swap or synthesize voices with local AI, master to broadcast loudness and export an immersive 3D mix — all in one app that provisions everything it needs.
+A full audio-production studio for Windows built on **.NET 10 + WPF (Fluent / WPF-UI)**, with a companion **.NET 10 Blazor WebAssembly** web app. Drag a song in, split it into stems, edit on a multitrack timeline, swap or synthesize voices with local AI, master to broadcast loudness and export an immersive 3D mix — all in one app that provisions everything it needs.
 
 <br/>
 
-[![Download](https://img.shields.io/badge/Download-Latest%20Release-5B8CFF?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/fgilde/Audiola/releases/latest)
+[![Download](https://img.shields.io/badge/Download-Latest%20Release-5B8CFF?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe)
 &nbsp;
 [![Documentation](https://img.shields.io/badge/Docs-GitHub%20Pages-6BD6FF?style=for-the-badge&logo=readthedocs&logoColor=white)](https://fgilde.github.io/Audiola/)
 
 <br/>
 
-[![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)](https://github.com/fgilde/Audiola/releases/latest)
 [![UI](https://img.shields.io/badge/UI-WPF--UI%20(Fluent)-5B8CFF)](https://github.com/lepoco/wpfui)
 [![Auto-update](https://img.shields.io/badge/Updates-Velopack-2EA043)](https://velopack.io)
@@ -243,7 +243,7 @@ If you'd rather wire up Python yourself, point Audiola's Python path at any inte
 
 ## Build & run from source
 
-Requires the **.NET 9 SDK** on Windows. (The web/API/Aspire projects additionally target **.NET 10**.)
+Requires the **.NET 10 SDK** on Windows.
 
 ```powershell
 # Clone
@@ -264,8 +264,8 @@ dotnet build Audiola.sln -c Release
 
 | Project | Target | Purpose |
 |---|---|---|
-| `src/Audiola/Audiola.csproj` | `net9.0-windows` | The WPF desktop studio app (entry point). |
-| `src/Audiola.Core/Audiola.Core.csproj` | `net9.0-windows` | Shared DSP, mastering, stem separation, voices, project format. |
+| `src/Audiola/Audiola.csproj` | `net10.0-windows` | The WPF desktop studio app (entry point). |
+| `src/Audiola.Core/Audiola.Core.csproj` | `net10.0-windows` | Shared DSP, mastering, stem separation, voices, project format. |
 | `src/Audiola.Web/Audiola.Web.csproj` | `net10.0` | Blazor WebAssembly web companion. |
 | `src/Audiola.Api/Audiola.Api.csproj` | `net10.0-windows` | API that hosts the WASM client (same origin). |
 | `src/Audiola.AppHost/Audiola.AppHost.csproj` | `net10.0` | .NET Aspire app host for the web stack. |
@@ -282,7 +282,7 @@ A **.NET 10 Blazor WebAssembly** companion (`src/Audiola.Web`) is hosted by `src
 
 ## Tech stack
 
-**.NET 9** · **WPF** · [**WPF-UI**](https://github.com/lepoco/wpfui) (Fluent / Mica) · [**NAudio**](https://github.com/naudio/NAudio) + NAudio.Lame · SoundTouch · [**CommunityToolkit.Mvvm**](https://github.com/CommunityToolkit/dotnet) · [**TagLibSharp**](https://github.com/mono/taglib-sharp) · [**Velopack**](https://velopack.io) (auto-update) · **.NET 10 Blazor WebAssembly** + [**.NET Aspire**](https://learn.microsoft.com/dotnet/aspire/) · [**MudBlazor.Extensions**](https://github.com/fgilde/MudBlazor.Extensions) · [AuralizeBlazor](https://github.com/fgilde/AuralizeBlazor).
+**.NET 10** · **WPF** · [**WPF-UI**](https://github.com/lepoco/wpfui) (Fluent / Mica) · [**NAudio**](https://github.com/naudio/NAudio) + NAudio.Lame · SoundTouch · [**CommunityToolkit.Mvvm**](https://github.com/CommunityToolkit/dotnet) · [**TagLibSharp**](https://github.com/mono/taglib-sharp) · [**Velopack**](https://velopack.io) (auto-update) · **.NET 10 Blazor WebAssembly** + [**.NET Aspire**](https://learn.microsoft.com/dotnet/aspire/) · [**MudBlazor.Extensions**](https://github.com/fgilde/MudBlazor.Extensions) · [AuralizeBlazor](https://github.com/fgilde/AuralizeBlazor).
 
 Python sidecars power the AI/ML parts: [**Demucs**](https://github.com/facebookresearch/demucs), [**audio-separator**](https://github.com/nomadkaraoke/python-audio-separator), [**faster-whisper**](https://github.com/SYSTRAN/faster-whisper), [**seed-vc**](https://github.com/Plachtaa/seed-vc), Kokoro, Qwen3-TTS, Coqui XTTS v2 and Chatterbox.
 

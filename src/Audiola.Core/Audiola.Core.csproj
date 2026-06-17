@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- net9.0-windows: nutzt NAudio MediaFoundation (MP3/AAC) und ist Windows-Host. -->
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <!-- net10.0-windows: nutzt NAudio MediaFoundation (MP3/AAC/FLAC) und ist Windows-Host. -->
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CUETools.Codecs.FLAKE" Version="1.0.5" />
     <PackageReference Include="NAudio" Version="2.3.0" />
   </ItemGroup>
 

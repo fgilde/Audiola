@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
@@ -11,7 +11,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\audiola.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
-    <Version>0.3.0</Version>
+    <Version>0.3.1</Version>
     <!-- Velopack muss seine Install/Update-Hooks vor dem WPF-Start ausführen — siehe Program.cs. -->
     <StartupObject>Audiola.Program</StartupObject>
   </PropertyGroup>

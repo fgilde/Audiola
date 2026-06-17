@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Audiola — A modern Windows audio studio</title>
-  <meta name="description" content="Audiola is a modern Windows audio studio: a multitrack timeline, AI stem separation, mastering, immersive 3D spatial audio and local + cloud voice tools (TTS & voice swap). Built on .NET 9 and WPF." />
+  <meta name="description" content="Audiola is a modern Windows audio studio: a multitrack timeline, AI stem separation, mastering, immersive 3D spatial audio and local + cloud voice tools (TTS & voice swap). Built on .NET 10 and WPF." />
   <meta name="theme-color" content="#0E0E13" />
   <link rel="icon" href="assets/logo.png" />
   <link rel="stylesheet" href="styles.css" />
@@ -36,7 +36,7 @@
         <a href="#gallery">Screenshots</a>
         <a href="#get-started">Get started</a>
         <a href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">GitHub</a>
-        <a class="nav-cta" href="https://github.com/fgilde/Audiola/releases/latest" target="_blank" rel="noopener">Download</a>
+        <a class="nav-cta" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe" target="_blank" rel="noopener">Download</a>
       </nav>
     </div>
   </header>
@@ -47,7 +47,7 @@
     <section class="hero">
       <div class="wrap">
         <img class="hero-logo" src="assets/logo.png" alt="Audiola" />
-        <div class="badge-pill"><span class="dot"></span> .NET 9 · WPF · Fluent design · Windows</div>
+        <div class="badge-pill"><span class="dot"></span> .NET 10 · WPF · Fluent design · Windows</div>
         <h1>A modern Windows<br /><span class="gradient-text">audio studio.</span></h1>
         <p class="lead">
           Drag a song in, split it into stems, arrange on a multitrack timeline,
@@ -55,7 +55,7 @@
           an immersive 3D mix — all in one app that sets up everything it needs.
         </p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="https://github.com/fgilde/Audiola/releases/latest" target="_blank" rel="noopener">
+          <a class="btn btn-primary" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe" target="_blank" rel="noopener">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Download for Windows
           </a>
@@ -120,7 +120,12 @@
           <div class="card">
             <div class="icon">📝</div>
             <h3>Transcription &amp; Lyrics</h3>
-            <p>Whisper transcription (tiny → large-v3, turbo) to time-synced LRC lyrics, with embedded lyrics metadata on export.</p>
+            <p>Whisper or ElevenLabs transcription (tiny → large-v3, turbo) to time-synced LRC lyrics, with embedded lyrics metadata on export.</p>
+          </div>
+          <div class="card">
+            <div class="icon">🏷️</div>
+            <h3>Metadata &amp; Export</h3>
+            <p>A full tag editor — title, artist, album, cover art and synced lyrics — embedded on export to WAV, MP3, M4A or FLAC, with an in-app preview.</p>
           </div>
           <div class="card">
             <div class="icon">🔎</div>
@@ -392,7 +397,7 @@
 
         <div style="margin-top:32px;">
           <h3 style="font-size:18px;margin-bottom:6px;">Build from source</h3>
-          <p style="color:var(--text-2);margin:0;">Requires the .NET 9 SDK on Windows.</p>
+          <p style="color:var(--text-2);margin:0;">Requires the .NET 10 SDK on Windows.</p>
 <pre>git clone https://github.com/fgilde/Audiola.git
 cd Audiola
 dotnet run --project src/Audiola/Audiola.csproj</pre>
@@ -411,7 +416,7 @@ dotnet run --project src/Audiola/Audiola.csproj</pre>
           <h2>Ready to produce?</h2>
           <p>Download Audiola for Windows and start arranging, separating, mastering and rendering in 3D today.</p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="https://github.com/fgilde/Audiola/releases/latest" target="_blank" rel="noopener">Download for Windows</a>
+            <a class="btn btn-primary" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe" target="_blank" rel="noopener">Download for Windows</a>
             <a class="btn btn-ghost" href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">View on GitHub</a>
           </div>
         </div>
@@ -425,7 +430,7 @@ dotnet run --project src/Audiola/Audiola.csproj</pre>
       <div>© <span id="year">2026</span> Florian Gilde · Audiola</div>
       <div class="footer-links">
         <a href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/fgilde/Audiola/releases/latest" target="_blank" rel="noopener">Download</a>
+        <a href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe" target="_blank" rel="noopener">Download</a>
         <a href="https://github.com/fgilde/Audiola/issues" target="_blank" rel="noopener">Report an issue</a>
         <!-- TODO: replace href="#" with the deployed Blazor web app URL -->
         <a href="#" data-webapp>Web version</a>

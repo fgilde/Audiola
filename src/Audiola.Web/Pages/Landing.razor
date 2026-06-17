@@ -32,7 +32,7 @@
             companion web app that runs right in your browser.
         </p>
         <div class="hero-actions">
-            <a class="btn btn-primary btn-lg" href="https://github.com/fgilde/Audiola/releases/latest" target="_blank" rel="noopener">
+            <a class="btn btn-primary btn-lg" href="@DownloadUrl" target="_blank" rel="noopener">
                 <span class="btn-ico" aria-hidden="true">&#x2193;</span> Download
             </a>
             <NavLink class="btn btn-ghost btn-lg" href="@AppRoute">
@@ -95,7 +95,7 @@
         <h2>Ready to start producing?</h2>
         <p>Download the desktop studio for Windows, or jump straight into the web app.</p>
         <div class="hero-actions">
-            <a class="btn btn-primary btn-lg" href="https://github.com/fgilde/Audiola/releases/latest" target="_blank" rel="noopener">Download latest release</a>
+            <a class="btn btn-primary btn-lg" href="@DownloadUrl" target="_blank" rel="noopener">Download latest release</a>
             <NavLink class="btn btn-ghost btn-lg" href="@AppRoute">Open Web App</NavLink>
         </div>
     </div>
@@ -112,6 +112,9 @@
 @code {
     // Entry route into the existing Blazor tool (welcome / open-file screen).
     private const string AppRoute = "/start";
+
+    // Direct download of the latest Windows installer (GitHub serves the newest release asset).
+    private const string DownloadUrl = "https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe";
 
     private record Feature(string Icon, string Title, string Description);
     private record Shot(string Src, string Caption);
@@ -132,6 +135,8 @@
             "Local text-to-speech models plus voice swapping via seed-vc and ElevenLabs, with optional CUDA acceleration."),
         new("✎", "Transcription → LRC",
             "Transcribe speech and vocals and export timed LRC lyric files synced to your audio."),
+        new("❏", "Metadata & Export",
+            "A full tag editor — title, artist, album, cover art and synced lyrics — embedded on export to WAV, MP3, M4A or FLAC, with an in-app preview."),
         new("⚑", "Provenance Analysis",
             "Inspect and report on audio provenance and metadata to better understand the material you're working with."),
     };
