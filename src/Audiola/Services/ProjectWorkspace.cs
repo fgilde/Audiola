@@ -14,10 +14,11 @@ public sealed class ProjectWorkspace
     private readonly EqualizerViewModel _eq;
     private readonly MasteringViewModel _mastering;
     private readonly SpatialAudioViewModel _spatial;
+    private readonly SongMetadata _metadata;
 
     public ProjectWorkspace(IProjectService project, ISettingsService settings,
         TimelineViewModel timeline, EqualizerViewModel eq, MasteringViewModel mastering,
-        SpatialAudioViewModel spatial)
+        SpatialAudioViewModel spatial, SongMetadata metadata)
     {
         _project = project;
         _settings = settings;
@@ -25,6 +26,7 @@ public sealed class ProjectWorkspace
         _eq = eq;
         _mastering = mastering;
         _spatial = spatial;
+        _metadata = metadata;
     }
 
     public event EventHandler? RecentChanged;
@@ -42,6 +44,7 @@ public sealed class ProjectWorkspace
         dto.Mastering = ms;
         dto.MasteringProfile = profile;
         dto.Spatial = _spatial.ExportSpatial();
+        dto.Metadata = _metadata.ToMetadata();
 
         await _project.SaveAsync(path, dto);
 
@@ -57,6 +60,8 @@ public sealed class ProjectWorkspace
         _eq.ImportBands(dto.Eq);
         _mastering.ImportSettings(dto.Mastering, dto.MasteringProfile);
         _spatial.ImportSpatial(dto.Spatial);
+        _metadata.Clear();
+        _metadata.Apply(dto.Metadata);
 
         _timeline.CurrentProjectPath = path;
         AddRecent(path);

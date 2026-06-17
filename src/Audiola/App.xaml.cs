@@ -40,6 +40,13 @@ public partial class App : Application
             services.AddSingleton<IProjectService, ProjectService>();
             services.AddSingleton<ProjectWorkspace>();
 
+            // Metadaten / Tags + einheitlicher Export.
+            services.AddSingleton<IMetadataService, MetadataService>();
+            services.AddSingleton<SongMetadata>();
+            services.AddSingleton<ExportService>();
+            // Datei-Vorschau über die MudBlazor.Extensions-Preview-Seite (lokaler Loopback-Host).
+            services.AddSingleton(_ => new FilePreviewHost("https://www.mudex.org/preview-file"));
+
             // Audio-Variations-Provider (weitere Implementierungen hier registrieren):
             services.AddSingleton<IAudioVariationProvider, StudioEffectsVariationProvider>();
             services.AddSingleton<IAudioVariationProvider, ComplexManipulationVariationProvider>();
@@ -88,6 +95,8 @@ public partial class App : Application
             services.AddSingleton<EvaluationViewModel>();
             services.AddSingleton<SettingsPage>();
             services.AddSingleton<SettingsViewModel>();
+            services.AddSingleton<MetadataPage>();
+            services.AddSingleton<MetadataViewModel>();
             services.AddSingleton<AboutPage>();
         })
         .Build();

@@ -493,7 +493,10 @@
                                                             <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
                                                                 <MenuItem Header="Variationen / Effekte…" Click="ClipVariations_Click" />
                                                                 <MenuItem Header="Stimme tauschen…" Click="ClipVoiceChange_Click" />
-                                                <MenuItem Header="Transkribieren (Whisper → LRC)" Click="Transcribe_Click" />
+                                                <MenuItem Header="Transkribieren (Lyrics → LRC)">
+                                                    <MenuItem Header="Lokal (Whisper)" Click="Transcribe_Click" />
+                                                    <MenuItem Header="ElevenLabs" Click="TranscribeEleven_Click" />
+                                                </MenuItem>
                                                                 <Separator />
                                                                 <MenuItem Header="Markierten Bereich ausschneiden" Command="{Binding ViewModel.CutRegionCommand}" />
                                                                 <MenuItem Header="Am Playhead teilen" Command="{Binding ViewModel.SplitAtPlayheadCommand}" />

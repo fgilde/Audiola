@@ -26,6 +26,10 @@ public sealed partial class TimelineViewModel : ObservableObject
     private readonly IStemSeparationService _separation;
     private IAdvancedSeparationService? _advSep;
     public IAdvancedSeparationService AdvSep => _advSep ??= App.GetService<IAdvancedSeparationService>();
+    private ExportService? _export;
+    private ExportService Export => _export ??= App.GetService<ExportService>();
+    private SongMetadata? _songMeta;
+    private SongMetadata SongMeta => _songMeta ??= App.GetService<SongMetadata>();
     private readonly IVoiceChangeService _voiceChange;
     private readonly ILocalVoiceService _localVoice;
     private readonly ISettingsService _settings;
@@ -129,32 +133,13 @@ public sealed partial class TimelineViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanExportRange))]
     private async Task ExportRangeAsync()
     {
-        var dialog = new SaveFileDialog
-        {
-            Title = "Auswahlbereich exportieren",
-            Filter = AudioExporter.SaveFilter,
-            FileName = "audiola-bereich.wav"
-        };
-        if (dialog.ShowDialog() != true) return;
-
         var start = TimeSpan.FromSeconds(SelectionStartSeconds);
         var end = TimeSpan.FromSeconds(SelectionEndSeconds);
         var tracks = Tracks.ToList();
-        try
-        {
-            await Task.Run(() =>
-            {
-                var (samples, sr) = _engine.RenderRange(tracks, start, end);
-                AudioExporter.Export(new FloatArraySampleProvider(samples, sr, 2), dialog.FileName);
-            });
-            _snackbar.Show("Bereich exportiert", System.IO.Path.GetFileName(dialog.FileName),
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
-        }
-        catch (Exception ex)
-        {
-            _snackbar.Show("Export fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
-        }
+        await Export.ExportAsync(
+            DefaultExportName("bereich"),
+            () => Task.Run(() => _engine.RenderRange(tracks, start, end)),
+            SongMeta.ToMetadata());
     }
 
     /// <summary>
@@ -193,31 +178,31 @@ public sealed partial class TimelineViewModel : ObservableObject
             return;
         }
 
-        var dialog = new SaveFileDialog
-        {
-            Title = "Studio-Mix exportieren",
-            Filter = AudioExporter.SaveFilter,
-            FileName = "audiola-mix.wav"
-        };
-        if (dialog.ShowDialog() != true) return;
-
         var end = TimeSpan.FromSeconds(DurationSeconds);
         var tracks = Tracks.ToList();
-        try
-        {
-            await Task.Run(() =>
-            {
-                var (samples, sr) = _engine.RenderRange(tracks, TimeSpan.Zero, end);
-                AudioExporter.Export(new FloatArraySampleProvider(samples, sr, 2), dialog.FileName);
-            });
-            _snackbar.Show("Mix exportiert", System.IO.Path.GetFileName(dialog.FileName),
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
-        }
-        catch (Exception ex)
-        {
-            _snackbar.Show("Export fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
-        }
+        await Export.ExportAsync(
+            DefaultExportName("mix"),
+            () => Task.Run(() => _engine.RenderRange(tracks, TimeSpan.Zero, end)),
+            SongMeta.ToMetadata(),
+            generateLyrics: GenerateMixLyricsAsync,
+            elevenLabsAvailable: ElevenLabsAvailable);
+    }
+
+    /// <summary>Liefert einen Vorschlags-Dateinamen aus den Song-Metadaten (Interpret – Titel) oder einem Fallback.</summary>
+    private string DefaultExportName(string fallbackSuffix)
+    {
+        var m = SongMeta.ToMetadata();
+        if (!string.IsNullOrWhiteSpace(m.Title))
+            return string.IsNullOrWhiteSpace(m.Artist) ? m.Title! : $"{m.Artist} - {m.Title}";
+        return $"audiola-{fallbackSuffix}";
+    }
+
+    /// <summary>Erzeugt Lyrics für den gesamten Mix — für den „erzeugen"-Button im Export-Dialog (lokal oder ElevenLabs).</summary>
+    private async Task<string?> GenerateMixLyricsAsync(bool useElevenLabs)
+    {
+        var mix = await RenderMixToTempFileAsync();
+        return mix is null ? null : await TranscribeFileToLrcAsync(mix,
+            string.IsNullOrWhiteSpace(SongMeta.Title) ? null : SongMeta.Title, useElevenLabs);
     }
 
     public IReadOnlyList<double> GridOptions { get; } = [0.1, 0.25, 0.5, 1.0];
@@ -929,34 +914,20 @@ public sealed partial class TimelineViewModel : ObservableObject
         var end = track.Clips.Count > 0 ? track.Clips.Max(c => c.EndSeconds) : track.LengthSeconds;
         if (end <= 0.01) return;
 
-        var safe = string.Join("_", track.Name.Split(System.IO.Path.GetInvalidFileNameChars()));
-        var dialog = new SaveFileDialog
-        {
-            Title = "Spur exportieren",
-            Filter = AudioExporter.SaveFilter,
-            FileName = $"{safe}.wav"
-        };
-        if (dialog.ShowDialog() != true) return;
-
         var single = new List<StemTrackViewModel> { track };
-        try
-        {
-            await Task.Run(() =>
-            {
-                var (samples, sr) = _engine.RenderRange(single, TimeSpan.Zero, TimeSpan.FromSeconds(end));
-                AudioExporter.Export(new FloatArraySampleProvider(samples, sr, 2), dialog.FileName);
-            });
-            // Falls für die Spur ein Transkript vorliegt: als Lyrics einbetten (+ .lrc daneben).
-            if (!string.IsNullOrWhiteSpace(track.Lrc))
-                LyricsEmbedder.Embed(dialog.FileName, track.Lrc, track.Name);
-            _snackbar.Show("Spur exportiert", System.IO.Path.GetFileName(dialog.FileName),
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
-        }
-        catch (Exception ex)
-        {
-            _snackbar.Show("Export fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
-        }
+        // Tags aus dem Projekt übernehmen, aber den Titel auf den Spurnamen setzen, falls noch keiner da ist.
+        var seed = SongMeta.ToMetadata();
+        if (string.IsNullOrWhiteSpace(seed.Title)) seed.Title = track.Name;
+        var sourcePath = track.Clips.FirstOrDefault()?.SourcePath;
+
+        await Export.ExportAsync(
+            track.Name,
+            () => Task.Run(() => _engine.RenderRange(single, TimeSpan.Zero, TimeSpan.FromSeconds(end))),
+            seed,
+            seedLyrics: track.Lrc,
+            generateLyrics: string.IsNullOrEmpty(sourcePath) ? null
+                : useEleven => TranscribeFileToLrcAsync(sourcePath!, track.Name, useEleven),
+            elevenLabsAvailable: ElevenLabsAvailable);
     }
 
     private const double MinClipSeconds = 0.05;
@@ -1175,7 +1146,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     [ObservableProperty] private bool _isTranscribing;
 
     /// <summary>Transkribiert den ausgewählten Clip (Whisper) und speichert das Ergebnis als LRC.</summary>
-    public async Task TranscribeSelectedClipAsync()
+    public async Task TranscribeSelectedClipAsync(bool useElevenLabs = false)
     {
         var clip = SelectedClip;
         if (clip is null || string.IsNullOrEmpty(clip.SourcePath) || IsTranscribing) return;
@@ -1183,8 +1154,10 @@ public sealed partial class TimelineViewModel : ObservableObject
         IsTranscribing = true;
         try
         {
-            var model = string.IsNullOrWhiteSpace(_settings.Current.WhisperModel) ? "base" : _settings.Current.WhisperModel;
-            var segments = await _localVoice.TranscribeAsync(clip.SourcePath, model);
+            var segments = useElevenLabs
+                ? await _voiceChange.TranscribeAsync(clip.SourcePath)
+                : await _localVoice.TranscribeAsync(clip.SourcePath,
+                    string.IsNullOrWhiteSpace(_settings.Current.WhisperModel) ? "base" : _settings.Current.WhisperModel);
             if (segments.Count == 0)
             {
                 _snackbar.Show("Keine Sprache erkannt", "Das Transkript ist leer.",
@@ -1219,6 +1192,29 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
         finally { IsTranscribing = false; }
     }
+
+    /// <summary>
+    /// Transkribiert eine Audiodatei per Whisper und gibt das Ergebnis als LRC zurück
+    /// (null = keine Sprache erkannt). Wiederverwendbar für Tag-Editor und Export-Dialog.
+    /// </summary>
+    public async Task<string?> TranscribeFileToLrcAsync(string audioPath, string? title = null, bool useElevenLabs = false)
+    {
+        if (string.IsNullOrWhiteSpace(audioPath) || !System.IO.File.Exists(audioPath)) return null;
+        IReadOnlyList<TranscriptSegment> segments;
+        if (useElevenLabs)
+        {
+            segments = await _voiceChange.TranscribeAsync(audioPath);
+        }
+        else
+        {
+            var model = string.IsNullOrWhiteSpace(_settings.Current.WhisperModel) ? "base" : _settings.Current.WhisperModel;
+            segments = await _localVoice.TranscribeAsync(audioPath, model);
+        }
+        return segments.Count == 0 ? null : LrcWriter.ToLrc(segments, title);
+    }
+
+    /// <summary>True, wenn ElevenLabs als Lyrics-Engine zur Verfügung steht (API-Key hinterlegt).</summary>
+    public bool ElevenLabsAvailable => _voiceChange.HasApiKey;
 
     /// <summary>Skaliert <paramref name="samples"/> so, dass ihr Spitzenpegel dem Original entspricht.</summary>
     private static void MatchPeak(float[] samples, float targetPeak)

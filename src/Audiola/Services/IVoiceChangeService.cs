@@ -44,6 +44,12 @@ public interface IVoiceChangeService
     Task<(float[] Samples, int SampleRate)> SpeakAsync(string text, string voiceId,
         double speed, double stability, double similarity, CancellationToken ct = default);
 
+    /// <summary>
+    /// Transkribiert eine Audiodatei über den Dienst (ElevenLabs Speech-to-Text/Scribe) und
+    /// liefert zeitgestempelte Segmente — Alternative zur lokalen Whisper-Transkription.
+    /// </summary>
+    Task<IReadOnlyList<TranscriptSegment>> TranscribeAsync(string audioPath, CancellationToken ct = default);
+
     /// <summary>Löscht eine (temporär geklonte) Stimme wieder aus dem Konto.</summary>
     Task DeleteVoiceAsync(string voiceId, CancellationToken ct = default);
 

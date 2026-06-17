@@ -372,26 +372,15 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         if (_buffer is null) return;
 
-        var dialog = new SaveFileDialog
-        {
-            Title = "Bearbeitetes Audio exportieren",
-            Filter = AudioExporter.SaveFilter,
-            FileName = (_originalPath is null ? "audio" : Path.GetFileNameWithoutExtension(_originalPath)) + "-edit.wav"
-        };
-        if (dialog.ShowDialog() != true) return;
-
         var snapshot = _buffer;
         var sr = _sampleRate;
-        try
-        {
-            await Task.Run(() =>
-                AudioExporter.Export(new FloatArraySampleProvider(snapshot, sr, AudioEdits.Channels), dialog.FileName));
-            Notify("Exportiert", Path.GetFileName(dialog.FileName), true);
-        }
-        catch (Exception ex)
-        {
-            Notify("Export fehlgeschlagen", ex.Message, false);
-        }
+        var baseName = _originalPath is null ? "audio" : Path.GetFileNameWithoutExtension(_originalPath);
+        var meta = Audiola.App.GetService<SongMetadata>().ToMetadata();
+
+        await Audiola.App.GetService<Audiola.Services.ExportService>().ExportAsync(
+            baseName + "-edit",
+            () => Task.FromResult((snapshot, sr)),
+            meta);
     }
 
     private void UpdateInfo()

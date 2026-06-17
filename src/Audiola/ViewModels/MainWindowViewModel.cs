@@ -18,6 +18,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         new NavigationViewItem("Mastering", SymbolRegular.SoundWaveCircle24, typeof(Views.Pages.MasteringPage)),
         new NavigationViewItem("Spatial Audio", SymbolRegular.Headphones24, typeof(Views.Pages.SpatialAudioPage)),
         new NavigationViewItem("Stimmen", SymbolRegular.PersonVoice24, typeof(Views.Pages.VoicesPage)),
+        new NavigationViewItem("Metadaten", SymbolRegular.Tag24, typeof(Views.Pages.MetadataPage)),
         new NavigationViewItem("Klangvariation", SymbolRegular.Pulse24, typeof(Views.Pages.VariationPage)),
         new NavigationViewItem("Provenienz", SymbolRegular.DocumentSearch24, typeof(Views.Pages.ProvenancePage)),
         new NavigationViewItem("Mess-Harness", SymbolRegular.DataHistogram24, typeof(Views.Pages.EvaluationPage)),

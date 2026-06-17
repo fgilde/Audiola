@@ -77,6 +77,7 @@ public partial class MainWindow : FluentWindow
         {
             await _trackLoader.LoadAsync(dlg.FileName);
             await App.GetService<ViewModels.TimelineViewModel>().AddAudioFileAsync(dlg.FileName, -1, 0);
+            AdoptMetadataIfEmpty(dlg.FileName);
             _navigationService.Navigate(typeof(Views.Pages.TimelinePage));
         }
         catch (Exception ex)
@@ -94,6 +95,19 @@ public partial class MainWindow : FluentWindow
         var vm = App.GetService<ViewModels.TimelineViewModel>();
         foreach (var f in dlg.FileNames)
             await vm.AddAudioFileAsync(f, -1, 0);
+        if (dlg.FileNames.Length > 0) AdoptMetadataIfEmpty(dlg.FileNames[0]);
+    }
+
+    /// <summary>Übernimmt die Tags einer geöffneten Datei in die projektweiten Metadaten (nur leere Felder).</summary>
+    private static void AdoptMetadataIfEmpty(string path)
+    {
+        try
+        {
+            var read = App.GetService<IMetadataService>().Read(path);
+            if (!read.IsEmpty)
+                App.GetService<ViewModels.SongMetadata>().Apply(read, onlyFillEmpty: true);
+        }
+        catch { /* Tags sind optional */ }
     }
 
     private const string ProjectFilter = "Audiola-Projekt|*.audiola|Alle Dateien|*.*";
@@ -115,6 +129,7 @@ public partial class MainWindow : FluentWindow
         if (!App.GetService<ProjectWorkspace>().HasContent) return;
         if (!await ConfirmDiscardAsync()) return;
         App.GetService<ViewModels.TimelineViewModel>().CloseProject();
+        App.GetService<ViewModels.SongMetadata>().Clear();
         _navigationService.Navigate(typeof(Views.Pages.HomePage));
         _snackbarService.Show("Projekt geschlossen", "Das Studio ist jetzt leer.",
             ControlAppearance.Secondary, new SymbolIcon(SymbolRegular.Info24), TimeSpan.FromSeconds(2));
@@ -305,6 +320,7 @@ public partial class MainWindow : FluentWindow
         {
             var track = await _trackLoader.LoadAsync(path!);
             await App.GetService<ViewModels.TimelineViewModel>().AddAudioFileAsync(path!, -1, 0);
+            AdoptMetadataIfEmpty(path!);
             _snackbarService.Show("Geladen", track.FileName, ControlAppearance.Success,
                 new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(2));
             _navigationService.Navigate(typeof(Views.Pages.TimelinePage));

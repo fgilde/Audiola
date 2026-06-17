@@ -204,9 +204,23 @@ def cmd_transcribe(args):
         from faster_whisper import WhisperModel
         compute = "float16" if dev == "cuda" else "int8"
         model = WhisperModel(args.model, device=dev, compute_type=compute)
-        segments, _ = model.transcribe(args.input, vad_filter=True)
+        # KEIN vad_filter: bei einem (lauten) Musik-Mix verwirft die VAD große Teile als
+        # „keine Sprache" und beendet die Transkription vorzeitig. Ohne VAD wird die gesamte
+        # Datei transkribiert; condition_on_previous_text=False dämpft Wiederholungs-Halluzinationen.
+        segments, _ = model.transcribe(
+            args.input,
+            beam_size=5,
+            condition_on_previous_text=False,
+        )
         out = [{"start": float(s.start), "end": float(s.end), "text": s.text} for s in segments]
-        print(json.dumps({"segments": out}))
+        payload = json.dumps({"segments": out})
+        # In eine Datei schreiben (robust gegen abgeschnittene stdout-Pipes), sonst stdout.
+        if getattr(args, "out", None):
+            with open(args.out, "w", encoding="utf-8") as f:
+                f.write(payload)
+            log(f"{len(out)} Segmente transkribiert.")
+        else:
+            print(payload)
     except Exception as e:
         log(f"Transkriptions-Fehler: {e}")
         sys.exit(1)
@@ -333,7 +347,7 @@ def main():
     tt.add_argument("--model", required=True); tt.add_argument("--text", required=True); tt.add_argument("--language", default="de")
     tt.add_argument("--speaker", default=""); tt.add_argument("--out", required=True); tt.add_argument("--device", default="auto")
     tt.add_argument("--models-dir", default=""); tt.add_argument("--speed", default="1.0")
-    tr = sub.add_parser("transcribe"); tr.add_argument("--input", required=True); tr.add_argument("--model", default="base"); tr.add_argument("--device", default="auto")
+    tr = sub.add_parser("transcribe"); tr.add_argument("--input", required=True); tr.add_argument("--model", default="base"); tr.add_argument("--device", default="auto"); tr.add_argument("--out", default=None)
     vc = sub.add_parser("vc"); vc.add_argument("--input", required=True); vc.add_argument("--speaker", default=""); vc.add_argument("--out", required=True); vc.add_argument("--device", default="auto"); vc.add_argument("--models-dir", default=""); vc.add_argument("--diffusion-steps", default="30"); vc.add_argument("--auto-f0-adjust", default="False")
     sub.add_parser("gpu-check")
     sp = sub.add_parser("separate"); sp.add_argument("--input", required=True); sp.add_argument("--out-dir", required=True); sp.add_argument("--model", required=True)

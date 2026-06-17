@@ -174,6 +174,22 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         }
     }
 
+    /// <summary>
+    /// Stellt die Whisper-Transkription bereit (venv + faster-whisper), falls noch nicht geschehen.
+    /// Idempotent über einen Marker, damit nicht bei jeder Transkription neu installiert wird.
+    /// </summary>
+    private async Task EnsureWhisperAsync(IProgress<string>? progress, CancellationToken ct)
+    {
+        await _env.EnsureAsync(progress, ct);
+        Directory.CreateDirectory(ModelsDir);
+        var marker = Path.Combine(ModelsDir, ".audiola_whisper_ok");
+        if (File.Exists(marker)) return;
+
+        progress?.Report("Installiere faster-whisper …");
+        await _env.InstallAsync(["faster-whisper"], null, progress, ct);
+        try { File.WriteAllText(marker, "ok"); } catch { /* Marker optional */ }
+    }
+
     private static IReadOnlyList<string> PackagesFor(string modelId) => modelId switch
     {
         "qwen3-tts" => ["qwen-tts", "soundfile", "numpy"],
@@ -267,12 +283,21 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
     public async Task<IReadOnlyList<TranscriptSegment>> TranscribeAsync(string inputWav, string whisperModel, CancellationToken ct = default)
     {
         RequireScript();
+        await EnsureWhisperAsync(null, ct);   // faster-whisper bei Bedarf selbst bereitstellen
+
+        // Ergebnis in eine Datei schreiben lassen — robust gegen abgeschnittene stdout-Pipes bei langen Transkripten.
+        var outPath = TempWav("lrc") + ".json";
         var (code, stdout, err) = await RunAsync(
-            ["transcribe", "--input", inputWav, "--model", whisperModel, "--device", Device], null, ct);
+            ["transcribe", "--input", inputWav, "--model", whisperModel, "--device", Device, "--out", outPath], null, ct);
         if (code != 0)
             throw new InvalidOperationException($"Transkription fehlgeschlagen: {Short(err)}");
 
-        var parsed = JsonSerializer.Deserialize<TranscriptResponse>(ExtractJson(stdout), JsonOpts);
+        string json;
+        try { json = File.Exists(outPath) ? await File.ReadAllTextAsync(outPath, ct) : ExtractJson(stdout); }
+        finally { try { if (File.Exists(outPath)) File.Delete(outPath); } catch { /* egal */ } }
+
+        var parsed = JsonSerializer.Deserialize<TranscriptResponse>(
+            string.IsNullOrWhiteSpace(json) ? "{}" : json, JsonOpts);
         return parsed?.Segments?.Select(s => new TranscriptSegment(s.Start, s.End, (s.Text ?? "").Trim())).ToList()
                ?? [];
     }
@@ -320,15 +345,16 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         foreach (var a in args) psi.ArgumentList.Add(a);
 
         using var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
-        var stdout = new StringBuilder();
         var stderr = new StringBuilder();
 
-        process.OutputDataReceived += (_, e) => { if (e.Data is not null) stdout.AppendLine(e.Data); };
+        // stderr zeilenweise für Live-Fortschritt; stdout komplett über ReadToEndAsync,
+        // damit auch lange Ausgaben (z. B. das gesamte Transkript-JSON in einer Zeile) nicht
+        // durch eine Race zwischen WaitForExitAsync und den Output-Events abgeschnitten werden.
         process.ErrorDataReceived += (_, e) => { if (e.Data is not null) { stderr.AppendLine(e.Data); progress?.Report(e.Data); } };
 
         process.Start();
-        process.BeginOutputReadLine();
         process.BeginErrorReadLine();
+        var stdoutTask = process.StandardOutput.ReadToEndAsync(ct);
         try
         {
             await process.WaitForExitAsync(ct);
@@ -338,7 +364,8 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
             try { process.Kill(entireProcessTree: true); } catch { /* schon beendet */ }
             throw;
         }
-        return (process.ExitCode, stdout.ToString(), stderr.ToString());
+        var stdout = await stdoutTask;   // sicherstellen, dass der gesamte stdout gelesen wurde
+        return (process.ExitCode, stdout, stderr.ToString());
     }
 
     // ---- JSON-DTOs ----

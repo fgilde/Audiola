@@ -480,41 +480,25 @@ public sealed partial class MasteringViewModel : ObservableObject
     {
         if (_sourcePath is null) return;
 
-        var dialog = new SaveFileDialog
-        {
-            Title = "Gemastertes Audio exportieren",
-            Filter = AudioExporter.SaveFilter,
-            FileName = "studio-master.wav"
-        };
-        if (dialog.ShowDialog() != true) return;
+        var src = _sourcePath;
+        var settings = BuildSettings();
+        var meta = Audiola.App.GetService<SongMetadata>().ToMetadata();
+        var name = string.IsNullOrWhiteSpace(meta.Title) ? "studio-master" : meta.Title!;
 
-        IsBusy = true;
-        AnalyzeCommand.NotifyCanExecuteChanged();
-        ExportCommand.NotifyCanExecuteChanged();
-        try
-        {
-            StatusText = "Verarbeite & exportiere …";
-            var result = await _mastering.ProcessAndExportAsync(
-                _sourcePath, dialog.FileName, BuildSettings());
-
-            StatusText = $"Fertig: {result.InputLufs:F1} → {result.OutputLufs:F1} LUFS " +
-                         $"(Gain {result.AppliedGainDb:+0.0;-0.0} dB)" +
-                         (result.ClippedSamples > 0 ? $", {result.ClippedSamples} Clipping-Samples" : "");
-
-            _snackbar.Show("Mastering fertig", Path.GetFileName(dialog.FileName),
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
-        }
-        catch (Exception ex)
-        {
-            StatusText = "Fehler: " + ex.Message;
-            _snackbar.Show("Mastering fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
-        }
-        finally
-        {
-            IsBusy = false;
-            AnalyzeCommand.NotifyCanExecuteChanged();
-            ExportCommand.NotifyCanExecuteChanged();
-        }
+        await Audiola.App.GetService<Audiola.Services.ExportService>().ExportAsync(
+            name,
+            async () =>
+            {
+                StatusText = "Verarbeite & exportiere …";
+                var dir = Path.Combine(Path.GetTempPath(), "Audiola", "master");
+                Directory.CreateDirectory(dir);
+                var tempWav = Path.Combine(dir, $"master_{Guid.NewGuid():N}.wav");
+                var result = await _mastering.ProcessAndExportAsync(src, tempWav, settings);
+                StatusText = $"Fertig: {result.InputLufs:F1} → {result.OutputLufs:F1} LUFS " +
+                             $"(Gain {result.AppliedGainDb:+0.0;-0.0} dB)" +
+                             (result.ClippedSamples > 0 ? $", {result.ClippedSamples} Clipping-Samples" : "");
+                return (NAudio.Wave.ISampleProvider)new NAudio.Wave.AudioFileReader(tempWav);
+            },
+            meta);
     }
 }

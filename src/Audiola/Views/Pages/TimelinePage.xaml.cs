@@ -241,8 +241,9 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
             await ViewModel.ChangeSelectedClipVoiceAsync(r);
     }
 
-    // ---- Transkription (Whisper → LRC) ----
+    // ---- Transkription (Whisper / ElevenLabs → LRC) ----
     private async void Transcribe_Click(object sender, RoutedEventArgs e) => await ViewModel.TranscribeSelectedClipAsync();
+    private async void TranscribeEleven_Click(object sender, RoutedEventArgs e) => await ViewModel.TranscribeSelectedClipAsync(useElevenLabs: true);
 
     // ---- Spur aus Text (TTS) ----
     private async void AddTts_Click(object sender, RoutedEventArgs e)

@@ -1,0 +1,33 @@
+<ui:FluentWindow
+    x:Class="Audiola.Views.Dialogs.PreviewDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+    Title="Vorschau"
+    Width="980" Height="720"
+    MinWidth="520" MinHeight="360"
+    WindowStartupLocation="CenterOwner"
+    ResizeMode="CanResize"
+    ExtendsContentIntoTitleBar="True"
+    WindowBackdropType="Mica"
+    WindowCornerPreference="Round">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar x:Name="TitleBarControl" Grid.Row="0" Title="Vorschau">
+            <ui:TitleBar.Icon><ui:SymbolIcon Symbol="Eye24" /></ui:TitleBar.Icon>
+        </ui:TitleBar>
+
+        <!-- Rand freilassen: das native WebView2-HWND würde sonst die Resize-Kanten des Fensters überdecken. -->
+        <Grid Grid.Row="1" Margin="8,0,8,8">
+            <ui:ProgressRing x:Name="LoadingRing" IsIndeterminate="True" Width="36" Height="36"
+                             HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <wv2:WebView2 x:Name="Web" Visibility="Collapsed" />
+        </Grid>
+    </Grid>
+</ui:FluentWindow>

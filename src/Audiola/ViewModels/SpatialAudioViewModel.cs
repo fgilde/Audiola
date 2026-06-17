@@ -254,37 +254,17 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanRun))]
     private async Task ExportBinauralAsync()
     {
-        var dlg = new SaveFileDialog
-        {
-            Title = "Binauralen 3D-Mix exportieren",
-            Filter = AudioExporter.SaveFilter,
-            FileName = "spatial-binaural.wav"
-        };
-        if (dlg.ShowDialog() != true) return;
-
         StopPreview();
-        IsBusy = true; UpdateCommands();
-        try
-        {
-            StatusText = "Rendere binauralen Mix …";
-            var list = BuildSources();
-            var room = RoomAmount;
-            await Task.Run(() =>
-            {
-                var (inter, sr) = SpatialAudioService.RenderBinaural(list, room);
-                AudioExporter.Export(new FloatArraySampleProvider(inter, sr, 2), dlg.FileName);
-            });
-            StatusText = "Fertig: " + Path.GetFileName(dlg.FileName);
-            _snackbar.Show("Binaural exportiert", Path.GetFileName(dlg.FileName),
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
-        }
-        catch (Exception ex)
-        {
-            StatusText = "Fehler: " + ex.Message;
-            _snackbar.Show("Export fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
-        }
-        finally { IsBusy = false; UpdateCommands(); }
+        var list = BuildSources();
+        var room = RoomAmount;
+        var meta = Audiola.App.GetService<SongMetadata>().ToMetadata();
+        var name = string.IsNullOrWhiteSpace(meta.Title) ? "spatial-binaural" : $"{meta.Title} (binaural)";
+
+        StatusText = "Binauraler Mix wird beim Export gerendert …";
+        await Audiola.App.GetService<Audiola.Services.ExportService>().ExportAsync(
+            name,
+            () => Task.Run(() => SpatialAudioService.RenderBinaural(list, room)),
+            meta);
     }
 
     [RelayCommand(CanExecute = nameof(CanRun))]

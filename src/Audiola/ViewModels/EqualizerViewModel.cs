@@ -142,37 +142,14 @@ public sealed partial class EqualizerViewModel : ObservableObject
     private async Task ExportAsync()
     {
         if (_sourcePath is null) return;
-        var dialog = new SaveFileDialog
-        {
-            Title = "EQ-Mix exportieren",
-            Filter = AudioExporter.SaveFilter,
-            FileName = "studio-eq.wav"
-        };
-        if (dialog.ShowDialog() != true) return;
-
         var path = _sourcePath;
         var bands = Bands.ToList();
-        IsBusy = true; ExportCommand.NotifyCanExecuteChanged();
-        try
-        {
-            await Task.Run(() =>
-            {
-                var temp = Process(path, bands);
-                using var reader = new NAudio.Wave.AudioFileReader(temp);
-                AudioExporter.Export(reader, dialog.FileName);
-            });
-            _snackbar.Show("Exportiert", Path.GetFileName(dialog.FileName),
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(2));
-        }
-        catch (Exception ex)
-        {
-            _snackbar.Show("Export fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
-        }
-        finally
-        {
-            IsBusy = false; ExportCommand.NotifyCanExecuteChanged();
-        }
+        var meta = Audiola.App.GetService<SongMetadata>().ToMetadata();
+        var name = string.IsNullOrWhiteSpace(meta.Title) ? "studio-eq" : meta.Title!;
+        await Audiola.App.GetService<Audiola.Services.ExportService>().ExportAsync(
+            name,
+            () => Task.Run<NAudio.Wave.ISampleProvider>(() => new NAudio.Wave.AudioFileReader(Process(path, bands))),
+            meta);
     }
 
     private static string Process(string path, List<EqBand> bands)

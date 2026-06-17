@@ -22,6 +22,9 @@ public sealed class ProjectDto
 
     /// <summary>Spatial-Audio-Positionen/Layout (null = nicht eingerichtet).</summary>
     public ProjectSpatialDto? Spatial { get; set; }
+
+    /// <summary>Projektweite Song-Metadaten (Titel, Artist, Album, Cover, Lyrics …).</summary>
+    public AudioMetadata? Metadata { get; set; }
 }
 
 /// <summary>Gespeicherter Spatial-Audio-Zustand (3D-Positionen + Ausgabe-Layout).</summary>

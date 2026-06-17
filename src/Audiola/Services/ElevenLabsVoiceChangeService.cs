@@ -125,6 +125,87 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
         return DecodeToStereo(mp3);
     }
 
+    public async Task<IReadOnlyList<TranscriptSegment>> TranscribeAsync(string audioPath, CancellationToken ct = default)
+    {
+        RequireApiKey();
+        if (!File.Exists(audioPath))
+            throw new InvalidOperationException("Audiodatei für die Transkription nicht gefunden.");
+
+        var bytes = await File.ReadAllBytesAsync(audioPath, ct);
+        using var form = new MultipartFormDataContent();
+        var fc = new ByteArrayContent(bytes);
+        fc.Headers.ContentType = new MediaTypeHeaderValue(MimeForExtension(audioPath));
+        form.Add(fc, "file", Path.GetFileName(audioPath));
+        form.Add(new StringContent("scribe_v1"), "model_id");
+
+        using var req = new HttpRequestMessage(HttpMethod.Post, "https://api.elevenlabs.io/v1/speech-to-text") { Content = form };
+        req.Headers.Add("xi-api-key", _settings.Current.ElevenLabsApiKey);
+        using var resp = await Http.SendAsync(req, ct);
+        var json = await resp.Content.ReadAsStringAsync(ct);
+        if (!resp.IsSuccessStatusCode)
+            throw new InvalidOperationException($"ElevenLabs-Fehler {(int)resp.StatusCode}: {Shorten(json)}");
+
+        return ParseScribe(json);
+    }
+
+    /// <summary>Wandelt die ElevenLabs-Scribe-Antwort (Wort-Timestamps) in zeilenweise Segmente um.</summary>
+    private static IReadOnlyList<TranscriptSegment> ParseScribe(string json)
+    {
+        var result = new List<TranscriptSegment>();
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("words", out var words) && words.ValueKind == JsonValueKind.Array)
+        {
+            var line = new System.Text.StringBuilder();
+            double start = 0, end = 0;
+            var hasLine = false;
+
+            void Flush()
+            {
+                var text = line.ToString().Trim();
+                if (text.Length > 0) result.Add(new TranscriptSegment(start, end, text));
+                line.Clear();
+                hasLine = false;
+            }
+
+            foreach (var w in words.EnumerateArray())
+            {
+                var type = w.TryGetProperty("type", out var ty) ? ty.GetString() : "word";
+                if (type is "spacing") continue;
+                var text = (w.TryGetProperty("text", out var tx) ? tx.GetString() : null)?.Trim();
+                if (string.IsNullOrEmpty(text)) continue;
+
+                var ws = w.TryGetProperty("start", out var s) ? s.GetDouble() : end;
+                var we = w.TryGetProperty("end", out var e) ? e.GetDouble() : ws;
+
+                // Neue Zeile bei längerer Pause oder wenn die Zeile lang wird.
+                if (hasLine && (ws - end > 0.9 || line.Length > 48)) Flush();
+                if (!hasLine) { start = ws; hasLine = true; }
+                if (line.Length > 0) line.Append(' ');
+                line.Append(text);
+                end = we;
+
+                if (text.EndsWith('.') || text.EndsWith('!') || text.EndsWith('?')) Flush();
+            }
+            Flush();
+        }
+        else if (root.TryGetProperty("text", out var t) && t.GetString() is { Length: > 0 } txt)
+        {
+            result.Add(new TranscriptSegment(0, 0, txt.Trim()));   // Fallback ohne Timestamps
+        }
+        return result;
+    }
+
+    private static string MimeForExtension(string path) => Path.GetExtension(path).ToLowerInvariant() switch
+    {
+        ".mp3" => "audio/mpeg",
+        ".m4a" or ".aac" => "audio/mp4",
+        ".flac" => "audio/flac",
+        ".ogg" => "audio/ogg",
+        _ => "audio/wav"
+    };
+
     public async Task DeleteVoiceAsync(string voiceId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(voiceId) || !HasApiKey) return;
