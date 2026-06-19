@@ -5,6 +5,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <!-- Stabile _framework-Dateinamen (kein dotnet.<hash>.js): verhindert 404, wenn die separat
+         gehostete API ein älteres Fingerprint-Manifest ausliefert als der aktuelle Web-Build. -->
+    <!--<WasmFingerprintAssets>false</WasmFingerprintAssets>-->
   </PropertyGroup>
 
   <ItemGroup>

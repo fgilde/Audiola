@@ -57,14 +57,14 @@ public sealed class AudioSeparatorService : IAdvancedSeparationService
             .ToList() ?? [];
     }
 
-    private async Task EnsureInstalledAsync(IProgress<string>? progress, CancellationToken ct)
+    public async Task EnsureInstalledAsync(IProgress<string>? progress = null, CancellationToken ct = default)
     {
         await _env.EnsureAsync(progress, ct);
         var marker = Path.Combine(_settings.Current.VoiceModelsDirectory, ".audio_separator_ok");
         if (File.Exists(marker)) return;
 
         Directory.CreateDirectory(_settings.Current.VoiceModelsDirectory);
-        var cuda = string.Equals(_settings.Current.VoiceDevice, "cuda", StringComparison.OrdinalIgnoreCase);
+        var cuda = GpuDetect.ShouldUseCuda(Device); // „auto“ erkennt die NVIDIA-GPU, nicht nur explizites „cuda“
         progress?.Report("Installiere audio-separator … (einmalig, groß)");
         await _env.InstallAsync([cuda ? "audio-separator[gpu]" : "audio-separator[cpu]"], null, progress, ct);
         try { File.WriteAllText(marker, "ok"); } catch { }

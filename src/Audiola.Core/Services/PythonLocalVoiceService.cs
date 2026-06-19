@@ -102,13 +102,10 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         // 1) Isolierte Umgebung sicherstellen.
         await _env.EnsureAsync(progress, ct);
 
-        // 2) torch (außer Whisper, das nutzt ctranslate2) – CUDA-Index, falls gewünscht.
+        // 2) torch (außer Whisper, das nutzt ctranslate2) – CUDA-Index bei NVIDIA-GPU.
         var isWhisper = modelId.StartsWith("whisper-", StringComparison.OrdinalIgnoreCase);
         if (!isWhisper)
-        {
-            var cuda = string.Equals(Device, "cuda", StringComparison.OrdinalIgnoreCase);
-            await _env.InstallAsync(["torch"], cuda ? "https://download.pytorch.org/whl/cu121" : null, progress, ct);
-        }
+            await _env.InstallAsync(["torch"], ShouldUseCuda() ? GpuDetect.CudaIndexUrl : null, progress, ct);
 
         // 3) Modell-Pakete.
         var pkgs = PackagesFor(modelId);
@@ -161,17 +158,73 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
                 throw new InvalidOperationException("seed-vc konnte nicht bereitgestellt werden (inference.py fehlt nach dem Entpacken).");
         }
 
-        // Abhängigkeiten nur einmal installieren (Marker), nicht bei jedem Tausch.
-        var depsMarker = Path.Combine(repo, ".audiola_deps_ok");
+        // WICHTIG: seed-vc hat Abhängigkeiten, die mit dem Haupt-venv KOLLIDIEREN
+        // (seed-vc verlangt transformers==4.46.3, qwen-tts verlangt transformers==4.57.3).
+        // Deshalb bekommt seed-vc ein EIGENES, isoliertes venv im Repo-Ordner; das Haupt-venv
+        // (qwen-tts/Whisper) bleibt unberührt. Der Tausch ruft seed-vc mit diesem venv-Python auf.
+        var venvPy = await EnsureSeedVcVenvAsync(repo, progress, ct);
+        var depsMarker = Path.Combine(repo, ".venv", ".audiola_deps_ok");
         if (!File.Exists(depsMarker))
         {
-            var cuda = string.Equals(Device, "cuda", StringComparison.OrdinalIgnoreCase);
-            await _env.InstallAsync(["torch", "torchvision", "torchaudio"],
-                cuda ? "https://download.pytorch.org/whl/cu121" : null, progress, ct);
-            await _env.InstallRequirementsAsync(Path.Combine(repo, "requirements.txt"), progress, ct);
-            await _env.InstallAsync(["hf_xet"], null, progress, ct); // schnellerer HF-Download, entfernt die Warnung
+            // 1) seed-vcs requirements.txt installieren. ACHTUNG: sie pinnt torch==2.4.0, das von PyPI
+            //    als reiner CPU-Build kommt — deshalb wird torch danach ggf. durch CUDA ersetzt.
+            await RunPipAsync(venvPy, ["-m", "pip", "install", "-r", Path.Combine(repo, "requirements.txt")], progress, ct);
+
+            // 2) Bei NVIDIA-GPU das CPU-torch durch den passenden CUDA-Build (gleiche Version) ersetzen,
+            //    sonst läuft die Diffusion auf der CPU und der Tausch dauert ewig.
+            if (ShouldUseCuda())
+            {
+                progress?.Report("Installiere CUDA-Torch für seed-vc (GPU-Beschleunigung) …");
+                await RunPipAsync(venvPy, ["-m", "pip", "install", "--force-reinstall", "--no-deps",
+                    "torch==2.4.0", "torchvision==0.19.0", "torchaudio==2.4.0", "--index-url", GpuDetect.CudaIndexUrl], progress, ct);
+            }
+            await RunPipAsync(venvPy, ["-m", "pip", "install", "hf_xet"], progress, ct); // schnellerer HF-Download
             try { File.WriteAllText(depsMarker, "ok"); } catch { }
         }
+    }
+
+    /// <summary>
+    /// Erstellt (einmalig) ein isoliertes venv im seed-vc-Repo und gibt dessen python.exe zurück.
+    /// Getrennt vom Haupt-venv, damit seed-vcs transformers-Pin qwen-tts nicht zerstört.
+    /// </summary>
+    private async Task<string> EnsureSeedVcVenvAsync(string repo, IProgress<string>? progress, CancellationToken ct)
+    {
+        var venvDir = Path.Combine(repo, ".venv");
+        var venvPy = Path.Combine(venvDir, "Scripts", "python.exe");
+        if (!File.Exists(venvPy))
+        {
+            progress?.Report("Erstelle isolierte seed-vc-Umgebung (eigene Paketversionen) …");
+            var (code, err) = await RunPipAsync(_env.PythonExe, ["-m", "venv", venvDir], progress, ct);
+            if (code != 0 || !File.Exists(venvPy))
+                throw new InvalidOperationException($"seed-vc-Umgebung konnte nicht erstellt werden: {Short(err)}");
+            await RunPipAsync(venvPy, ["-m", "pip", "install", "--upgrade", "pip", "wheel"], progress, ct);
+        }
+        return venvPy;
+    }
+
+    /// <summary>Führt ein Programm (python/pip) aus und reicht die Ausgabe als Fortschritt durch.</summary>
+    private static async Task<(int Code, string Err)> RunPipAsync(
+        string exe, string[] args, IProgress<string>? progress, CancellationToken ct)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = exe,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        foreach (var a in args) psi.ArgumentList.Add(a);
+
+        using var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
+        var err = new StringBuilder();
+        process.OutputDataReceived += (_, e) => { if (e.Data is not null) progress?.Report(e.Data); };
+        process.ErrorDataReceived += (_, e) => { if (e.Data is not null) { err.AppendLine(e.Data); progress?.Report(e.Data); } };
+        process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+        await process.WaitForExitAsync(ct);
+        return (process.ExitCode, err.ToString());
     }
 
     /// <summary>
@@ -220,7 +273,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         await _env.EnsureAsync(progress, ct);
         progress?.Report("Installiere CUDA-Variante von torch/torchvision/torchaudio … (groß, dauert)");
         // Alle drei zusammen aus demselben Index → passende ABI (sonst „Einsprungpunkt nicht gefunden").
-        await _env.InstallAsync(["torch", "torchvision", "torchaudio"], "https://download.pytorch.org/whl/cu121",
+        await _env.InstallAsync(["torch", "torchvision", "torchaudio"], GpuDetect.CudaIndexUrl,
             progress, ct, forceReinstall: true);
     }
 
@@ -304,6 +357,9 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
 
     private string ModelsDir => _settings.Current.VoiceModelsDirectory;
     private string Device => string.IsNullOrWhiteSpace(_settings.Current.VoiceDevice) ? "auto" : _settings.Current.VoiceDevice;
+
+    /// <summary>CUDA nutzen? Zentrale Entscheidung über <see cref="GpuDetect"/> (siehe dort).</summary>
+    private bool ShouldUseCuda() => GpuDetect.ShouldUseCuda(Device);
 
     private void RequireScript()
     {

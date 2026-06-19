@@ -145,6 +145,7 @@ def _write_wav(path, samples, sr):
 
 def _load_qwen(device_map):
     """Lädt das Qwen3-TTS-Modell (Paket `qwen-tts`)."""
+    import qwen_tts  # Top-Level-Import registriert die qwen_tts-Architektur bei transformers (sonst KeyError 'qwen_tts')
     try:
         from qwen_tts import Qwen3TTSModel
     except ImportError:
@@ -193,7 +194,9 @@ def cmd_tts(args):
                 "Für eigene (geklonte) Stimmen: XTTS v2 oder Chatterbox. Für Presets: Kokoro.")
         log("Fertig.")
     except Exception as e:
+        import traceback
         log(f"TTS-Fehler: {e}")
+        log(traceback.format_exc())
         sys.exit(1)
 
 
@@ -294,8 +297,11 @@ def cmd_vc(args):
             steps = min(steps, 15)  # CPU: deckeln, sonst extrem langsam
             log("Hinweis: seed-vc läuft auf CPU sehr langsam — für brauchbare Geschwindigkeit CUDA-GPU nutzen.")
         auto_f0 = "True" if str(args.auto_f0_adjust).strip().lower() in ("1", "true", "yes") else "False"
+        # seed-vc läuft in einem EIGENEN venv (eigene transformers-Version, kollidiert sonst mit qwen-tts).
+        seedvc_py = os.path.join(seedvc_repo(args.models_dir), ".venv", "Scripts", "python.exe")
+        py = seedvc_py if os.path.isfile(seedvc_py) else sys.executable
         log(f"Stimmtausch via seed-vc auf {dev} (Schritte={steps}, auto-f0={auto_f0}) …")
-        cmd = [sys.executable, "-u", inf,
+        cmd = [py, "-u", inf,
                "--source", args.input, "--target", args.speaker, "--output", work,
                "--diffusion-steps", str(steps), "--f0-condition", "True", "--auto-f0-adjust", auto_f0]
         # Ausgabe live durchreichen, damit man den Fortschritt sieht (kein stilles Puffern).

@@ -1,0 +1,113 @@
+<ui:FluentWindow
+    x:Class="Audiola.Views.Dialogs.TrackMasteringDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="Spur mastern"
+    Width="560" Height="660"
+    MinWidth="440" MinHeight="480"
+    WindowStartupLocation="CenterOwner"
+    ResizeMode="CanResize"
+    ExtendsContentIntoTitleBar="True"
+    WindowBackdropType="Mica"
+    WindowCornerPreference="Round">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="Spur mastern">
+            <ui:TitleBar.Icon><ui:SymbolIcon Symbol="SoundWaveCircle24" /></ui:TitleBar.Icon>
+        </ui:TitleBar>
+
+        <ui:DynamicScrollViewer Grid.Row="1" Margin="0,8,0,0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="18,0,18,8">
+                <TextBlock FontSize="18" FontWeight="SemiBold" Text="{Binding TrackName, StringFormat='Spur: {0}'}" />
+                <TextBlock Margin="0,2,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                           Text="EQ → Kompressor → Lautheit (LUFS), wie auf der Mastering-Seite — angewandt auf diese Spur." />
+
+                <!-- Profil (eingebaut + eigene) -->
+                <Border Margin="0,12,0,0" Padding="14" CornerRadius="10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Profil" />
+                        <ComboBox Margin="0,6,0,0" HorizontalAlignment="Stretch"
+                                  ItemsSource="{Binding ProfileNames}"
+                                  SelectedItem="{Binding SelectedProfile, Mode=TwoWay}"
+                                  ToolTip="Eingebaute und eigene Mastering-Profile — übernimmt EQ/Kompressor/Lautheit." />
+                    </StackPanel>
+                </Border>
+
+                <!-- Equalizer -->
+                <Border Margin="0,12,0,0" Padding="14" CornerRadius="10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Equalizer" />
+                        <CheckBox Margin="0,8,0,0" Content="High-Pass aktiv" IsChecked="{Binding HighPassEnabled, Mode=TwoWay}" />
+                        <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="{Binding HighPassHz, StringFormat='High-Pass: {0:F0} Hz'}" />
+                        <Slider Minimum="20" Maximum="300" Value="{Binding HighPassHz, Mode=TwoWay}" IsEnabled="{Binding HighPassEnabled}" />
+                        <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="{Binding BassGainDb, StringFormat='Bass: {0:+0.0;-0.0;0.0} dB'}" />
+                        <Slider Minimum="-12" Maximum="12" Value="{Binding BassGainDb, Mode=TwoWay}" />
+                        <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="{Binding MidGainDb, StringFormat='Mitten: {0:+0.0;-0.0;0.0} dB'}" />
+                        <Slider Minimum="-12" Maximum="12" Value="{Binding MidGainDb, Mode=TwoWay}" />
+                        <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="{Binding TrebleGainDb, StringFormat='Höhen: {0:+0.0;-0.0;0.0} dB'}" />
+                        <Slider Minimum="-12" Maximum="12" Value="{Binding TrebleGainDb, Mode=TwoWay}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Kompressor -->
+                <Border Margin="0,10,0,0" Padding="14" CornerRadius="10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel>
+                        <CheckBox Content="Kompressor aktiv" FontWeight="SemiBold" IsChecked="{Binding CompressorEnabled, Mode=TwoWay}" />
+                        <TextBlock Margin="0,8,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="{Binding ThresholdDb, StringFormat='Threshold: {0:F0} dB'}" />
+                        <Slider Minimum="-40" Maximum="0" Value="{Binding ThresholdDb, Mode=TwoWay}" IsEnabled="{Binding CompressorEnabled}" />
+                        <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="{Binding Ratio, StringFormat='Ratio: {0:F1}:1'}" />
+                        <Slider Minimum="1" Maximum="8" Value="{Binding Ratio, Mode=TwoWay}" IsEnabled="{Binding CompressorEnabled}" />
+                        <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="{Binding MakeupGainDb, StringFormat='Makeup: {0:+0.0;-0.0;0.0} dB'}" />
+                        <Slider Minimum="0" Maximum="12" Value="{Binding MakeupGainDb, Mode=TwoWay}" IsEnabled="{Binding CompressorEnabled}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Loudness -->
+                <Border Margin="0,10,0,0" Padding="14" CornerRadius="10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Lautheit (LUFS)" />
+                        <CheckBox Margin="0,8,0,0" Content="Auf Ziel-Lautheit normalisieren" IsChecked="{Binding NormalizeLoudness, Mode=TwoWay}" />
+                        <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="{Binding TargetLufs, StringFormat='Ziel: {0:F0} LUFS'}" />
+                        <Slider Minimum="-24" Maximum="-6" Value="{Binding TargetLufs, Mode=TwoWay}" IsEnabled="{Binding NormalizeLoudness}" />
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Margin="0,12,0,0" FontSize="12" TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding Status}" />
+            </StackPanel>
+        </ui:DynamicScrollViewer>
+
+        <!-- Aktionen -->
+        <Border Grid.Row="2" Padding="18,12" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <ui:Button Content="Abbrechen" Click="Cancel_Click" Margin="0,0,8,0" />
+                <ui:Button Icon="{ui:SymbolIcon Save24}" Content="Exportieren…" Command="{Binding ExportCommand}" Margin="0,0,8,0" />
+                <ui:Button Appearance="Primary" Icon="{ui:SymbolIcon Checkmark24}" Content="Anwenden" Command="{Binding ApplyCommand}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Busy-Overlay -->
+        <Border Grid.Row="0" Grid.RowSpan="3" Background="#B0000000"
+                Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ui:ProgressRing IsIndeterminate="True" Width="44" Height="44" HorizontalAlignment="Center" />
+                <TextBlock Margin="0,14,0,0" Foreground="White" Text="{Binding Status}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</ui:FluentWindow>

@@ -20,4 +20,7 @@ public interface IAdvancedSeparationService
     /// <summary>Trennt die Datei mit dem gewählten Modell; liefert die erzeugten Stem-Dateien.</summary>
     Task<IReadOnlyList<SeparatedStem>> SeparateAsync(string inputFile, string modelFilename,
         IProgress<string>? progress = null, CancellationToken ct = default);
+
+    /// <summary>Stellt die Stem-Trennung bereit (venv + audio-separator) — für den Einrichtungs-Assistenten.</summary>
+    Task EnsureInstalledAsync(IProgress<string>? progress = null, CancellationToken ct = default);
 }

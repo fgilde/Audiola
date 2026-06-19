@@ -386,6 +386,9 @@
                                                 <MenuItem.Icon><Border Width="14" Height="14" CornerRadius="3" Background="#D6C054" /></MenuItem.Icon>
                                             </MenuItem>
                                         </MenuItem>
+                                        <MenuItem Header="Spur mastern…"
+                                                  Command="{Binding ViewModel.MasterTrackCommand}"
+                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                                         <MenuItem Header="Spur exportieren…"
                                                   Command="{Binding ViewModel.ExportTrackCommand}"
                                                   CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />

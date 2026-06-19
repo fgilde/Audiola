@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using Audiola.Helper;
 using Audiola.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -930,6 +931,51 @@ public sealed partial class TimelineViewModel : ObservableObject
             elevenLabsAvailable: ElevenLabsAvailable);
     }
 
+    /// <summary>Öffnet den „Spur mastern“-Dialog (EQ → Kompressor → LUFS) für die gewählte Spur.</summary>
+    [RelayCommand]
+    private void MasterTrack(StemTrackViewModel? track)
+    {
+        if (track is null) return;
+        var dlg = new Audiola.Views.Dialogs.TrackMasteringDialog(App.GetService<TrackMasteringViewModel>(), track)
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        dlg.ShowDialog();
+    }
+
+    /// <summary>Rendert eine einzelne Spur (mit allen Clips/Pegeln) als interleaved Stereo + Samplerate.</summary>
+    public Task<(float[] Samples, int SampleRate)> RenderTrackAsync(StemTrackViewModel track)
+    {
+        var end = track.Clips.Count > 0 ? track.Clips.Max(c => c.EndSeconds) : track.LengthSeconds;
+        var single = new List<StemTrackViewModel> { track };
+        return Task.Run(() => _engine.RenderRange(single, TimeSpan.Zero, TimeSpan.FromSeconds(Math.Max(0.1, end))));
+    }
+
+    /// <summary>
+    /// Ersetzt den gesamten Inhalt einer Spur durch eine Audiodatei (z. B. gemastert) — als ein
+    /// Clip ab Position 0. Flacht mehrere Clips zu einem zusammen. Mit Undo.
+    /// </summary>
+    public async Task ApplyProcessedTrackAsync(StemTrackViewModel track, string wavPath)
+    {
+        var data = await LoadClipDataAsync(wavPath);
+        track.Clips.Clear();
+        track.Clips.Add(new ClipViewModel
+        {
+            Track = track,
+            SourcePath = wavPath,
+            SourceTotalSeconds = data.Seconds,
+            SourcePeaks = data.Peaks,
+            TimelineOffsetSeconds = 0,
+            SourceStartSeconds = 0,
+            LengthSeconds = data.Seconds,
+            Peaks = data.Peaks
+        });
+        RecomputeDuration();
+        CommitClips();
+        if (HasTracks) _transport.SetMode(TransportMode.StemMix);
+        Commit("Spur gemastert");
+    }
+
     private const double MinClipSeconds = 0.05;
 
     /// <summary>Linke Clip-Kante auf eine Timeline-Zeit ziehen (Offset + Quellstart + Länge).</summary>
@@ -962,6 +1008,65 @@ public sealed partial class TimelineViewModel : ObservableObject
         clip.LengthSeconds = newLen;
         Reslice(clip, total);
         RecomputeDuration();
+    }
+
+    /// <summary>
+    /// Vorschau beim Dehnen: ändert nur die Timeline-Länge (und bei der linken Kante den Offset),
+    /// ohne die Quelle zu trimmen — die Wellenform wird dadurch optisch gestaucht/gedehnt.
+    /// Das eigentliche Time-Stretching passiert beim Loslassen (<see cref="StretchClipToLengthAsync"/>).
+    /// </summary>
+    public void SetClipStretchEdge(ClipViewModel clip, double timelineSeconds, bool fromLeft, double anchorOffset, double anchorLen)
+    {
+        if (fromLeft)
+        {
+            var rightEdge = anchorOffset + anchorLen;
+            var newStart = Math.Clamp(Snap(timelineSeconds), 0, rightEdge - MinClipSeconds);
+            clip.TimelineOffsetSeconds = newStart;
+            clip.LengthSeconds = rightEdge - newStart;
+        }
+        else
+        {
+            clip.LengthSeconds = Math.Max(MinClipSeconds, Snap(timelineSeconds) - clip.TimelineOffsetSeconds);
+        }
+        RecomputeDuration();
+    }
+
+    /// <summary>
+    /// Dehnt/staucht das Clip-Audio per Time-Stretch (SoundTouch, Tonhöhe bleibt) auf die neue Länge
+    /// und backt es als neue Clip-Quelle. <paramref name="origSrcLen"/> ist die ursprüngliche
+    /// Quell-Dauer (vor dem Ziehen), <paramref name="newLen"/> die Ziel-Timeline-Länge.
+    /// </summary>
+    public async Task StretchClipToLengthAsync(ClipViewModel clip, double newLen, double origSrcStart, double origSrcLen)
+    {
+        var stretch = origSrcLen > 0.001 ? newLen / origSrcLen : 1.0;
+        // Kaum verändert → kein Re-Encode, nur committen.
+        if (origSrcLen < 0.02 || newLen < MinClipSeconds || Math.Abs(stretch - 1.0) < 0.01)
+        {
+            CommitClips();
+            Commit("Clip gedehnt");
+            return;
+        }
+
+        var path = clip.SourcePath;
+        try
+        {
+            var (buf, sr) = await Task.Run(() =>
+            {
+                var (all, rate) = AudioProcessingHelper.ReadStereo(path);
+                var startS = (int)Math.Clamp((long)(origSrcStart * rate) * 2, 0, all.Length);
+                var lenS = (int)Math.Clamp((long)(origSrcLen * rate) * 2, 0, all.Length - startS);
+                var seg = new float[lenS];
+                Array.Copy(all, startS, seg, 0, lenS);
+
+                var stretched = new SoundTouchProfileProvider(new FloatArraySampleProvider(seg, rate, 2), 0, stretch);
+                return (SampleProviderRenderer.RenderAllSamples(stretched), rate);
+            });
+            ReplaceClipFromBuffer(clip, buf, sr);   // setzt Länge = neue Audio-Dauer, committet
+        }
+        catch (Exception ex)
+        {
+            Audiola.Services.UiError.Show("Dehnen fehlgeschlagen", ex.Message);
+        }
     }
 
     private static void Reslice(ClipViewModel clip, double total)
@@ -1107,6 +1212,9 @@ public sealed partial class TimelineViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(text) || choice is null || IsVoiceChanging) return;
 
         IsVoiceChanging = true;
+        _snackbar.Show("Sprache wird erzeugt …",
+            choice.IsLocal ? "Lokales Modell — beim ersten Mal kann das einige Zeit dauern." : "Über ElevenLabs …",
+            ControlAppearance.Info, new SymbolIcon(SymbolRegular.TextField24), TimeSpan.FromSeconds(6));
         try
         {
             float[] samples; int sr;

@@ -222,6 +222,10 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
     private double _dragStartOffset;
     private bool _moved;
 
+    // Kanten-Ziehen: Standard = Zeitdehnung (schneller/langsamer), mit Strg = Trimmen (schneiden).
+    private bool _stretchDrag;
+    private double _stretchOrigLen, _stretchOrigSrcStart, _stretchOrigOffset;
+
     // ---- Variationen-Provider anwenden ----
     private async void Variations_All_Click(object sender, RoutedEventArgs e)
         => await OpenVariationsAsync(ViewModel.Tracks.SelectMany(t => t.Clips).ToList(), "Gesamtes Audio (alle Spuren)");
@@ -357,6 +361,15 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
             : local > w - EdgeGrip ? DragMode.Right
             : DragMode.Move;
 
+        // An einer Kante: Standard = Dehnen; mit gedrückter Strg-Taste = Trimmen (Schneiden).
+        _stretchDrag = _dragMode != DragMode.Move && (Keyboard.Modifiers & ModifierKeys.Control) == 0;
+        if (_stretchDrag)
+        {
+            _stretchOrigLen = clip.LengthSeconds;
+            _stretchOrigSrcStart = clip.SourceStartSeconds;
+            _stretchOrigOffset = clip.TimelineOffsetSeconds;
+        }
+
         ViewModel.SelectClip(clip);
         fe.CaptureMouse();
         e.Handled = true; // verhindert Seek auf der Lane
@@ -380,10 +393,12 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         switch (_dragMode)
         {
             case DragMode.Left:
-                ViewModel.SetClipLeftEdge(_dragClip, x / pps);
+                if (_stretchDrag) ViewModel.SetClipStretchEdge(_dragClip, x / pps, fromLeft: true, _stretchOrigOffset, _stretchOrigLen);
+                else ViewModel.SetClipLeftEdge(_dragClip, x / pps);
                 break;
             case DragMode.Right:
-                ViewModel.SetClipRightEdge(_dragClip, x / pps);
+                if (_stretchDrag) ViewModel.SetClipStretchEdge(_dragClip, x / pps, fromLeft: false, _stretchOrigOffset, _stretchOrigLen);
+                else ViewModel.SetClipRightEdge(_dragClip, x / pps);
                 break;
             default:
                 ViewModel.SetClipOffset(_dragClip, _dragStartOffset + (x - _dragStartX) / pps);
@@ -391,7 +406,7 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         }
     }
 
-    private void Clip_Up(object sender, MouseButtonEventArgs e)
+    private async void Clip_Up(object sender, MouseButtonEventArgs e)
     {
         if (_clipRangeSelecting)
         {
@@ -406,6 +421,14 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
 
         var clip = _dragClip;
         _dragClip = null;
+
+        // Kante gedehnt: Audio einmalig per Time-Stretch auf die neue Länge bringen (Tonhöhe bleibt).
+        if (_stretchDrag && _moved)
+        {
+            await ViewModel.StretchClipToLengthAsync(clip, clip.LengthSeconds, _stretchOrigSrcStart, _stretchOrigLen);
+            e.Handled = true;
+            return;
+        }
 
         // Verschieben auf eine andere Spur (nur im Move-Modus, wenn wirklich gezogen wurde).
         if (_dragMode == DragMode.Move && _moved)

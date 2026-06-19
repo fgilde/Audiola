@@ -53,4 +53,7 @@ public sealed class AppSettings
 
     /// <summary>Whisper-Modellgröße für die Transkription: tiny/base/small/medium/large-v3/turbo.</summary>
     public string WhisperModel { get; set; } = "base";
+
+    /// <summary>True, sobald der Einrichtungs-Assistent erfolgreich abgeschlossen wurde (sonst läuft er beim Start).</summary>
+    public bool SetupCompleted { get; set; }
 }

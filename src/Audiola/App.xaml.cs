@@ -98,6 +98,13 @@ public partial class App : Application
             services.AddSingleton<MetadataPage>();
             services.AddSingleton<MetadataViewModel>();
             services.AddSingleton<AboutPage>();
+
+            // Einrichtungs-Assistent (frischer Zustand pro Aufruf → Transient).
+            services.AddTransient<SetupWizardViewModel>();
+            services.AddTransient<Views.Dialogs.SetupWizardWindow>();
+
+            // Spur-Mastering-Dialog (frischer Zustand pro Aufruf).
+            services.AddTransient<TrackMasteringViewModel>();
         })
         .Build();
 
@@ -131,6 +138,17 @@ public partial class App : Application
 
         var window = GetService<MainWindow>();
         window.Show();
+
+        // Beim ersten Start den Einrichtungs-Assistenten zeigen (bis er einmal abgeschlossen wurde).
+        if (!GetService<ISettingsService>().Current.SetupCompleted)
+        {
+            window.Loaded += (_, _) =>
+            {
+                var wizard = GetService<Views.Dialogs.SetupWizardWindow>();
+                wizard.Owner = window;
+                wizard.ShowDialog();
+            };
+        }
         }
         catch (Exception ex)
         {

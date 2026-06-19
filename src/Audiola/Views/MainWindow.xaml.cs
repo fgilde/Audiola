@@ -233,7 +233,10 @@ public partial class MainWindow : FluentWindow
         if (await ConfirmDiscardAsync())
         {
             _forceClose = true;
-            Close();
+            // Close() NICHT direkt aufrufen — wir sind noch im Closing-Handler, das wirft
+            // „Close cannot be called while a Window is in a Closing event handler". Stattdessen
+            // über den Dispatcher nachreichen, damit es nach Abschluss dieses Events läuft.
+            await Dispatcher.BeginInvoke(new Action(Close));
         }
     }
 
@@ -304,6 +307,13 @@ public partial class MainWindow : FluentWindow
 
     private void About_Click(object sender, RoutedEventArgs e)
         => _navigationService.Navigate(typeof(Views.Pages.AboutPage));
+
+    private void SetupWizard_Click(object sender, RoutedEventArgs e)
+    {
+        var wizard = App.GetService<Views.Dialogs.SetupWizardWindow>();
+        wizard.Owner = this;
+        wizard.ShowDialog();
+    }
 
     private void OnDragOver(object sender, DragEventArgs e)
     {
