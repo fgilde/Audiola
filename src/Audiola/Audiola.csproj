@@ -11,7 +11,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\audiola.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
-    <Version>0.3.1</Version>
+    <Version>0.4.0</Version>
     <!-- Velopack muss seine Install/Update-Hooks vor dem WPF-Start ausführen — siehe Program.cs. -->
     <StartupObject>Audiola.Program</StartupObject>
   </PropertyGroup>
