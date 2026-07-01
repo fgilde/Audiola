@@ -13,6 +13,68 @@
     WindowBackdropType="Mica"
     WindowCornerPreference="Round">
 
+    <ui:FluentWindow.Resources>
+        <!-- Mute/Solo-Umschalter mit deutlichem Aktiv-Zustand (Farbe kommt aus Tag). -->
+        <Style x:Key="TagToggle" TargetType="ToggleButton">
+            <Setter Property="MinWidth" Value="30" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="bd" CornerRadius="6" Padding="7,3"
+                                Background="#18FFFFFF" BorderThickness="1" BorderBrush="#22FFFFFF">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bd" Property="Background"
+                                        Value="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <Setter TargetName="bd" Property="BorderBrush"
+                                        Value="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#55FFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Spuren-Zeile: transparent, ausgewählte (= Gesangs-)Spur mit Akzent + linkem Balken. -->
+        <Style x:Key="TrackRow" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Border x:Name="bd" CornerRadius="8" Padding="10,7"
+                                Background="#12FFFFFF" BorderThickness="2,0,0,0" BorderBrush="Transparent">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#20FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#2A6BD6FF" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#6BD6FF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </ui:FluentWindow.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -43,6 +105,7 @@
                            ToolTip="Klick-Test — bitte OHNE Kopfhörer, damit das Mikro die Klicks hört." />
                 <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon TextBulletListSquare24}" Content="Lyrics extrahieren"
                            Command="{Binding ExtractLyricsCommand}"
+                           Visibility="{Binding NeedsLyrics, Converter={StaticResource BooleanToVisibilityConverter}}"
                            ToolTip="Liedtext aus der Gesangsspur erkennen (getaktet) und projektweit speichern." />
                 <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="12"
                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
@@ -68,19 +131,22 @@
                     <TextBlock DockPanel.Dock="Top" Margin="0,2,0,8" FontSize="11" TextWrapping="Wrap"
                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                Text="Gesangsspur auswählen (liefert die Referenz-Melodie) und stummschalten, damit du nur das Playback hörst." />
-                    <ListView ItemsSource="{Binding Tracks}" SelectedItem="{Binding ReferenceTrack, Mode=TwoWay}">
+                    <ListView ItemsSource="{Binding Tracks}" SelectedItem="{Binding ReferenceTrack, Mode=TwoWay}"
+                              Background="Transparent" BorderThickness="0"
+                              ItemContainerStyle="{StaticResource TrackRow}"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,2">
+                                <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                    <ToggleButton Grid.Column="1" Margin="4,0,0,0" Padding="7,2" FontSize="11" Content="M"
+                                    <ToggleButton Grid.Column="1" Style="{StaticResource TagToggle}" Tag="#FF3B30" Content="M"
                                                   ToolTip="Stummschalten" IsChecked="{Binding IsMuted, Mode=TwoWay}" />
-                                    <ToggleButton Grid.Column="2" Margin="4,0,0,0" Padding="7,2" FontSize="11" Content="S"
+                                    <ToggleButton Grid.Column="2" Style="{StaticResource TagToggle}" Tag="#E0A800" Content="S"
                                                   ToolTip="Solo" IsChecked="{Binding IsSolo, Mode=TwoWay}" />
                                 </Grid>
                             </DataTemplate>
@@ -101,6 +167,34 @@
                 <Border Grid.Row="0" Padding="14,10" CornerRadius="10"
                         Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
                     <StackPanel Orientation="Horizontal">
+                        <!-- Aufnahme-Indikator (blinkt während der Aufnahme) -->
+                        <Border VerticalAlignment="Center" Margin="0,0,16,0" Padding="10,4" CornerRadius="14"
+                                Background="#33FF3B30">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsRecording}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                         From="1" To="0.3" Duration="0:0:0.6"
+                                                                         AutoReverse="True" RepeatBehavior="Forever" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="12" Height="12" Fill="#FF3B30" VerticalAlignment="Center" />
+                                <TextBlock Margin="7,0,0,0" VerticalAlignment="Center" FontWeight="Bold"
+                                           Foreground="#FF6B60" Text="AUFNAHME" />
+                            </StackPanel>
+                        </Border>
                         <TextBlock VerticalAlignment="Center" FontSize="26" FontWeight="Bold"
                                    Text="{Binding ScorePercent, StringFormat='{}{0}%'}" />
                         <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="13"
@@ -138,8 +232,17 @@
                 </StackPanel>
 
                 <!-- Pitch-Band -->
-                <Border Grid.Row="2" Margin="0,8,0,0" CornerRadius="10" ClipToBounds="True"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <Border Grid.Row="2" Margin="0,8,0,0" CornerRadius="10" ClipToBounds="True" BorderThickness="2">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsRecording}" Value="True">
+                                    <Setter Property="BorderBrush" Value="#FF3B30" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <controls:PitchLaneControl />
                 </Border>
             </Grid>

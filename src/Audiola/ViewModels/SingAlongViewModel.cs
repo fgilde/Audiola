@@ -88,6 +88,10 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     // ---- Lyrics ----
     public ObservableCollection<LyricLineViewModel> LyricLines { get; } = [];
     [ObservableProperty] private bool _hasLyrics;
+
+    /// <summary>Nur dann Lyrics extrahieren anbieten, wenn (noch) keine vorhanden sind.</summary>
+    public bool NeedsLyrics => !HasLyrics;
+    partial void OnHasLyricsChanged(bool value) => OnPropertyChanged(nameof(NeedsLyrics));
     [ObservableProperty] private string _lyricPrev = "";
     [ObservableProperty] private string _lyricCurrent = "";
     [ObservableProperty] private string _lyricNext = "";
@@ -128,20 +132,37 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
             t.Name.Contains("stimme", StringComparison.OrdinalIgnoreCase) ||
             t.Name.Contains("lead", StringComparison.OrdinalIgnoreCase)) ?? Tracks.FirstOrDefault();
 
-        LoadLyrics(_songMeta.Lyrics);
         DurationSeconds = _timeline.DurationSeconds;
+        LoadLyrics(_songMeta.Lyrics);   // vorhandene Lyrics aus den Metadaten übernehmen
     }
 
     private void LoadLyrics(string? lrc)
     {
         _lyrics = LrcParser.Parse(lrc);
+
+        // Lyrics ohne Zeitmarken (Fließtext aus den Metadaten) grob über die Songdauer verteilen,
+        // damit sie trotzdem mitlaufen — keine erneute Extraktion nötig.
+        if (_lyrics.Count == 0 && !string.IsNullOrWhiteSpace(lrc) && DurationSeconds > 1)
+        {
+            var lines = lrc.Replace("\r\n", "\n").Split('\n')
+                .Select(l => l.Trim())
+                .Where(l => l.Length > 0 && !l.StartsWith('['))   // Tag-Zeilen ([ti:]…) überspringen
+                .ToList();
+            if (lines.Count > 0)
+            {
+                double step = DurationSeconds / (lines.Count + 1);
+                _lyrics = lines.Select((t, i) => new LyricLine(step * (i + 1), t)).ToList();
+            }
+        }
+
         HasLyrics = _lyrics.Count > 0;
         LyricLines.Clear();
         foreach (var l in _lyrics) LyricLines.Add(new LyricLineViewModel(l.TimeSeconds, l.Text));
         _curLyricIndex = -1;
         LyricPrev = LyricCurrent = LyricNext = "";
-        if (!HasLyrics)
-            Status = LrcParser.HasTimestamps(lrc) ? Status : "Keine getakteten Lyrics — optional extrahieren.";
+        if (HasLyrics)
+            Status = LrcParser.HasTimestamps(lrc)
+                ? "Lyrics geladen." : "Lyrics geladen (ohne Zeitmarken, grob verteilt).";
     }
 
     /// <summary>Lyrics aus der Gesangsspur (oder dem Mix) transkribieren und projektweit speichern.</summary>

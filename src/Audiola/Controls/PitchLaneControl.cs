@@ -7,21 +7,21 @@ using Audiola.ViewModels;
 namespace Audiola.Controls;
 
 /// <summary>
-/// SingStar-artiges Notenband: zeichnet die Referenz-Melodie (Soll) und den live gesungenen Verlauf
-/// (Ist) in einem gleitenden Zeitfenster um die aktuelle Position. Treffer werden grün, Fehler rot.
-/// Erwartet ein <see cref="SingAlongViewModel"/> als DataContext.
+/// SingStar-artiges Notenband: die Referenz-Melodie erscheint als Notenblöcke (Soll), der live
+/// gesungene Ton als durchgehende Linie (Ist) — grün bei Treffer, rot daneben — in einem gleitenden
+/// Zeitfenster um die aktuelle Position. Erwartet ein <see cref="SingAlongViewModel"/> als DataContext.
 /// </summary>
 public sealed class PitchLaneControl : FrameworkElement
 {
-    private const double WindowSec = 6.0;   // sichtbares Zeitfenster (Position in der Mitte)
+    private const double WindowSec = 6.0;   // sichtbares Zeitfenster (Playhead in der Mitte)
     private const double MidiMin = 45;      // A2
     private const double MidiMax = 76;      // E5
 
     private static readonly Brush BgBrush = Frozen(Color.FromRgb(0x12, 0x12, 0x18));
-    private static readonly Brush GridBrush = Frozen(Color.FromArgb(0x22, 0xFF, 0xFF, 0xFF));
-    private static readonly Brush RefBrush = Frozen(Color.FromArgb(0xCC, 0x6B, 0xD6, 0xFF));
-    private static readonly Brush HitBrush = Frozen(Color.FromRgb(0x4C, 0xD9, 0x64));
-    private static readonly Brush MissBrush = Frozen(Color.FromRgb(0xFF, 0x6B, 0x6B));
+    private static readonly Brush GridBrush = Frozen(Color.FromArgb(0x1C, 0xFF, 0xFF, 0xFF));
+    private static readonly Brush RefBar = Frozen(Color.FromArgb(0xFF, 0x4A, 0x7C, 0xC7));   // Soll-Note
+    private static readonly Pen HitPen = FrozenPen(Color.FromRgb(0x4C, 0xD9, 0x64), 3.0);    // Treffer
+    private static readonly Pen MissPen = FrozenPen(Color.FromRgb(0xFF, 0x8A, 0x5B), 3.0);   // daneben
     private static readonly Pen PlayheadPen = FrozenPen(Color.FromArgb(0xAA, 0xFF, 0xFF, 0xFF), 1.5);
 
     private SingAlongViewModel? _vm;
@@ -68,39 +68,51 @@ public sealed class PitchLaneControl : FrameworkElement
 
         double pos = _vm.PositionSeconds;
         double t0 = pos - WindowSec / 2, t1 = pos + WindowSec / 2;
-
         double X(double t) => (t - t0) / WindowSec * w;
         double Y(double midi) => h - (midi - MidiMin) / (MidiMax - MidiMin) * h;
 
-        // Oktav-Gitterlinien (C-Noten).
+        // Oktav-Gitter (C-Linien).
         for (int m = 48; m <= 72; m += 12)
-        {
-            double y = Y(m);
-            dc.DrawLine(new Pen(GridBrush, 1), new Point(0, y), new Point(w, y));
-        }
+            dc.DrawLine(new Pen(GridBrush, 1), new Point(0, Y(m)), new Point(w, Y(m)));
 
-        // Referenz-Melodie (Soll) als Punkte im Fenster.
+        // Referenz-Melodie als Notenblöcke: aufeinanderfolgende Punkte gleicher Note zusammenfassen.
         var reference = _vm.Reference;
-        foreach (var p in reference)
+        int i = 0;
+        while (i < reference.Count)
         {
-            if (p.Hz <= 0 || p.TimeSeconds < t0 || p.TimeSeconds > t1) continue;
-            double midi = PitchDetector.HzToMidi(p.Hz);
-            if (midi < MidiMin || midi > MidiMax) continue;
-            double x = X(p.TimeSeconds);
-            dc.DrawRoundedRectangle(RefBrush, null, new Rect(x - 2, Y(midi) - 3, 5, 6), 2, 2);
+            var p = reference[i];
+            if (p.Hz <= 0 || p.TimeSeconds > t1) { i++; continue; }
+            int note = (int)Math.Round(PitchDetector.HzToMidi(p.Hz));
+            int j = i;
+            while (j + 1 < reference.Count && reference[j + 1].Hz > 0 &&
+                   (int)Math.Round(PitchDetector.HzToMidi(reference[j + 1].Hz)) == note &&
+                   reference[j + 1].TimeSeconds - reference[j].TimeSeconds < 0.2)
+                j++;
+
+            double segStart = reference[i].TimeSeconds, segEnd = reference[j].TimeSeconds;
+            if (segEnd >= t0 && segStart <= t1 && note >= MidiMin && note <= MidiMax)
+            {
+                double x1 = Math.Max(0, X(segStart)), x2 = Math.Min(w, X(segEnd));
+                dc.DrawRoundedRectangle(RefBar, null, new Rect(x1, Y(note) - 4, Math.Max(6, x2 - x1), 8), 4, 4);
+            }
+            i = j + 1;
         }
 
-        // Gesungener Verlauf (Ist).
+        // Gesungener Verlauf als durchgehende Linie (bei stimmlosen Lücken unterbrochen).
         var sung = _vm.SungHistory;
-        for (int i = 0; i < sung.Count; i++)
+        Point? prev = null;
+        for (int k = 0; k < sung.Count; k++)
         {
-            var s = sung[i];
-            if (s.Hz <= 0 || s.TimeSeconds < t0 || s.TimeSeconds > t1) continue;
+            var s = sung[k];
+            if (s.Hz <= 0 || s.TimeSeconds < t0 || s.TimeSeconds > t1) { prev = null; continue; }
             double midi = PitchDetector.HzToMidi(s.Hz);
-            if (midi < MidiMin || midi > MidiMax) continue;
+            if (midi < MidiMin || midi > MidiMax) { prev = null; continue; }
+            var pt = new Point(X(s.TimeSeconds), Y(midi));
             double tref = ReferenceHzAt(reference, s.TimeSeconds);
             bool hit = tref > 0 && Math.Abs(PitchDetector.CentsOffOctaveless(s.Hz, tref)) < 100;
-            dc.DrawEllipse(hit ? HitBrush : MissBrush, null, new Point(X(s.TimeSeconds), Y(midi)), 3.5, 3.5);
+            if (prev is { } pv) dc.DrawLine(hit ? HitPen : MissPen, pv, pt);
+            else dc.DrawEllipse(hit ? HitPen.Brush : MissPen.Brush, null, pt, 2.5, 2.5);
+            prev = pt;
         }
 
         // Playhead in der Mitte.
@@ -110,12 +122,12 @@ public sealed class PitchLaneControl : FrameworkElement
 
     private static double ReferenceHzAt(IReadOnlyList<PitchPoint> reference, double t)
     {
-        // lineare Nähe-Suche im kleinen Fenster reicht (wird selten aufgerufen)
         double best = 0, bestDt = 0.12;
         for (int i = 0; i < reference.Count; i++)
         {
+            if (reference[i].Hz <= 0) continue;
             double dt = Math.Abs(reference[i].TimeSeconds - t);
-            if (dt <= bestDt && reference[i].Hz > 0) { best = reference[i].Hz; bestDt = dt; }
+            if (dt <= bestDt) { best = reference[i].Hz; bestDt = dt; }
         }
         return best;
     }
