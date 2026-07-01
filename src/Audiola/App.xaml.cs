@@ -105,6 +105,9 @@ public partial class App : Application
 
             // Spur-Mastering-Dialog (frischer Zustand pro Aufruf).
             services.AddTransient<TrackMasteringViewModel>();
+
+            // Einsing-Studio (frischer Zustand pro Aufruf).
+            services.AddTransient<SingAlongViewModel>();
         })
         .Build();
 

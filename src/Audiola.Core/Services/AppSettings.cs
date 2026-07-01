@@ -56,4 +56,7 @@ public sealed class AppSettings
 
     /// <summary>True, sobald der Einrichtungs-Assistent erfolgreich abgeschlossen wurde (sonst läuft er beim Start).</summary>
     public bool SetupCompleted { get; set; }
+
+    /// <summary>Gemessener Aufnahme-Latenzversatz (ms) fürs Einsingen — Aufnahme wird um diesen Wert zurückgeschoben.</summary>
+    public double VocalLatencyMs { get; set; }
 }

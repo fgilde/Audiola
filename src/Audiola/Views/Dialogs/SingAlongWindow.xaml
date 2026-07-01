@@ -1,0 +1,176 @@
+<ui:FluentWindow
+    x:Class="Audiola.Views.Dialogs.SingAlongWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:controls="clr-namespace:Audiola.Controls"
+    Title="Einsingen"
+    Width="1040" Height="720"
+    MinWidth="820" MinHeight="560"
+    WindowStartupLocation="CenterOwner"
+    ResizeMode="CanResize"
+    ExtendsContentIntoTitleBar="True"
+    WindowBackdropType="Mica"
+    WindowCornerPreference="Round">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="Einsingen">
+            <ui:TitleBar.Icon><ui:SymbolIcon Symbol="Mic24" /></ui:TitleBar.Icon>
+        </ui:TitleBar>
+
+        <!-- Setup-Leiste: Vorbereiten + Kalibrieren -->
+        <Border Grid.Row="1" Margin="12,4,12,0" Padding="12,10" CornerRadius="10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+            <StackPanel Orientation="Horizontal">
+                <ui:Button Icon="{ui:SymbolIcon MusicNote224}" Content="Backing vorbereiten"
+                           Appearance="Primary" Command="{Binding PrepareCommand}" />
+                <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon Timer24}" Content="Latenz kalibrieren"
+                           Command="{Binding CalibrateCommand}"
+                           ToolTip="Klick-Test — bitte OHNE Kopfhörer, damit das Mikro die Klicks hört." />
+                <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon TextBulletListSquare24}" Content="Lyrics extrahieren"
+                           Command="{Binding ExtractLyricsCommand}"
+                           ToolTip="Liedtext aus der Gesangsspur erkennen (getaktet) und projektweit speichern." />
+                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="12"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                           Text="{Binding LatencyMs, StringFormat='Versatz: {0:F0} ms'}" />
+                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="12"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding CalibrationStatus}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Hauptbereich -->
+        <Grid Grid.Row="2" Margin="12,8,12,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="264" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Spuren -->
+            <Border Grid.Column="0" Padding="12" CornerRadius="10"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" FontWeight="SemiBold" Text="Spuren" />
+                    <TextBlock DockPanel.Dock="Top" Margin="0,2,0,8" FontSize="11" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               Text="Gesangsspur auswählen (liefert die Referenz-Melodie) und stummschalten, damit du nur das Playback hörst." />
+                    <ListView ItemsSource="{Binding Tracks}" SelectedItem="{Binding ReferenceTrack, Mode=TwoWay}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                    <ToggleButton Grid.Column="1" Margin="4,0,0,0" Padding="7,2" FontSize="11" Content="M"
+                                                  ToolTip="Stummschalten" IsChecked="{Binding IsMuted, Mode=TwoWay}" />
+                                    <ToggleButton Grid.Column="2" Margin="4,0,0,0" Padding="7,2" FontSize="11" Content="S"
+                                                  ToolTip="Solo" IsChecked="{Binding IsSolo, Mode=TwoWay}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </DockPanel>
+            </Border>
+
+            <!-- Karaoke -->
+            <Grid Grid.Column="1" Margin="12,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Score-Zeile -->
+                <Border Grid.Row="0" Padding="14,10" CornerRadius="10"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center" FontSize="26" FontWeight="Bold"
+                                   Text="{Binding ScorePercent, StringFormat='{}{0}%'}" />
+                        <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="13"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding Points, StringFormat='{}{0} Punkte'}" />
+                        <Border Width="12" Height="12" Margin="20,0,0,0" CornerRadius="6" VerticalAlignment="Center">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{DynamicResource TextFillColorDisabledBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsOnPitch}" Value="True">
+                                            <Setter Property="Background" Value="#4CD964" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="13"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding TargetNote, StringFormat='Ziel {0}'}" />
+                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="13"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Text="{Binding SungNote, StringFormat='· Du {0}'}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Lyrics -->
+                <StackPanel Grid.Row="1" Margin="0,8,0,0">
+                    <TextBlock HorizontalAlignment="Center" FontSize="15" TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding LyricPrev}" />
+                    <TextBlock HorizontalAlignment="Center" Margin="0,4" FontSize="30" FontWeight="Bold"
+                               TextWrapping="Wrap" TextAlignment="Center" Text="{Binding LyricCurrent}" />
+                    <TextBlock HorizontalAlignment="Center" FontSize="16" TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding LyricNext}" />
+                </StackPanel>
+
+                <!-- Pitch-Band -->
+                <Border Grid.Row="2" Margin="0,8,0,0" CornerRadius="10" ClipToBounds="True"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                    <controls:PitchLaneControl />
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- Transport -->
+        <Border Grid.Row="3" Margin="12,8,12,12" Padding="14,10" CornerRadius="10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <ui:Button Icon="{ui:SymbolIcon Play24}" Content="Play" Command="{Binding PlayCommand}"
+                               IsEnabled="{Binding Prepared}" />
+                    <ui:Button Margin="8,0,0,0" Appearance="Danger" Icon="{ui:SymbolIcon Record24}" Content="Aufnahme"
+                               Command="{Binding RecordCommand}" IsEnabled="{Binding Prepared}" />
+                    <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon Stop24}" Content="Stopp" Command="{Binding StopCommand}" />
+                    <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="13"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding PositionText}" />
+                    <ui:Button Margin="20,0,0,0" Icon="{ui:SymbolIcon CheckmarkCircle24}" Content="Als Spur übernehmen"
+                               Appearance="Success" Command="{Binding AcceptCommand}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <ui:ToggleSwitch Content="Nur Abschnitt (Punch-in)" IsChecked="{Binding LoopEnabled, Mode=TwoWay}" />
+                    <TextBlock Margin="16,0,4,0" VerticalAlignment="Center" FontSize="12"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="von (s)" />
+                    <ui:NumberBox Width="90" Value="{Binding LoopStartSeconds, Mode=TwoWay}" Minimum="0" IsEnabled="{Binding LoopEnabled}" />
+                    <TextBlock Margin="12,0,4,0" VerticalAlignment="Center" FontSize="12"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="bis (s)" />
+                    <ui:NumberBox Width="90" Value="{Binding LoopEndSeconds, Mode=TwoWay}" Minimum="0" IsEnabled="{Binding LoopEnabled}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Busy-Overlay -->
+        <Border Grid.Row="0" Grid.RowSpan="4" Background="#B0000000"
+                Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ui:ProgressRing IsIndeterminate="True" Width="46" Height="46" HorizontalAlignment="Center" />
+                <TextBlock Margin="0,14,0,0" Foreground="White" Text="{Binding Status}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</ui:FluentWindow>

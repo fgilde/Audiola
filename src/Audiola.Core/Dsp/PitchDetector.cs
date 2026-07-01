@@ -1,5 +1,8 @@
 namespace Audiola.Dsp;
 
+/// <summary>Ein Punkt der Tonhöhen-Kontur: Zeit (s) und Frequenz (Hz; 0 = stimmlos).</summary>
+public readonly record struct PitchPoint(double TimeSeconds, float Hz);
+
 /// <summary>
 /// Grundfrequenz-Schätzung (F0) per YIN-Algorithmus — für die Referenz-Melodie (Gesangsspur offline)
 /// und den Echtzeit-Mikrofon-Ton beim Einsingen. Genau genug für Karaoke-Scoring, ohne externe Abhängigkeit.
@@ -75,6 +78,29 @@ public static class PitchDetector
             if (Math.Abs(denom) > 1e-9f) betterTau = bestTau + (a - c) / (2f * denom);
         }
         return betterTau > 0f ? sampleRate / betterTau : 0f;
+    }
+
+    /// <summary>
+    /// Verfolgt die Grundfrequenz über einen ganzen Mono-Puffer (gleitendes Fenster) — für die
+    /// Referenz-Melodie aus der isolierten Gesangsspur. Hz = 0 an stimmlosen Stellen.
+    /// </summary>
+    public static PitchPoint[] Track(ReadOnlySpan<float> mono, int sampleRate, double hopSeconds = 0.046)
+    {
+        const int win = 2048;
+        int hop = Math.Max(1, (int)(hopSeconds * sampleRate));
+        if (mono.Length < win) return [];
+
+        int count = (mono.Length - win) / hop + 1;
+        var points = new PitchPoint[count];
+        var buf = new float[win];
+        int k = 0;
+        for (int start = 0; start + win <= mono.Length; start += hop)
+        {
+            mono.Slice(start, win).CopyTo(buf);
+            float hz = DetectHz(buf, sampleRate);
+            points[k++] = new PitchPoint((double)(start + win / 2) / sampleRate, hz);
+        }
+        return k == points.Length ? points : points[..k];
     }
 
     private static readonly string[] Names =

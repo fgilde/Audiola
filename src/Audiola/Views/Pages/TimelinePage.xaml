@@ -52,11 +52,17 @@
                 <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                            Text="Mehrspur-Arbeitsfläche — Audiodateien hierher ziehen, Stems übernehmen, Clips schneiden &amp; mischen." />
             </StackPanel>
-            <ui:Button Grid.Column="1" VerticalAlignment="Top" Appearance="Primary"
-                       Icon="{ui:SymbolIcon ArrowExportLtr24}" Content="Mix exportieren"
-                       Command="{Binding ViewModel.ExportMixCommand}"
-                       IsEnabled="{Binding ViewModel.HasTracks}"
-                       ToolTip="Den aktuellen Studio-Mix als Audiodatei speichern (WAV/MP3/…)" />
+            <StackPanel Grid.Column="1" VerticalAlignment="Top" Orientation="Horizontal">
+                <ui:Button Margin="0,0,8,0" Icon="{ui:SymbolIcon Mic24}" Content="Einsingen"
+                           Command="{Binding ViewModel.OpenSingAlongCommand}"
+                           IsEnabled="{Binding ViewModel.HasTracks}"
+                           ToolTip="Zum Song einsingen (Karaoke, Ton-Feedback) und als neue Spur übernehmen" />
+                <ui:Button Appearance="Primary"
+                           Icon="{ui:SymbolIcon ArrowExportLtr24}" Content="Mix exportieren"
+                           Command="{Binding ViewModel.ExportMixCommand}"
+                           IsEnabled="{Binding ViewModel.HasTracks}"
+                           ToolTip="Den aktuellen Studio-Mix als Audiodatei speichern (WAV/MP3/…)" />
+            </StackPanel>
         </Grid>
 
         <!-- Werkzeugleiste + Clip-Inspektor -->

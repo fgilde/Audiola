@@ -943,6 +943,23 @@ public sealed partial class TimelineViewModel : ObservableObject
         dlg.ShowDialog();
     }
 
+    /// <summary>Öffnet das Einsing-Studio (Karaoke: Backing + Mikro, Ton-Feedback, Übernahme als Spur).</summary>
+    [RelayCommand]
+    private void OpenSingAlong()
+    {
+        if (!HasTracks)
+        {
+            _snackbar.Show("Nichts zum Einsingen", "Lade zuerst einen Song oder Spuren ins Studio.",
+                ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(3));
+            return;
+        }
+        var win = new Audiola.Views.Dialogs.SingAlongWindow(App.GetService<SingAlongViewModel>())
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        win.Show();   // eigenes Fenster, nicht-modal – kann neben dem Studio liegen
+    }
+
     /// <summary>Rendert eine einzelne Spur (mit allen Clips/Pegeln) als interleaved Stereo + Samplerate.</summary>
     public Task<(float[] Samples, int SampleRate)> RenderTrackAsync(StemTrackViewModel track)
     {
