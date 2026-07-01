@@ -96,6 +96,14 @@ public sealed class VocalRecordingEngine : IDisposable
         _timer.Start();
     }
 
+    /// <summary>Springt zu einer Position (nur wenn nicht gerade aufgenommen wird).</summary>
+    public void Seek(double sec)
+    {
+        if (_backing is null) return;
+        _backing.CurrentTime = TimeSpan.FromSeconds(Math.Clamp(sec, 0, _backing.TotalTime.TotalSeconds));
+        PositionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     /// <summary>Playback + Aufnahme anhalten (Position bleibt erhalten).</summary>
     public void Stop()
     {

@@ -80,10 +80,8 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         _settings.Save();
     }
 
-    // ---- Loop-Region (Punch-in) ----
-    [ObservableProperty] private bool _loopEnabled;
-    [ObservableProperty] private double _loopStartSeconds;
-    [ObservableProperty] private double _loopEndSeconds;
+    // ---- Lyrics-Vorlauf (0..1 bis zur nächsten Zeile) ----
+    [ObservableProperty] private double _nextLineProgress;
 
     // ---- Lyrics ----
     public ObservableCollection<LyricLineViewModel> LyricLines { get; } = [];
@@ -203,7 +201,6 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
             if (_backingPath is null) { Status = "Kein Backing (keine Spuren)."; return; }
             _engine.LoadBacking(_backingPath);
             DurationSeconds = _engine.Duration.TotalSeconds;
-            if (LoopEndSeconds <= 0) LoopEndSeconds = DurationSeconds;
 
             Status = "Referenz-Melodie wird analysiert …";
             await BuildReferenceAsync();
@@ -252,28 +249,36 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         finally { IsBusy = false; }
     }
 
-    // ---- Transport ----
+    // ---- Transport: zwei Umschalter (Wiedergabe & Aufnahme) ----
     [RelayCommand]
-    private void Play()
+    private void TogglePlay()
     {
         if (!Prepared) return;
+        if (_engine.IsPlaying) { _engine.Stop(); return; }
         _sung.Clear();
-        _engine.Play(StartPosition(), record: false);
+        _engine.Play(PositionSeconds, record: false);
     }
 
     [RelayCommand]
-    private void Record()
+    private void ToggleRecord()
     {
         if (!Prepared) return;
+        if (_engine.IsRecording) { _engine.Stop(); return; }
         ResetScore();
         _sung.Clear();
-        _engine.Play(StartPosition(), record: true);
+        _engine.Play(PositionSeconds, record: true);   // nimmt ab der Position auf und überschreibt sie dort
     }
 
-    [RelayCommand]
-    private void Stop() => _engine.Stop();
+    // ---- Position ziehen (Punch-in): dorthin ziehen, dann aufnehmen — überschreibt ab da ----
+    public void BeginScrub() => _engine.Stop();
 
-    private double StartPosition() => LoopEnabled ? LoopStartSeconds : PositionSeconds;
+    public void EndScrub(double sec)
+    {
+        _engine.Seek(sec);
+        PositionSeconds = sec;
+        PositionText = $"{Fmt(sec)} / {Fmt(DurationSeconds)}";
+        UpdateLyric();
+    }
 
     private void OnPlaybackEnded()
     {
@@ -316,23 +321,26 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         PositionText = $"{Fmt(PositionSeconds)} / {Fmt(DurationSeconds)}";
         IsPlaying = _engine.IsPlaying;
         IsRecording = _engine.IsRecording;
-
-        // Loop-Region: am Ende zurückspringen bzw. stoppen.
-        if (LoopEnabled && _engine.IsPlaying && PositionSeconds >= LoopEndSeconds)
-        {
-            bool rec = _engine.IsRecording;
-            _engine.Play(LoopStartSeconds, rec);
-        }
-
         UpdateLyric();
     }
 
     private void UpdateLyric()
     {
-        if (_lyrics.Count == 0) return;
+        if (_lyrics.Count == 0) { NextLineProgress = 0; return; }
+
         int idx = -1;
         for (int i = 0; i < _lyrics.Count; i++)
             if (_lyrics[i].TimeSeconds <= PositionSeconds) idx = i; else break;
+
+        // Fortschritt bis zur nächsten Zeile (0..1) — zeigt den kommenden Einsatz an.
+        if (idx + 1 < _lyrics.Count)
+        {
+            double cur = idx >= 0 ? _lyrics[idx].TimeSeconds : 0;
+            double next = _lyrics[idx + 1].TimeSeconds;
+            NextLineProgress = next > cur ? Math.Clamp((PositionSeconds - cur) / (next - cur), 0, 1) : 0;
+        }
+        else NextLineProgress = 0;
+
         if (idx == _curLyricIndex) return;
         _curLyricIndex = idx;
         LyricPrev = idx > 0 ? _lyrics[idx - 1].Text : "";

@@ -13,4 +13,14 @@ public partial class SingAlongWindow : FluentWindow
         InitializeComponent();
         viewModel.Initialize();
     }
+
+    // Positionsleiste: beim Drücken pausieren, beim Loslassen an die Stelle springen (Punch-in).
+    private void Pos_ScrubStart(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        => (DataContext as SingAlongViewModel)?.BeginScrub();
+
+    private void Pos_ScrubEnd(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (DataContext is SingAlongViewModel vm && sender is System.Windows.Controls.Slider s)
+            vm.EndScrub(s.Value);
+    }
 }

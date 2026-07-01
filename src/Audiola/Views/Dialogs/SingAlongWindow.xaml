@@ -227,6 +227,11 @@
                                Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding LyricPrev}" />
                     <TextBlock HorizontalAlignment="Center" Margin="0,4" FontSize="30" FontWeight="Bold"
                                TextWrapping="Wrap" TextAlignment="Center" Text="{Binding LyricCurrent}" />
+                    <!-- Vorlauf: füllt sich bis zum Einsatz der nächsten Zeile -->
+                    <ProgressBar Width="240" Height="5" Margin="0,6" HorizontalAlignment="Center"
+                                 Minimum="0" Maximum="1" Value="{Binding NextLineProgress}"
+                                 Foreground="#6BD6FF"
+                                 Visibility="{Binding HasLyrics, Converter={StaticResource BooleanToVisibilityConverter}}" />
                     <TextBlock HorizontalAlignment="Center" FontSize="16" TextTrimming="CharacterEllipsis"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding LyricNext}" />
                 </StackPanel>
@@ -252,25 +257,43 @@
         <Border Grid.Row="3" Margin="12,8,12,12" Padding="14,10" CornerRadius="10"
                 Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
             <StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <ui:Button Icon="{ui:SymbolIcon Play24}" Content="Play" Command="{Binding PlayCommand}"
-                               IsEnabled="{Binding Prepared}" />
-                    <ui:Button Margin="8,0,0,0" Appearance="Danger" Icon="{ui:SymbolIcon Record24}" Content="Aufnahme"
-                               Command="{Binding RecordCommand}" IsEnabled="{Binding Prepared}" />
-                    <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon Stop24}" Content="Stopp" Command="{Binding StopCommand}" />
+                <!-- Positionsleiste: ziehen zum Springen (Punch-in). Aufnahme überschreibt ab hier. -->
+                <Slider x:Name="PosSlider" Minimum="0" Maximum="{Binding DurationSeconds}"
+                        Value="{Binding PositionSeconds, Mode=OneWay}" IsMoveToPointEnabled="True"
+                        PreviewMouseLeftButtonDown="Pos_ScrubStart" PreviewMouseLeftButtonUp="Pos_ScrubEnd"
+                        ToolTip="Ziehen zum Springen — an dieser Stelle aufnehmen überschreibt ab hier." />
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <!-- Wiedergabe / Pause -->
+                    <ui:Button MinWidth="150" Command="{Binding TogglePlayCommand}" IsEnabled="{Binding Prepared}">
+                        <ui:Button.Style>
+                            <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                <Setter Property="Content" Value="▶  Wiedergabe" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                        <Setter Property="Content" Value="⏸  Pause" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:Button.Style>
+                    </ui:Button>
+                    <!-- Aufnahme / Stopp -->
+                    <ui:Button MinWidth="180" Margin="8,0,0,0" Appearance="Danger"
+                               Command="{Binding ToggleRecordCommand}" IsEnabled="{Binding Prepared}">
+                        <ui:Button.Style>
+                            <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                <Setter Property="Content" Value="⏺  Aufnahme" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRecording}" Value="True">
+                                        <Setter Property="Content" Value="⏹  Aufnahme stoppen" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:Button.Style>
+                    </ui:Button>
                     <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="13"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding PositionText}" />
                     <ui:Button Margin="20,0,0,0" Icon="{ui:SymbolIcon CheckmarkCircle24}" Content="Als Spur übernehmen"
                                Appearance="Success" Command="{Binding AcceptCommand}" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                    <ui:ToggleSwitch Content="Nur Abschnitt (Punch-in)" IsChecked="{Binding LoopEnabled, Mode=TwoWay}" />
-                    <TextBlock Margin="16,0,4,0" VerticalAlignment="Center" FontSize="12"
-                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="von (s)" />
-                    <ui:NumberBox Width="90" Value="{Binding LoopStartSeconds, Mode=TwoWay}" Minimum="0" IsEnabled="{Binding LoopEnabled}" />
-                    <TextBlock Margin="12,0,4,0" VerticalAlignment="Center" FontSize="12"
-                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="bis (s)" />
-                    <ui:NumberBox Width="90" Value="{Binding LoopEndSeconds, Mode=TwoWay}" Minimum="0" IsEnabled="{Binding LoopEnabled}" />
                 </StackPanel>
             </StackPanel>
         </Border>
