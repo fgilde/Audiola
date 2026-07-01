@@ -19,12 +19,12 @@ public sealed class LatencyCalibrator
     private const double TotalSeconds = 3.2;
 
     /// <summary>Misst den Versatz in Millisekunden. Wirft, wenn keine Klicks erkannt wurden.</summary>
-    public async Task<double> MeasureMsAsync(CancellationToken ct = default)
+    public async Task<double> MeasureMsAsync(int deviceNumber = 0, CancellationToken ct = default)
     {
         var clickPath = WriteClickSignal();
         var recorded = new List<float>(capacity: (int)(TotalSeconds * Rate) + Rate);
 
-        using var mic = new WaveInEvent { WaveFormat = new WaveFormat(Rate, 16, 1), BufferMilliseconds = 30 };
+        using var mic = new WaveInEvent { DeviceNumber = deviceNumber, WaveFormat = new WaveFormat(Rate, 16, 1), BufferMilliseconds = 30 };
         mic.DataAvailable += (_, e) =>
         {
             int n = e.BytesRecorded / 2;

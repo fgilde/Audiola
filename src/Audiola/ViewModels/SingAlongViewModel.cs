@@ -48,6 +48,15 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     public ObservableCollection<StemTrackViewModel> Tracks { get; } = [];
     [ObservableProperty] private StemTrackViewModel? _referenceTrack;   // liefert die Soll-Melodie
 
+    // ---- Mikrofon ----
+    public ObservableCollection<MicDevice> Mics { get; } = [];
+    [ObservableProperty] private MicDevice? _selectedMic;
+
+    partial void OnSelectedMicChanged(MicDevice? value)
+    {
+        if (value is not null) _engine.DeviceNumber = value.Index;
+    }
+
     // ---- Status ----
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _status = "Backing vorbereiten und Latenz kalibrieren.";
@@ -104,6 +113,13 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     {
         Tracks.Clear();
         foreach (var t in _timeline.Tracks) Tracks.Add(t);
+
+        // Verfügbare Mikrofone auflisten.
+        Mics.Clear();
+        for (int i = 0; i < NAudio.Wave.WaveInEvent.DeviceCount; i++)
+            Mics.Add(new MicDevice(i, NAudio.Wave.WaveInEvent.GetCapabilities(i).ProductName));
+        SelectedMic = Mics.FirstOrDefault();
+        if (Mics.Count == 0) Status = "Kein Mikrofon gefunden — bitte ein Aufnahmegerät anschließen.";
 
         // Gesangs-Spur raten (Name enthält „vocal"/„gesang"/„stimme"/„lead").
         ReferenceTrack = Tracks.FirstOrDefault(t =>
@@ -207,7 +223,7 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         IsBusy = true; CalibrationStatus = "Messung läuft — bitte OHNE Kopfhörer, ruhig sein …";
         try
         {
-            var ms = await _calibrator.MeasureMsAsync();
+            var ms = await _calibrator.MeasureMsAsync(SelectedMic?.Index ?? 0);
             LatencyMs = Math.Round(ms);
             CalibrationStatus = $"Gemessen: {LatencyMs:F0} ms Versatz.";
         }
@@ -240,7 +256,9 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
 
     private void OnPlaybackEnded()
     {
-        // Am Loop-Ende bzw. Songende stoppen (Loop-Grenze wird in OnPosition geprüft).
+        // Kommt vom WaveOut-Thread → auf den UI-Thread marshallen.
+        var disp = System.Windows.Application.Current?.Dispatcher;
+        if (disp is not null && !disp.CheckAccess()) { disp.BeginInvoke(OnPlaybackEnded); return; }
         IsPlaying = false; IsRecording = false;
     }
 
@@ -303,6 +321,10 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
 
     private void OnPitchDetected(object? sender, PitchSample s)
     {
+        // Läuft vom WaveIn-Thread → auf den UI-Thread marshallen (Properties sind gebunden).
+        var disp = System.Windows.Application.Current?.Dispatcher;
+        if (disp is not null && !disp.CheckAccess()) { disp.BeginInvoke(() => OnPitchDetected(sender, s)); return; }
+
         _sung.Add(s);
         SungHz = s.Hz;
         SungNote = s.Hz > 0 ? PitchDetector.MidiToName(PitchDetector.HzToMidi(s.Hz)) : "–";
@@ -357,3 +379,6 @@ public sealed class LyricLineViewModel(double timeSeconds, string text)
     public double TimeSeconds { get; } = timeSeconds;
     public string Text { get; } = text;
 }
+
+/// <summary>Ein wählbares Aufnahme-Gerät (Mikrofon).</summary>
+public sealed record MicDevice(int Index, string Name);

@@ -40,6 +40,9 @@ public sealed class VocalRecordingEngine : IDisposable
     /// <summary>Kalibrierter Round-Trip-Versatz (s), um den die Aufnahme zeitlich zurückgeschoben wird.</summary>
     public double LatencySeconds { get; set; }
 
+    /// <summary>Index des Aufnahme-Geräts (WaveIn). 0 = Standardgerät.</summary>
+    public int DeviceNumber { get; set; }
+
     public bool IsRecording { get; private set; }
     public bool IsPlaying => _out?.PlaybackState == PlaybackState.Playing;
     public TimeSpan Position => _backing?.CurrentTime ?? TimeSpan.Zero;
@@ -83,7 +86,7 @@ public sealed class VocalRecordingEngine : IDisposable
             // Erster aufgenommener Sample gehört – latenzkorrigiert – an diese Puffer-Position.
             _writePos = (long)Math.Round((fromSec - LatencySeconds) * Rate);
             _winFill = 0;
-            _mic = new WaveInEvent { WaveFormat = new WaveFormat(Rate, 16, 1), BufferMilliseconds = 40 };
+            _mic = new WaveInEvent { DeviceNumber = DeviceNumber, WaveFormat = new WaveFormat(Rate, 16, 1), BufferMilliseconds = 40 };
             _mic.DataAvailable += OnMic;
             _mic.StartRecording();
             IsRecording = true;

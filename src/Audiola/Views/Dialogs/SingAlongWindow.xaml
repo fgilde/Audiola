@@ -25,9 +25,16 @@
             <ui:TitleBar.Icon><ui:SymbolIcon Symbol="Mic24" /></ui:TitleBar.Icon>
         </ui:TitleBar>
 
-        <!-- Setup-Leiste: Vorbereiten + Kalibrieren -->
+        <!-- Setup-Leiste: Mikrofon, Vorbereiten, Kalibrieren -->
         <Border Grid.Row="1" Margin="12,4,12,0" Padding="12,10" CornerRadius="10"
                 Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <TextBlock VerticalAlignment="Center" Text="Mikrofon:" FontSize="13" />
+                <ComboBox Margin="8,0,0,0" Width="300" ItemsSource="{Binding Mics}"
+                          SelectedItem="{Binding SelectedMic, Mode=TwoWay}" DisplayMemberPath="Name"
+                          ToolTip="Aufnahme-Gerät zum Einsingen wählen." />
+            </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <ui:Button Icon="{ui:SymbolIcon MusicNote224}" Content="Backing vorbereiten"
                            Appearance="Primary" Command="{Binding PrepareCommand}" />
@@ -43,6 +50,7 @@
                 <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="12"
                            Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding CalibrationStatus}" />
             </StackPanel>
+          </StackPanel>
         </Border>
 
         <!-- Hauptbereich -->
