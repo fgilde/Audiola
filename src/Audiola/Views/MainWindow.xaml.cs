@@ -67,35 +67,23 @@ public partial class MainWindow : FluentWindow
     }
 
     // ---- Menü ----
-    private const string AudioFilter = "Audiodateien|*.wav;*.mp3;*.flac;*.aiff;*.m4a;*.ogg|Alle Dateien|*.*";
+    private const string AudioFilter =
+        "Audio & ZIP|*.wav;*.mp3;*.flac;*.aiff;*.m4a;*.ogg;*.zip|" +
+        "Audiodateien|*.wav;*.mp3;*.flac;*.aiff;*.m4a;*.ogg|" +
+        "ZIP-Archive|*.zip|Alle Dateien|*.*";
 
     private async void OpenFile_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new Microsoft.Win32.OpenFileDialog { Title = "Audiodatei öffnen", Filter = AudioFilter };
+        var dlg = new Microsoft.Win32.OpenFileDialog { Title = "Öffnen (Audio oder ZIP)", Multiselect = true, Filter = AudioFilter };
         if (dlg.ShowDialog() != true) return;
-        try
-        {
-            await _trackLoader.LoadAsync(dlg.FileName);
-            await App.GetService<ViewModels.TimelineViewModel>().AddAudioFileAsync(dlg.FileName, -1, 0);
-            AdoptMetadataIfEmpty(dlg.FileName);
-            _navigationService.Navigate(typeof(Views.Pages.TimelinePage));
-        }
-        catch (Exception ex)
-        {
-            _snackbarService.Show("Fehler beim Laden", ex.Message, ControlAppearance.Danger,
-                new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(4));
-        }
+        await LoadInputsAsync(dlg.FileNames);
     }
 
     private async void AddToStudio_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new Microsoft.Win32.OpenFileDialog { Title = "Audio ins Studio hinzufügen", Multiselect = true, Filter = AudioFilter };
         if (dlg.ShowDialog() != true) return;
-        _navigationService.Navigate(typeof(Views.Pages.TimelinePage));
-        var vm = App.GetService<ViewModels.TimelineViewModel>();
-        foreach (var f in dlg.FileNames)
-            await vm.AddAudioFileAsync(f, -1, 0);
-        if (dlg.FileNames.Length > 0) AdoptMetadataIfEmpty(dlg.FileNames[0]);
+        await LoadInputsAsync(dlg.FileNames);
     }
 
     /// <summary>Übernimmt die Tags einer geöffneten Datei in die projektweiten Metadaten (nur leere Felder).</summary>
@@ -317,40 +305,86 @@ public partial class MainWindow : FluentWindow
 
     private void OnDragOver(object sender, DragEventArgs e)
     {
-        e.Effects = TryGetAudioFile(e, out _) ? DragDropEffects.Copy : DragDropEffects.None;
+        e.Effects = HasDroppableFiles(e) ? DragDropEffects.Copy : DragDropEffects.None;
         e.Handled = true;
     }
 
     private async void OnFileDrop(object sender, DragEventArgs e)
     {
-        if (!TryGetAudioFile(e, out var path))
-            return;
-
-        try
-        {
-            var track = await _trackLoader.LoadAsync(path!);
-            await App.GetService<ViewModels.TimelineViewModel>().AddAudioFileAsync(path!, -1, 0);
-            AdoptMetadataIfEmpty(path!);
-            _snackbarService.Show("Geladen", track.FileName, ControlAppearance.Success,
-                new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(2));
-            _navigationService.Navigate(typeof(Views.Pages.TimelinePage));
-        }
-        catch (Exception ex)
-        {
-            _snackbarService.Show("Fehler beim Laden", ex.Message, ControlAppearance.Danger,
-                new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(4));
-        }
+        if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+        var files = (string[])e.Data.GetData(DataFormats.FileDrop)!;
+        await LoadInputsAsync(files);
     }
 
-    private static bool TryGetAudioFile(DragEventArgs e, out string? path)
+    private static bool HasDroppableFiles(DragEventArgs e)
     {
-        path = null;
-        if (!e.Data.GetDataPresent(DataFormats.FileDrop))
-            return false;
-
+        if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return false;
         var files = (string[])e.Data.GetData(DataFormats.FileDrop)!;
-        path = files.FirstOrDefault(f =>
-            SupportedExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()));
-        return path is not null;
+        return files.Any(IsSupportedInput);
+    }
+
+    private static bool IsSupportedInput(string path)
+    {
+        var ext = Path.GetExtension(path).ToLowerInvariant();
+        return ext == ".zip" || SupportedExtensions.Contains(ext);
+    }
+
+    /// <summary>
+    /// Lädt Dateien/ZIPs ins Studio: öffnet als erste Spur, wenn noch nichts da ist, sonst wird
+    /// jede als weitere Spur angehängt. ZIP-Archive werden entpackt und alle enthaltenen
+    /// Audiodateien einzeln geladen.
+    /// </summary>
+    private async Task LoadInputsAsync(IEnumerable<string> paths)
+    {
+        var files = ExpandToAudioFiles(paths);
+        if (files.Count == 0)
+        {
+            _snackbarService.Show("Nichts geladen", "Keine unterstützten Audiodateien gefunden.",
+                ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(3));
+            return;
+        }
+
+        _navigationService.Navigate(typeof(Views.Pages.TimelinePage));
+        var vm = App.GetService<ViewModels.TimelineViewModel>();
+        int loaded = 0;
+        foreach (var f in files)
+        {
+            try { await vm.AddAudioFileAsync(f, -1, 0); loaded++; }
+            catch { /* einzelne defekte Datei überspringen */ }
+        }
+        if (loaded == 0) return;
+
+        AdoptMetadataIfEmpty(files[0]);
+        _snackbarService.Show("Geladen",
+            loaded == 1 ? Path.GetFileName(files[0]) : $"{loaded} Spuren hinzugefügt.",
+            ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(2));
+    }
+
+    /// <summary>Expandiert Eingabepfade: ZIPs werden nach %Temp% entpackt; übrig bleiben nur unterstützte Audiodateien.</summary>
+    private static List<string> ExpandToAudioFiles(IEnumerable<string> paths)
+    {
+        var result = new List<string>();
+        foreach (var p in paths)
+        {
+            if (Path.GetExtension(p).Equals(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var dir = Path.Combine(Path.GetTempPath(), "Audiola", "zip", Guid.NewGuid().ToString("N"));
+                    Directory.CreateDirectory(dir);
+                    System.IO.Compression.ZipFile.ExtractToDirectory(p, dir);
+                    result.AddRange(Directory
+                        .EnumerateFiles(dir, "*.*", SearchOption.AllDirectories)
+                        .Where(f => SupportedExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
+                        .OrderBy(f => f, StringComparer.OrdinalIgnoreCase));
+                }
+                catch { /* defektes/gesperrtes Archiv überspringen */ }
+            }
+            else if (SupportedExtensions.Contains(Path.GetExtension(p).ToLowerInvariant()))
+            {
+                result.Add(p);
+            }
+        }
+        return result;
     }
 }
