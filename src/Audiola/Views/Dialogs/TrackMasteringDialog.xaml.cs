@@ -12,6 +12,7 @@ public partial class TrackMasteringDialog : FluentWindow
         DataContext = viewModel;
         viewModel.SetTrack(track);
         viewModel.RequestClose += () => { try { Close(); } catch { /* bereits zu */ } };
+        Closed += (_, _) => viewModel.StopPreview();   // Audio-Ressourcen freigeben
         InitializeComponent();
     }
 

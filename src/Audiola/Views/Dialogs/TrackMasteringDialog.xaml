@@ -40,6 +40,27 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Vorschau / A-B-Vergleich -->
+                <Border Margin="0,12,0,0" Padding="14" CornerRadius="10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Vorschau &amp; A/B-Vergleich" />
+                        <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   Text="Original und gemasterte Fassung synchron an derselben Stelle vergleichen." />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <ui:Button Icon="{ui:SymbolIcon SoundWaveCircle24}" Content="Vorschau erzeugen"
+                                       Command="{Binding PreviewCommand}" ToolTip="Rendert Original + gemasterte Fassung." />
+                            <ui:Button Margin="8,0,0,0" MinWidth="110" Icon="{ui:SymbolIcon Play24}"
+                                       Content="Play / Pause" Command="{Binding PlayPausePreviewCommand}"
+                                       IsEnabled="{Binding PreviewLoaded}" />
+                            <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" FontSize="12"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding PreviewTime}" />
+                        </StackPanel>
+                        <ui:ToggleSwitch Margin="0,10,0,0" IsEnabled="{Binding PreviewLoaded}"
+                                         IsChecked="{Binding ShowMastered, Mode=TwoWay}"
+                                         Content="Gemastert hörbar (aus = Original)" />
+                    </StackPanel>
+                </Border>
+
                 <!-- Equalizer -->
                 <Border Margin="0,12,0,0" Padding="14" CornerRadius="10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
                     <StackPanel>

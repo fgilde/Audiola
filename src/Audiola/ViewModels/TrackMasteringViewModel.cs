@@ -24,6 +24,9 @@ public sealed partial class TrackMasteringViewModel : ObservableObject
     private readonly ISettingsService _settings;
     private readonly ISnackbarService _snackbar;
 
+    private readonly AbComparePlayer _preview = new();
+    private string? _origCache;   // gerendertes, ungemastertes Original (einmalig, für die Vorschau)
+
     private StemTrackViewModel? _track;
     public event Action? RequestClose;
 
@@ -37,6 +40,8 @@ public sealed partial class TrackMasteringViewModel : ObservableObject
         _settings = settings;
         _snackbar = snackbar;
         RebuildProfileNames();
+        _preview.PositionChanged += (_, _) => { UpdatePreviewTime(); IsPreviewPlaying = _preview.IsPlaying; };
+        _preview.StateChanged += (_, _) => IsPreviewPlaying = _preview.IsPlaying;
     }
 
     public void SetTrack(StemTrackViewModel track)
@@ -52,6 +57,14 @@ public sealed partial class TrackMasteringViewModel : ObservableObject
     // Profile (eingebaute + eigene).
     public ObservableCollection<string> ProfileNames { get; } = [];
     [ObservableProperty] private string? _selectedProfile;
+
+    // Vorschau / A-B-Vergleich (Original vs. gemastert).
+    [ObservableProperty] private bool _previewLoaded;
+    [ObservableProperty] private bool _isPreviewPlaying;
+    [ObservableProperty] private bool _showMastered = true;
+    [ObservableProperty] private string _previewTime = "0:00 / 0:00";
+
+    partial void OnShowMasteredChanged(bool value) => _preview.ShowB = value;
 
     // EQ
     [ObservableProperty] private bool _highPassEnabled = true;
@@ -122,6 +135,42 @@ public sealed partial class TrackMasteringViewModel : ObservableObject
         Directory.CreateDirectory(dir);
         return Path.Combine(dir, $"mastered_{Guid.NewGuid():N}.wav");
     }
+
+    /// <summary>Rendert Original + gemasterte Fassung und lädt sie in den A-B-Vergleichsplayer.</summary>
+    [RelayCommand]
+    private async Task PreviewAsync()
+    {
+        if (_track is null || IsBusy) return;
+        IsBusy = true; Status = "Erzeuge Vorschau …";
+        try
+        {
+            _origCache ??= await RenderSourceAsync();              // Original nur einmal rendern
+            var mastered = MasteredTempPath();
+            await _mastering.ProcessAndExportAsync(_origCache, mastered, BuildSettings());
+            _preview.Load(_origCache, mastered);
+            _preview.ShowB = ShowMastered;
+            PreviewLoaded = true;
+            UpdatePreviewTime();
+            Status = "Vorschau bereit — Play drücken und mit A/B vergleichen.";
+        }
+        catch (Exception ex) { UiError.Show("Vorschau fehlgeschlagen", ex.Message); Status = ""; }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private void PlayPausePreview()
+    {
+        if (PreviewLoaded) _preview.TogglePlay();
+    }
+
+    private void UpdatePreviewTime()
+    {
+        static string F(TimeSpan t) => $"{(int)t.TotalMinutes}:{t.Seconds:D2}";
+        PreviewTime = $"{F(_preview.Position)} / {F(_preview.Duration)}";
+    }
+
+    /// <summary>Vom Dialog beim Schließen aufgerufen — gibt Audio-Ressourcen frei.</summary>
+    public void StopPreview() => _preview.Dispose();
 
     /// <summary>Spur mastern und im Studio durch das Ergebnis ersetzen.</summary>
     [RelayCommand]
