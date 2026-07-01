@@ -276,6 +276,35 @@ code:not(pre code) { background: var(--surface-2); border: 1px solid var(--borde
 .cta-band p { color: var(--text-2); max-width: 560px; margin: 0 auto 28px; font-size: 17px; }
 
 /* ---------- Footer ---------- */
+/* ---------- Credits: used by + built with ---------- */
+.credits { padding-top: 0; }
+.credits-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: start;
+  border-top: 1px solid var(--border); padding-top: 48px;
+}
+.credits-col .kicker { color: var(--accent-2); }
+.credits-sub { color: var(--text-2); font-size: 14.5px; margin: 0 0 16px; }
+.usedby { display: flex; flex-wrap: wrap; gap: 12px; }
+.usedby a {
+  display: inline-block; padding: 9px 16px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); font-weight: 600; font-size: 14.5px;
+  transition: transform .15s, border-color .15s, background .15s;
+}
+.usedby a:hover { transform: translateY(-2px); border-color: var(--accent); background: var(--surface-2); color: var(--text); }
+.built-with { display: flex; flex-wrap: wrap; gap: 14px; }
+.bw-card {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;
+  width: 172px; padding: 18px; border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  transition: transform .18s, border-color .18s;
+}
+.bw-card:hover { transform: translateY(-3px); border-color: var(--accent); color: var(--text); }
+.bw-card img { width: 54px; height: 54px; object-fit: contain; border-radius: 12px; }
+.bw-name { font-weight: 700; font-size: 15px; }
+.bw-desc { color: var(--text-3); font-size: 12.5px; }
+@media (max-width: 760px) { .credits-grid { grid-template-columns: 1fr; gap: 32px; } }
+
 footer { border-top: 1px solid var(--border); padding: 40px 0 56px; color: var(--text-3); font-size: 14px; }
 .footer-inner { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; justify-content: space-between; }
 .footer-links { display: flex; gap: 18px; flex-wrap: wrap; }

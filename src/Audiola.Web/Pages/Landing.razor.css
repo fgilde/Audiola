@@ -397,6 +397,93 @@
 
 ::deep .footer-inner a:hover { color: var(--au-text); }
 
+/* ----------------------------- CREDITS ----------------------------- */
+::deep .credits {
+    border-top: 1px solid var(--au-border);
+    padding: 64px 0;
+}
+
+::deep .credits-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 44px;
+    align-items: start;
+}
+
+::deep .credits-head {
+    margin: 0 0 18px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+::deep .credits-sub {
+    margin: 0 0 18px;
+    color: var(--au-muted);
+    font-size: 0.95rem;
+}
+
+::deep .usedby {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+::deep .usedby a {
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: var(--au-surface);
+    border: 1px solid var(--au-border);
+    color: var(--au-text);
+    font-weight: 600;
+    font-size: 0.94rem;
+    text-decoration: none;
+    transition: transform 0.15s ease, border-color 0.2s ease;
+}
+
+::deep .usedby a:hover {
+    transform: translateY(-2px);
+    border-color: rgba(91, 140, 255, 0.6);
+}
+
+::deep .built-with {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+::deep .bw-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    width: 172px;
+    padding: 18px;
+    border-radius: 16px;
+    background: var(--au-surface);
+    border: 1px solid var(--au-border);
+    color: var(--au-text);
+    text-decoration: none;
+    transition: transform 0.18s ease, border-color 0.2s ease;
+}
+
+::deep .bw-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(91, 140, 255, 0.45);
+}
+
+::deep .bw-card img {
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+::deep .bw-name { font-weight: 700; font-size: 0.98rem; }
+::deep .bw-desc { color: var(--au-muted); font-size: 0.82rem; }
+
 /* ----------------------------- RESPONSIVE ----------------------------- */
 @media (max-width: 980px) {
     ::deep .feature-grid { grid-template-columns: repeat(2, 1fr); }
@@ -407,6 +494,7 @@
     ::deep .hero { padding: 64px 0 56px; }
     ::deep .section { padding: 60px 0; }
     ::deep .shot-grid { grid-template-columns: 1fr; }
+    ::deep .credits-grid { grid-template-columns: 1fr; gap: 32px; }
 }
 
 @media (max-width: 520px) {
