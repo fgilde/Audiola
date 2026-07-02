@@ -21,6 +21,10 @@ public static class AudioExporter
 
     private static bool _mfStarted;
 
+    /// <summary>Bequem-Overload: schreibt einen Float-Puffer (interleaved) direkt als Datei.</summary>
+    public static void Export(float[] samples, int sampleRate, int channels, string path, int bitrate = 256_000)
+        => Export(new FloatArraySampleProvider(samples, sampleRate, channels), path, bitrate);
+
     public static void Export(ISampleProvider source, string path, int bitrate = 256_000)
     {
         var ext = Path.GetExtension(path).ToLowerInvariant();

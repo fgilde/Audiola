@@ -91,25 +91,9 @@ public sealed class AudioSeparatorService : IAdvancedSeparationService
 
     private async Task<(int Code, string Stdout, string Stderr)> RunAsync(string[] args, IProgress<string>? progress, CancellationToken ct)
     {
-        var psi = new ProcessStartInfo
-        {
-            FileName = _env.Exists ? _env.PythonExe : _settings.Current.PythonPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        psi.ArgumentList.Add(ScriptPath);
-        foreach (var a in args) psi.ArgumentList.Add(a);
-
-        using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
-        var so = new StringBuilder();
-        var se = new StringBuilder();
-        p.OutputDataReceived += (_, e) => { if (e.Data is not null) so.AppendLine(e.Data); };
-        p.ErrorDataReceived += (_, e) => { if (e.Data is not null) { se.AppendLine(e.Data); progress?.Report(e.Data); } };
-        p.Start(); p.BeginOutputReadLine(); p.BeginErrorReadLine();
-        await p.WaitForExitAsync(ct);
-        return (p.ExitCode, so.ToString(), se.ToString());
+        var exe = _env.Exists ? _env.PythonExe : _settings.Current.PythonPath;
+        var r = await ProcessRunner.RunAsync(exe, [ScriptPath, .. args], progress, ct);
+        return (r.ExitCode, r.Stdout, r.Stderr);
     }
 
     private sealed class SepResponse { public List<SepFile>? Files { get; set; } }

@@ -21,7 +21,6 @@ public sealed partial class MasteringViewModel : ObservableObject
     private readonly LiveMasterProcessor _liveMaster;
     private readonly ISettingsService _settings;
 
-    private static readonly string MasterDir = Path.Combine(Path.GetTempPath(), "Audiola", "master");
     private string? _sourcePath;
     private double _inputLufs = double.NegativeInfinity;
 
@@ -179,8 +178,7 @@ public sealed partial class MasteringViewModel : ObservableObject
         if (string.IsNullOrEmpty(name)) return;
         if (MasteringProfiles.All.Any(p => p.Name == name))
         {
-            _snackbar.Show("Name belegt", "Dieser Name ist ein eingebautes Profil.", ControlAppearance.Caution,
-                new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(3));
+            _snackbar.Warning("Name belegt", "Dieser Name ist ein eingebautes Profil.");
             return;
         }
 
@@ -194,8 +192,7 @@ public sealed partial class MasteringViewModel : ObservableObject
         SelectedProfile = name;
         NewProfileName = "";
         DeleteProfileCommand.NotifyCanExecuteChanged();
-        _snackbar.Show("Profil gespeichert", name, ControlAppearance.Success,
-            new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(2));
+        _snackbar.Success("Profil gespeichert", name, 2);
     }
 
     private bool CanDeleteProfile => IsUserProfile(SelectedProfile);
@@ -227,8 +224,7 @@ public sealed partial class MasteringViewModel : ObservableObject
                 var (temp, peaks, lufs) = await Task.Run(() =>
                 {
                     var (samples, sr) = _engine.RenderRange(tracks, TimeSpan.Zero, dur);
-                    Directory.CreateDirectory(MasterDir);
-                    var t = Path.Combine(MasterDir, $"mix_{Guid.NewGuid():N}.wav");
+                    var t = TempDir.File("master", ".wav", "mix");
                     AudioEdits.WriteWav(t, samples, sr);
                     return (t, AudioEdits.ComputePeaks(samples), Dsp.LoudnessMeter.MeasureIntegratedLufs(samples, sr));
                 });
@@ -356,9 +352,7 @@ public sealed partial class MasteringViewModel : ObservableObject
                     // Wenn Ziel = Quelle: über eine temporäre Datei schreiben (Original nicht korrumpieren).
                     if (string.Equals(outPath, input, StringComparison.OrdinalIgnoreCase))
                     {
-                        var tmpDir = Path.Combine(Path.GetTempPath(), "Audiola", "bulk");
-                        Directory.CreateDirectory(tmpDir);
-                        var tmp = Path.Combine(tmpDir, $"{Guid.NewGuid():N}{ext}");
+                        var tmp = TempDir.File("bulk", ext);
                         await _mastering.ProcessAndExportAsync(input, tmp, settings);
                         File.Copy(tmp, input, overwrite: true);
                         try { File.Delete(tmp); } catch { /* egal */ }
@@ -490,9 +484,7 @@ public sealed partial class MasteringViewModel : ObservableObject
             async () =>
             {
                 StatusText = "Verarbeite & exportiere …";
-                var dir = Path.Combine(Path.GetTempPath(), "Audiola", "master");
-                Directory.CreateDirectory(dir);
-                var tempWav = Path.Combine(dir, $"master_{Guid.NewGuid():N}.wav");
+                var tempWav = TempDir.File("master", ".wav", "master");
                 var result = await _mastering.ProcessAndExportAsync(src, tempWav, settings);
                 StatusText = $"Fertig: {result.InputLufs:F1} → {result.OutputLufs:F1} LUFS " +
                              $"(Gain {result.AppliedGainDb:+0.0;-0.0} dB)" +

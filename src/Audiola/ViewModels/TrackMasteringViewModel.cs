@@ -6,7 +6,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NAudio.Wave;
 using Wpf.Ui;
-using Wpf.Ui.Controls;
 
 namespace Audiola.ViewModels;
 
@@ -122,18 +121,14 @@ public sealed partial class TrackMasteringViewModel : ObservableObject
     private async Task<string> RenderSourceAsync()
     {
         var (samples, sr) = await _timeline.RenderTrackAsync(_track!);
-        var dir = Path.Combine(Path.GetTempPath(), "Audiola", "trackmaster");
-        Directory.CreateDirectory(dir);
-        var temp = Path.Combine(dir, $"src_{Guid.NewGuid():N}.wav");
-        AudioExporter.Export(new FloatArraySampleProvider(samples, sr, 2), temp);
+        var temp = TempDir.File("trackmaster", ".wav", "src");
+        AudioExporter.Export(samples, sr, 2, temp);
         return temp;
     }
 
     private static string MasteredTempPath()
     {
-        var dir = Path.Combine(Path.GetTempPath(), "Audiola", "trackmaster");
-        Directory.CreateDirectory(dir);
-        return Path.Combine(dir, $"mastered_{Guid.NewGuid():N}.wav");
+        return TempDir.File("trackmaster", ".wav", "mastered");
     }
 
     /// <summary>Rendert Original + gemasterte Fassung und lädt sie in den A-B-Vergleichsplayer.</summary>
@@ -186,8 +181,7 @@ public sealed partial class TrackMasteringViewModel : ObservableObject
             await _timeline.ApplyProcessedTrackAsync(_track, outp);
 
             Status = $"Fertig: {result.InputLufs:F1} → {result.OutputLufs:F1} LUFS";
-            _snackbar.Show("Spur gemastert", $"{_track.Name} aktualisiert.",
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+            _snackbar.Success("Spur gemastert", $"{_track.Name} aktualisiert.");
             RequestClose?.Invoke();
         }
         catch (Exception ex) { UiError.Show("Mastern fehlgeschlagen", ex.Message); Status = ""; }

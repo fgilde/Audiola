@@ -55,7 +55,7 @@ public abstract class PythonVariationProviderBase : IAudioVariationProvider
             if (result.ExitCode != 0)
             {
                 throw new InvalidOperationException(
-                    $"Python variation failed with exit code {result.ExitCode}\n\nSTDOUT:\n{result.StdOut}\n\nSTDERR:\n{result.StdErr}");
+                    $"Python variation failed with exit code {result.ExitCode}\n\nSTDOUT:\n{result.Stdout}\n\nSTDERR:\n{result.Stderr}");
             }
 
             var expectedPrefix = variationId + "_";
@@ -91,42 +91,14 @@ public abstract class PythonVariationProviderBase : IAudioVariationProvider
         string outputWav,
         CancellationToken ct)
     {
-        var psi = new ProcessStartInfo
-        {
-            FileName = "ffmpeg",
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-        };
+        var r = await ProcessRunner.RunAsync("ffmpeg",
+            ["-hide_banner", "-y", "-i", inputWav, "-map_metadata", "-1", "-map_chapters", "-1",
+             "-vn", "-sn", "-ac", "2", "-c:a", "pcm_f32le", outputWav],
+            progress: null, ct);
 
-        psi.ArgumentList.Add("-hide_banner");
-        psi.ArgumentList.Add("-y");
-        psi.ArgumentList.Add("-i");
-        psi.ArgumentList.Add(inputWav);
-        psi.ArgumentList.Add("-map_metadata");
-        psi.ArgumentList.Add("-1");
-        psi.ArgumentList.Add("-map_chapters");
-        psi.ArgumentList.Add("-1");
-        psi.ArgumentList.Add("-vn");
-        psi.ArgumentList.Add("-sn");
-        psi.ArgumentList.Add("-ac");
-        psi.ArgumentList.Add("2");
-        psi.ArgumentList.Add("-c:a");
-        psi.ArgumentList.Add("pcm_f32le");
-        psi.ArgumentList.Add(outputWav);
-
-        using var process = Process.Start(psi)!;
-        var stdout = await process.StandardOutput.ReadToEndAsync(ct);
-        var stderr = await process.StandardError.ReadToEndAsync(ct);
-
-        await process.WaitForExitAsync(ct);
-
-        if (process.ExitCode != 0)
-        {
+        if (!r.Success)
             throw new InvalidOperationException(
-                $"ffmpeg normalize failed with exit code {process.ExitCode}\n\nSTDOUT:\n{stdout}\n\nSTDERR:\n{stderr}");
-        }
+                $"ffmpeg normalize failed with exit code {r.ExitCode}\n\nSTDOUT:\n{r.Stdout}\n\nSTDERR:\n{r.Stderr}");
     }
 
     private async Task<ProcessResult> RunPythonAsync(
@@ -136,48 +108,9 @@ public abstract class PythonVariationProviderBase : IAudioVariationProvider
         CancellationToken ct)
     {
         Directory.CreateDirectory(outputDir);
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = _pythonExe,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-        };
-
-        psi.ArgumentList.Add(_scriptPath);
-        psi.ArgumentList.Add(inputWav);
-        psi.ArgumentList.Add("-o");
-        psi.ArgumentList.Add(outputDir);
-        psi.ArgumentList.Add("--formats");
-        psi.ArgumentList.Add("wav");
-        psi.ArgumentList.Add("--only");
-        psi.ArgumentList.Add(variationId);
-        psi.ArgumentList.Add("--continue-on-error");
-
-        using var process = new Process { StartInfo = psi };
-
-        var stdout = new StringBuilder();
-        var stderr = new StringBuilder();
-
-        process.OutputDataReceived += (_, e) =>
-        {
-            if (e.Data != null) stdout.AppendLine(e.Data);
-        };
-
-        process.ErrorDataReceived += (_, e) =>
-        {
-            if (e.Data != null) stderr.AppendLine(e.Data);
-        };
-
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-
-        await process.WaitForExitAsync(ct);
-
-        return new ProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
+        return await ProcessRunner.RunAsync(_pythonExe,
+            [_scriptPath, inputWav, "-o", outputDir, "--formats", "wav", "--only", variationId, "--continue-on-error"],
+            progress: null, ct, ProcessRunner.StdoutMode.StreamLines);
     }
 
     private static void WriteStereoFloatWav(string path, float[] samples, int sampleRate)
@@ -315,5 +248,4 @@ public abstract class PythonVariationProviderBase : IAudioVariationProvider
         throw new InvalidDataException($"Unsupported WAV format. AudioFormat={audioFormat}, Bits={bitsPerSample}");
     }
 
-    private sealed record ProcessResult(int ExitCode, string StdOut, string StdErr);
 }

@@ -72,9 +72,7 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
                 $"ElevenLabs-Fehler {(int)resp.StatusCode}: {Shorten(body)}");
         }
 
-        var dir = Path.Combine(Path.GetTempPath(), "Audiola", "voice");
-        Directory.CreateDirectory(dir);
-        var mp3 = Path.Combine(dir, $"sts_{Guid.NewGuid():N}.mp3");
+        var mp3 = TempDir.File("voice", ".mp3", "sts");
         await using (var fs = File.Create(mp3))
             await resp.Content.CopyToAsync(fs, ct);
 
@@ -116,9 +114,7 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
             throw new InvalidOperationException($"ElevenLabs-Fehler {(int)resp.StatusCode}: {Shorten(body)}");
         }
 
-        var dir = Path.Combine(Path.GetTempPath(), "Audiola", "voice");
-        Directory.CreateDirectory(dir);
-        var mp3 = Path.Combine(dir, $"tts_{Guid.NewGuid():N}.mp3");
+        var mp3 = TempDir.File("voice", ".mp3", "tts");
         await using (var fs = File.Create(mp3))
             await resp.Content.CopyToAsync(fs, ct);
 

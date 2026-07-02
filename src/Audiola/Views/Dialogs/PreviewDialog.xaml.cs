@@ -28,8 +28,7 @@ public partial class PreviewDialog : FluentWindow
         try
         {
             // Eigener, isolierter Benutzerdatenordner (kein Schreiben ins Programmverzeichnis).
-            var dataDir = Path.Combine(Path.GetTempPath(), "Audiola", "webview2");
-            Directory.CreateDirectory(dataDir);
+            var dataDir = Audiola.Services.TempDir.Category("webview2");
             var env = await CoreWebView2Environment.CreateAsync(userDataFolder: dataDir);
             await Web.EnsureCoreWebView2Async(env);
 

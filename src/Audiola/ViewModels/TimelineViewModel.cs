@@ -156,9 +156,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         return await Task.Run(() =>
         {
             var (samples, sr) = _engine.RenderRange(tracks, TimeSpan.Zero, end);
-            var dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Audiola", "render");
-            System.IO.Directory.CreateDirectory(dir);
-            var path = System.IO.Path.Combine(dir, $"mix_{Guid.NewGuid():N}.wav");
+            var path = TempDir.File("render", ".wav", "mix");
             AudioExporter.Export(new FloatArraySampleProvider(samples, sr, 2), path);
             return path;
         });
@@ -174,8 +172,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     {
         if (Tracks.Count == 0)
         {
-            _snackbar.Show("Nichts zu exportieren", "Es sind keine Spuren im Studio.",
-                ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(3));
+            _snackbar.Warning("Nichts zu exportieren", "Es sind keine Spuren im Studio.");
             return;
         }
 
@@ -690,8 +687,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         {
             if (!await _separation.IsAvailableAsync())
             {
-                _snackbar.Show("Demucs fehlt", "Bitte 'pip install demucs soundfile' ausführen.",
-                    ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(5));
+                _snackbar.Warning("Demucs fehlt", "Bitte 'pip install demucs soundfile' ausführen.", 5);
                 return;
             }
 
@@ -743,14 +739,12 @@ public sealed partial class TimelineViewModel : ObservableObject
             CommitClips();
             Commit("Stems getrennt");
             var detected = string.Join(", ", stemList.Select(s => StemName(s.Kind)));
-            _snackbar.Show("Stems hinzugefügt",
-                detectContent ? $"Erkannt: {detected} ({stemList.Count} Spuren)." : $"{stemList.Count} Spuren aus „{track.Name}“.",
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(4));
+            _snackbar.Success("Stems hinzugefügt",
+                detectContent ? $"Erkannt: {detected} ({stemList.Count} Spuren)." : $"{stemList.Count} Spuren aus „{track.Name}“.", 4);
         }
         catch (Exception ex)
         {
-            _snackbar.Show("Trennung fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
+            _snackbar.Error("Trennung fehlgeschlagen", ex.Message, 5);
         }
         finally
         {
@@ -784,8 +778,7 @@ public sealed partial class TimelineViewModel : ObservableObject
             var stems = await AdvSep.SeparateAsync(path, model.ModelFilename, prog);
             if (stems.Count == 0)
             {
-                _snackbar.Show("Keine Stems", "Die Trennung hat nichts erzeugt.",
-                    ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(4));
+                _snackbar.Warning("Keine Stems", "Die Trennung hat nichts erzeugt.", 4);
                 return;
             }
 
@@ -808,8 +801,7 @@ public sealed partial class TimelineViewModel : ObservableObject
             RecomputeDuration();
             CommitClips();
             Commit("HQ-Stems getrennt");
-            _snackbar.Show("Stems hinzugefügt", $"{stems.Count} Spuren ({model.Name}).",
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(4));
+            _snackbar.Success("Stems hinzugefügt", $"{stems.Count} Spuren ({model.Name}).", 4);
         }
         catch (Exception ex)
         {
@@ -949,8 +941,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     {
         if (!HasTracks)
         {
-            _snackbar.Show("Nichts zum Einsingen", "Lade zuerst einen Song oder Spuren ins Studio.",
-                ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(3));
+            _snackbar.Warning("Nichts zum Einsingen", "Lade zuerst einen Song oder Spuren ins Studio.");
             return;
         }
         var win = new Audiola.Views.Dialogs.SingAlongWindow(App.GetService<SingAlongViewModel>())
@@ -1098,9 +1089,6 @@ public sealed partial class TimelineViewModel : ObservableObject
     // Einzel-Effekte (Hall/Echo/…) gibt es als Variationen im „Studio-Effekte"-Provider
     // (Button/Kontextmenü „Variationen…"); ApplyClipEffect entfällt dadurch.
 
-    private static readonly string ClipFxDir =
-        System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Audiola", "clipfx");
-
     /// <summary>
     /// Bereich (in Clip-relativen Sekunden), auf den Clip-Operationen wirken: Schnittmenge
     /// der Timeline-Auswahl mit dem Clip. null = kein/keine Überlappung → ganzer Clip.
@@ -1180,9 +1168,7 @@ public sealed partial class TimelineViewModel : ObservableObject
                 var inPeak = 0f;
                 foreach (var v in sub) inPeak = Math.Max(inPeak, Math.Abs(v));
 
-                var dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Audiola", "voice");
-                System.IO.Directory.CreateDirectory(dir);
-                var t = System.IO.Path.Combine(dir, $"in_{Guid.NewGuid():N}.wav");
+                var t = TempDir.File("voice", ".wav", "in");
                 AudioEdits.WriteWav(t, sub, rate);
                 return (temp: t, seg, aS, bS, rate, inPeak, whole: a == 0 && b == lenFrames);
             });
@@ -1205,9 +1191,8 @@ public sealed partial class TimelineViewModel : ObservableObject
                 ReplaceClipFromBuffer(clip, newBuf, prep.rate);
             }
 
-            _snackbar.Show("Stimme getauscht",
-                prep.whole ? "Der Clip wurde ersetzt." : "Der markierte Bereich wurde ersetzt.",
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+            _snackbar.Success("Stimme getauscht",
+                prep.whole ? "Der Clip wurde ersetzt." : "Der markierte Bereich wurde ersetzt.");
         }
         catch (Exception ex)
         {
@@ -1248,15 +1233,12 @@ public sealed partial class TimelineViewModel : ObservableObject
                 finally { if (choice.TemporaryEleven) try { await _voiceChange.DeleteVoiceAsync(voiceId); } catch { } }
             }
 
-            var dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Audiola", "voice");
-            System.IO.Directory.CreateDirectory(dir);
-            var temp = System.IO.Path.Combine(dir, $"tts_{Guid.NewGuid():N}.wav");
+            var temp = TempDir.File("voice", ".wav", "tts");
             AudioEdits.WriteWav(temp, samples, sr);
 
             await AddAudioFileAsync(temp, -1, 0);
 
-            _snackbar.Show("Sprache erzeugt", "Neue Spur aus Text hinzugefügt.",
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+            _snackbar.Success("Sprache erzeugt", "Neue Spur aus Text hinzugefügt.");
         }
         catch (Exception ex)
         {
@@ -1285,8 +1267,7 @@ public sealed partial class TimelineViewModel : ObservableObject
                     string.IsNullOrWhiteSpace(_settings.Current.WhisperModel) ? "base" : _settings.Current.WhisperModel);
             if (segments.Count == 0)
             {
-                _snackbar.Show("Keine Sprache erkannt", "Das Transkript ist leer.",
-                    ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(4));
+                _snackbar.Warning("Keine Sprache erkannt", "Das Transkript ist leer.", 4);
                 return;
             }
 
@@ -1308,8 +1289,7 @@ public sealed partial class TimelineViewModel : ObservableObject
                 await System.IO.File.WriteAllTextAsync(dialog.FileName, content);
             }
 
-            _snackbar.Show("Transkribiert", $"{segments.Count} Segmente — wird beim Export der Spur eingebettet.",
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(4));
+            _snackbar.Success("Transkribiert", $"{segments.Count} Segmente — wird beim Export der Spur eingebettet.", 4);
         }
         catch (Exception ex)
         {
@@ -1355,8 +1335,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// <summary>Ersetzt die Quelle eines Clips durch einen bearbeiteten Puffer (Editor-Bake / Voice-Change).</summary>
     public void ReplaceClipFromBuffer(ClipViewModel clip, float[] samples, int sampleRate)
     {
-        System.IO.Directory.CreateDirectory(ClipFxDir);
-        var temp = System.IO.Path.Combine(ClipFxDir, $"edit_{Guid.NewGuid():N}.wav");
+        var temp = TempDir.File("clipfx", ".wav", "edit");
         AudioEdits.WriteWav(temp, samples, sampleRate);
         var lenSec = (double)(samples.Length / 2) / sampleRate;
         ReplaceSelectedClipSource(clip, temp, samples, lenSec);
@@ -1440,8 +1419,7 @@ public sealed partial class TimelineViewModel : ObservableObject
 
                 var temp = await Task.Run(() =>
                 {
-                    System.IO.Directory.CreateDirectory(ClipFxDir);
-                    var t = System.IO.Path.Combine(ClipFxDir, $"var_{Guid.NewGuid():N}.wav");
+                    var t = TempDir.File("clipfx", ".wav", "var");
                     AudioEdits.WriteWav(t, newSeg, sr);
                     return t;
                 });
@@ -1451,14 +1429,12 @@ public sealed partial class TimelineViewModel : ObservableObject
 
             CommitClips();
             Commit($"Variationen ({provider.Name})");
-            _snackbar.Show("Variationen angewendet",
-                $"{provider.Name}: {variationIds.Count} Variation(en) auf {targets.Count} Clip(s).",
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+            _snackbar.Success("Variationen angewendet",
+                $"{provider.Name}: {variationIds.Count} Variation(en) auf {targets.Count} Clip(s).");
         }
         catch (Exception ex)
         {
-            _snackbar.Show("Variation fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(6));
+            _snackbar.Error("Variation fehlgeschlagen", ex.Message, 6);
         }
     }
 

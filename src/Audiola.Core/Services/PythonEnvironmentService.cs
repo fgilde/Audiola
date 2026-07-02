@@ -71,24 +71,7 @@ public sealed class PythonEnvironmentService : IPythonEnvironment
 
     private static async Task<(int Code, string Err)> RunAsync(string exe, string[] args, IProgress<string>? progress, CancellationToken ct)
     {
-        var psi = new ProcessStartInfo
-        {
-            FileName = exe,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args) psi.ArgumentList.Add(a);
-
-        using var p = new Process { StartInfo = psi, EnableRaisingEvents = true };
-        var err = new StringBuilder();
-        p.OutputDataReceived += (_, e) => { if (e.Data is not null) progress?.Report(e.Data); };
-        p.ErrorDataReceived += (_, e) => { if (e.Data is not null) { err.AppendLine(e.Data); progress?.Report(e.Data); } };
-        p.Start();
-        p.BeginOutputReadLine();
-        p.BeginErrorReadLine();
-        await p.WaitForExitAsync(ct);
-        return (p.ExitCode, err.ToString());
+        var r = await ProcessRunner.RunAsync(exe, args, progress, ct, ProcessRunner.StdoutMode.StreamLines);
+        return (r.ExitCode, r.Stderr);
     }
 }

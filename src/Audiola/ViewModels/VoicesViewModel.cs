@@ -7,7 +7,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using NAudio.Wave;
 using Wpf.Ui;
-using Wpf.Ui.Controls;
 
 namespace Audiola.ViewModels;
 
@@ -138,8 +137,7 @@ public sealed partial class VoicesViewModel : ObservableObject
         try
         {
             await _local.DownloadModelAsync(model.Id, new Progress<string>(s => Status = s));
-            _snackbar.Show("Modell installiert", model.Name, ControlAppearance.Success,
-                new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+            _snackbar.Success("Modell installiert", model.Name);
             await LoadModelsAsync();
         }
         catch (Exception ex)
@@ -201,8 +199,7 @@ public sealed partial class VoicesViewModel : ObservableObject
         SamplePath = null;
         NewName = "Meine Stimme";
         Status = $"Stimme „{profile.Name}“ erstellt.";
-        _snackbar.Show("Stimme erstellt", profile.Name, ControlAppearance.Success,
-            new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(2));
+        _snackbar.Success("Stimme erstellt", profile.Name, 2);
     }
 
     [RelayCommand]
@@ -220,9 +217,7 @@ public sealed partial class VoicesViewModel : ObservableObject
         try
         {
             var (samples, sr) = await _local.SpeakAsync(PreviewText, p, 1.0);
-            var dir = Path.Combine(Path.GetTempPath(), "Audiola", "voice");
-            Directory.CreateDirectory(dir);
-            var path = Path.Combine(dir, $"preview_{Guid.NewGuid():N}.wav");
+            var path = TempDir.File("voice", ".wav", "preview");
             AudioEdits.WriteWav(path, samples, sr);
 
             _previewReader = new AudioFileReader(path);

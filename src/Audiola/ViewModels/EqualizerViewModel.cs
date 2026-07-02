@@ -17,8 +17,6 @@ namespace Audiola.ViewModels;
 /// </summary>
 public sealed partial class EqualizerViewModel : ObservableObject
 {
-    private static readonly string EqDir = Path.Combine(Path.GetTempPath(), "Audiola", "eq");
-
     private readonly SessionState _session;
     private readonly LiveEqProcessor _liveEq;
     private readonly ISnackbarService _snackbar;
@@ -49,7 +47,6 @@ public sealed partial class EqualizerViewModel : ObservableObject
         _timeline = timeline;
         _engine = engine;
 
-        Directory.CreateDirectory(EqDir);
         _liveEq.SetBands(Bands);
         foreach (var b in Bands)
             b.PropertyChanged += (_, _) => _liveEq.MarkDirty();
@@ -79,7 +76,7 @@ public sealed partial class EqualizerViewModel : ObservableObject
                 _sourcePath = await Task.Run(() =>
                 {
                     var (samples, sr) = _engine.RenderRange(tracks, TimeSpan.Zero, dur);
-                    var temp = Path.Combine(EqDir, $"mix_{Guid.NewGuid():N}.wav");
+                    var temp = TempDir.File("eq", ".wav", "mix");
                     AudioEdits.WriteWav(temp, samples, sr);
                     return temp;
                 });
@@ -169,7 +166,7 @@ public sealed partial class EqualizerViewModel : ObservableObject
             samples[i * 2 + 1] = Math.Clamp(r, -1f, 1f);
         }
 
-        var temp = Path.Combine(EqDir, $"eq_{Guid.NewGuid():N}.wav");
+        var temp = TempDir.File("eq", ".wav", "eq");
         AudioEdits.WriteWav(temp, samples, sr);
         return temp;
     }

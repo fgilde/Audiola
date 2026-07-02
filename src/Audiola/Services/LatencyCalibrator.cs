@@ -83,10 +83,8 @@ public sealed class LatencyCalibrator
             for (int i = 0; i < clickLen && start + i < sig.Length; i++)
                 sig[start + i] = 0.9f * (1f - (float)i / clickLen); // kurzer, abfallender Impuls
         }
-        var dir = Path.Combine(Path.GetTempPath(), "Audiola", "calib");
-        Directory.CreateDirectory(dir);
-        var path = Path.Combine(dir, $"click_{Guid.NewGuid():N}.wav");
-        AudioExporter.Export(new FloatArraySampleProvider(sig, Rate, 1), path);
+        var path = TempDir.File("calib", ".wav", "click");
+        AudioExporter.Export(sig, Rate, 1, path);
         return path;
     }
 }

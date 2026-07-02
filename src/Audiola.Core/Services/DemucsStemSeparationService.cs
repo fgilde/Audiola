@@ -96,39 +96,9 @@ public sealed class DemucsStemSeparationService : IStemSeparationService
         IProgress<string>? progress,
         CancellationToken ct)
     {
-        var psi = new ProcessStartInfo
-        {
-            FileName = _settings.Current.PythonPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args)
-            psi.ArgumentList.Add(a);
-
-        using var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
-        var output = new System.Text.StringBuilder();
-
-        process.OutputDataReceived += (_, e) =>
-        {
-            if (e.Data is null) return;
-            output.AppendLine(e.Data);
-            progress?.Report(e.Data);
-        };
-        process.ErrorDataReceived += (_, e) =>
-        {
-            if (e.Data is null) return;
-            output.AppendLine(e.Data);
-            // Demucs schreibt Fortschritt nach stderr.
-            progress?.Report(e.Data);
-        };
-
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-
-        await process.WaitForExitAsync(ct);
-        return (process.ExitCode, output.ToString());
+        // Demucs schreibt Fortschritt nach stderr; stdout zeilenweise mitstreamen.
+        var r = await ProcessRunner.RunAsync(_settings.Current.PythonPath, args, progress, ct,
+            ProcessRunner.StdoutMode.StreamLines);
+        return (r.ExitCode, r.Stdout + r.Stderr);
     }
 }

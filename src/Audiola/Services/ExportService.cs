@@ -4,7 +4,6 @@ using Audiola.Models;
 using Audiola.Views.Dialogs;
 using NAudio.Wave;
 using Wpf.Ui;
-using Wpf.Ui.Controls;
 
 namespace Audiola.Services;
 
@@ -87,12 +86,10 @@ public sealed class ExportService
             catch (Exception tagEx) { tagWarning = tagEx.Message; }
 
             if (tagWarning is null)
-                _snackbar.Show("Exportiert", Path.GetFileName(req.Path),
-                    ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+                _snackbar.Success("Exportiert", Path.GetFileName(req.Path));
             else
-                _snackbar.Show("Exportiert (Tags eingeschränkt)",
-                    $"{Path.GetFileName(req.Path)} — Metadaten konnten nicht vollständig geschrieben werden.",
-                    ControlAppearance.Caution, new SymbolIcon(SymbolRegular.Warning24), TimeSpan.FromSeconds(5));
+                _snackbar.Warning("Exportiert (Tags eingeschränkt)",
+                    $"{Path.GetFileName(req.Path)} — Metadaten konnten nicht vollständig geschrieben werden.", 5);
         }
         catch (Exception ex)
         {

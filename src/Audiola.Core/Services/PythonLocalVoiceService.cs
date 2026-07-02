@@ -206,25 +206,8 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
     private static async Task<(int Code, string Err)> RunPipAsync(
         string exe, string[] args, IProgress<string>? progress, CancellationToken ct)
     {
-        var psi = new ProcessStartInfo
-        {
-            FileName = exe,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        foreach (var a in args) psi.ArgumentList.Add(a);
-
-        using var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
-        var err = new StringBuilder();
-        process.OutputDataReceived += (_, e) => { if (e.Data is not null) progress?.Report(e.Data); };
-        process.ErrorDataReceived += (_, e) => { if (e.Data is not null) { err.AppendLine(e.Data); progress?.Report(e.Data); } };
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-        await process.WaitForExitAsync(ct);
-        return (process.ExitCode, err.ToString());
+        var r = await ProcessRunner.RunAsync(exe, args, progress, ct, ProcessRunner.StdoutMode.StreamLines);
+        return (r.ExitCode, r.Stderr);
     }
 
     /// <summary>
@@ -415,40 +398,11 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
     private async Task<(int Code, string Stdout, string Stderr)> RunAsync(
         string[] args, IProgress<string>? progress, CancellationToken ct)
     {
-        var psi = new ProcessStartInfo
-        {
-            // Bevorzugt die verwaltete Umgebung (mit allen installierten Paketen), sonst System-Python.
-            FileName = _env.Exists ? _env.PythonExe : _settings.Current.PythonPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        psi.ArgumentList.Add(ScriptPath);
-        foreach (var a in args) psi.ArgumentList.Add(a);
-
-        using var process = new Process { StartInfo = psi, EnableRaisingEvents = true };
-        var stderr = new StringBuilder();
-
-        // stderr zeilenweise für Live-Fortschritt; stdout komplett über ReadToEndAsync,
-        // damit auch lange Ausgaben (z. B. das gesamte Transkript-JSON in einer Zeile) nicht
-        // durch eine Race zwischen WaitForExitAsync und den Output-Events abgeschnitten werden.
-        process.ErrorDataReceived += (_, e) => { if (e.Data is not null) { stderr.AppendLine(e.Data); progress?.Report(e.Data); } };
-
-        process.Start();
-        process.BeginErrorReadLine();
-        var stdoutTask = process.StandardOutput.ReadToEndAsync(ct);
-        try
-        {
-            await process.WaitForExitAsync(ct);
-        }
-        catch (OperationCanceledException)
-        {
-            try { process.Kill(entireProcessTree: true); } catch { /* schon beendet */ }
-            throw;
-        }
-        var stdout = await stdoutTask;   // sicherstellen, dass der gesamte stdout gelesen wurde
-        return (process.ExitCode, stdout, stderr.ToString());
+        // Bevorzugt die verwaltete Umgebung (mit allen installierten Paketen), sonst System-Python.
+        // stdout im Buffer-Modus: lange JSON-Ausgaben (Transkript in einer Zeile) ohne Zeilen-Race.
+        var exe = _env.Exists ? _env.PythonExe : _settings.Current.PythonPath;
+        var r = await ProcessRunner.RunAsync(exe, [ScriptPath, .. args], progress, ct);
+        return (r.ExitCode, r.Stdout, r.Stderr);
     }
 
     // ---- JSON-DTOs ----

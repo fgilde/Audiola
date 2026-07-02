@@ -9,13 +9,5 @@ namespace Audiola.Services;
 public static class UiError
 {
     public static void Show(string title, string message)
-    {
-        void Display() => MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Error);
-
-        var dispatcher = Application.Current?.Dispatcher;
-        if (dispatcher is not null && !dispatcher.CheckAccess())
-            dispatcher.Invoke(Display);
-        else
-            Display();
-    }
+        => DispatcherHelper.OnUi(() => MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Error));
 }

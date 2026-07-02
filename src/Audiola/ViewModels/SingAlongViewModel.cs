@@ -5,7 +5,6 @@ using Audiola.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Wpf.Ui;
-using Wpf.Ui.Controls;
 
 namespace Audiola.ViewModels;
 
@@ -316,14 +315,11 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         IsBusy = true; Status = "Aufnahme wird übernommen …";
         try
         {
-            var dir = Path.Combine(Path.GetTempPath(), "Audiola", "vocal");
-            Directory.CreateDirectory(dir);
-            var wav = Path.Combine(dir, $"gesang_{Guid.NewGuid():N}.wav");
-            AudioExporter.Export(new FloatArraySampleProvider(buf, _engine.SampleRate, 1), wav);
+            var wav = TempDir.File("vocal", ".wav", "gesang");
+            AudioExporter.Export(buf, _engine.SampleRate, 1, wav);
             await _timeline.AddAudioFileAsync(wav, -1, 0);
 
-            _snackbar.Show("Gesang übernommen", "Als neue Spur ins Studio eingefügt.",
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+            _snackbar.Success("Gesang übernommen", "Als neue Spur ins Studio eingefügt.");
             Status = "Übernommen.";
         }
         catch (Exception ex) { UiError.Show("Übernahme fehlgeschlagen", ex.Message); Status = ""; }
@@ -349,32 +345,29 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         IsBusy = true; Status = "Tonhöhe wird auf die Original-Melodie gezogen …";
         try
         {
-            var dir = Path.Combine(Path.GetTempPath(), "Audiola", "magic");
-            Directory.CreateDirectory(dir);
             var prog = new Progress<string>(m => Status = m);
 
             // 1) Aufnahme-Puffer → WAV
-            var inWav = Path.Combine(dir, $"in_{Guid.NewGuid():N}.wav");
-            AudioExporter.Export(new FloatArraySampleProvider(buf, _engine.SampleRate, 1), inWav);
+            var inWav = TempDir.File("magic", ".wav", "in");
+            AudioExporter.Export(buf, _engine.SampleRate, 1, inWav);
 
             // 2) Auto-Tune gegen die Referenz-Melodie (WORLD-Vocoder)
             var (tuned, sr) = await _voice.AutoTuneAsync(inWav, refPath, MagicStrength, prog);
-            var resultWav = Path.Combine(dir, $"tuned_{Guid.NewGuid():N}.wav");
-            AudioExporter.Export(new FloatArraySampleProvider(tuned, sr, 2), resultWav);
+            var resultWav = TempDir.File("magic", ".wav", "tuned");
+            AudioExporter.Export(tuned, sr, 2, resultWav);
 
             // 3) Optional: Stimm-Veredelung per seed-vc (auf eine Zielstimme)
             if (SelectedVoice?.Profile is { } prof)
             {
                 Status = $"Stimme wird veredelt ({prof.Name}) …";
                 var (swapped, sr2) = await _voice.ChangeVoiceAsync(resultWav, prof, 50, autoF0Adjust: false, prog);
-                resultWav = Path.Combine(dir, $"voiced_{Guid.NewGuid():N}.wav");
-                AudioExporter.Export(new FloatArraySampleProvider(swapped, sr2, 2), resultWav);
+                resultWav = TempDir.File("magic", ".wav", "voiced");
+                AudioExporter.Export(swapped, sr2, 2, resultWav);
             }
 
             // 4) Als neue Studio-Spur
             await _timeline.AddAudioFileAsync(resultWav, -1, 0);
-            _snackbar.Show("Perfektioniert ✨", "Als neue Spur ins Studio eingefügt.",
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+            _snackbar.Success("Perfektioniert ✨", "Als neue Spur ins Studio eingefügt.");
             Status = "Fertig — perfektionierte Spur eingefügt.";
         }
         catch (Exception ex) { UiError.Show("Perfekt machen fehlgeschlagen", ex.Message); Status = ""; }

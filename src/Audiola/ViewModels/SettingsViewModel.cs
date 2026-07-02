@@ -126,8 +126,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             var name = string.IsNullOrWhiteSpace(NewVoiceName) ? "Audiola-Stimme" : NewVoiceName.Trim();
             await _voiceChange.CreateVoiceFromSamplesAsync(name, paths);
             VoiceStatus = $"Stimme '{name}' erstellt.";
-            _snackbar.Show("Stimme erstellt", $"'{name}' steht jetzt im Stimmtausch-Dialog bereit.",
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(4));
+            _snackbar.Success("Stimme erstellt", $"'{name}' steht jetzt im Stimmtausch-Dialog bereit.", 4);
         }
         catch (Exception ex)
         {
@@ -138,8 +137,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     private void ShowError(string title, string message) =>
-        _snackbar.Show(title, message, ControlAppearance.Danger,
-            new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(6));
+        _snackbar.Error(title, message, 6);
 
     [RelayCommand]
     private void BrowseOutput()

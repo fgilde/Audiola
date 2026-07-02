@@ -17,9 +17,7 @@ public sealed class AudioRecorder : IAudioRecorder
     {
         if (IsRecording) return _path!;
 
-        var dir = Path.Combine(Path.GetTempPath(), "Audiola", "rec");
-        Directory.CreateDirectory(dir);
-        _path = Path.Combine(dir, $"rec_{Guid.NewGuid():N}.wav");
+        _path = TempDir.File("rec", ".wav", "rec");
 
         _waveIn = new WaveInEvent { WaveFormat = new WaveFormat(44100, 16, 1) };
         _writer = new WaveFileWriter(_path, _waveIn.WaveFormat);

@@ -8,7 +8,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using NAudio.Wave;
 using Wpf.Ui;
-using Wpf.Ui.Controls;
 
 namespace Audiola.ViewModels;
 
@@ -83,8 +82,6 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
 
         var tracks = _timeline.Tracks.ToList();
         var pending = _pendingSpatial;
-        var dir = Path.Combine(Path.GetTempPath(), "Audiola", "spatial-src");
-        Directory.CreateDirectory(dir);
 
         IsBusy = true;
         StatusText = "Bereite Spuren vor (rendern – inkl. Stimmtausch & Verschiebungen) …";
@@ -101,7 +98,7 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
                     try
                     {
                         var (samples, sr) = _engine.RenderRange([t], TimeSpan.Zero, TimeSpan.FromSeconds(dur));
-                        var temp = Path.Combine(dir, $"{Guid.NewGuid():N}.wav");
+                        var temp = TempDir.File("spatial-src", ".wav");
                         AudioEdits.WriteWav(temp, samples, sr);
                         list.Add((temp, t.DisplayName, t.AccentColor));
                     }
@@ -291,14 +288,12 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
                 SpatialAudioService.WriteSurroundWav(dlg.FileName, inter, ch, sr, SpatialAudioService.ChannelMask(layout));
             });
             StatusText = "Fertig: " + Path.GetFileName(dlg.FileName);
-            _snackbar.Show("Mehrkanal exportiert", Path.GetFileName(dlg.FileName),
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+            _snackbar.Success("Mehrkanal exportiert", Path.GetFileName(dlg.FileName));
         }
         catch (Exception ex)
         {
             StatusText = "Fehler: " + ex.Message;
-            _snackbar.Show("Export fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
+            _snackbar.Error("Export fehlgeschlagen", ex.Message, 5);
         }
         finally { IsBusy = false; UpdateCommands(); }
     }

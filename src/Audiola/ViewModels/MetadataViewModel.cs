@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using Wpf.Ui;
-using Wpf.Ui.Controls;
 
 namespace Audiola.ViewModels;
 
@@ -104,8 +103,7 @@ public sealed partial class MetadataViewModel : ObservableObject
 
             Meta.Lyrics = lrc!;
             Status = useEleven ? "Liedtext erzeugt (ElevenLabs)." : "Liedtext erzeugt (Whisper).";
-            _snackbar.Show("Liedtext erzeugt", "Aus dem Studio-Mix transkribiert.",
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+            _snackbar.Success("Liedtext erzeugt", "Aus dem Studio-Mix transkribiert.");
         }
         catch (Exception ex) { UiError.Show("Liedtext erzeugen fehlgeschlagen", ex.Message); Status = ""; }
         finally { IsBusy = false; }

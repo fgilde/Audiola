@@ -54,9 +54,7 @@ public partial class ExportDialog : FluentWindow
     {
         if (_preview is null) return;
         var fmt = SelectedFormat;
-        var dir = Path.Combine(Path.GetTempPath(), "Audiola", "preview");
-        Directory.CreateDirectory(dir);
-        var temp = Path.Combine(dir, $"{Sanitize(_defaultFileName)}_{Guid.NewGuid():N}.{fmt}");
+        var temp = TempDir.File("preview", $".{fmt}", Sanitize(_defaultFileName));
 
         var req = new ExportRequest
         {
