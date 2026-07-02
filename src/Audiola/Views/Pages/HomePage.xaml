@@ -9,8 +9,11 @@
     Title="HomePage">
 
     <Page.Resources>
-        <!-- Schnellstart-Karte: großer Klickbereich mit Icon, Titel, Untertitel. -->
+        <!-- Schnellstart-Karte: großer Klickbereich mit Icon, Titel, Untertitel.
+             Foreground explizit: Custom-Templates ersetzen den WPF-UI-Style, sonst fiele
+             die Textfarbe auf das WPF-Default-Schwarz zurück. -->
         <Style x:Key="QuickCard" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Margin" Value="0,0,14,0" />
             <Setter Property="Template">
@@ -32,8 +35,10 @@
             </Setter>
         </Style>
 
-        <!-- Listeneintrag (Projekt/Datei): ganze Zeile klickbar, Akzentkante links über Tag. -->
+        <!-- Listeneintrag (Projekt/Datei): ganze Zeile klickbar, Akzentkante links über Tag;
+             fehlende Dateien werden gedimmt dargestellt. -->
         <Style x:Key="RecentCard" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Margin" Value="0,0,0,8" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -56,6 +61,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <!-- Fehlende Dateien gedimmt darstellen (Triggers müssen nach den Settern stehen). -->
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Exists}" Value="False">
+                    <Setter Property="Opacity" Value="0.5" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <!-- Kleine Icon-Aktion (Entfernen/Löschen) am Zeilenende. -->

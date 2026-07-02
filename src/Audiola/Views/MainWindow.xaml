@@ -69,7 +69,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Grid.Row="0" Title="Audiola">
+        <ui:TitleBar Grid.Row="0" Title="{Binding ViewModel.ApplicationTitle}">
             <ui:TitleBar.Icon>
                 <ui:ImageIcon Source="pack://application:,,,/Assets/audiola.png" />
             </ui:TitleBar.Icon>
@@ -91,7 +91,7 @@
                 <!-- Menü (kompakt) -->
                 <Menu Grid.Column="0" VerticalAlignment="Center" Background="Transparent">
                     <MenuItem Header="_Datei">
-                        <MenuItem Header="Öffnen… (Audio/ZIP)" Click="OpenFile_Click" />
+                        <MenuItem Header="Öffnen… (Audio/ZIP)" InputGestureText="Strg+O" Click="OpenFile_Click" />
                         <MenuItem Header="Audio ins Studio hinzufügen…" Click="AddToStudio_Click" />
                         <Separator />
                         <MenuItem Header="Projekt öffnen…" Click="OpenProject_Click" />
@@ -118,7 +118,7 @@
                         <Separator />
                         <MenuItem Header="Projekt speichern" InputGestureText="Strg+S" Click="SaveProjectQuick_Click"
                                   IsEnabled="{Binding Transport.HasTrack}" />
-                        <MenuItem Header="Projekt speichern unter…" Click="SaveProjectAs_Click"
+                        <MenuItem Header="Projekt speichern unter…" InputGestureText="Strg+Umschalt+S" Click="SaveProjectAs_Click"
                                   IsEnabled="{Binding Transport.HasTrack}" />
                         <MenuItem Header="Projekt schließen" Click="CloseProject_Click"
                                   IsEnabled="{Binding Transport.HasTrack}" />

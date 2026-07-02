@@ -263,7 +263,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     [ObservableProperty] private bool _isDirty;
 
     /// <summary>Pfad der aktuell geöffneten/gespeicherten Projektdatei (null = noch keine).</summary>
-    public string? CurrentProjectPath { get; set; }
+    [ObservableProperty] private string? _currentProjectPath;   // observable → Fenstertitel folgt
 
     private void MarkDirty() { if (!_suppressDirty) IsDirty = true; }
 

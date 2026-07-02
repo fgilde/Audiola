@@ -96,6 +96,15 @@ public sealed partial class HomeViewModel : ObservableObject
     private async Task OpenAsync(RecentItem? item)
     {
         if (item is null) return;
+
+        // Fehlende Dateien freundlich abfangen (statt Fehler-Dialog) und Aufräumen anbieten.
+        if (!File.Exists(item.Path))
+        {
+            _snackbar.Warning("Datei nicht gefunden", $"{item.Name} existiert nicht mehr — Eintrag wird entfernt.", 4);
+            Remove(item);
+            return;
+        }
+
         if (item.IsProject)
         {
             IsLoading = true;

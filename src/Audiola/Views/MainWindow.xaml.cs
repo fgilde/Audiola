@@ -47,7 +47,7 @@ public partial class MainWindow : FluentWindow
         Loaded += (_, _) => _navigationService.Navigate(typeof(Views.Pages.HomePage));
         Closing += OnWindowClosing;
 
-        // Statusleiste: laufende Hintergrund-Arbeit des Studios anzeigen (Stems, Stimmtausch …).
+        // Statusleiste + Fenstertitel folgen dem Studio-Zustand (Hintergrund-Arbeit, Projektname, Dirty).
         var timelineVm = App.GetService<ViewModels.TimelineViewModel>();
         timelineVm.PropertyChanged += (_, args) =>
         {
@@ -57,6 +57,11 @@ public partial class MainWindow : FluentWindow
                 ViewModel.IsWorking = timelineVm.IsSeparating;
                 ViewModel.Status = string.IsNullOrWhiteSpace(timelineVm.SeparationStatus)
                     ? "Bereit" : timelineVm.SeparationStatus;
+            }
+            else if (args.PropertyName is nameof(ViewModels.TimelineViewModel.CurrentProjectPath)
+                or nameof(ViewModels.TimelineViewModel.IsDirty))
+            {
+                UpdateTitle(timelineVm);
             }
         };
 
@@ -69,10 +74,16 @@ public partial class MainWindow : FluentWindow
         // Echtzeit-Spektrum in der Menüleiste (folgt dem Studio-Mix).
         App.GetService<ViewModels.TimelineViewModel>().SpectrumUpdated += (_, bands) => Spectrum.SetLevels(bands);
 
-        // Strg+S → Projekt speichern.
+        // Tastenkürzel: Strg+S speichern, Strg+Umschalt+S speichern unter, Strg+O öffnen.
         InputBindings.Add(new System.Windows.Input.KeyBinding(
             new CommunityToolkit.Mvvm.Input.RelayCommand(() => SaveProjectQuick_Click(this, new RoutedEventArgs())),
             System.Windows.Input.Key.S, System.Windows.Input.ModifierKeys.Control));
+        InputBindings.Add(new System.Windows.Input.KeyBinding(
+            new CommunityToolkit.Mvvm.Input.RelayCommand(() => SaveProjectAs_Click(this, new RoutedEventArgs())),
+            System.Windows.Input.Key.S, System.Windows.Input.ModifierKeys.Control | System.Windows.Input.ModifierKeys.Shift));
+        InputBindings.Add(new System.Windows.Input.KeyBinding(
+            new CommunityToolkit.Mvvm.Input.RelayCommand(() => OpenFile_Click(this, new RoutedEventArgs())),
+            System.Windows.Input.Key.O, System.Windows.Input.ModifierKeys.Control));
     }
 
     private void Transport_WaveformMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -275,6 +286,16 @@ public partial class MainWindow : FluentWindow
     {
         if (sender is FrameworkElement { Tag: Type t })
             _navigationService.Navigate(t);
+    }
+
+    /// <summary>Fenstertitel: „Audiola — Projektname •" (Punkt = ungespeicherte Änderungen).</summary>
+    private void UpdateTitle(ViewModels.TimelineViewModel tvm)
+    {
+        var name = string.IsNullOrEmpty(tvm.CurrentProjectPath)
+            ? null : Path.GetFileNameWithoutExtension(tvm.CurrentProjectPath);
+        ViewModel.ApplicationTitle = name is null
+            ? "Audiola"
+            : $"Audiola — {name}{(tvm.IsDirty ? " •" : "")}";
     }
 
     /// <summary>Markiert das Rail-Werkzeug der aktiven Seite (bzw. keins bei Menü-Zielen).</summary>

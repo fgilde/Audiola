@@ -48,6 +48,7 @@
 
         <!-- Spuren-Zeile: transparent, ausgewählte (= Gesangs-)Spur mit Akzent + linkem Balken. -->
         <Style x:Key="TrackRow" TargetType="ListViewItem">
+            <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0,2" />
             <Setter Property="Background" Value="Transparent" />
