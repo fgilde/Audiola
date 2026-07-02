@@ -42,6 +42,8 @@ public static class ThemeManager
         ("TextFillColorSecondaryBrush", "DawTextDim"), ("TextFillColorTertiaryBrush", "DawTextFaint"),
     ];
 
+    private static bool _appliedOnce;
+
     public static void Apply(string? theme)
     {
         IsLight = string.Equals(theme, "Light", StringComparison.OrdinalIgnoreCase);
@@ -49,6 +51,13 @@ public static class ThemeManager
         // WPF-UI-eigene Controls (Popups, ScrollBars, Slider-Innereien, Fokus …).
         ApplicationThemeManager.Apply(
             IsLight ? ApplicationTheme.Light : ApplicationTheme.Dark, updateAccent: false);
+
+        // Beim LIVE-Wechsel zusätzlich das WPF-UI-Controls-Dictionary neu laden: dessen Brushes
+        // (Button-Border, Hover, ComboBox …) hängen per DynamicResource an den COLOR-Keys des
+        // getauschten Theme-Dictionaries — und Freezable-Unterproperties (Brush.Color) werden
+        // beim Dictionary-Tausch nicht neu ausgewertet. Frisch instanziiert lösen sie korrekt auf.
+        if (_appliedOnce) RefreshWpfUiControlsDictionary();
+        _appliedOnce = true;
 
         ApplyPalette(IsLight);
 
@@ -69,6 +78,28 @@ public static class ThemeManager
                 b.Color = c;                        // Objekt bleibt stabil → Static/Dynamic greifen sofort
             else
                 res[brushKey] = new SolidColorBrush(c);  // Fallback (fehlt/frozen)
+        }
+    }
+
+    /// <summary>Ersetzt Wpf.Ui.xaml an Ort und Stelle durch eine frische Instanz (Reihenfolge bleibt).
+    /// Nötig, weil WPF-UI-Control-Styles Theme-Brushes teils per StaticResource einbetten — die
+    /// zeigen nach dem Theme-Tausch sonst dauerhaft auf die alten (verwaisten) Brush-Objekte.</summary>
+    private static void RefreshWpfUiControlsDictionary()
+    {
+        // Offene Fenster zuerst vom Ressourcen-Style abkoppeln (Expression → lokaler Wert):
+        // Das Neuladen würde sonst den FluentWindow-Style neu anwenden, dessen Setter
+        // AllowsTransparency schreibt — nach dem Anzeigen des Fensters eine Exception.
+        foreach (Window w in Application.Current.Windows)
+            if (w.Style is { } s) w.Style = s;
+
+        var dicts = Application.Current.Resources.MergedDictionaries;
+        for (var i = 0; i < dicts.Count; i++)
+        {
+            if (dicts[i].Source is { } src && src.OriginalString.Contains("Wpf.Ui.xaml", StringComparison.OrdinalIgnoreCase))
+            {
+                dicts[i] = new ResourceDictionary { Source = src };
+                return;
+            }
         }
     }
 

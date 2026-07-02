@@ -13,20 +13,31 @@ public sealed class LevelMeterControl : FrameworkElement
     private float _l, _r;            // geglättete Anzeige (0..1 der dB-Skala)
     private float _peakL, _peakR;    // Peak-Hold
     private int _holdL, _holdR;      // verbleibende Halte-Ticks
+    private bool _clip;              // Übersteuerung — latcht bis zum Klick
 
     private static readonly Brush Track = Frozen(Color.FromArgb(0x55, 0x00, 0x00, 0x00));
     private static readonly Pen PeakPen = FrozenPen(Color.FromArgb(0xDD, 0xFF, 0xFF, 0xFF), 1.5);
+    private static readonly Brush ClipLed = Frozen(Color.FromRgb(0xFF, 0x35, 0x30));
     private static readonly Brush Fill = MakeGradient();
 
-    public LevelMeterControl() => IsHitTestVisible = false;
+    public LevelMeterControl() =>
+        ToolTip = "Master-Pegel — rote LED = Übersteuerung (Klick setzt sie zurück)";
 
     /// <summary>Neue Spitzenpegel (linear 0..1) übernehmen; rechnet in dB und glättet den Abfall.</summary>
     public void SetLevels(float l, float r)
     {
+        if (l >= 0.999f || r >= 0.999f) _clip = true;   // 0 dBFS erreicht → LED latcht
         _l = Ease(_l, ToDb01(l));
         _r = Ease(_r, ToDb01(r));
         Track1(ref _peakL, ref _holdL, _l);
         Track1(ref _peakR, ref _holdR, _r);
+        InvalidateVisual();
+    }
+
+    protected override void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+    {
+        base.OnMouseLeftButtonDown(e);
+        _clip = false;                                   // Clip-LED quittieren
         InvalidateVisual();
     }
 
@@ -48,11 +59,16 @@ public sealed class LevelMeterControl : FrameworkElement
     protected override void OnRender(DrawingContext dc)
     {
         double w = ActualWidth, h = ActualHeight;
-        if (w < 4 || h < 4) return;
-        double gap = 2, bh = (h - gap) / 2;
+        if (w < 8 || h < 4) return;
+        double gap = 2, led = 4;
+        double bw = w - led - 2;                        // Balkenbreite; rechts Platz für die Clip-LED
+        double bh = (h - gap) / 2;
 
-        DrawBar(dc, 0, w, bh, _l, _peakL);
-        DrawBar(dc, bh + gap, w, bh, _r, _peakR);
+        DrawBar(dc, 0, bw, bh, _l, _peakL);
+        DrawBar(dc, bh + gap, bw, bh, _r, _peakR);
+
+        // Clip-LED: latcht rot bei 0 dBFS, sonst gedimmter Platzhalter (Klick quittiert).
+        dc.DrawRoundedRectangle(_clip ? ClipLed : Track, null, new Rect(w - led, 0, led, h), 1.5, 1.5);
     }
 
     private static void DrawBar(DrawingContext dc, double y, double w, double h, float level, float peak)

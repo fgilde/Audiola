@@ -287,10 +287,16 @@
                                     <DataTrigger Binding="{Binding IsRecording}" Value="True">
                                         <Setter Property="Content" Value="⏹  Aufnahme stoppen" />
                                     </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsCountingIn}" Value="True">
+                                        <Setter Property="Content" Value="✕  Vorzähler abbrechen" />
+                                    </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </ui:Button.Style>
                     </ui:Button>
+                    <ui:ToggleSwitch Margin="12,0,0,0" VerticalAlignment="Center" Content="Vorzähler"
+                                     IsChecked="{Binding CountInEnabled, Mode=TwoWay}"
+                                     ToolTip="3-Sekunden-Countdown vor jeder Aufnahme" />
                     <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="13"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding PositionText}" />
                     <ui:Button Margin="20,0,0,0" Icon="{ui:SymbolIcon CheckmarkCircle24}" Content="Als Spur übernehmen"
@@ -312,6 +318,17 @@
                               SelectedItem="{Binding SelectedVoice, Mode=TwoWay}"
                               ToolTip="Optional: die korrigierte Stimme per seed-vc auf eine Zielstimme tauschen." />
                 </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Vorzähler-Overlay: 3-2-1 vor der Aufnahme (nochmal ⏺ drücken bricht ab) -->
+        <Border Grid.Row="0" Grid.RowSpan="4" Background="#90000000" IsHitTestVisible="False"
+                Visibility="{Binding IsCountingIn, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock FontSize="128" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"
+                           Text="{Binding CountIn}" />
+                <TextBlock Margin="0,4,0,0" FontSize="16" Foreground="#CCFFFFFF" HorizontalAlignment="Center"
+                           Text="Bereit machen — die Aufnahme startet gleich" />
             </StackPanel>
         </Border>
 

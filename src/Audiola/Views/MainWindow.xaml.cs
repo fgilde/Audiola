@@ -102,6 +102,31 @@ public partial class MainWindow : FluentWindow
         InputBindings.Add(new System.Windows.Input.KeyBinding(
             new CommunityToolkit.Mvvm.Input.RelayCommand(() => OpenFile_Click(this, new RoutedEventArgs())),
             System.Windows.Input.Key.O, System.Windows.Input.ModifierKeys.Control));
+
+        // Autosave: alle 2 Minuten still zum aktuellen Projektpfad (nur bei ungespeicherten Änderungen).
+        var autosave = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMinutes(2) };
+        autosave.Tick += async (_, _) => await AutoSaveAsync();
+        autosave.Start();
+    }
+
+    private bool _autoSaving;
+
+    /// <summary>Stilles Autosave — nur wenn ein Projektpfad bekannt ist und Änderungen anstehen.
+    /// Kein Dialog, kein Snackbar-Spam; Rückmeldung dezent über die Statusleiste.</summary>
+    private async Task AutoSaveAsync()
+    {
+        if (_autoSaving) return;
+        var ws = App.GetService<ProjectWorkspace>();
+        if (!ws.HasContent || !ws.IsDirty || string.IsNullOrEmpty(ws.CurrentPath)) return;
+
+        _autoSaving = true;
+        try
+        {
+            await ws.SaveAsync(ws.CurrentPath!);
+            ViewModel.Status = $"Automatisch gespeichert · {DateTime.Now:HH:mm}";
+        }
+        catch { /* still — beim nächsten Tick erneut versuchen */ }
+        finally { _autoSaving = false; }
     }
 
     private void Transport_WaveformMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -286,9 +311,6 @@ public partial class MainWindow : FluentWindow
         if (await ConfirmDiscardAsync())
         {
             _forceClose = true;
-            // Close() NICHT direkt aufrufen — wir sind noch im Closing-Handler, das wirft
-            // „Close cannot be called while a Window is in a Closing event handler". Stattdessen
-            // über den Dispatcher nachreichen, damit es nach Abschluss dieses Events läuft.
             await Dispatcher.BeginInvoke(new Action(Close));
         }
     }

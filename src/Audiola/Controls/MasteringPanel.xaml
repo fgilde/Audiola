@@ -138,8 +138,9 @@
             </ui:Card>
         </WrapPanel>
 
-        <!-- Aktionen -->
-        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+        <!-- Aktionen (im „Spur mastern"-Dialog ausgeblendet — dort liegen sie im Dialog-Footer) -->
+        <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
+                    Visibility="{Binding ShowActions, RelativeSource={RelativeSource AncestorType=controls:MasteringPanel}, Converter={StaticResource BooleanToVisibilityConverter}}">
             <ui:Button Appearance="Primary" Icon="{ui:SymbolIcon CheckmarkCircle24}" Content="Auf Spur anwenden"
                        Command="{Binding ApplyToTrackCommand}"
                        Visibility="{Binding IsTrackSource, Converter={StaticResource BooleanToVisibilityConverter}}"

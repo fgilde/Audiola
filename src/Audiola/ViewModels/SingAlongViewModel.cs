@@ -269,23 +269,50 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     private void TogglePlay()
     {
         if (!Prepared) return;
+        CancelCountIn();
         if (_engine.IsPlaying) { _engine.Stop(); return; }
         _sung.Clear();
         _engine.Play(PositionSeconds, record: false);
     }
 
+    // ---- Vorzähler (Count-In): 3-2-1 vor der Aufnahme, damit der Einsatz nicht verrutscht ----
+    [ObservableProperty] private bool _countInEnabled = true;
+    [ObservableProperty] private int _countIn;                    // 3..1 während des Vorzählers, 0 = aus
+    public bool IsCountingIn => CountIn > 0;
+    partial void OnCountInChanged(int value) => OnPropertyChanged(nameof(IsCountingIn));
+
+    private int _countInToken;                                     // invalidiert laufende Countdowns
+
+    /// <summary>Bricht einen laufenden Vorzähler ab (Play/Scrub/Übernahme/Schließen).</summary>
+    public void CancelCountIn() { _countInToken++; CountIn = 0; }
+
     [RelayCommand]
-    private void ToggleRecord()
+    private async Task ToggleRecordAsync()
     {
         if (!Prepared) return;
+        if (IsCountingIn) { CancelCountIn(); Status = "Vorzähler abgebrochen."; return; }
         if (_engine.IsRecording) { _engine.Stop(); return; }
+
+        if (CountInEnabled)
+        {
+            var token = ++_countInToken;
+            for (var i = 3; i >= 1; i--)
+            {
+                CountIn = i;
+                Status = $"Aufnahme startet in {i} …";
+                await Task.Delay(1000);
+                if (token != _countInToken || !Prepared) return;   // abgebrochen / Fenster zu
+            }
+            CountIn = 0;
+        }
+
         ResetScore();
         _sung.Clear();
         _engine.Play(PositionSeconds, record: true);   // nimmt ab der Position auf und überschreibt sie dort
     }
 
     // ---- Position ziehen (Punch-in): dorthin ziehen, dann aufnehmen — überschreibt ab da ----
-    public void BeginScrub() => _engine.Stop();
+    public void BeginScrub() { CancelCountIn(); _engine.Stop(); }
 
     public void EndScrub(double sec)
     {
@@ -308,6 +335,7 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     private async Task AcceptAsync()
     {
         if (IsBusy) return;
+        CancelCountIn();
         _engine.Stop();
         var buf = _engine.VocalBuffer;
         if (buf.Length == 0) { Status = "Noch nichts aufgenommen."; return; }
@@ -460,7 +488,7 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         _hits = _judged = 0; Points = 0; ScorePercent = 0;
     }
 
-    public void Dispose() => _engine.Dispose();
+    public void Dispose() { CancelCountIn(); _engine.Dispose(); }
 }
 
 /// <summary>Eine Lyric-Zeile für die Karaoke-Liste (Zeit + Text).</summary>

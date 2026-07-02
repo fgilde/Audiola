@@ -26,16 +26,31 @@
         </ui:TitleBar>
 
         <!-- Dasselbe Mastering-Panel wie auf der Mastering-Seite — inkl. Wellenform mit Seek,
-             Live-A/B, Presets, EQ-Kurve, Kompressor und LUFS. Quelle: die gewählte Spur (solo). -->
+             Live-A/B, Presets, EQ-Kurve, Kompressor und LUFS. Quelle: die gewählte Spur (solo).
+             Die Aktionen liegen hier im Dialog-Footer (Anwenden/Abbrechen). -->
         <ui:DynamicScrollViewer Grid.Row="1" Margin="0,4,0,0" VerticalScrollBarVisibility="Auto">
-            <controls:MasteringPanel Margin="18,4,18,10" />
+            <controls:MasteringPanel Margin="18,4,18,10" ShowActions="False" />
         </ui:DynamicScrollViewer>
 
         <Border Grid.Row="2" Padding="18,12" Background="{StaticResource DawPanelBrush}"
                 BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,1,0,0">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <ui:Button Content="Schließen" Click="Close_Click" />
-            </StackPanel>
+            <Grid>
+                <!-- Sekundär: gemasterte Spur als Datei exportieren -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <ui:Button Icon="{ui:SymbolIcon Save24}" Content="Als Datei exportieren"
+                               Command="{Binding ExportCommand}"
+                               ToolTip="Die gemasterte Spur als Audiodatei speichern (ohne die Spur im Studio zu ändern)" />
+                    <ui:ProgressRing Margin="12,0,0,0" Width="22" Height="22" VerticalAlignment="Center" IsIndeterminate="True"
+                                     Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                </StackPanel>
+                <!-- Primär: Anwenden / Abbrechen -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <ui:Button Appearance="Primary" Icon="{ui:SymbolIcon CheckmarkCircle24}" Content="Anwenden"
+                               Command="{Binding ApplyToTrackCommand}"
+                               ToolTip="Spur mastern und im Studio ersetzen (Strg+Z macht es rückgängig)" />
+                    <ui:Button Margin="8,0,0,0" Content="Abbrechen" Click="Close_Click" />
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </ui:FluentWindow>
