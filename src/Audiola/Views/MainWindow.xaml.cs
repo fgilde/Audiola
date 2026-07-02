@@ -44,6 +44,22 @@ public partial class MainWindow : FluentWindow
         Loaded += (_, _) => _navigationService.Navigate(typeof(Views.Pages.TimelinePage));
         Closing += OnWindowClosing;
 
+        // Statusleiste: laufende Hintergrund-Arbeit des Studios anzeigen (Stems, Stimmtausch …).
+        var timelineVm = App.GetService<ViewModels.TimelineViewModel>();
+        timelineVm.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName is nameof(ViewModels.TimelineViewModel.SeparationStatus)
+                or nameof(ViewModels.TimelineViewModel.IsSeparating))
+            {
+                ViewModel.IsWorking = timelineVm.IsSeparating;
+                ViewModel.Status = string.IsNullOrWhiteSpace(timelineVm.SeparationStatus)
+                    ? "Bereit" : timelineVm.SeparationStatus;
+            }
+        };
+
+        // Globale Studio-Shortcuts: Leertaste = Play/Pause, Pos1 = an den Anfang.
+        PreviewKeyDown += OnGlobalKeyDown;
+
         // Leises Auto-Update beim Start (nur in installierter Version).
         Loaded += async (_, _) => await AutoUpdateAsync();
 
@@ -60,6 +76,26 @@ public partial class MainWindow : FluentWindow
     {
         if (sender is Controls.WaveformControl wf && wf.ActualWidth > 0)
             Transport.Seek(e.GetPosition(wf).X / wf.ActualWidth);
+    }
+
+    /// <summary>Leertaste = Play/Pause, Pos1 = Anfang — außer der Fokus liegt in einem Eingabefeld.</summary>
+    private void OnGlobalKeyDown(object? sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (System.Windows.Input.Keyboard.FocusedElement is System.Windows.Controls.Primitives.TextBoxBase
+            or System.Windows.Controls.PasswordBox
+            or System.Windows.Controls.ComboBox { IsEditable: true })
+            return;
+
+        if (e.Key == System.Windows.Input.Key.Space && Transport.HasTrack)
+        {
+            if (Transport.PlayPauseCommand.CanExecute(null)) Transport.PlayPauseCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == System.Windows.Input.Key.Home && Transport.HasTrack)
+        {
+            Transport.Seek(0);
+            e.Handled = true;
+        }
     }
 
     // ---- Menü ----

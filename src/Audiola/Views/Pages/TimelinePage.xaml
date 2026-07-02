@@ -473,7 +473,7 @@
             <!-- Lanes: scrollen horizontal + vertikal und treiben die Synchronisation -->
             <ScrollViewer x:Name="LaneScroll" Grid.Row="1" Grid.Column="1" Background="#FF15151B"
                           HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                          ScrollChanged="Lane_ScrollChanged">
+                          ScrollChanged="Lane_ScrollChanged" PreviewMouseWheel="Lane_MouseWheel">
                     <Grid x:Name="LanesArea" Background="Transparent"
                           Width="{Binding ViewModel.ContentWidth}"
                           MouseLeftButtonDown="Lanes_MouseDown"

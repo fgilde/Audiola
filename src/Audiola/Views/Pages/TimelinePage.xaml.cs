@@ -137,6 +137,27 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         HeaderScroll.ScrollToVerticalOffset(LaneScroll.VerticalOffset);
     }
 
+    /// <summary>Strg+Mausrad zoomt die Timeline um die Maus-Position (DAW-Standard).</summary>
+    private void Lane_MouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if ((Keyboard.Modifiers & ModifierKeys.Control) == 0) return;
+        e.Handled = true;
+
+        // Zeitpunkt unter der Maus vor dem Zoom merken …
+        var mouseX = e.GetPosition(LaneScroll).X;
+        var oldPps = ViewModel.PixelsPerSecond;
+        if (oldPps <= 0) return;
+        var timeAtMouse = (LaneScroll.HorizontalOffset + mouseX) / oldPps;
+
+        if (e.Delta > 0) ViewModel.ZoomInCommand.Execute(null);
+        else ViewModel.ZoomOutCommand.Execute(null);
+
+        // … und danach so scrollen, dass derselbe Zeitpunkt unter der Maus bleibt.
+        var newPps = ViewModel.PixelsPerSecond;
+        if (Math.Abs(newPps - oldPps) < 0.001) return;
+        LaneScroll.ScrollToHorizontalOffset(Math.Max(0, timeAtMouse * newPps - mouseX));
+    }
+
     // ---- Bereich direkt auf den Spuren aufziehen (Drag = Auswahl, Klick = Seek) ----
     private bool _laneSelecting;
     private double _laneDownSeconds;
@@ -185,15 +206,18 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
     // ---- Auswahlbereich auf dem Zeit-Lineal aufziehen ----
     private bool _selecting;
     private double _selStartSeconds;
+    private bool _rulerDragged;
 
+    // DAW-Verhalten in der Zeitleiste: reiner KLICK springt mit Playhead + Zeit dorthin,
+    // ZIEHEN zieht wie bisher eine Auswahl (Loop-/Export-Bereich) auf.
     private void Ruler_Down(object sender, MouseButtonEventArgs e)
     {
         if (sender is not System.Windows.FrameworkElement fe) return;
         var pps = ViewModel.PixelsPerSecond;
         if (pps <= 0) return;
         _selecting = true;
+        _rulerDragged = false;
         _selStartSeconds = e.GetPosition(fe).X / pps;
-        ViewModel.SetSelection(_selStartSeconds, _selStartSeconds);
         fe.CaptureMouse();
         e.Handled = true;
     }
@@ -203,12 +227,17 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         if (!_selecting || sender is not System.Windows.FrameworkElement fe) return;
         var pps = ViewModel.PixelsPerSecond;
         if (pps <= 0) return;
-        ViewModel.SetSelection(_selStartSeconds, e.GetPosition(fe).X / pps);
+        var cur = e.GetPosition(fe).X / pps;
+        if (!_rulerDragged && Math.Abs(cur - _selStartSeconds) * pps < 4) return; // Klick-Toleranz
+        _rulerDragged = true;
+        ViewModel.SetSelection(_selStartSeconds, cur);
     }
 
     private void Ruler_Up(object sender, MouseButtonEventArgs e)
     {
         if (sender is System.Windows.FrameworkElement fe) fe.ReleaseMouseCapture();
+        if (_selecting && !_rulerDragged)
+            ViewModel.SeekToPixel(_selStartSeconds * ViewModel.PixelsPerSecond); // reiner Klick → springen
         _selecting = false;
     }
 

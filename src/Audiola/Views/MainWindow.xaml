@@ -236,8 +236,19 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <Ellipse Width="7" Height="7" VerticalAlignment="Center" Fill="{StaticResource DawGreenBrush}" />
-                    <TextBlock Style="{StaticResource DawStatusText}" Margin="7,0,0,0" Text="Bereit" />
+                    <Ellipse Width="7" Height="7" VerticalAlignment="Center">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{StaticResource DawGreenBrush}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ViewModel.IsWorking}" Value="True">
+                                        <Setter Property="Fill" Value="{StaticResource DawYellowBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock Style="{StaticResource DawStatusText}" Margin="7,0,0,0" Text="{Binding ViewModel.Status}" />
                     <TextBlock Style="{StaticResource DawStatusText}" Margin="18,0,0,0"
                                Text="{Binding Transport.TrackName}" />
                 </StackPanel>

@@ -305,7 +305,15 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
         else if (HasTracks)
         {
-            _engine.Load(Tracks);
+            // Läuft die Wiedergabe, NICHT neu laden — sonst stoppt sie bei jeder Rückkehr
+            // ins Studio und die Zeit springt auf 0. Spur-Änderungen laden die Engine ohnehin
+            // selbst neu (CommitClips); im Pause-Zustand bleibt die Position erhalten.
+            if (!_engine.IsPlaying)
+            {
+                var pos = _engine.Position;
+                _engine.Load(Tracks);
+                if (pos > TimeSpan.Zero && pos < _engine.Duration) _engine.Position = pos;
+            }
             DurationSeconds = _engine.Duration.TotalSeconds;
         }
 
