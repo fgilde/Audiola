@@ -17,7 +17,7 @@
 
         <!-- Kopf -->
         <StackPanel Grid.Row="0">
-            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Metadaten" />
+            <TextBlock Style="{StaticResource DawPageTitle}" Text="Metadaten" />
             <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                        Text="Song-Tags für das Projekt — werden beim Öffnen gelesen, im Projekt gespeichert und bei jedem Export geschrieben." />
         </StackPanel>

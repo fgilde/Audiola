@@ -40,6 +40,9 @@ public sealed class StemMixerEngine : IDisposable
     /// <summary>Wird im Wiedergabe-Takt mit den geglätteten Spektrum-Bändern (0..1) ausgelöst.</summary>
     public event EventHandler<float[]>? SpectrumUpdated;
 
+    /// <summary>Master-Spitzenpegel L/R (0..1) im Wiedergabe-Takt — für die VU-Anzeige.</summary>
+    public event EventHandler<(float L, float R)>? LevelUpdated;
+
     /// <summary>Master-Lautstärke (0..1.5), wirkt live auf die gesamte Wiedergabe.</summary>
     public float MasterVolume
     {
@@ -363,12 +366,14 @@ public sealed class StemMixerEngine : IDisposable
         }
 
         SpectrumUpdated?.Invoke(this, _bands);
+        if (_spectrum is not null) LevelUpdated?.Invoke(this, _spectrum.ReadPeaks());
     }
 
     private void ZeroSpectrum()
     {
         Array.Clear(_bands);
         SpectrumUpdated?.Invoke(this, _bands);
+        LevelUpdated?.Invoke(this, (0f, 0f));
     }
 
     private void Unload()

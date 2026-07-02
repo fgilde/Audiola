@@ -12,6 +12,7 @@ public sealed class SpectrumSampleProvider : ISampleProvider
     private readonly int _channels;
     private readonly float[] _ring;
     private int _writePos;
+    private float _peakL, _peakR;   // Spitzenpegel seit dem letzten ReadPeaks() (fürs VU-Meter)
     private readonly object _lock = new();
 
     public SpectrumSampleProvider(ISampleProvider source, int ringSize = 8192)
@@ -34,9 +35,26 @@ public sealed class SpectrumSampleProvider : ISampleProvider
                 for (var c = 0; c < _channels; c++) m += buffer[offset + i + c];
                 _ring[_writePos] = m / _channels;
                 _writePos = (_writePos + 1) % _ring.Length;
+
+                // Stereo-Spitzenpegel fürs VU-Meter (Kanal 0 = L, Kanal 1 = R; Mono → beide gleich).
+                var l = Math.Abs(buffer[offset + i]);
+                var r = _channels > 1 ? Math.Abs(buffer[offset + i + 1]) : l;
+                if (l > _peakL) _peakL = l;
+                if (r > _peakR) _peakR = r;
             }
         }
         return read;
+    }
+
+    /// <summary>Liefert den Spitzenpegel L/R (0..1) seit dem letzten Aufruf und setzt ihn zurück.</summary>
+    public (float L, float R) ReadPeaks()
+    {
+        lock (_lock)
+        {
+            var p = (_peakL, _peakR);
+            _peakL = _peakR = 0f;
+            return p;
+        }
     }
 
     /// <summary>Kopiert die letzten <c>dest.Length</c> Mono-Samples in Reihenfolge.</summary>

@@ -10,7 +10,7 @@
 
     <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto">
         <StackPanel MaxWidth="720" HorizontalAlignment="Left">
-            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Einstellungen" />
+            <TextBlock Style="{StaticResource DawPageTitle}" Text="Einstellungen" />
 
             <!-- Demucs -->
             <TextBlock Margin="0,24,0,8" FontWeight="SemiBold" Text="Stem-Trennung (Demucs)" />
@@ -126,8 +126,10 @@
             <!-- Darstellung -->
             <TextBlock Margin="0,28,0,8" FontWeight="SemiBold" Text="Darstellung" />
             <StackPanel Orientation="Horizontal">
-                <ui:Button Icon="{ui:SymbolIcon WeatherSunny28}" Content="Hell" Command="{Binding ViewModel.SetThemeLightCommand}" />
-                <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon WeatherMoon28}" Content="Dunkel" Command="{Binding ViewModel.SetThemeDarkCommand}" />
+                <ui:Button Icon="{ui:SymbolIcon WeatherSunny28}" Content="Hell" Command="{Binding ViewModel.SetThemeLightCommand}"
+                           Appearance="{Binding ViewModel.IsLightTheme, Converter={StaticResource BoolToAccentAppearanceConverter}}" />
+                <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon WeatherMoon28}" Content="Dunkel" Command="{Binding ViewModel.SetThemeDarkCommand}"
+                           Appearance="{Binding ViewModel.IsDarkTheme, Converter={StaticResource BoolToAccentAppearanceConverter}}" />
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

@@ -19,7 +19,7 @@
 
         <!-- Kopf -->
         <StackPanel Grid.Row="0">
-            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Equalizer" />
+            <TextBlock Style="{StaticResource DawPageTitle}" Text="Equalizer" />
             <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                        Text="Interaktiver 4-Band-EQ — Punkte ziehen, dann auf den Track anwenden." />
         </StackPanel>

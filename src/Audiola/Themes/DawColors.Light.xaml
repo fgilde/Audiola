@@ -1,0 +1,28 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Audiola Studio-Palette — HELL. Gleiche Keys wie DawColors.Dark.xaml. -->
+    <Color x:Key="DawBg">#EEF0F4</Color>
+    <Color x:Key="DawPanel">#FFFFFF</Color>
+    <Color x:Key="DawCard">#F4F6FA</Color>
+    <Color x:Key="DawHover">#E6EAF2</Color>
+    <Color x:Key="DawStroke">#DCE0E8</Color>
+    <Color x:Key="DawStrokeStrong">#C3C9D6</Color>
+    <Color x:Key="DawText">#1B1E27</Color>
+    <Color x:Key="DawTextDim">#4E5566</Color>
+    <Color x:Key="DawTextFaint">#7B8394</Color>
+    <Color x:Key="DawAccent">#2F6FE0</Color>
+    <Color x:Key="DawAccentLight">#2478C6</Color>
+    <Color x:Key="DawAccentViolet">#8B47D6</Color>
+    <Color x:Key="DawAccentSoft">#242F6FE0</Color>
+    <Color x:Key="DawGreen">#1E9E5A</Color>
+    <Color x:Key="DawYellow">#B8860B</Color>
+    <Color x:Key="DawRed">#D93A36</Color>
+    <Color x:Key="DawRec">#E0342A</Color>
+    <!-- Timeline-Arbeitsfläche: helle, leicht abgesetzte Fläche (dunkler als DawBg), damit sich Clips abheben. -->
+    <Color x:Key="DawTimeline">#E4E7EE</Color>
+    <!-- Scrollbalken: dunkle Halbtransparenz auf hellem Grund. -->
+    <Color x:Key="DawScrollThumb">#59000000</Color>
+    <Color x:Key="DawScrollTrack">#10000000</Color>
+</ResourceDictionary>

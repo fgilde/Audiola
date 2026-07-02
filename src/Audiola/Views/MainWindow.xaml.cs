@@ -23,6 +23,18 @@ public partial class MainWindow : FluentWindow
     /// <summary>Zuletzt geöffnete Projekte/Dateien fürs Datei-Menü (geteilt mit der Startseite).</summary>
     public HomeViewModel Home => App.GetService<HomeViewModel>();
 
+    /// <summary>Von App.OnStartup gesetzt: beim ersten Laden zu öffnende Datei (Doppelklick/CLI).</summary>
+    public string? PendingStartupFile { get; set; }
+
+    /// <summary>Öffnet einen Pfad: .audiola als Projekt, sonst als Audiospur(en). Auch für Drop/Start.</summary>
+    public async Task OpenPathAsync(string path)
+    {
+        if (path.EndsWith(".audiola", StringComparison.OrdinalIgnoreCase))
+            await OpenProjectPathAsync(path);
+        else
+            await LoadInputsAsync([path]);
+    }
+
     public MainWindow(
         MainWindowViewModel viewModel,
         TransportViewModel transport,
@@ -44,7 +56,12 @@ public partial class MainWindow : FluentWindow
         contentDialogService.SetDialogHost(RootContentDialogPresenter);
 
         // Start auf der Startseite (Projekte & zuletzt geöffnet); Öffnen springt ins Studio.
-        Loaded += (_, _) => _navigationService.Navigate(typeof(Views.Pages.HomePage));
+        // Ein per Doppelklick/Kommandozeile übergebener Pfad wird danach geöffnet.
+        Loaded += async (_, _) =>
+        {
+            _navigationService.Navigate(typeof(Views.Pages.HomePage));
+            if (PendingStartupFile is { } f) { PendingStartupFile = null; await OpenPathAsync(f); }
+        };
         Closing += OnWindowClosing;
 
         // Statusleiste + Fenstertitel folgen dem Studio-Zustand (Hintergrund-Arbeit, Projektname, Dirty).
@@ -71,8 +88,9 @@ public partial class MainWindow : FluentWindow
         // Leises Auto-Update beim Start (nur in installierter Version).
         Loaded += async (_, _) => await AutoUpdateAsync();
 
-        // Echtzeit-Spektrum in der Menüleiste (folgt dem Studio-Mix).
+        // Echtzeit-Spektrum + Master-VU in der Transportleiste (folgen dem Studio-Mix).
         App.GetService<ViewModels.TimelineViewModel>().SpectrumUpdated += (_, bands) => Spectrum.SetLevels(bands);
+        App.GetService<StemMixerEngine>().LevelUpdated += (_, lr) => LevelMeter.SetLevels(lr.L, lr.R);
 
         // Tastenkürzel: Strg+S speichern, Strg+Umschalt+S speichern unter, Strg+O öffnen.
         InputBindings.Add(new System.Windows.Input.KeyBinding(
@@ -179,23 +197,24 @@ public partial class MainWindow : FluentWindow
 
     private async void OpenProject_Click(object sender, RoutedEventArgs e)
     {
-        // Vor dem Öffnen ggf. das aktuelle Projekt sichern.
-        if (!await ConfirmDiscardAsync()) return;
-
         var dlg = new Microsoft.Win32.OpenFileDialog { Title = "Projekt öffnen", Filter = ProjectFilter };
         if (dlg.ShowDialog() != true) return;
+        await OpenProjectPathAsync(dlg.FileName);
+    }
 
+    /// <summary>Ein .audiola-Projekt laden (nach Rückfrage bei ungespeicherten Änderungen).</summary>
+    private async Task OpenProjectPathAsync(string path)
+    {
+        if (!await ConfirmDiscardAsync()) return;
         try
         {
-            await App.GetService<ProjectWorkspace>().OpenAsync(dlg.FileName);
+            await App.GetService<ProjectWorkspace>().OpenAsync(path);
             _navigationService.Navigate(typeof(Views.Pages.TimelinePage));
-            _snackbarService.Show("Projekt geladen", Path.GetFileName(dlg.FileName),
-                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+            _snackbarService.Success("Projekt geladen", Path.GetFileName(path), 3);
         }
         catch (Exception ex)
         {
-            _snackbarService.Show("Öffnen fehlgeschlagen", ex.Message,
-                ControlAppearance.Danger, new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(5));
+            _snackbarService.Error("Öffnen fehlgeschlagen", ex.Message, 5);
         }
     }
 
@@ -398,7 +417,7 @@ public partial class MainWindow : FluentWindow
     private static bool IsSupportedInput(string path)
     {
         var ext = Path.GetExtension(path).ToLowerInvariant();
-        return ext == ".zip" || SupportedExtensions.Contains(ext);
+        return ext is ".zip" or ".audiola" || SupportedExtensions.Contains(ext);
     }
 
     /// <summary>
@@ -408,7 +427,14 @@ public partial class MainWindow : FluentWindow
     /// </summary>
     private async Task LoadInputsAsync(IEnumerable<string> paths)
     {
-        var files = ExpandToAudioFiles(paths);
+        var list = paths.ToList();
+
+        // Ein .audiola-Projekt öffnet ein ganzes Projekt (ersetzt das aktuelle) — hat Vorrang.
+        var project = list.FirstOrDefault(p =>
+            p.EndsWith(".audiola", StringComparison.OrdinalIgnoreCase) && File.Exists(p));
+        if (project is not null) { await OpenProjectPathAsync(project); return; }
+
+        var files = ExpandToAudioFiles(list);
         if (files.Count == 0)
         {
             _snackbarService.Show("Nichts geladen", "Keine unterstützten Audiodateien gefunden.",

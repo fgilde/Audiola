@@ -28,7 +28,7 @@
                        Content="Zurück" Command="{Binding ViewModel.CloseEditorCommand}"
                        ToolTip="Zurück ins Studio (ohne zu übernehmen)" />
             <StackPanel Grid.Column="1">
-                <TextBlock FontSize="24" FontWeight="SemiBold" Text="Spur bearbeiten" />
+                <TextBlock Style="{StaticResource DawPageTitle}" Text="Spur bearbeiten" />
                 <TextBlock
                     Margin="0,2,0,0"
                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"

@@ -11,7 +11,7 @@
 
     <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel MaxWidth="1120" HorizontalAlignment="Left">
-            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Mastering" />
+            <TextBlock Style="{StaticResource DawPageTitle}" Text="Mastering" />
             <TextBlock
                 Margin="0,2,0,20"
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"

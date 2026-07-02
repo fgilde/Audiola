@@ -169,8 +169,10 @@
                 <controls:SpectrumControl Grid.Column="4" x:Name="Spectrum"
                                           Width="170" Height="30" Margin="0,0,14,0" VerticalAlignment="Center" />
 
-                <!-- Master-Lautstärke -->
+                <!-- Master-Pegel (VU) + Lautstärke -->
                 <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0">
+                    <controls:LevelMeterControl x:Name="LevelMeter" Width="46" Height="24" Margin="0,0,10,0"
+                                                VerticalAlignment="Center" />
                     <ui:SymbolIcon Symbol="Speaker224" VerticalAlignment="Center"
                                    Foreground="{StaticResource DawTextDimBrush}" />
                     <Slider Width="92" Margin="8,0,0,0" VerticalAlignment="Center"

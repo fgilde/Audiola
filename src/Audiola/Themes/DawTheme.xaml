@@ -10,36 +10,29 @@
          und definiert eigene Daw*-Keys/-Styles für die Shell.
          ============================================================ -->
 
-    <!-- ————— Palette ————— -->
-    <Color x:Key="DawBg">#121318</Color>            <!-- Fenster-Grund -->
-    <Color x:Key="DawPanel">#1A1C23</Color>         <!-- Panels/Docks -->
-    <Color x:Key="DawCard">#20232D</Color>          <!-- erhöhte Flächen -->
-    <Color x:Key="DawHover">#2A2E3A</Color>
-    <Color x:Key="DawStroke">#2C303B</Color>
-    <Color x:Key="DawStrokeStrong">#3A3F4D</Color>
-    <Color x:Key="DawText">#E9EBF2</Color>
-    <Color x:Key="DawTextDim">#A7ADC0</Color>
-    <Color x:Key="DawTextFaint">#757C90</Color>
-    <Color x:Key="DawAccent">#3F8CFF</Color>
-    <Color x:Key="DawAccentLight">#6BD6FF</Color>
-    <Color x:Key="DawAccentViolet">#B56BFF</Color>
-
-    <SolidColorBrush x:Key="DawBgBrush" Color="{StaticResource DawBg}" />
-    <SolidColorBrush x:Key="DawPanelBrush" Color="{StaticResource DawPanel}" />
-    <SolidColorBrush x:Key="DawCardBrush" Color="{StaticResource DawCard}" />
-    <SolidColorBrush x:Key="DawHoverBrush" Color="{StaticResource DawHover}" />
-    <SolidColorBrush x:Key="DawStrokeBrush" Color="{StaticResource DawStroke}" />
-    <SolidColorBrush x:Key="DawStrokeStrongBrush" Color="{StaticResource DawStrokeStrong}" />
-    <SolidColorBrush x:Key="DawTextBrush" Color="{StaticResource DawText}" />
-    <SolidColorBrush x:Key="DawTextDimBrush" Color="{StaticResource DawTextDim}" />
-    <SolidColorBrush x:Key="DawTextFaintBrush" Color="{StaticResource DawTextFaint}" />
-    <SolidColorBrush x:Key="DawAccentBrush" Color="{StaticResource DawAccent}" />
-    <SolidColorBrush x:Key="DawAccentLightBrush" Color="{StaticResource DawAccentLight}" />
-    <SolidColorBrush x:Key="DawAccentSoftBrush" Color="#2E3F8CFF" />
-    <SolidColorBrush x:Key="DawGreenBrush" Color="#3DDC84" />
-    <SolidColorBrush x:Key="DawYellowBrush" Color="#FFC24B" />
-    <SolidColorBrush x:Key="DawRedBrush" Color="#FF5350" />
-    <SolidColorBrush x:Key="DawRecBrush" Color="#FF3B30" />
+    <!-- ————— Palette-Brushes —————
+         Die Color-Keys (DawBg …) liefert ein separates, umschaltbares Dictionary
+         (DawColors.Dark/Light.xaml). Deshalb hier DynamicResource: beim Theme-Wechsel
+         wird nur das Farb-Dictionary getauscht, und alle Brushes ziehen automatisch mit. -->
+    <SolidColorBrush x:Key="DawBgBrush" Color="{DynamicResource DawBg}" />
+    <SolidColorBrush x:Key="DawPanelBrush" Color="{DynamicResource DawPanel}" />
+    <SolidColorBrush x:Key="DawCardBrush" Color="{DynamicResource DawCard}" />
+    <SolidColorBrush x:Key="DawHoverBrush" Color="{DynamicResource DawHover}" />
+    <SolidColorBrush x:Key="DawStrokeBrush" Color="{DynamicResource DawStroke}" />
+    <SolidColorBrush x:Key="DawStrokeStrongBrush" Color="{DynamicResource DawStrokeStrong}" />
+    <SolidColorBrush x:Key="DawTextBrush" Color="{DynamicResource DawText}" />
+    <SolidColorBrush x:Key="DawTextDimBrush" Color="{DynamicResource DawTextDim}" />
+    <SolidColorBrush x:Key="DawTextFaintBrush" Color="{DynamicResource DawTextFaint}" />
+    <SolidColorBrush x:Key="DawAccentBrush" Color="{DynamicResource DawAccent}" />
+    <SolidColorBrush x:Key="DawAccentLightBrush" Color="{DynamicResource DawAccentLight}" />
+    <SolidColorBrush x:Key="DawAccentSoftBrush" Color="{DynamicResource DawAccentSoft}" />
+    <SolidColorBrush x:Key="DawGreenBrush" Color="{DynamicResource DawGreen}" />
+    <SolidColorBrush x:Key="DawYellowBrush" Color="{DynamicResource DawYellow}" />
+    <SolidColorBrush x:Key="DawRedBrush" Color="{DynamicResource DawRed}" />
+    <SolidColorBrush x:Key="DawRecBrush" Color="{DynamicResource DawRec}" />
+    <SolidColorBrush x:Key="DawTimelineBrush" Color="{DynamicResource DawTimeline}" />
+    <SolidColorBrush x:Key="DawScrollThumbBrush" Color="{DynamicResource DawScrollThumb}" />
+    <SolidColorBrush x:Key="DawScrollTrackBrush" Color="{DynamicResource DawScrollTrack}" />
 
     <!-- Marken-Gradient (Frequenzverlauf) — für Logo-Akzente und den Playhead-Glow. -->
     <LinearGradientBrush x:Key="BrandGradient" StartPoint="0,0" EndPoint="1,0">
@@ -50,19 +43,19 @@
 
     <!-- ————— Overrides der WPF-UI-Systembrushes —————
          Bestehende Views binden per DynamicResource an diese Keys;
-         damit erbt jede Seite/jeder Dialog automatisch die Studio-Palette. -->
-    <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="{StaticResource DawBg}" />
-    <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="{StaticResource DawBg}" />
-    <SolidColorBrush x:Key="SolidBackgroundFillColorSecondaryBrush" Color="{StaticResource DawPanel}" />
-    <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="{StaticResource DawPanel}" />
-    <SolidColorBrush x:Key="CardBackgroundFillColorSecondaryBrush" Color="{StaticResource DawCard}" />
-    <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="{StaticResource DawCard}" />
-    <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="{StaticResource DawHover}" />
-    <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="{StaticResource DawStroke}" />
-    <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="{StaticResource DawStrokeStrong}" />
-    <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="{StaticResource DawText}" />
-    <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="{StaticResource DawTextDim}" />
-    <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="{StaticResource DawTextFaint}" />
+         damit erbt jede Seite/jeder Dialog automatisch die Studio-Palette (Light + Dark). -->
+    <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="{DynamicResource DawBg}" />
+    <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="{DynamicResource DawBg}" />
+    <SolidColorBrush x:Key="SolidBackgroundFillColorSecondaryBrush" Color="{DynamicResource DawPanel}" />
+    <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="{DynamicResource DawPanel}" />
+    <SolidColorBrush x:Key="CardBackgroundFillColorSecondaryBrush" Color="{DynamicResource DawCard}" />
+    <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="{DynamicResource DawCard}" />
+    <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="{DynamicResource DawHover}" />
+    <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="{DynamicResource DawStroke}" />
+    <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="{DynamicResource DawStrokeStrong}" />
+    <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="{DynamicResource DawText}" />
+    <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="{DynamicResource DawTextDim}" />
+    <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="{DynamicResource DawTextFaint}" />
 
     <!-- ————— Shell-Styles ————— -->
 
@@ -157,6 +150,13 @@
         <Setter Property="FontSize" Value="11" />
         <Setter Property="Foreground" Value="{StaticResource DawTextFaintBrush}" />
         <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Seiten-Titel: großer Kopf jeder Seite im Marken-Farbverlauf (statt geerbtem Schwarz). -->
+    <Style x:Key="DawPageTitle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource BrandGradient}" />
     </Style>
 
 </ResourceDictionary>

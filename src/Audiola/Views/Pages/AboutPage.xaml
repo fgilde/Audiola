@@ -19,7 +19,7 @@
             <Image Source="pack://application:,,,/Assets/audiola.png" Width="64" Height="64"
                    VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
             <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
-                <TextBlock FontSize="30" FontWeight="SemiBold" Text="Audiola" />
+                <TextBlock Style="{StaticResource DawPageTitle}" FontSize="30" Text="Audiola" />
                 <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                            Text="{Binding VersionText}" />
             </StackPanel>

@@ -10,7 +10,7 @@
 
     <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel MaxWidth="1120" HorizontalAlignment="Left">
-            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Spatial Audio (3D / Immersive)" />
+            <TextBlock Style="{StaticResource DawPageTitle}" Text="Spatial Audio (3D / Immersive)" />
             <TextBlock
                 Margin="0,2,0,0" TextWrapping="Wrap"
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"

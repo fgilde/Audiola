@@ -10,7 +10,7 @@
 
     <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto">
         <StackPanel MaxWidth="820" HorizontalAlignment="Left">
-            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Klangvariation" />
+            <TextBlock Style="{StaticResource DawPageTitle}" Text="Klangvariation" />
             <TextBlock
                 Margin="0,2,0,0"
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"

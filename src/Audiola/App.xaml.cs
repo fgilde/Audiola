@@ -130,34 +130,17 @@ public partial class App : Application
 
         await Host.StartAsync();
 
-        // Studio-Akzentfarbe.
-        Wpf.Ui.Appearance.ApplicationAccentColorManager.Apply(
-            System.Windows.Media.Color.FromRgb(0x5B, 0x8C, 0xFF),
-            Wpf.Ui.Appearance.ApplicationTheme.Dark,
-            false);
+        // Gespeichertes Theme (Light/Dark) anwenden — Palette + WPF-UI + Akzent.
+        ThemeManager.Apply(GetService<ISettingsService>().Current.Theme);
 
         // .audiola-Dateien mit Audiola verknüpfen (Doppelklick + App-Icon; HKCU, idempotent).
         FileAssociation.EnsureRegistered();
 
         var window = GetService<MainWindow>();
+        // Per Doppelklick/Kommandozeile übergebene Datei — VOR Show setzen, damit der Loaded-Handler
+        // des Fensters sie sicher aufgreift (der bisherige „+= nach Show" feuerte nie).
+        window.PendingStartupFile = e.Args.FirstOrDefault(File.Exists);
         window.Show();
-
-        // Per Doppelklick/Kommandozeile übergebene Datei öffnen (Projekt oder Audio).
-        if (e.Args.FirstOrDefault(File.Exists) is { } startFile)
-        {
-            window.Loaded += async (_, _) =>
-            {
-                try
-                {
-                    if (startFile.EndsWith(".audiola", StringComparison.OrdinalIgnoreCase))
-                        await GetService<ProjectWorkspace>().OpenAsync(startFile);
-                    else
-                        await GetService<ViewModels.TimelineViewModel>().AddAudioFileAsync(startFile, -1, 0);
-                    GetService<IShellNavigation>().Navigate(typeof(Views.Pages.TimelinePage));
-                }
-                catch (Exception ex) { UiError.Show("Öffnen fehlgeschlagen", ex.Message); }
-            };
-        }
 
         // Beim ersten Start den Einrichtungs-Assistenten zeigen (bis er einmal abgeschlossen wurde).
         if (!GetService<ISettingsService>().Current.SetupCompleted)

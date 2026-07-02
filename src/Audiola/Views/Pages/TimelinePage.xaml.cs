@@ -137,6 +137,13 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
         HeaderScroll.ScrollToVerticalOffset(LaneScroll.VerticalOffset);
     }
 
+    /// <summary>„Auf Song einpassen": Zoom so setzen, dass der ganze Song in die sichtbare Breite passt.</summary>
+    private void Fit_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.ZoomToFit(LaneScroll.ViewportWidth);
+        LaneScroll.ScrollToHorizontalOffset(0);
+    }
+
     /// <summary>Strg+Mausrad zoomt die Timeline um die Maus-Position (DAW-Standard).</summary>
     private void Lane_MouseWheel(object sender, MouseWheelEventArgs e)
     {

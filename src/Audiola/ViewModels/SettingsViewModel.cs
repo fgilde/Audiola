@@ -68,6 +68,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _demucsModel = settings.Current.DemucsModel;
         _outputDirectory = settings.Current.OutputDirectory;
         _elevenLabsApiKey = settings.Current.ElevenLabsApiKey;
+        _theme = settings.Current.Theme == "Light" ? "Light" : "Dark";
     }
 
     partial void OnPythonPathChanged(string value) { _settings.Current.PythonPath = value; _settings.Save(); }
@@ -168,9 +169,24 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    private void SetThemeLight() => ApplicationThemeManager.Apply(ApplicationTheme.Light);
+    /// <summary>Aktuelles Theme ("Light"/"Dark") — steuert die Markierung der Theme-Buttons.</summary>
+    [ObservableProperty] private string _theme;
+
+    public bool IsLightTheme => Theme == "Light";
+    public bool IsDarkTheme => Theme != "Light";
+
+    partial void OnThemeChanged(string value)
+    {
+        ThemeManager.Apply(value);
+        _settings.Current.Theme = value;
+        _settings.Save();
+        OnPropertyChanged(nameof(IsLightTheme));
+        OnPropertyChanged(nameof(IsDarkTheme));
+    }
 
     [RelayCommand]
-    private void SetThemeDark() => ApplicationThemeManager.Apply(ApplicationTheme.Dark);
+    private void SetThemeLight() => Theme = "Light";
+
+    [RelayCommand]
+    private void SetThemeDark() => Theme = "Dark";
 }

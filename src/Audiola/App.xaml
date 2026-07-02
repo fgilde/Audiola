@@ -11,13 +11,16 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
-                <!-- DAW-Theme zuletzt: überschreibt die WPF-UI-Systembrushes mit der Studio-Palette. -->
+                <!-- Umschaltbare Studio-Palette (Farben) + Brushes/Overrides/Styles darauf.
+                     ThemeManager tauscht beim Start/Wechsel das DawColors-Dictionary. -->
+                <ResourceDictionary Source="pack://application:,,,/Themes/DawColors.Dark.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/Themes/DawTheme.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <wpf:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <conv:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
             <conv:InverseBooleanConverter x:Key="InverseBooleanConverter" />
             <conv:RecordAppearanceConverter x:Key="RecordAppearanceConverter" />
+            <conv:BoolToAccentAppearanceConverter x:Key="BoolToAccentAppearanceConverter" />
             <conv:StringToBrushConverter x:Key="StringToBrushConverter" />
             <conv:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
             <conv:SecondsToWidthConverter x:Key="SecondsToWidthConverter" />
@@ -31,7 +34,7 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Thumb">
-                            <Border CornerRadius="4" Margin="2" Background="#66FFFFFF" />
+                            <Border CornerRadius="4" Margin="2" Background="{DynamicResource DawScrollThumbBrush}" />
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
@@ -50,7 +53,7 @@
             </Style>
 
             <ControlTemplate x:Key="AudiolaVScrollBar" TargetType="ScrollBar">
-                <Grid Background="#14FFFFFF">
+                <Grid Background="{DynamicResource DawScrollTrackBrush}">
                     <Track x:Name="PART_Track" IsDirectionReversed="True">
                         <Track.DecreaseRepeatButton>
                             <RepeatButton Command="ScrollBar.PageUpCommand" Style="{StaticResource AudiolaScrollPage}" />
@@ -65,7 +68,7 @@
                 </Grid>
             </ControlTemplate>
             <ControlTemplate x:Key="AudiolaHScrollBar" TargetType="ScrollBar">
-                <Grid Background="#14FFFFFF">
+                <Grid Background="{DynamicResource DawScrollTrackBrush}">
                     <Track x:Name="PART_Track" IsDirectionReversed="False">
                         <Track.DecreaseRepeatButton>
                             <RepeatButton Command="ScrollBar.PageLeftCommand" Style="{StaticResource AudiolaScrollPage}" />
