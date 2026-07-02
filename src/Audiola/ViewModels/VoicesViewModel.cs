@@ -159,11 +159,14 @@ public sealed partial class VoicesViewModel : ObservableObject
         if (dlg.ShowDialog() == true) SamplePath = dlg.FileName;
     }
 
+    /// <summary>Mikrofon (NAudio-Gerätenummer) für die Sample-Aufnahme.</summary>
+    [ObservableProperty] private int _recordDeviceNumber;
+
     [RelayCommand]
     private void ToggleRecord()
     {
         if (IsRecording) { _ = StopRecordAsync(); return; }
-        try { _recorder.Start(); IsRecording = true; Status = "Aufnahme läuft …"; }
+        try { _recorder.Start(RecordDeviceNumber); IsRecording = true; Status = "Aufnahme läuft …"; }
         catch (Exception ex) { Status = "Mikrofon-Fehler: " + ex.Message; }
     }
 

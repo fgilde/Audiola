@@ -13,13 +13,13 @@ public sealed class AudioRecorder : IAudioRecorder
 
     public bool IsRecording => _waveIn is not null;
 
-    public string Start()
+    public string Start(int deviceNumber = 0)
     {
         if (IsRecording) return _path!;
 
         _path = TempDir.File("rec", ".wav", "rec");
 
-        _waveIn = new WaveInEvent { WaveFormat = new WaveFormat(44100, 16, 1) };
+        _waveIn = new WaveInEvent { DeviceNumber = deviceNumber, WaveFormat = new WaveFormat(44100, 16, 1) };
         _writer = new WaveFileWriter(_path, _waveIn.WaveFormat);
         _tcs = new TaskCompletionSource<string>();
 

@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:controls="clr-namespace:Audiola.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     mc:Ignorable="d"
@@ -98,6 +99,8 @@
                         Width="280"
                         PlaceholderText="Name der neuen Stimme"
                         Text="{Binding ViewModel.NewVoiceName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <controls:MicSelectorControl Margin="0,8,0,0" HorizontalAlignment="Right"
+                                                 DeviceNumber="{Binding ViewModel.RecordDeviceNumber, Mode=TwoWay}" />
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Right">
                         <ui:Button
                             Icon="{ui:SymbolIcon Mic24}"

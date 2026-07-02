@@ -13,21 +13,21 @@
              Foreground explizit: Custom-Templates ersetzen den WPF-UI-Style, sonst fiele
              die Textfarbe auf das WPF-Default-Schwarz zurück. -->
         <Style x:Key="QuickCard" TargetType="Button">
-            <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Margin" Value="0,0,14,0" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Width="230" Padding="18,16" CornerRadius="12"
-                                Background="{StaticResource DawPanelBrush}"
-                                BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="1">
+                                Background="{DynamicResource DawPanelBrush}"
+                                BorderBrush="{DynamicResource DawStrokeBrush}" BorderThickness="1">
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{StaticResource DawCardBrush}" />
-                                <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource DawAccentBrush}" />
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource DawCardBrush}" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource DawAccentBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -38,7 +38,7 @@
         <!-- Listeneintrag (Projekt/Datei): ganze Zeile klickbar, Akzentkante links über Tag;
              fehlende Dateien werden gedimmt dargestellt. -->
         <Style x:Key="RecentCard" TargetType="Button">
-            <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Margin" Value="0,0,0,8" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -47,13 +47,13 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Padding="12,10" CornerRadius="10"
-                                Background="{StaticResource DawPanelBrush}"
+                                Background="{DynamicResource DawPanelBrush}"
                                 BorderBrush="Transparent" BorderThickness="3,0,0,0">
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{StaticResource DawCardBrush}" />
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource DawCardBrush}" />
                                 <Setter TargetName="bd" Property="BorderBrush"
                                         Value="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" />
                             </Trigger>
@@ -74,7 +74,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="6" />
-            <Setter Property="Foreground" Value="{StaticResource DawTextFaintBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -84,8 +84,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{StaticResource DawHoverBrush}" />
-                                <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource DawHoverBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -121,16 +121,16 @@
                 <Rectangle Width="120" Height="3" Margin="0,10,0,0" RadiusX="1.5" RadiusY="1.5"
                            HorizontalAlignment="Center" Fill="{StaticResource BrandGradient}" />
                 <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14"
-                           Foreground="{StaticResource DawTextDimBrush}"
+                           Foreground="{DynamicResource DawTextDimBrush}"
                            Text="Trennen · Mischen · Einsingen · Mastern — dein Studio für alles." />
 
                 <!-- ======= SCHNELLSTART ======= -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,34,0,0">
                     <Button Style="{StaticResource QuickCard}" Command="{Binding ViewModel.OpenFileCommand}">
                         <StackPanel>
-                            <ui:SymbolIcon Symbol="MusicNote224" FontSize="26" Foreground="{StaticResource DawAccentLightBrush}" />
+                            <ui:SymbolIcon Symbol="MusicNote224" FontSize="26" Foreground="{DynamicResource DawAccentLightBrush}" />
                             <TextBlock Margin="0,10,0,2" FontWeight="SemiBold" FontSize="15" Text="Song öffnen" />
-                            <TextBlock FontSize="12" Foreground="{StaticResource DawTextFaintBrush}"
+                            <TextBlock FontSize="12" Foreground="{DynamicResource DawTextFaintBrush}"
                                        Text="Audio laden — jede Datei wird eine Spur" TextWrapping="Wrap" />
                         </StackPanel>
                     </Button>
@@ -138,15 +138,15 @@
                         <StackPanel>
                             <ui:SymbolIcon Symbol="FolderOpen24" FontSize="26" Foreground="#B56BFF" />
                             <TextBlock Margin="0,10,0,2" FontWeight="SemiBold" FontSize="15" Text="Projekt öffnen" />
-                            <TextBlock FontSize="12" Foreground="{StaticResource DawTextFaintBrush}"
+                            <TextBlock FontSize="12" Foreground="{DynamicResource DawTextFaintBrush}"
                                        Text="Ein gespeichertes .audiola-Projekt fortsetzen" TextWrapping="Wrap" />
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource QuickCard}" Margin="0" Command="{Binding ViewModel.GoToStudioCommand}">
                         <StackPanel>
-                            <ui:SymbolIcon Symbol="Timeline24" FontSize="26" Foreground="{StaticResource DawGreenBrush}" />
+                            <ui:SymbolIcon Symbol="Timeline24" FontSize="26" Foreground="{DynamicResource DawGreenBrush}" />
                             <TextBlock Margin="0,10,0,2" FontWeight="SemiBold" FontSize="15" Text="Zum Studio" />
-                            <TextBlock FontSize="12" Foreground="{StaticResource DawTextFaintBrush}"
+                            <TextBlock FontSize="12" Foreground="{DynamicResource DawTextFaintBrush}"
                                        Text="Direkt zur Mehrspur-Arbeitsfläche" TextWrapping="Wrap" />
                         </StackPanel>
                     </Button>
@@ -183,7 +183,7 @@
                                             </Border>
                                             <StackPanel Grid.Column="1" Margin="11,0,8,0" VerticalAlignment="Center">
                                                 <TextBlock FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                                <TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}"
+                                                <TextBlock FontSize="11" Foreground="{DynamicResource DawTextFaintBrush}"
                                                            Text="{Binding DetailsText}" TextTrimming="CharacterEllipsis" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -203,7 +203,7 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <TextBlock FontSize="12" Foreground="{StaticResource DawTextFaintBrush}" TextWrapping="Wrap"
+                        <TextBlock FontSize="12" Foreground="{DynamicResource DawTextFaintBrush}" TextWrapping="Wrap"
                                    Text="Noch keine Projekte — speichere dein Studio über Datei → „Projekt speichern“ als .audiola."
                                    Visibility="{Binding ViewModel.HasRecentProjects, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
                     </StackPanel>
@@ -211,7 +211,7 @@
                     <!-- Zuletzt geöffnete Dateien (blaue Akzentkante) -->
                     <StackPanel Grid.Column="2">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <ui:SymbolIcon Symbol="History24" FontSize="15" Foreground="{StaticResource DawAccentLightBrush}" />
+                            <ui:SymbolIcon Symbol="History24" FontSize="15" Foreground="{DynamicResource DawAccentLightBrush}" />
                             <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Style="{StaticResource DawCaption}" Text="ZULETZT GEÖFFNET" />
                         </StackPanel>
                         <ItemsControl ItemsSource="{Binding ViewModel.RecentFiles}">
@@ -227,11 +227,11 @@
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <Border Width="34" Height="34" CornerRadius="8" Background="#263F8CFF">
-                                                <ui:SymbolIcon Symbol="MusicNote224" FontSize="16" Foreground="{StaticResource DawAccentLightBrush}" />
+                                                <ui:SymbolIcon Symbol="MusicNote224" FontSize="16" Foreground="{DynamicResource DawAccentLightBrush}" />
                                             </Border>
                                             <StackPanel Grid.Column="1" Margin="11,0,8,0" VerticalAlignment="Center">
                                                 <TextBlock FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                                <TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}"
+                                                <TextBlock FontSize="11" Foreground="{DynamicResource DawTextFaintBrush}"
                                                            Text="{Binding DetailsText}" TextTrimming="CharacterEllipsis" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -251,7 +251,7 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <TextBlock FontSize="12" Foreground="{StaticResource DawTextFaintBrush}" TextWrapping="Wrap"
+                        <TextBlock FontSize="12" Foreground="{DynamicResource DawTextFaintBrush}" TextWrapping="Wrap"
                                    Text="Noch nichts geöffnet — zieh einfach eine Audiodatei oder ein ZIP ins Fenster."
                                    Visibility="{Binding ViewModel.HasRecent, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
                     </StackPanel>

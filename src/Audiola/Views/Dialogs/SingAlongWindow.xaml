@@ -48,7 +48,7 @@
 
         <!-- Spuren-Zeile: transparent, ausgewählte (= Gesangs-)Spur mit Akzent + linkem Balken. -->
         <Style x:Key="TrackRow" TargetType="ListViewItem">
-            <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0,2" />
             <Setter Property="Background" Value="Transparent" />
@@ -94,9 +94,8 @@
           <StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                 <TextBlock VerticalAlignment="Center" Text="Mikrofon:" FontSize="13" />
-                <ComboBox Margin="8,0,0,0" Width="300" ItemsSource="{Binding Mics}"
-                          SelectedItem="{Binding SelectedMic, Mode=TwoWay}" DisplayMemberPath="Name"
-                          ToolTip="Aufnahme-Gerät zum Einsingen wählen." />
+                <controls:MicSelectorControl Margin="8,0,0,0"
+                                             DeviceNumber="{Binding SelectedMicNumber, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <ui:Button Icon="{ui:SymbolIcon MusicNote224}" Content="Backing vorbereiten"

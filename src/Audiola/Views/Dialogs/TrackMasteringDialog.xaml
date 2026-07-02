@@ -11,10 +11,10 @@
     ResizeMode="CanResize"
     ExtendsContentIntoTitleBar="True"
     WindowBackdropType="None"
-    Background="{StaticResource DawBgBrush}"
+    Background="{DynamicResource DawBgBrush}"
     WindowCornerPreference="Round">
 
-    <Grid TextElement.Foreground="{StaticResource DawTextBrush}">
+    <Grid TextElement.Foreground="{DynamicResource DawTextBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -32,8 +32,8 @@
             <controls:MasteringPanel Margin="18,4,18,10" ShowActions="False" />
         </ui:DynamicScrollViewer>
 
-        <Border Grid.Row="2" Padding="18,12" Background="{StaticResource DawPanelBrush}"
-                BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,1,0,0">
+        <Border Grid.Row="2" Padding="18,12" Background="{DynamicResource DawPanelBrush}"
+                BorderBrush="{DynamicResource DawStrokeBrush}" BorderThickness="0,1,0,0">
             <Grid>
                 <!-- Sekundär: gemasterte Spur als Datei exportieren -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">

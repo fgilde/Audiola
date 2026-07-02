@@ -1,20 +1,24 @@
 using System.Windows;
 using System.Windows.Media;
 using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls;
 
 namespace Audiola.Services;
 
 /// <summary>
-/// Wendet das App-Theme (Light/Dark) an. Die Studio-Palette (DawColors.*.xaml) liefert nur die
-/// FARBWERTE; die Brushes (Daw*Brush + WPF-UI-System-Overrides) leben in DawTheme.xaml und bleiben
-/// als OBJEKTE dauerhaft bestehen. Beim Wechsel wird nur ihre <see cref="SolidColorBrush.Color"/>
-/// gesetzt.
+/// Wendet das App-Theme (Light/Dark) an — auch LIVE, ohne Neustart. Zwei Mechanismen:
 ///
-/// Warum nicht einfach das Farb-Dictionary austauschen? Weil eine DynamicResource auf einer
-/// Freezable-Unterproperty (Brush.Color) NICHT zuverlässig neu ausgewertet wird, wenn das
-/// referenzierte Dictionary zur Laufzeit ersetzt wird — der Wechsel griffe dann erst nach Neustart.
-/// Das direkte Setzen der Color am stabilen Brush-Objekt wirkt dagegen sofort und hält zugleich
-/// alle StaticResource-Referenzen in den Views gültig.
+/// 1. <see cref="ApplicationThemeManager"/> tauscht das WPF-UI-Theme-Dictionary (Dark/Light.xaml)
+///    → alle DynamicResource-Verweise auf WPF-UI-Brushes lösen frisch auf.
+/// 2. <see cref="ApplyPalette"/> ERSETZT unsere Brushes (Daw* + überschriebene WPF-UI-System-Keys,
+///    inkl. der Elevation-Border) durch frische, gefrorene Objekte im BASE-Dictionary der App.
+///    Ersetzen statt Mutieren, weil WPF Setter-Werte beim Style-Sealing einfriert; deshalb müssen
+///    per Konvention ALLE Verweise auf diese Keys DynamicResource sein (nie StaticResource).
+///
+/// Bewusst NICHT: WPF-UI-Dictionaries zur Laufzeit neu laden oder isoliert parsen — isoliert
+/// geparst lösen deren interne StaticResources (z. B. SystemAccentColorPrimary) nicht auf
+/// (XamlParseException), und ein Reload re-applied den FluentWindow-Style (AllowsTransparency
+/// nach Show ⇒ Exception).
 /// </summary>
 public static class ThemeManager
 {
@@ -40,33 +44,33 @@ public static class ThemeManager
         ("ControlFillColorSecondaryBrush", "DawHover"), ("CardStrokeColorDefaultBrush", "DawStroke"),
         ("ControlStrokeColorDefaultBrush", "DawStrokeStrong"), ("TextFillColorPrimaryBrush", "DawText"),
         ("TextFillColorSecondaryBrush", "DawTextDim"), ("TextFillColorTertiaryBrush", "DawTextFaint"),
+        // Elevation-Border der WPF-UI-Controls (Button/TextBox …): im Original ein Gradient aus dem
+        // Theme-Dict; als flacher Stroke überschrieben, damit er unsere Ersetz-Maschinerie nutzt.
+        ("ControlElevationBorderBrush", "DawStrokeStrong"),
+        ("TextControlElevationBorderBrush", "DawStrokeStrong"),
+        ("CircleElevationBorderBrush", "DawStrokeStrong"),
     ];
-
-    private static bool _appliedOnce;
 
     public static void Apply(string? theme)
     {
         IsLight = string.Equals(theme, "Light", StringComparison.OrdinalIgnoreCase);
+        var appTheme = IsLight ? ApplicationTheme.Light : ApplicationTheme.Dark;
 
         // WPF-UI-eigene Controls (Popups, ScrollBars, Slider-Innereien, Fokus …).
-        ApplicationThemeManager.Apply(
-            IsLight ? ApplicationTheme.Light : ApplicationTheme.Dark, updateAccent: false);
-
-        // Beim LIVE-Wechsel zusätzlich das WPF-UI-Controls-Dictionary neu laden: dessen Brushes
-        // (Button-Border, Hover, ComboBox …) hängen per DynamicResource an den COLOR-Keys des
-        // getauschten Theme-Dictionaries — und Freezable-Unterproperties (Brush.Color) werden
-        // beim Dictionary-Tausch nicht neu ausgewertet. Frisch instanziiert lösen sie korrekt auf.
-        if (_appliedOnce) RefreshWpfUiControlsDictionary();
-        _appliedOnce = true;
+        ApplicationThemeManager.Apply(appTheme, updateAccent: false);
 
         ApplyPalette(IsLight);
+        UpdateWindowChrome(appTheme);
 
         var accent = IsLight ? Color.FromRgb(0x2F, 0x6F, 0xE0) : Color.FromRgb(0x5B, 0x8C, 0xFF);
-        ApplicationAccentColorManager.Apply(accent,
-            IsLight ? ApplicationTheme.Light : ApplicationTheme.Dark, systemGlassColor: false);
+        ApplicationAccentColorManager.Apply(accent, appTheme, systemGlassColor: false);
     }
 
-    /// <summary>Setzt die Farbe jedes gemappten Brushes auf den Wert der gewünschten Palette.</summary>
+    /// <summary>Ersetzt jeden gemappten Brush durch einen frischen (gefrorenen) mit der Farbe der
+    /// gewünschten Palette — im BASE-Dictionary der App-Ressourcen, das jeden Merged-Eintrag
+    /// überschattet. Alle Verweise auf Daw-/System-Brushes laufen per DynamicResource (per
+    /// Konvention, siehe Sweep) und lösen den Ersatz sofort auf. Mutation der Brush-Objekte wäre
+    /// keine Option: WPF friert Setter-Werte beim Style-Sealing ein (Brush.Color danach fix).</summary>
     private static void ApplyPalette(bool light)
     {
         var palette = new ResourceDictionary { Source = ThemeUri($"DawColors.{(light ? "Light" : "Dark")}.xaml") };
@@ -74,32 +78,27 @@ public static class ThemeManager
         foreach (var (brushKey, colorKey) in Map)
         {
             if (palette[colorKey] is not Color c) continue;
-            if (res[brushKey] is SolidColorBrush b && !b.IsFrozen)
-                b.Color = c;                        // Objekt bleibt stabil → Static/Dynamic greifen sofort
-            else
-                res[brushKey] = new SolidColorBrush(c);  // Fallback (fehlt/frozen)
+            var b = new SolidColorBrush(c);
+            b.Freeze();             // unveränderlich + Cross-Thread-sicher; Wechsel ersetzt das Objekt
+            res[brushKey] = b;
         }
     }
 
-    /// <summary>Ersetzt Wpf.Ui.xaml an Ort und Stelle durch eine frische Instanz (Reihenfolge bleibt).
-    /// Nötig, weil WPF-UI-Control-Styles Theme-Brushes teils per StaticResource einbetten — die
-    /// zeigen nach dem Theme-Tausch sonst dauerhaft auf die alten (verwaisten) Brush-Objekte.</summary>
-    private static void RefreshWpfUiControlsDictionary()
+    /// <summary>Setzt nur das native Dark-Mode-Flag der Titelleisten (DWM) — bewusst KEIN
+    /// WindowBackgroundManager: der manipuliert den Fenster-Background und kann das Fenster
+    /// „leeren". Der Inhalt färbt komplett über die DynamicResource-Brushes.</summary>
+    private static void UpdateWindowChrome(ApplicationTheme theme)
     {
-        // Offene Fenster zuerst vom Ressourcen-Style abkoppeln (Expression → lokaler Wert):
-        // Das Neuladen würde sonst den FluentWindow-Style neu anwenden, dessen Setter
-        // AllowsTransparency schreibt — nach dem Anzeigen des Fensters eine Exception.
         foreach (Window w in Application.Current.Windows)
-            if (w.Style is { } s) w.Style = s;
-
-        var dicts = Application.Current.Resources.MergedDictionaries;
-        for (var i = 0; i < dicts.Count; i++)
         {
-            if (dicts[i].Source is { } src && src.OriginalString.Contains("Wpf.Ui.xaml", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                dicts[i] = new ResourceDictionary { Source = src };
-                return;
+                if (theme == ApplicationTheme.Dark)
+                    Wpf.Ui.Interop.UnsafeNativeMethods.ApplyWindowDarkMode(w);
+                else
+                    Wpf.Ui.Interop.UnsafeNativeMethods.RemoveWindowDarkMode(w);
             }
+            catch { /* rein kosmetisch — nie fatal */ }
         }
     }
 

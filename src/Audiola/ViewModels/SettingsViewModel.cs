@@ -92,6 +92,9 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     /// <summary>Aufnahme starten/stoppen; beim Stoppen wird daraus eine Stimme erstellt.</summary>
+    /// <summary>Mikrofon (NAudio-Gerätenummer) für „Eigene Stimme aufnehmen".</summary>
+    [ObservableProperty] private int _recordDeviceNumber;
+
     [RelayCommand]
     private async Task ToggleRecordAsync()
     {
@@ -99,7 +102,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         {
             try
             {
-                _recorder.Start();
+                _recorder.Start(RecordDeviceNumber);
                 IsRecording = true;
                 VoiceStatus = "Aufnahme läuft … sprich einige Sätze und stoppe dann.";
             }

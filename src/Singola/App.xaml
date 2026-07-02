@@ -1,0 +1,36 @@
+<Application
+    x:Class="Singola.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:wpf="clr-namespace:System.Windows.Controls;assembly=PresentationFramework">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Dark" />
+                <ui:ControlsDictionary />
+            </ResourceDictionary.MergedDictionaries>
+
+            <wpf:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+            <!-- Singola-Party-Palette: immer dunkel, kräftige Bühnen-Akzente. -->
+            <Color x:Key="StageBg">#0E0B16</Color>
+            <Color x:Key="StagePanel">#181226</Color>
+            <Color x:Key="StageCard">#221935</Color>
+            <Color x:Key="StageStroke">#332851</Color>
+            <SolidColorBrush x:Key="StageBgBrush" Color="{StaticResource StageBg}" />
+            <SolidColorBrush x:Key="StagePanelBrush" Color="{StaticResource StagePanel}" />
+            <SolidColorBrush x:Key="StageCardBrush" Color="{StaticResource StageCard}" />
+            <SolidColorBrush x:Key="StageStrokeBrush" Color="{StaticResource StageStroke}" />
+            <SolidColorBrush x:Key="StageTextBrush" Color="#F2EEFB" />
+            <SolidColorBrush x:Key="StageTextDimBrush" Color="#B4A9D4" />
+
+            <!-- Marken-Gradient: pink → violett → cyan (SingStar-Bühne). -->
+            <LinearGradientBrush x:Key="SingolaGradient" StartPoint="0,0" EndPoint="1,0">
+                <GradientStop Color="#FF4FA3" Offset="0" />
+                <GradientStop Color="#B56BFF" Offset="0.5" />
+                <GradientStop Color="#4FD8FF" Offset="1" />
+            </LinearGradientBrush>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

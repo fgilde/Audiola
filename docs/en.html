@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audiola — Your audio studio for Windows</title>
+  <meta name="description" content="Audiola is a modern audio studio for Windows: multitrack timeline, AI stem separation, sing-along with auto-tune, mastering, 3D spatial audio and voice tools. Plus Singola — the karaoke stage for your party." />
+  <meta name="theme-color" content="#0C0D12" />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <meta property="og:title" content="Audiola — Your audio studio for Windows" />
+  <meta property="og:description" content="Separate · Mix · Sing · Master — one studio for everything. Plus Singola, the karaoke stage." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://audiola.de/assets/shots/studio.png" />
+  <link rel="alternate" hreflang="de" href="https://audiola.de/" />
+  <link rel="alternate" hreflang="en" href="https://audiola.de/en.html" />
+</head>
+<body id="top">
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#top"><img src="assets/logo.png" alt="" />Audiola</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
+      <nav class="nav-links" id="navLinks">
+        <a href="#studio">Studio</a>
+        <a href="#singalong">Sing-along</a>
+        <a href="#mastering">Mastering</a>
+        <a href="#themes">Light &amp; Dark</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#singola" class="nav-singola">Singola</a>
+        <a href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">GitHub</a>
+        <span class="lang-switch"><a href="index.html">DE</a><em>/</em><a class="active" href="en.html">EN</a></span>
+        <a class="nav-cta" href="#download">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="eq" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+    <div class="hero-inner">
+      <p class="hero-kicker"><span class="dot"></span> FOR WINDOWS · FREE · OPEN SOURCE</p>
+      <h1>Your song.<br /><span class="grad">Fully in your hands.</span></h1>
+      <p class="hero-sub">
+        Audiola splits any song into its tracks with AI, lets you arrange, sing along,
+        swap voices and master — in a studio that actually feels like one.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe">⭳&nbsp; Download Audiola</a>
+        <a class="btn btn-ghost" href="#singola">🎤&nbsp; Discover Singola</a>
+      </div>
+      <div class="transport" aria-hidden="true">
+        <span class="t-play">▶</span>
+        <span class="t-time">00:18 <em>/</em> 02:42</span>
+        <span class="t-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        <span class="t-rec"></span><span class="t-reclabel">REC</span>
+      </div>
+    </div>
+    <figure class="hero-shot">
+      <img src="assets/shots/studio.png" alt="The Audiola studio: multitrack timeline with colored waveforms" data-zoom />
+    </figure>
+  </section>
+
+  <section class="grid-section" id="features">
+    <h2 class="sr-only">All features</h2>
+    <div class="feature-grid">
+      <article style="--fc:#3F8CFF"><h3>AI stem separation</h3><p>Vocals, drums, bass, guitar, piano — Demucs splits any song locally on your machine. No cloud, no upload.</p></article>
+      <article style="--fc:#FFB454"><h3>Multitrack studio</h3><p>Cut, drag, fade and loop clips. Undo history, snapping, range effects — a real workspace.</p></article>
+      <article style="--fc:#3DDC84"><h3>Sing-along + auto-tune</h3><p>Karaoke view with a note band and scoring. "Make it perfect" gently pulls your take onto the original melody.</p></article>
+      <article style="--fc:#FF6B6B"><h3>Mastering</h3><p>EQ, compressor and target loudness per EBU&nbsp;R128 — with live A/B and 14 profiles from streaming to club.</p></article>
+      <article style="--fc:#B56BFF"><h3>Voice tools</h3><p>Clone your own voices (locally or via ElevenLabs), text-to-speech tracks, per-clip voice swap.</p></article>
+      <article style="--fc:#6BD6FF"><h3>3D spatial audio</h3><p>Place tracks freely in space — an immersive 7.1.4 bed for headphone moments you won't forget.</p></article>
+    </div>
+  </section>
+
+  <section class="dive" id="studio">
+    <div class="dive-text">
+      <p class="dive-kicker" style="--fc:#FFB454">THE STUDIO</p>
+      <h2>Arrange like the pros — <span class="grad">without the bloat.</span></h2>
+      <p>Drop an MP3 and it becomes a track. Split it into stems, cut clips at the playhead, move parts between tracks, set fades with a single grab.</p>
+      <ul>
+        <li>Tracks with volume, pan, mute &amp; solo — plus a slide-in mixer</li>
+        <li>Clip effects: reverb, echo, vocal cleanup, normalize, reverse</li>
+        <li>Full undo history with jump-to-any-state</li>
+        <li>Autosave &amp; its own project format <code>.audiola</code> — everything in one file</li>
+      </ul>
+    </div>
+    <figure><img src="assets/shots/studio.png" alt="Multitrack timeline with stems" data-zoom /></figure>
+  </section>
+
+  <section class="dive dive-flip" id="singalong">
+    <div class="dive-text">
+      <p class="dive-kicker" style="--fc:#3DDC84">SING-ALONG</p>
+      <h2>Sing the lead — <span class="grad">your version.</span></h2>
+      <p>Audiola turns any song into your vocal booth: lyrics roll by, the note band shows the original melody, and you see live how well you hit it.</p>
+      <ul>
+        <li>Punch-in: jump anywhere and re-sing from there</li>
+        <li>Count-in, latency calibration and mic picker with live level meter</li>
+        <li>"Make it perfect": auto-tune to the original melody — your voice stays yours</li>
+        <li>The take lands right in the studio as a new track</li>
+      </ul>
+    </div>
+    <figure><img src="assets/shots/einsingen.png" alt="Sing-along with lyrics and note band" data-zoom /></figure>
+  </section>
+
+  <section class="dive" id="mastering">
+    <div class="dive-text">
+      <p class="dive-kicker" style="--fc:#FF6B6B">MASTERING</p>
+      <h2>Loud, clean, done — <span class="grad">on target.</span></h2>
+      <p>Your mix runs through EQ, compressor and loudness normalization to exactly the LUFS you want. A/B switch for the honest comparison, waveform with click-to-seek.</p>
+      <ul>
+        <li>14 profiles: streaming, pop, rock, club, podcast … plus your own presets</li>
+        <li>BS.1770/EBU-R128 metering — the result hits the target loudness exactly</li>
+        <li>Per track too: "Master track" opens the same panel as a dialog</li>
+        <li>Export as WAV, MP3 or AAC — lyrics are written as tags &amp; .lrc</li>
+      </ul>
+    </div>
+    <figure><img src="assets/shots/mastering.png" alt="Mastering with EQ curve, compressor and LUFS" data-zoom /></figure>
+  </section>
+
+  <section class="dive dive-flip" id="equalizer">
+    <div class="dive-text">
+      <p class="dive-kicker" style="--fc:#3F8CFF">EQUALIZER &amp; SPATIAL</p>
+      <h2>Shape your sound — <span class="grad">in 2D and 3D.</span></h2>
+      <p>The interactive 4-band EQ shapes the studio mix live — drag the dots, listen, done. And when stereo isn't enough: place every track freely in space.</p>
+      <ul>
+        <li>Live preview right on the studio mix, curve with the real frequency response</li>
+        <li>Spatial: 7.1.4 bed, drag sources around the circle</li>
+        <li>Both are saved in the project and applied on export</li>
+      </ul>
+    </div>
+    <figure><img src="assets/shots/equalizer.png" alt="Interactive equalizer" data-zoom /></figure>
+  </section>
+
+  <section class="dive" id="voices">
+    <div class="dive-text">
+      <p class="dive-kicker" style="--fc:#B56BFF">VOICES</p>
+      <h2>Your voice, <span class="grad">as many as you like.</span></h2>
+      <p>Create voice profiles from a short recording — locally on your GPU or via ElevenLabs. Swap a clip's voice, generate speech tracks from text.</p>
+      <ul>
+        <li>Mic picker with live level — you instantly see the right one is connected</li>
+        <li>Local models (CUDA/CPU) with Whisper transcription</li>
+        <li>Only your own or licensed voices — fair is fair</li>
+      </ul>
+    </div>
+    <figure><img src="assets/shots/voices.png" alt="Voice management" data-zoom /></figure>
+  </section>
+
+  <section class="themes" id="themes">
+    <p class="dive-kicker center" style="--fc:#6BD6FF">LIGHT &amp; DARK</p>
+    <h2 class="center">Your studio, <span class="grad">your light.</span></h2>
+    <p class="center sub">Night shift in the dark studio or daylight by the window — drag the handle.</p>
+    <div class="compare" id="compare">
+      <img class="cmp-dark" src="assets/shots/studio.png" alt="Studio in dark theme" />
+      <div class="cmp-top" id="cmpTop"><img src="assets/shots/studio-light.png" alt="Studio in light theme" /></div>
+      <div class="cmp-handle" id="cmpHandle"><span>◂ ▸</span></div>
+    </div>
+  </section>
+
+  <section class="gallery" id="gallery">
+    <p class="dive-kicker center" style="--fc:#FFB454">GALLERY</p>
+    <h2 class="center">A walk <span class="grad">through the studio.</span></h2>
+    <div class="gal-grid">
+      <img src="assets/shots/studio.png" alt="Studio (dark)" data-zoom />
+      <img src="assets/shots/einsingen.png" alt="Sing-along" data-zoom />
+      <img src="assets/shots/mastering.png" alt="Mastering" data-zoom />
+      <img src="assets/shots/equalizer.png" alt="Equalizer" data-zoom />
+      <img src="assets/shots/spatial.png" alt="Spatial audio" data-zoom />
+      <img src="assets/shots/voices.png" alt="Voices" data-zoom />
+      <img src="assets/shots/studio-light.png" alt="Studio (light)" data-zoom />
+    </div>
+  </section>
+
+  <section class="singola" id="singola">
+    <div class="singola-inner">
+      <p class="singola-kicker">FROM THE MAKERS OF AUDIOLA</p>
+      <h2 class="singola-logo">SINGOLA</h2>
+      <p class="singola-sub">The karaoke stage for your party. Drop a song, hand out the mics, sing —<br />lyrics and notes appear on their own.</p>
+      <div class="singola-grid">
+        <article><h3>🎤 Up to 4 players</h3><p>Everyone with their own microphone and color — pitch lines dance live across the note band.</p></article>
+        <article><h3>📝 Automatic lyrics</h3><p>From tags, .lrc, Audiola projects — or AI recognition. Each song only once: the song memory remembers everything.</p></article>
+        <article><h3>🎯 Real scoring</h3><p>Points for hitting the original melody, combos for streaks. Like back in the day — on your own PC.</p></article>
+        <article><h3>🏆 Playlists &amp; battles</h3><p>Whole playlists or random picks, multiple rounds, standings — until a winner is crowned.</p></article>
+      </div>
+      <div class="hero-cta center-cta">
+        <a class="btn btn-stage" href="https://github.com/fgilde/Audiola/releases/latest/download/Singola-win-Setup.exe">⭳&nbsp; Download Singola</a>
+        <span class="singola-note">Also opens .audiola projects — with ready-made lyrics &amp; vocal track.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="download" id="download">
+    <h2 class="center">Get <span class="grad">going.</span></h2>
+    <div class="dl-grid">
+      <article class="dl-card">
+        <img src="assets/logo.png" alt="" class="dl-logo" />
+        <h3>Audiola</h3>
+        <p>The complete studio: stems, timeline, sing-along, mastering, spatial, voices.</p>
+        <a class="btn btn-primary" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe">⭳&nbsp; Get Audiola setup</a>
+        <span class="dl-meta">Windows 10/11 · x64 · automatic updates</span>
+      </article>
+      <article class="dl-card dl-stage">
+        <div class="dl-logo dl-mic">🎤</div>
+        <h3>Singola</h3>
+        <p>The karaoke stage: multiplayer, note band, playlists, party.</p>
+        <a class="btn btn-stage" href="https://github.com/fgilde/Audiola/releases/latest/download/Singola-win-Setup.exe">⭳&nbsp; Get Singola setup</a>
+        <span class="dl-meta">Windows 10/11 · x64 · shares settings with Audiola</span>
+      </article>
+    </div>
+    <p class="dl-foot">All versions &amp; changes on <a href="https://github.com/fgilde/Audiola/releases" target="_blank" rel="noopener">GitHub Releases</a>.
+       AI stem separation runs locally via Python + Demucs — the setup wizard helps on first launch.</p>
+  </section>
+
+  <!-- ============ USED BY / BUILT WITH ============ -->
+  <section class="partners">
+    <div class="partners-inner">
+      <div>
+        <p class="dive-kicker" style="--fc:#6BD6FF">USED BY</p>
+        <div class="chips">
+          <a href="https://drunkenrecords.de/" target="_blank" rel="noopener">Drunken Records</a>
+          <a href="https://www.null5er.de/" target="_blank" rel="noopener">0,5ER</a>
+          <a href="https://www.eyirish.de/" target="_blank" rel="noopener">Eyirish</a>
+          <a href="https://papibaras.de/" target="_blank" rel="noopener">Papibaras</a>
+        </div>
+      </div>
+      <div>
+        <p class="dive-kicker" style="--fc:#B56BFF">BUILT WITH</p>
+        <p class="partners-sub">Audiola uses components from these open-source projects.</p>
+        <div class="built-grid">
+          <a href="https://auralizeblazor.azurewebsites.net/" target="_blank" rel="noopener">
+            <img src="assets/auralizer-logo.png" alt="Auralizer" />
+            <strong>Auralizer</strong><em>Audio visualization</em>
+          </a>
+          <a href="https://www.mudex.org" target="_blank" rel="noopener">
+            <img src="assets/mudex-logo.png" alt="MudBlazor.Extensions" />
+            <strong>MudBlazor.Extensions</strong><em>UI &amp; preview components</em>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>© <span id="year"></span> <a href="https://www.gilde.org" target="_blank" rel="noopener">Florian Gilde</a> · Audiola &amp; Singola</span>
+      <span class="foot-links"><a href="https://www.gilde.org" target="_blank" rel="noopener">gilde.org</a> · <a href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">GitHub</a> · <a href="#top">Back to top ↑</a></span>
+    </div>
+  </footer>
+
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lb-close" id="lbClose" aria-label="Close">✕</button>
+    <button class="lb-prev" id="lbPrev" aria-label="Previous">‹</button>
+    <img id="lbImg" alt="" />
+    <button class="lb-next" id="lbNext" aria-label="Next">›</button>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById('navToggle').onclick = () => document.getElementById('navLinks').classList.toggle('open');
+    const zoomables = [...document.querySelectorAll('img[data-zoom]')];
+    const lb = document.getElementById('lightbox'), lbImg = document.getElementById('lbImg');
+    let idx = 0;
+    const show = i => { idx = (i + zoomables.length) % zoomables.length;
+      lbImg.src = zoomables[idx].src; lbImg.alt = zoomables[idx].alt; lb.classList.add('open'); };
+    zoomables.forEach((img, i) => img.addEventListener('click', () => show(i)));
+    document.getElementById('lbClose').onclick = () => lb.classList.remove('open');
+    document.getElementById('lbPrev').onclick = e => { e.stopPropagation(); show(idx - 1); };
+    document.getElementById('lbNext').onclick = e => { e.stopPropagation(); show(idx + 1); };
+    lb.addEventListener('click', e => { if (e.target === lb) lb.classList.remove('open'); });
+    window.addEventListener('keydown', e => {
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'Escape') lb.classList.remove('open');
+      if (e.key === 'ArrowLeft') show(idx - 1);
+      if (e.key === 'ArrowRight') show(idx + 1);
+    });
+    const cmp = document.getElementById('compare'), cmpTopEl = document.getElementById('cmpTop'), handle = document.getElementById('cmpHandle');
+    const setCmp = x => { const r = cmp.getBoundingClientRect();
+      const p = Math.min(Math.max((x - r.left) / r.width, 0.03), 0.97);
+      cmpTopEl.style.width = (p * 100) + '%'; handle.style.left = (p * 100) + '%'; };
+    let dragging = false;
+    const start = e => { dragging = true; setCmp(e.touches ? e.touches[0].clientX : e.clientX); };
+    const move = e => { if (dragging) setCmp(e.touches ? e.touches[0].clientX : e.clientX); };
+    cmp.addEventListener('mousedown', start); window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', () => dragging = false);
+    cmp.addEventListener('touchstart', start, { passive: true });
+    cmp.addEventListener('touchmove', move, { passive: true });
+    window.addEventListener('load', () => { const r = cmp.getBoundingClientRect(); setCmp(r.left + r.width * 0.5); });
+  </script>
+</body>
+</html>

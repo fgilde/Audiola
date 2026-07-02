@@ -55,8 +55,16 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     public ObservableCollection<MicDevice> Mics { get; } = [];
     [ObservableProperty] private MicDevice? _selectedMic;
 
+    /// <summary>Geräte-Nummer fürs MicSelectorControl (bridged auf <see cref="SelectedMic"/>).</summary>
+    public int SelectedMicNumber
+    {
+        get => SelectedMic?.Index ?? 0;
+        set { if (value >= 0) SelectedMic = Mics.FirstOrDefault(m => m.Index == value) ?? SelectedMic; }
+    }
+
     partial void OnSelectedMicChanged(MicDevice? value)
     {
+        OnPropertyChanged(nameof(SelectedMicNumber));
         if (value is not null) _engine.DeviceNumber = value.Index;
     }
 

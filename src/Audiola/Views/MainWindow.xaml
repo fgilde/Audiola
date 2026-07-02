@@ -12,7 +12,7 @@
     MinHeight="640"
     ExtendsContentIntoTitleBar="True"
     WindowBackdropType="None"
-    Background="{StaticResource DawBgBrush}"
+    Background="{DynamicResource DawBgBrush}"
     WindowCornerPreference="Round"
     WindowStartupLocation="CenterScreen"
     Icon="pack://application:,,,/Assets/audiola.png"
@@ -27,7 +27,7 @@
             <Setter Property="Height" Value="42" />
             <Setter Property="Margin" Value="0,1" />
             <Setter Property="GroupName" Value="Rail" />
-            <Setter Property="Foreground" Value="{StaticResource DawTextFaintBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -41,13 +41,13 @@
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{StaticResource DawHoverBrush}" />
-                                <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource DawHoverBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="{StaticResource DawAccentSoftBrush}" />
-                                <Setter TargetName="edge" Property="Fill" Value="{StaticResource DawAccentLightBrush}" />
-                                <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource DawAccentSoftBrush}" />
+                                <Setter TargetName="edge" Property="Fill" Value="{DynamicResource DawAccentLightBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -57,7 +57,7 @@
         <Style x:Key="RailSeparator" TargetType="Rectangle">
             <Setter Property="Height" Value="1" />
             <Setter Property="Margin" Value="12,6" />
-            <Setter Property="Fill" Value="{StaticResource DawStrokeBrush}" />
+            <Setter Property="Fill" Value="{DynamicResource DawStrokeBrush}" />
         </Style>
     </ui:FluentWindow.Resources>
 
@@ -76,8 +76,8 @@
         </ui:TitleBar>
 
         <!-- ============ TRANSPORT-LEISTE (immer sichtbar) ============ -->
-        <Border Grid.Row="1" Background="{StaticResource DawPanelBrush}"
-                BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,1" Padding="8,6">
+        <Border Grid.Row="1" Background="{DynamicResource DawPanelBrush}"
+                BorderBrush="{DynamicResource DawStrokeBrush}" BorderThickness="0,1" Padding="8,6">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -147,14 +147,14 @@
 
                 <!-- Zeitanzeige -->
                 <Border Grid.Column="2" Margin="14,0,0,0" Padding="12,3" CornerRadius="6"
-                        Background="{StaticResource DawBgBrush}" BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="1"
+                        Background="{DynamicResource DawBgBrush}" BorderBrush="{DynamicResource DawStrokeBrush}" BorderThickness="1"
                         VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Style="{StaticResource DawTimeDisplay}" Text="{Binding Transport.PositionText}" />
                         <TextBlock Style="{StaticResource DawTimeDisplay}" Margin="6,0"
-                                   Foreground="{StaticResource DawTextFaintBrush}" Text="/" />
+                                   Foreground="{DynamicResource DawTextFaintBrush}" Text="/" />
                         <TextBlock Style="{StaticResource DawTimeDisplay}"
-                                   Foreground="{StaticResource DawTextDimBrush}" Text="{Binding Transport.DurationText}" />
+                                   Foreground="{DynamicResource DawTextDimBrush}" Text="{Binding Transport.DurationText}" />
                     </StackPanel>
                 </Border>
 
@@ -174,7 +174,7 @@
                     <controls:LevelMeterControl x:Name="LevelMeter" Width="46" Height="24" Margin="0,0,10,0"
                                                 VerticalAlignment="Center" />
                     <ui:SymbolIcon Symbol="Speaker224" VerticalAlignment="Center"
-                                   Foreground="{StaticResource DawTextDimBrush}" />
+                                   Foreground="{DynamicResource DawTextDimBrush}" />
                     <Slider Width="92" Margin="8,0,0,0" VerticalAlignment="Center"
                             Minimum="0" Maximum="1" Value="{Binding Transport.Volume, Mode=TwoWay}" />
                 </StackPanel>
@@ -189,8 +189,8 @@
             </Grid.ColumnDefinitions>
 
             <!-- Werkzeug-Rail -->
-            <Border Grid.Column="0" Background="{StaticResource DawPanelBrush}"
-                    BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,0,1,0">
+            <Border Grid.Column="0" Background="{DynamicResource DawPanelBrush}"
+                    BorderBrush="{DynamicResource DawStrokeBrush}" BorderThickness="0,0,1,0">
                 <DockPanel LastChildFill="False">
                     <StackPanel x:Name="RailItems" DockPanel.Dock="Top" Margin="0,6,0,0">
                         <RadioButton Style="{StaticResource RailItem}" IsChecked="True"
@@ -249,13 +249,13 @@
                  Textfarbe an ihre Seiten — der nackte Frame würde sonst das WPF-Default-Schwarz
                  vererben (Texte ohne explizites Foreground wären auf dunklem Grund unlesbar). -->
             <Frame Grid.Column="1" x:Name="MainFrame"
-                   TextElement.Foreground="{StaticResource DawTextBrush}"
+                   TextElement.Foreground="{DynamicResource DawTextBrush}"
                    NavigationUIVisibility="Hidden" Background="Transparent" Focusable="False" />
         </Grid>
 
         <!-- ============ STATUSLEISTE ============ -->
-        <Border Grid.Row="3" Background="{StaticResource DawPanelBrush}"
-                BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,1,0,0" Padding="12,4">
+        <Border Grid.Row="3" Background="{DynamicResource DawPanelBrush}"
+                BorderBrush="{DynamicResource DawStrokeBrush}" BorderThickness="0,1,0,0" Padding="12,4">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -265,10 +265,10 @@
                     <Ellipse Width="7" Height="7" VerticalAlignment="Center">
                         <Ellipse.Style>
                             <Style TargetType="Ellipse">
-                                <Setter Property="Fill" Value="{StaticResource DawGreenBrush}" />
+                                <Setter Property="Fill" Value="{DynamicResource DawGreenBrush}" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding ViewModel.IsWorking}" Value="True">
-                                        <Setter Property="Fill" Value="{StaticResource DawYellowBrush}" />
+                                        <Setter Property="Fill" Value="{DynamicResource DawYellowBrush}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>

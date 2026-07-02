@@ -1,501 +1,307 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Audiola — A modern Windows audio studio</title>
-  <meta name="description" content="Audiola is a modern Windows audio studio: a multitrack timeline, AI stem separation, mastering, immersive 3D spatial audio and local + cloud voice tools (TTS & voice swap). Built on .NET 10 and WPF." />
-  <meta name="theme-color" content="#0E0E13" />
+  <title>Audiola — Dein Audio-Studio für Windows</title>
+  <meta name="description" content="Audiola ist ein modernes Audio-Studio für Windows: Mehrspur-Timeline, KI-Stem-Trennung, Einsingen mit Auto-Tune, Mastering, 3D-Spatial-Audio und Stimmen-Werkzeuge. Dazu Singola — die Karaoke-Bühne für Partys." />
+  <meta name="theme-color" content="#0C0D12" />
   <link rel="icon" href="assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-
-  <!-- Open Graph -->
-  <meta property="og:title" content="Audiola — A modern Windows audio studio" />
-  <meta property="og:description" content="Arrange, separate, remix, master and master in 3D. AI stem separation, mastering, spatial audio and local + cloud voice tools — in one Fluent-design Windows app." />
+  <meta property="og:title" content="Audiola — Dein Audio-Studio für Windows" />
+  <meta property="og:description" content="Trennen · Mischen · Einsingen · Mastern — ein Studio für alles. Plus Singola, die Karaoke-Bühne." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="assets/logo.png" />
+  <meta property="og:image" content="https://audiola.de/assets/shots/studio.png" />
+  <link rel="alternate" hreflang="de" href="https://audiola.de/" />
+  <link rel="alternate" hreflang="en" href="https://audiola.de/en.html" />
 </head>
-<body>
-  <div class="bg-glow"></div>
+<body id="top">
 
   <!-- ============ NAV ============ -->
   <header class="nav">
     <div class="nav-inner">
-      <a class="brand" href="#top">
-        <img src="assets/logo.png" alt="Audiola logo" />
-        Audiola
-      </a>
-      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">☰</button>
+      <a class="brand" href="#top"><img src="assets/logo.png" alt="" />Audiola</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Menü">☰</button>
       <nav class="nav-links" id="navLinks">
-        <a href="#features">Features</a>
         <a href="#studio">Studio</a>
-        <a href="#stems">Stems</a>
+        <a href="#einsingen">Einsingen</a>
         <a href="#mastering">Mastering</a>
-        <a href="#spatial">Spatial</a>
-        <a href="#voices">Voices</a>
-        <a href="#gallery">Screenshots</a>
-        <a href="#get-started">Get started</a>
+        <a href="#themes">Hell &amp; Dunkel</a>
+        <a href="#galerie">Galerie</a>
+        <a href="#singola" class="nav-singola">Singola</a>
         <a href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">GitHub</a>
-        <a class="nav-cta" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe" target="_blank" rel="noopener">Download</a>
+        <span class="lang-switch"><a class="active" href="index.html">DE</a><em>/</em><a href="en.html">EN</a></span>
+        <a class="nav-cta" href="#download">Download</a>
       </nav>
     </div>
   </header>
 
-  <main id="top">
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="eq" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+    <div class="hero-inner">
+      <p class="hero-kicker"><span class="dot"></span> FÜR WINDOWS · KOSTENLOS · OPEN SOURCE</p>
+      <h1>Dein Song.<br /><span class="grad">Komplett in deiner Hand.</span></h1>
+      <p class="hero-sub">
+        Audiola zerlegt jeden Song per KI in seine Spuren, lässt dich arrangieren, einsingen,
+        Stimmen tauschen und mastern — in einem Studio, das sich anfühlt wie eines.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe">⭳&nbsp; Audiola herunterladen</a>
+        <a class="btn btn-ghost" href="#singola">🎤&nbsp; Singola entdecken</a>
+      </div>
+      <div class="transport" aria-hidden="true">
+        <span class="t-play">▶</span>
+        <span class="t-time">00:18 <em>/</em> 02:42</span>
+        <span class="t-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        <span class="t-rec"></span><span class="t-reclabel">REC</span>
+      </div>
+    </div>
+    <figure class="hero-shot">
+      <img src="assets/shots/studio.png" alt="Das Audiola-Studio: Mehrspur-Timeline mit farbigen Wellenformen" data-zoom />
+    </figure>
+  </section>
 
-    <!-- ============ HERO ============ -->
-    <section class="hero">
-      <div class="wrap">
-        <img class="hero-logo" src="assets/logo.png" alt="Audiola" />
-        <div class="badge-pill"><span class="dot"></span> .NET 10 · WPF · Fluent design · Windows</div>
-        <h1>A modern Windows<br /><span class="gradient-text">audio studio.</span></h1>
-        <p class="lead">
-          Drag a song in, split it into stems, arrange on a multitrack timeline,
-          swap or synthesize voices with local AI, master to broadcast loudness and export
-          an immersive 3D mix — all in one app that sets up everything it needs.
-        </p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe" target="_blank" rel="noopener">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download for Windows
+  <!-- ============ FEATURE-GRID ============ -->
+  <section class="grid-section" id="features">
+    <h2 class="sr-only">Alle Funktionen</h2>
+    <div class="feature-grid">
+      <article style="--fc:#3F8CFF"><h3>KI-Stem-Trennung</h3><p>Gesang, Drums, Bass, Gitarre, Piano — Demucs zerlegt jeden Song lokal auf deinem Rechner. Ohne Cloud, ohne Upload.</p></article>
+      <article style="--fc:#FFB454"><h3>Mehrspur-Studio</h3><p>Clips schneiden, ziehen, faden, loopen. Undo-Verlauf, Raster, Bereichs-Effekte — eine echte Arbeitsfläche.</p></article>
+      <article style="--fc:#3DDC84"><h3>Einsingen + Auto-Tune</h3><p>Karaoke-Ansicht mit Notenband und Punkten. „Perfekt machen" zieht deine Aufnahme sanft auf die Original-Melodie.</p></article>
+      <article style="--fc:#FF6B6B"><h3>Mastering</h3><p>EQ, Kompressor und Ziel-Lautheit nach EBU&nbsp;R128 — mit Live-A/B-Vergleich und 14 Profilen von Streaming bis Club.</p></article>
+      <article style="--fc:#B56BFF"><h3>Stimmen-Werkzeuge</h3><p>Eigene Stimmen klonen (lokal oder ElevenLabs), Text-to-Speech-Spuren, Stimmtausch pro Clip.</p></article>
+      <article style="--fc:#6BD6FF"><h3>3D Spatial Audio</h3><p>Spuren frei im Raum platzieren — immersives 7.1.4-Bett für Kopfhörer-Momente, die man nicht vergisst.</p></article>
+    </div>
+  </section>
+
+  <!-- ============ DEEP DIVES ============ -->
+  <section class="dive" id="studio">
+    <div class="dive-text">
+      <p class="dive-kicker" style="--fc:#FFB454">DAS STUDIO</p>
+      <h2>Arrangieren wie die Großen — <span class="grad">ohne den Ballast.</span></h2>
+      <p>Zieh eine MP3 rein und sie wird zur Spur. Trenn sie in Stems, schneide Clips am Playhead, verschiebe Parts zwischen Spuren, setz Fades mit einem Griff.</p>
+      <ul>
+        <li>Spuren mit Lautstärke, Pan, Mute &amp; Solo — plus einblendbarem Mixer</li>
+        <li>Clip-Effekte: Hall, Echo, Vocal-Cleanup, Normalisieren, Reverse</li>
+        <li>Kompletter Undo-Verlauf mit Sprung zu jedem Stand</li>
+        <li>Autosave &amp; eigenes Projektformat <code>.audiola</code> — alles in einer Datei</li>
+      </ul>
+    </div>
+    <figure><img src="assets/shots/studio.png" alt="Mehrspur-Timeline mit Stems" data-zoom /></figure>
+  </section>
+
+  <section class="dive dive-flip" id="einsingen">
+    <div class="dive-text">
+      <p class="dive-kicker" style="--fc:#3DDC84">EINSINGEN</p>
+      <h2>Sing die Lead-Stimme — <span class="grad">deine Version.</span></h2>
+      <p>Audiola macht aus jedem Song deine Karaoke-Kabine: Lyrics laufen mit, das Notenband zeigt die Original-Melodie, du siehst live, wie gut du triffst.</p>
+      <ul>
+        <li>Punch-in: an jede Stelle springen und ab dort neu singen</li>
+        <li>Vorzähler, Latenz-Kalibrierung und Mikrofon-Wahl mit Live-Pegel</li>
+        <li>„Perfekt machen": Auto-Tune auf die Original-Melodie — deine Stimme bleibt</li>
+        <li>Aufnahme landet direkt als neue Spur im Studio</li>
+      </ul>
+    </div>
+    <figure><img src="assets/shots/einsingen.png" alt="Einsingen mit Lyrics und Notenband" data-zoom /></figure>
+  </section>
+
+  <section class="dive" id="mastering">
+    <div class="dive-text">
+      <p class="dive-kicker" style="--fc:#FF6B6B">MASTERING</p>
+      <h2>Laut, sauber, fertig — <span class="grad">auf den Punkt.</span></h2>
+      <p>Der Mix geht durch EQ, Kompressor und Loudness-Normalisierung auf exakt die LUFS, die du willst. A/B-Schalter für den ehrlichen Vergleich, Wellenform mit Klick-Seek.</p>
+      <ul>
+        <li>14 Profile: Streaming, Pop, Rock, Club, Podcast … plus eigene speichern</li>
+        <li>BS.1770/EBU-R128-Messung — das Ergebnis trifft die Ziel-Lautheit exakt</li>
+        <li>Auch pro Spur: „Spur mastern" mit demselben Panel im Dialog</li>
+        <li>Export als WAV, MP3 oder AAC — Lyrics werden als Tag &amp; .lrc mitgeschrieben</li>
+      </ul>
+    </div>
+    <figure><img src="assets/shots/mastering.png" alt="Mastering mit EQ-Kurve, Kompressor und LUFS" data-zoom /></figure>
+  </section>
+
+  <section class="dive dive-flip" id="equalizer">
+    <div class="dive-text">
+      <p class="dive-kicker" style="--fc:#3F8CFF">EQUALIZER &amp; SPATIAL</p>
+      <h2>Klang formen — <span class="grad">in 2D und 3D.</span></h2>
+      <p>Der interaktive 4-Band-EQ shaped den Studio-Mix live — Punkte ziehen, hören, fertig. Und wenn Stereo nicht reicht: Platziere jede Spur frei im Raum.</p>
+      <ul>
+        <li>Live-Vorschau direkt auf dem Studio-Mix, Kurve mit echtem Frequenzgang</li>
+        <li>Spatial: 7.1.4-Bett, Quellen per Drag im Kreis positionieren</li>
+        <li>Beides wird im Projekt gespeichert und beim Export angewendet</li>
+      </ul>
+    </div>
+    <figure><img src="assets/shots/equalizer.png" alt="Interaktiver Equalizer" data-zoom /></figure>
+  </section>
+
+  <section class="dive" id="voices">
+    <div class="dive-text">
+      <p class="dive-kicker" style="--fc:#B56BFF">STIMMEN</p>
+      <h2>Deine Stimme, <span class="grad">beliebig viele davon.</span></h2>
+      <p>Erstelle Stimm-Profile aus einer kurzen Aufnahme — lokal auf deiner GPU oder über ElevenLabs. Tausche die Stimme eines Clips, erzeuge Sprach-Spuren aus Text.</p>
+      <ul>
+        <li>Mikrofon-Auswahl mit Live-Pegel — du siehst sofort, ob das richtige anliegt</li>
+        <li>Lokale Modelle (CUDA/CPU) mit Whisper-Transkription</li>
+        <li>Nur eigene oder lizenzierte Stimmen — fair bleibt fair</li>
+      </ul>
+    </div>
+    <figure><img src="assets/shots/voices.png" alt="Stimmen-Verwaltung" data-zoom /></figure>
+  </section>
+
+  <!-- ============ LIGHT / DARK SLIDER ============ -->
+  <section class="themes" id="themes">
+    <p class="dive-kicker center" style="--fc:#6BD6FF">HELL &amp; DUNKEL</p>
+    <h2 class="center">Dein Studio, <span class="grad">dein Licht.</span></h2>
+    <p class="center sub">Nachtschicht im dunklen Studio oder Tageslicht am Fenster — zieh den Regler.</p>
+    <div class="compare" id="compare">
+      <img class="cmp-dark" src="assets/shots/studio.png" alt="Studio im dunklen Theme" />
+      <div class="cmp-top" id="cmpTop"><img src="assets/shots/studio-light.png" alt="Studio im hellen Theme" /></div>
+      <div class="cmp-handle" id="cmpHandle"><span>◂ ▸</span></div>
+    </div>
+  </section>
+
+  <!-- ============ GALERIE ============ -->
+  <section class="gallery" id="galerie">
+    <p class="dive-kicker center" style="--fc:#FFB454">GALERIE</p>
+    <h2 class="center">Einmal <span class="grad">durchs Studio.</span></h2>
+    <div class="gal-grid">
+      <img src="assets/shots/studio.png" alt="Studio (dunkel)" data-zoom />
+      <img src="assets/shots/einsingen.png" alt="Einsingen" data-zoom />
+      <img src="assets/shots/mastering.png" alt="Mastering" data-zoom />
+      <img src="assets/shots/equalizer.png" alt="Equalizer" data-zoom />
+      <img src="assets/shots/spatial.png" alt="Spatial Audio" data-zoom />
+      <img src="assets/shots/voices.png" alt="Stimmen" data-zoom />
+      <img src="assets/shots/studio-light.png" alt="Studio (hell)" data-zoom />
+    </div>
+  </section>
+
+  <!-- ============ SINGOLA ============ -->
+  <section class="singola" id="singola">
+    <div class="singola-inner">
+      <p class="singola-kicker">AUS DEM HAUSE AUDIOLA</p>
+      <h2 class="singola-logo">SINGOLA</h2>
+      <p class="singola-sub">Die Karaoke-Bühne für deine Party. Song rein, Mikros verteilen, lossingen —<br />Lyrics und Noten kommen von selbst.</p>
+      <div class="singola-grid">
+        <article><h3>🎤 Bis zu 4 Spieler</h3><p>Jede/r mit eigenem Mikrofon und eigener Farbe — die Pitch-Linien tanzen live über das Notenband.</p></article>
+        <article><h3>📝 Lyrics automatisch</h3><p>Aus Tags, .lrc, Audiola-Projekten — oder per KI-Erkennung. Jeder Song nur einmal: das Song-Gedächtnis merkt sich alles.</p></article>
+        <article><h3>🎯 Echtes Scoring</h3><p>Punkte fürs Treffen der Original-Melodie, Combos für Serien. Wie damals — nur auf deinem Rechner.</p></article>
+        <article><h3>🏆 Playlisten &amp; Duelle</h3><p>Ganze Playlisten oder zufällige Songs, mehrere Runden, Zwischenstand — bis der Sieger feststeht.</p></article>
+      </div>
+      <div class="hero-cta center-cta">
+        <a class="btn btn-stage" href="https://github.com/fgilde/Audiola/releases/latest/download/Singola-win-Setup.exe">⭳&nbsp; Singola herunterladen</a>
+        <span class="singola-note">Öffnet auch .audiola-Projekte — mit fertigen Lyrics &amp; Gesangsspur.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DOWNLOAD ============ -->
+  <section class="download" id="download">
+    <h2 class="center">Leg <span class="grad">los.</span></h2>
+    <div class="dl-grid">
+      <article class="dl-card">
+        <img src="assets/logo.png" alt="" class="dl-logo" />
+        <h3>Audiola</h3>
+        <p>Das komplette Studio: Stems, Timeline, Einsingen, Mastering, Spatial, Stimmen.</p>
+        <a class="btn btn-primary" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe">⭳&nbsp; Audiola-Setup laden</a>
+        <span class="dl-meta">Windows 10/11 · x64 · automatische Updates</span>
+      </article>
+      <article class="dl-card dl-stage">
+        <div class="dl-logo dl-mic">🎤</div>
+        <h3>Singola</h3>
+        <p>Die Karaoke-Bühne: Mehrspieler, Notenband, Playlisten, Party.</p>
+        <a class="btn btn-stage" href="https://github.com/fgilde/Audiola/releases/latest/download/Singola-win-Setup.exe">⭳&nbsp; Singola-Setup laden</a>
+        <span class="dl-meta">Windows 10/11 · x64 · teilt Einstellungen mit Audiola</span>
+      </article>
+    </div>
+    <p class="dl-foot">Alle Versionen &amp; Änderungen auf <a href="https://github.com/fgilde/Audiola/releases" target="_blank" rel="noopener">GitHub Releases</a>.
+       Für die KI-Stem-Trennung wird lokal Python + Demucs genutzt — der Einrichtungs-Assistent hilft beim ersten Start.</p>
+  </section>
+
+  <!-- ============ USED BY / BUILT WITH ============ -->
+  <section class="partners">
+    <div class="partners-inner">
+      <div>
+        <p class="dive-kicker" style="--fc:#6BD6FF">USED BY</p>
+        <div class="chips">
+          <a href="https://drunkenrecords.de/" target="_blank" rel="noopener">Drunken Records</a>
+          <a href="https://www.null5er.de/" target="_blank" rel="noopener">0,5ER</a>
+          <a href="https://www.eyirish.de/" target="_blank" rel="noopener">Eyirish</a>
+          <a href="https://papibaras.de/" target="_blank" rel="noopener">Papibaras</a>
+        </div>
+      </div>
+      <div>
+        <p class="dive-kicker" style="--fc:#B56BFF">BUILT WITH</p>
+        <p class="partners-sub">Audiola nutzt Komponenten dieser Open-Source-Projekte.</p>
+        <div class="built-grid">
+          <a href="https://auralizeblazor.azurewebsites.net/" target="_blank" rel="noopener">
+            <img src="assets/auralizer-logo.png" alt="Auralizer" />
+            <strong>Auralizer</strong><em>Audio-Visualisierung</em>
           </a>
-          <!-- TODO: replace href="#" with the deployed Blazor web app URL -->
-          <a class="btn btn-ghost" href="#" data-webapp title="Hosting URL coming soon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            Open Web version
+          <a href="https://www.mudex.org" target="_blank" rel="noopener">
+            <img src="assets/mudex-logo.png" alt="MudBlazor.Extensions" />
+            <strong>MudBlazor.Extensions</strong><em>UI- &amp; Vorschau-Komponenten</em>
           </a>
         </div>
-        <p class="hero-meta">Free download · Auto-updates with <strong>Velopack</strong> · Self-provisioning AI — no manual setup</p>
-        <div class="eq-bars" aria-hidden="true">
-          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-        </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- ============ FEATURE GRID ============ -->
-    <section id="features" class="reveal">
-      <div class="wrap">
-        <div class="section-head">
-          <span class="kicker gradient-text">Everything in one app</span>
-          <h2>One studio. Every stage of production.</h2>
-          <p>From arranging clips to immersive mastering — Audiola brings the heavy parts of modern music production together in a single Fluent-design workspace.</p>
-        </div>
-
-        <div class="feature-grid">
-          <div class="card">
-            <div class="icon">🎛️</div>
-            <h3>Multitrack Studio</h3>
-            <p>A timeline workspace: drag clips in, cut/trim, fades, snapping, zoom, per-track colors, a draggable playhead and a real-time spectrum in the header.</p>
-          </div>
-          <div class="card">
-            <div class="icon">🧩</div>
-            <h3>AI Stem Separation</h3>
-            <p>Pull a song into vocals, drums, bass, guitar, piano and more — with Demucs and high-quality RoFormer models, added straight to the timeline.</p>
-          </div>
-          <div class="card">
-            <div class="icon">✂️</div>
-            <h3>Track Editor</h3>
-            <p>A focused waveform editor: trim, silence, fades, normalize, echo, reverb, stereo widen, reverse and vocal cleanup — with live FX preview and undo.</p>
-          </div>
-          <div class="card">
-            <div class="icon">🎚️</div>
-            <h3>Interactive EQ</h3>
-            <p>A 4-band equalizer with draggable curve points and a live Master-EQ you can hear on the studio mix in real time.</p>
-          </div>
-          <div class="card">
-            <div class="icon">🏆</div>
-            <h3>Mastering</h3>
-            <p>EQ → compressor → LUFS loudness chain (BS.1770 / EBU R128) with A/B preview, genre presets, custom profiles and batch processing.</p>
-          </div>
-          <div class="card">
-            <div class="icon">🌐</div>
-            <h3>Spatial Audio (3D)</h3>
-            <p>Place tracks in 3D, then export binaural for headphones or multichannel WAV — 5.1, 7.1 and a 7.1.4 Atmos bed.</p>
-          </div>
-          <div class="card">
-            <div class="icon">🗣️</div>
-            <h3>Voices: TTS &amp; Swap</h3>
-            <p>Local AI voices (Kokoro, Qwen3-TTS, XTTS v2, Chatterbox, seed-vc) plus ElevenLabs. Create voices, swap a clip's voice, add a track from text.</p>
-          </div>
-          <div class="card">
-            <div class="icon">📝</div>
-            <h3>Transcription &amp; Lyrics</h3>
-            <p>Whisper or ElevenLabs transcription (tiny → large-v3, turbo) to time-synced LRC lyrics, with embedded lyrics metadata on export.</p>
-          </div>
-          <div class="card">
-            <div class="icon">🏷️</div>
-            <h3>Metadata &amp; Export</h3>
-            <p>A full tag editor — title, artist, album, cover art and synced lyrics — embedded on export to WAV, MP3, M4A or FLAC, with an in-app preview.</p>
-          </div>
-          <div class="card">
-            <div class="icon">🔎</div>
-            <h3>Provenance Analysis</h3>
-            <p>A read-only analyzer for C2PA content credentials, metadata and AI-generation markers. It reports — it never changes your audio.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ STATS ============ -->
-    <section style="padding-top:0;">
-      <div class="wrap reveal">
-        <div class="stats">
-          <div class="stat"><div class="num gradient-text">6</div><div class="lbl">Separable stems</div></div>
-          <div class="stat"><div class="num gradient-text">7.1.4</div><div class="lbl">Atmos bed export</div></div>
-          <div class="stat"><div class="num gradient-text">5+</div><div class="lbl">Local AI voice models</div></div>
-          <div class="stat"><div class="num gradient-text">−14</div><div class="lbl">LUFS streaming target</div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ DETAIL: STUDIO ============ -->
-    <section id="studio">
-      <div class="wrap">
-        <div class="section-head reveal">
-          <span class="kicker gradient-text">Deep dive</span>
-          <h2>Built for the whole mix.</h2>
-          <p>Every feature, explained.</p>
-        </div>
-
-        <div class="detail reveal">
-          <div>
-            <span class="kicker gradient-text">Studio</span>
-            <h3>A multitrack timeline that gets out of your way</h3>
-            <p>Drop audio files onto the timeline and arrange clips across as many tracks as you need. Everything is direct and tactile.</p>
-            <ul>
-              <li><strong>Clip editing</strong> — split at the playhead, trim edges with snapping, cut regions, delete and drag clips between tracks.</li>
-              <li><strong>Per-clip</strong> volume and independent fade-in / fade-out handles drawn on the clip.</li>
-              <li><strong>Per-track</strong> volume, pan, mute, solo, rename, duplicate and a custom accent color.</li>
-              <li><strong>Timeline tools</strong> — zoom, adjustable lane height, a snapping grid, a draggable playhead with auto-scroll and looped selection.</li>
-              <li><strong>Real-time spectrum</strong> visualizer in the header, a live Master-EQ, and one-click <em>Export Mix</em>.</li>
-            </ul>
-          </div>
-          <div>
-            <div class="shot-frame">
-              <img class="shot-img" src="assets/screenshots/studio.png" alt="Audiola Studio multitrack timeline" onerror="this.style.display='none'" />
-              <div class="placeholder">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="4" rx="1"/><rect x="3" y="10" width="13" height="4" rx="1"/><rect x="3" y="15" width="16" height="4" rx="1"/></svg>
-                <b>Studio timeline</b>
-                <span>studio.png</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- STEMS -->
-        <div class="detail reverse reveal" id="stems">
-          <div>
-            <span class="kicker gradient-text">Stem separation</span>
-            <h3>Pull a song apart, instrument by instrument</h3>
-            <p>Separate any track into its components and drop the results straight back onto the timeline.</p>
-            <ul>
-              <li><strong>Demucs</strong> — <code>htdemucs</code>, <code>htdemucs_ft</code>, <code>htdemucs_6s</code> and <code>mdx</code> models, with optional quality shifts.</li>
-              <li><strong>High-quality models</strong> via audio-separator — BS-RoFormer, Mel-Band RoFormer (karaoke / lead vs. background) and 6-stem Demucs.</li>
-              <li><strong>Stems</strong> — vocals, drums, bass, guitar, piano and other.</li>
-              <li><strong>Smart auto mode</strong> runs a 6-stem split with content detection and drops near-silent stems automatically.</li>
-            </ul>
-            <div>
-              <span class="tag">vocals</span><span class="tag">drums</span><span class="tag">bass</span>
-              <span class="tag">guitar</span><span class="tag">piano</span><span class="tag">other</span>
-            </div>
-          </div>
-          <div>
-            <div class="shot-frame">
-              <img class="shot-img" src="assets/screenshots/stems.png" alt="Audiola stem separation" onerror="this.style.display='none'" />
-              <div class="placeholder">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                <b>Stem separation</b>
-                <span>stems.png</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- EDITOR -->
-        <div class="detail reveal">
-          <div>
-            <span class="kicker gradient-text">Track editor</span>
-            <h3>A focused waveform editor with live preview</h3>
-            <p>Double-click a clip to open a large waveform editor for precise, non-destructive edits.</p>
-            <ul>
-              <li><strong>Edits</strong> — trim, delete, silence and linear fade in / out.</li>
-              <li><strong>Effects</strong> — normalize, echo, reverb, stereo widen, reverse and one-click vocal cleanup (de-esser, harshness taming, gentle compression).</li>
-              <li><strong>Live FX preview</strong> for echo, reverb and stereo widen while you listen.</li>
-              <li><strong>Undo</strong> and per-edit export to WAV / MP3 / M4A.</li>
-            </ul>
-          </div>
-          <div>
-            <div class="shot-frame">
-              <img class="shot-img" src="assets/screenshots/change-variation.png" alt="Audiola creative clip variation" onerror="this.style.display='none'" />
-              <div class="placeholder">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h3l3-9 4 18 3-9h7"/></svg>
-                <b>Track editor</b>
-                <span>editor / variation</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- EQUALIZER -->
-        <div class="detail reverse reveal" id="equalizer">
-          <div>
-            <span class="kicker gradient-text">Equalizer</span>
-            <h3>An interactive 4-band EQ on your mix</h3>
-            <p>Shape the tone with draggable bands and hear the result live.</p>
-            <ul>
-              <li><strong>4 bands</strong> — low-shelf @ 100 Hz, peaking @ 500 Hz, peaking @ 3 kHz, high-shelf @ 10 kHz.</li>
-              <li><strong>Live Master-EQ</strong> applied to the studio mix as you adjust.</li>
-              <li><strong>Export</strong> the EQ-processed mix or a single track.</li>
-            </ul>
-          </div>
-          <div>
-            <div class="shot-frame">
-              <img class="shot-img" src="assets/screenshots/equalizer.png" alt="Audiola equalizer" onerror="this.style.display='none'" />
-              <div class="placeholder">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-                <b>Equalizer</b>
-                <span>equalizer.png</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- MASTERING -->
-        <div class="detail reveal" id="mastering">
-          <div>
-            <span class="kicker gradient-text">Mastering</span>
-            <h3>Broadcast-grade loudness, the easy way</h3>
-            <p>A professional chain runs over your studio mix, with metering that matches streaming standards.</p>
-            <ul>
-              <li><strong>Chain</strong> — EQ → compressor → loudness normalization.</li>
-              <li><strong>LUFS metering</strong> — ITU-R BS.1770 / EBU R128 integrated loudness.</li>
-              <li><strong>A/B preview</strong> between original and mastered signal.</li>
-              <li><strong>Genre presets</strong> (Streaming −14 LUFS, Pop, Rock, Podcast, EDM, Lo-Fi…) plus your own custom profiles.</li>
-              <li><strong>Batch mastering</strong> of many files with output-format conversion (e.g. MP3 → WAV).</li>
-            </ul>
-          </div>
-          <div>
-            <div class="shot-frame">
-              <img class="shot-img" src="assets/screenshots/mastering.png" alt="Audiola mastering" onerror="this.style.display='none'" />
-              <div class="placeholder">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="3"/></svg>
-                <b>Mastering</b>
-                <span>mastering.png</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SPATIAL -->
-        <div class="detail reverse reveal" id="spatial">
-          <div>
-            <span class="kicker gradient-text">Spatial Audio</span>
-            <h3>Position your mix in three dimensions</h3>
-            <p>Place each studio track in 3D space on a top-down radar, then render an immersive mix.</p>
-            <ul>
-              <li><strong>Position</strong> by azimuth, elevation, distance and level, with live preview.</li>
-              <li><strong>Auto-arrange</strong> places common track types intelligently.</li>
-              <li><strong>Binaural (HRTF)</strong> export for headphones with ITD/ILD and head-shadow modelling.</li>
-              <li><strong>Multichannel WAV</strong> — 5.1, 7.1 and a 7.1.4 Atmos bed (WAVE_FORMAT_EXTENSIBLE channel masks).</li>
-            </ul>
-            <div class="note">
-              Audiola is <strong>not</strong> a licensed Dolby Atmos bitstream encoder. It produces spatial audio —
-              binaural stereo or a 7.1.4 multichannel WAV — that you can import into an Atmos renderer or DAW.
-            </div>
-          </div>
-          <div>
-            <div class="shot-frame">
-              <img class="shot-img" src="assets/screenshots/spatial-audio.png" alt="Audiola spatial audio" onerror="this.style.display='none'" />
-              <div class="placeholder">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>
-                <b>Spatial Audio (3D)</b>
-                <span>spatial-audio.png</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- VOICES -->
-        <div class="detail reveal" id="voices">
-          <div>
-            <span class="kicker gradient-text">Voices</span>
-            <h3>Local &amp; cloud voices — synthesize and swap</h3>
-            <p>A full voice toolkit, with local AI models the app downloads and runs for you.</p>
-            <ul>
-              <li><strong>Local models</strong> — Kokoro, Qwen3-TTS, Coqui XTTS v2, Chatterbox and seed-vc, downloaded with one click.</li>
-              <li><strong>Create voices</strong> by recording from your mic or uploading a sample.</li>
-              <li><strong>Swap a clip's voice</strong> locally with seed-vc (keeps timing &amp; emphasis — works for singing) or via ElevenLabs.</li>
-              <li><strong>Add a track from text</strong> with the same voice picker.</li>
-              <li><strong>Device selection</strong> (auto / CUDA / CPU / DirectML) with a GPU check and an <em>Install CUDA Torch</em> button.</li>
-            </ul>
-          </div>
-          <div>
-            <div class="shot-frame">
-              <img class="shot-img" src="assets/screenshots/change-voice.png" alt="Audiola voice swap" onerror="this.style.display='none'" />
-              <div class="placeholder">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
-                <b>Voices</b>
-                <span>voices.png</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ GALLERY ============ -->
-    <section id="gallery" class="reveal">
-      <div class="wrap">
-        <div class="section-head">
-          <span class="kicker gradient-text">Screenshots</span>
-          <h2>See it in action</h2>
-          <p>A dark Fluent (Mica) interface with a frequency-gradient accent.</p>
-        </div>
-        <div class="gallery">
-          <figure>
-            <img class="shot" src="assets/screenshots/change-voice.png" alt="Change a clip's voice" />
-            <figcaption>Swap a clip's voice — local seed-vc or ElevenLabs</figcaption>
-          </figure>
-          <figure>
-            <img class="shot" src="assets/screenshots/new-voice-track.png" alt="Add a track from text" />
-            <figcaption>Add a new track from text (TTS)</figcaption>
-          </figure>
-          <figure>
-            <img class="shot" src="assets/screenshots/change-variation.png" alt="Creative clip variation" />
-            <figcaption>Creative clip variation &amp; studio effects</figcaption>
-          </figure>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ GET STARTED ============ -->
-    <section id="get-started" class="reveal">
-      <div class="wrap">
-        <div class="section-head">
-          <span class="kicker gradient-text">Get started</span>
-          <h2>Up and running in minutes</h2>
-          <p>Download the installer and let Audiola provision the rest.</p>
-        </div>
-
-        <div class="steps">
-          <div class="step">
-            <div class="n">1</div>
-            <h3>Install</h3>
-            <p>Download <code>Audiola-win-Setup.exe</code> from the latest release and run it. The app keeps itself up to date via Velopack.</p>
-          </div>
-          <div class="step">
-            <div class="n">2</div>
-            <h3>Open a song</h3>
-            <p>Drag an audio file onto the window, or open the multitrack Studio and start arranging clips on the timeline.</p>
-          </div>
-          <div class="step">
-            <div class="n">3</div>
-            <h3>Let AI provision itself</h3>
-            <p>Pick a feature — stem separation, voices, transcription — and Audiola downloads the model into its own managed Python environment. No manual setup.</p>
-          </div>
-        </div>
-
-        <div style="margin-top:32px;">
-          <h3 style="font-size:18px;margin-bottom:6px;">Build from source</h3>
-          <p style="color:var(--text-2);margin:0;">Requires the .NET 10 SDK on Windows.</p>
-<pre>git clone https://github.com/fgilde/Audiola.git
-cd Audiola
-dotnet run --project src/Audiola/Audiola.csproj</pre>
-          <div class="note">
-            <strong>GPU acceleration:</strong> add an NVIDIA GPU and use the in-app <em>GPU check</em> and
-            <em>Install CUDA Torch</em> buttons for much faster separation, voice conversion and transcription.
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ CTA ============ -->
-    <section style="padding-top:0;">
-      <div class="wrap reveal">
-        <div class="cta-band">
-          <h2>Ready to produce?</h2>
-          <p>Download Audiola for Windows and start arranging, separating, mastering and rendering in 3D today.</p>
-          <div class="hero-actions">
-            <a class="btn btn-primary" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe" target="_blank" rel="noopener">Download for Windows</a>
-            <a class="btn btn-ghost" href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">View on GitHub</a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ USED BY + BUILT WITH ============ -->
-    <section id="credits" class="credits reveal">
-      <div class="wrap">
-        <div class="credits-grid">
-          <div class="credits-col">
-            <span class="kicker gradient-text">Used by</span>
-            <div class="usedby">
-              <a href="https://drunkenrecords.de/" target="_blank" rel="noopener">Drunken Records</a>
-              <a href="https://www.null5er.de/" target="_blank" rel="noopener">0,5ER</a>
-              <a href="https://www.eyirish.de/" target="_blank" rel="noopener">Eyirish</a>
-              <a href="https://papibaras.de/" target="_blank" rel="noopener">Papibaras</a>
-            </div>
-          </div>
-          <div class="credits-col">
-            <span class="kicker gradient-text">Built with</span>
-            <p class="credits-sub">Audiola uses components from these open-source projects.</p>
-            <div class="built-with">
-              <a class="bw-card" href="https://auralizeblazor.azurewebsites.net/" target="_blank" rel="noopener">
-                <img src="assets/auralizer-logo.png" alt="Auralizer logo" />
-                <span class="bw-name">Auralizer</span>
-                <span class="bw-desc">Audio visualization</span>
-              </a>
-              <a class="bw-card" href="https://www.mudex.org/" target="_blank" rel="noopener">
-                <img src="assets/mudex-logo.png" alt="MudBlazor.Extensions logo" />
-                <span class="bw-name">MudBlazor.Extensions</span>
-                <span class="bw-desc">UI &amp; preview components</span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- ============ FOOTER ============ -->
-  <footer>
-    <div class="wrap footer-inner">
-      <div>© <span id="year">2026</span> <a href="https://www.gilde.org" target="_blank" rel="noopener">Florian Gilde</a> · Audiola</div>
-      <div class="footer-links">
-        <a href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe" target="_blank" rel="noopener">Download</a>
-        <a href="https://github.com/fgilde/Audiola/issues" target="_blank" rel="noopener">Report an issue</a>
-        <!-- TODO: replace href="#" with the deployed Blazor web app URL -->
-        <a href="#" data-webapp>Web version</a>
-      </div>
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>© <span id="year"></span> <a href="https://www.gilde.org" target="_blank" rel="noopener">Florian Gilde</a> · Audiola &amp; Singola</span>
+      <span class="foot-links"><a href="https://www.gilde.org" target="_blank" rel="noopener">gilde.org</a> · <a href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">GitHub</a> · <a href="#top">Nach oben ↑</a></span>
     </div>
   </footer>
 
+  <!-- ============ LIGHTBOX ============ -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lb-close" id="lbClose" aria-label="Schließen">✕</button>
+    <button class="lb-prev" id="lbPrev" aria-label="Zurück">‹</button>
+    <img id="lbImg" alt="" />
+    <button class="lb-next" id="lbNext" aria-label="Weiter">›</button>
+  </div>
+
   <script>
-    // Mobile nav toggle
-    const toggle = document.getElementById('navToggle');
-    const links = document.getElementById('navLinks');
-    toggle.addEventListener('click', () => links.classList.toggle('open'));
-    links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
-
-    // Current year
     document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById('navToggle').onclick = () => document.getElementById('navLinks').classList.toggle('open');
 
-    // Scroll reveal
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-    }, { threshold: 0.12 });
-    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
-
-    // Web-version placeholder guard
-    document.querySelectorAll('[data-webapp]').forEach(el => {
-      el.addEventListener('click', (ev) => {
-        if (el.getAttribute('href') === '#') {
-          ev.preventDefault();
-          alert('The web version is coming soon. The hosting URL will be linked here.');
-        }
-      });
+    // Lightbox über alle zoombaren Bilder
+    const zoomables = [...document.querySelectorAll('img[data-zoom]')];
+    const lb = document.getElementById('lightbox'), lbImg = document.getElementById('lbImg');
+    let idx = 0;
+    const show = i => { idx = (i + zoomables.length) % zoomables.length;
+      lbImg.src = zoomables[idx].src; lbImg.alt = zoomables[idx].alt; lb.classList.add('open'); };
+    zoomables.forEach((img, i) => img.addEventListener('click', () => show(i)));
+    document.getElementById('lbClose').onclick = () => lb.classList.remove('open');
+    document.getElementById('lbPrev').onclick = e => { e.stopPropagation(); show(idx - 1); };
+    document.getElementById('lbNext').onclick = e => { e.stopPropagation(); show(idx + 1); };
+    lb.addEventListener('click', e => { if (e.target === lb) lb.classList.remove('open'); });
+    window.addEventListener('keydown', e => {
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'Escape') lb.classList.remove('open');
+      if (e.key === 'ArrowLeft') show(idx - 1);
+      if (e.key === 'ArrowRight') show(idx + 1);
     });
+
+    // Hell/Dunkel-Vergleichs-Slider
+    const cmp = document.getElementById('compare'), cmpTopEl = document.getElementById('cmpTop'), handle = document.getElementById('cmpHandle');
+    const setCmp = x => { const r = cmp.getBoundingClientRect();
+      const p = Math.min(Math.max((x - r.left) / r.width, 0.03), 0.97);
+      cmpTopEl.style.width = (p * 100) + '%'; handle.style.left = (p * 100) + '%'; };
+    let dragging = false;
+    const start = e => { dragging = true; setCmp(e.touches ? e.touches[0].clientX : e.clientX); };
+    const move = e => { if (dragging) setCmp(e.touches ? e.touches[0].clientX : e.clientX); };
+    cmp.addEventListener('mousedown', start); window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', () => dragging = false);
+    cmp.addEventListener('touchstart', start, { passive: true });
+    cmp.addEventListener('touchmove', move, { passive: true });
+    window.addEventListener('load', () => { const r = cmp.getBoundingClientRect(); setCmp(r.left + r.width * 0.5); });
   </script>
 </body>
 </html>

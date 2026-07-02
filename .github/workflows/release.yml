@@ -73,6 +73,31 @@ jobs:
             --icon src/Audiola/Assets/audiola.ico `
             --outputDir releases
 
+      - name: Singola veröffentlichen (Karaoke-App)
+        shell: pwsh
+        run: |
+          dotnet publish src/Singola/Singola.csproj `
+            -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=false `
+            -p:Version=${{ steps.ver.outputs.version }} `
+            -o publish/singola
+
+      - name: Singola mit Velopack packen (eigener Channel gegen Dateikollisionen)
+        shell: pwsh
+        run: |
+          vpk pack `
+            --packId Singola `
+            --packTitle "Singola" `
+            --packAuthors "Florian Gilde" `
+            --packVersion ${{ steps.ver.outputs.version }} `
+            --packDir publish/singola `
+            --mainExe Singola.exe `
+            --icon src/Audiola/Assets/audiola.ico `
+            --channel singola-win `
+            --outputDir releases-singola
+          # Setup deterministisch benennen — die Website verlinkt Singola-win-Setup.exe.
+          Get-ChildItem releases-singola/*Setup.exe | Rename-Item -NewName "Singola-win-Setup.exe"
+
       - name: GitHub-Release erstellen
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
@@ -84,3 +109,4 @@ jobs:
           # werden vom In-App-UpdateManager gelesen, um neue Versionen zu finden.
           files: |
             releases/*
+            releases-singola/*

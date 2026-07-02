@@ -61,8 +61,8 @@
 
     <!-- Panel: die Grundfläche aller Docks/Karten (ersetzt das überall duplizierte Border-Muster). -->
     <Style x:Key="DawPanelStyle" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource DawPanelBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource DawStrokeBrush}" />
+        <Setter Property="Background" Value="{DynamicResource DawPanelBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DawStrokeBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="8" />
     </Style>
@@ -71,7 +71,7 @@
     <Style x:Key="DawCaption" TargetType="TextBlock">
         <Setter Property="FontSize" Value="10" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{StaticResource DawTextFaintBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
     </Style>
 
     <!-- Werkzeug-Button der Icon-Rail (links): quadratisch, ruhig, klarer Hover. -->
@@ -80,7 +80,7 @@
         <Setter Property="Height" Value="40" />
         <Setter Property="Margin" Value="0,2" />
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource DawTextDimBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource DawTextDimBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
@@ -91,11 +91,11 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="{StaticResource DawHoverBrush}" />
-                            <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource DawHoverBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="{StaticResource DawAccentSoftBrush}" />
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource DawAccentSoftBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.35" />
@@ -108,7 +108,7 @@
 
     <!-- Dock-Tab (unteres Panel): RadioButton als flacher Tab mit Akzent-Unterstreichung. -->
     <Style x:Key="DawDockTab" TargetType="RadioButton">
-        <Setter Property="Foreground" Value="{StaticResource DawTextFaintBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Cursor" Value="Hand" />
@@ -124,10 +124,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Foreground" Value="{StaticResource DawTextDimBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource DawTextDimBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
                             <Setter TargetName="underline" Property="Fill" Value="{StaticResource BrandGradient}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -141,14 +141,14 @@
         <Setter Property="FontFamily" Value="Consolas" />
         <Setter Property="FontSize" Value="20" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
     <!-- Statusleisten-Text. -->
     <Style x:Key="DawStatusText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="11" />
-        <Setter Property="Foreground" Value="{StaticResource DawTextFaintBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 

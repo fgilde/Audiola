@@ -1,0 +1,385 @@
+<ui:FluentWindow
+    x:Class="Singola.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:actrl="clr-namespace:Audiola.Controls"
+    xmlns:local="clr-namespace:Singola"
+    Title="Singola"
+    Width="1180" Height="780" MinWidth="900" MinHeight="620"
+    ExtendsContentIntoTitleBar="True"
+    WindowBackdropType="None"
+    Background="{StaticResource StageBgBrush}"
+    WindowCornerPreference="Round"
+    WindowStartupLocation="CenterScreen"
+    AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop">
+
+    <ui:FluentWindow.Resources>
+        <local:HexToBrushConverter x:Key="HexToBrush" />
+        <local:BoolToVisibilityConverter x:Key="BoolToVis" />
+        <local:IntEqualsConverter x:Key="IntEquals" />
+        <local:PathToNameConverter x:Key="PathToName" />
+
+        <Style x:Key="StageCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource StageCardBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource StageStrokeBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+        </Style>
+        <Style x:Key="StageCaption" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource StageTextDimBrush}" />
+        </Style>
+    </ui:FluentWindow.Resources>
+
+    <Grid TextElement.Foreground="{StaticResource StageTextBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="Singola" />
+
+        <!-- Hintergrund-Glow der Bühne -->
+        <Border Grid.Row="1" IsHitTestVisible="False">
+            <Border.Background>
+                <RadialGradientBrush Center="0.5,0.1" RadiusX="0.9" RadiusY="0.7">
+                    <GradientStop Color="#2EB56BFF" Offset="0" />
+                    <GradientStop Color="#14FF4FA3" Offset="0.5" />
+                    <GradientStop Color="#000E0B16" Offset="1" />
+                </RadialGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <!-- ============================ SETUP ============================ -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      Visibility="{Binding IsSetup, Converter={StaticResource BoolToVis}}">
+            <StackPanel MaxWidth="860" Margin="32,18,32,32" HorizontalAlignment="Center">
+                <Grid>
+                    <TextBlock HorizontalAlignment="Center" FontSize="54" FontWeight="Black"
+                               Foreground="{StaticResource SingolaGradient}" Text="SINGOLA" />
+                    <ui:Button HorizontalAlignment="Right" VerticalAlignment="Top"
+                               Icon="{ui:SymbolIcon Settings24}" ToolTip="Einstellungen"
+                               Command="{Binding OpenSettingsCommand}" />
+                </Grid>
+                <TextBlock HorizontalAlignment="Center" Margin="0,2,0,22" FontSize="14"
+                           Foreground="{StaticResource StageTextDimBrush}"
+                           Text="Song rein · Mikros verteilen · lossingen — Lyrics &amp; Noten kommen von selbst." />
+
+                <!-- Song -->
+                <Border Style="{StaticResource StageCardStyle}" Padding="18">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource StageCaption}" Text="SONG" />
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock FontSize="19" FontWeight="SemiBold" Text="{Binding SongTitle}"
+                                           TextTrimming="CharacterEllipsis"
+                                           Visibility="{Binding HasSong, Converter={StaticResource BoolToVis}}" />
+                                <TextBlock Margin="0,2,0,0" FontSize="12" TextWrapping="Wrap"
+                                           Foreground="{StaticResource StageTextDimBrush}" Text="{Binding SongStatus}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <ui:ProgressRing Width="24" Height="24" Margin="0,0,10,0" IsIndeterminate="True"
+                                                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
+                                <ui:Button Appearance="Primary" Icon="{ui:SymbolIcon MusicNote224}"
+                                           Content="Song öffnen…" Click="OpenSong_Click" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Playlist & Spielmodus -->
+                <Border Style="{StaticResource StageCardStyle}" Padding="18" Margin="0,14,0,0">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource StageCaption}" Text="PLAYLIST &amp; SPIELMODUS" />
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <ComboBox MinWidth="200" ItemsSource="{Binding Playlists}"
+                                          SelectedItem="{Binding SelectedPlaylist, Mode=TwoWay}" />
+                                <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon Add24}" ToolTip="Geladenen Song zur Playlist hinzufügen"
+                                           Command="{Binding AddSongToPlaylistCommand}" Content="Song dazu" />
+                                <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon Delete24}" ToolTip="Playlist löschen"
+                                           Command="{Binding DeletePlaylistCommand}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <ui:TextBox Width="160" PlaceholderText="Neue Playlist…"
+                                            Text="{Binding NewPlaylistName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon AddCircle24}" Content="Anlegen"
+                                           Command="{Binding CreatePlaylistCommand}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Songs der Playlist -->
+                        <ItemsControl Margin="0,10,0,0" MaxHeight="130" ItemsSource="{Binding SelectedPlaylistSongs}">
+                            <ItemsControl.Template>
+                                <ControlTemplate TargetType="ItemsControl">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto"><ItemsPresenter /></ScrollViewer>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ui:SymbolIcon Grid.Column="0" Symbol="MusicNote224" FontSize="12"
+                                                       Foreground="{StaticResource StageTextDimBrush}" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center" FontSize="13"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Text="{Binding Converter={StaticResource PathToName}}" />
+                                        <ui:Button Grid.Column="2" Padding="4,1" Icon="{ui:SymbolIcon Dismiss24}" ToolTip="Aus Playlist entfernen"
+                                                   Command="{Binding DataContext.RemoveSongFromPlaylistCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                   CommandParameter="{Binding}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Modus -->
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <RadioButton Content="Nur dieser Song" GroupName="mode"
+                                         IsChecked="{Binding PlayMode, Converter={StaticResource IntEquals}, ConverterParameter=0}" />
+                            <RadioButton Margin="18,0,0,0" Content="Ganze Playlist" GroupName="mode"
+                                         IsChecked="{Binding PlayMode, Converter={StaticResource IntEquals}, ConverterParameter=1}" />
+                            <RadioButton Margin="18,0,0,0" Content="Zufällige daraus:" GroupName="mode"
+                                         IsChecked="{Binding PlayMode, Converter={StaticResource IntEquals}, ConverterParameter=2}" />
+                            <ui:TextBox Width="46" Margin="8,0,0,0" Text="{Binding RandomCount, Mode=TwoWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Spieler -->
+                <Border Style="{StaticResource StageCardStyle}" Padding="18" Margin="0,14,0,0">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource StageCaption}" Text="SPIELER — jede/r mit eigenem Mikrofon" />
+                        <ItemsControl Margin="0,10,0,0" ItemsSource="{Binding Players}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,8" Padding="12,10" CornerRadius="10"
+                                            Background="{StaticResource StagePanelBrush}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="200" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Ellipse Grid.Column="0" Width="16" Height="16" Margin="0,0,12,0"
+                                                     VerticalAlignment="Center"
+                                                     Fill="{Binding ColorHex, Converter={StaticResource HexToBrush}}" />
+                                            <ui:TextBox Grid.Column="1" VerticalAlignment="Center"
+                                                        Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            <actrl:MicSelectorControl Grid.Column="2" Margin="14,0,0,0" VerticalAlignment="Center"
+                                                                      DeviceNumber="{Binding DeviceNumber, Mode=TwoWay}" />
+                                            <ui:Button Grid.Column="3" Margin="10,0,0,0" Icon="{ui:SymbolIcon Dismiss24}"
+                                                       ToolTip="Spieler entfernen"
+                                                       Command="{Binding DataContext.RemovePlayerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                       CommandParameter="{Binding}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Icon="{ui:SymbolIcon PersonAdd24}" Content="Spieler hinzufügen"
+                                       Command="{Binding AddPlayerCommand}" />
+                            <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" FontSize="11"
+                                       Foreground="{StaticResource StageTextDimBrush}"
+                                       Text="Bis zu 4 Spieler — zwei Spieler brauchen zwei verschiedene Mikrofone." />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <ui:Button Margin="0,20,0,0" HorizontalAlignment="Center" Padding="34,12"
+                           Appearance="Primary" FontSize="17" FontWeight="Bold"
+                           Icon="{ui:SymbolIcon Play24}" Content="Los geht's!"
+                           IsEnabled="{Binding CanStart}" Command="{Binding StartRoundCommand}" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ============================ SINGEN ============================ -->
+        <Grid Grid.Row="1" Margin="26,10,26,18"
+              Visibility="{Binding IsSinging, Converter={StaticResource BoolToVis}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Kopf: Titel + Zeit + Transport -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock FontSize="18" FontWeight="SemiBold" Text="{Binding SongTitle}" VerticalAlignment="Center" />
+                    <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontFamily="Consolas"
+                               Foreground="{StaticResource StageTextDimBrush}" Text="{Binding TimeText}" />
+                    <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{StaticResource SingolaGradient}" Text="{Binding RoundText}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <ui:Button Icon="{ui:SymbolIcon Pause24}" Content="Pause" Command="{Binding TogglePauseCommand}" />
+                    <ui:Button Margin="8,0,0,0" Icon="{ui:SymbolIcon Stop24}" Content="Beenden" Command="{Binding StopRoundCommand}" />
+                </StackPanel>
+            </Grid>
+            <ProgressBar Grid.Row="0" VerticalAlignment="Bottom" Margin="0,0,0,-8" Height="3"
+                         Minimum="0" Maximum="1" Value="{Binding Progress, Mode=OneWay}"
+                         Foreground="{StaticResource SingolaGradient}" Background="#22FFFFFF" />
+
+            <!-- Lyrics -->
+            <StackPanel Grid.Row="1" Margin="0,26,0,10">
+                <TextBlock HorizontalAlignment="Center" FontSize="16" Opacity="0.45"
+                           TextTrimming="CharacterEllipsis" Text="{Binding LyricPrev}" />
+                <TextBlock HorizontalAlignment="Center" Margin="0,6" FontSize="34" FontWeight="Bold"
+                           TextWrapping="Wrap" TextAlignment="Center" Text="{Binding LyricCurrent}" />
+                <TextBlock HorizontalAlignment="Center" FontSize="17" Opacity="0.6"
+                           TextTrimming="CharacterEllipsis" Text="{Binding LyricNext}" />
+            </StackPanel>
+
+            <!-- Bühne: Notenband (Ziel-Noten) + Live-Pitch-Linien aller Spieler (Code-behind zeichnet) -->
+            <Border Grid.Row="2" Style="{StaticResource StageCardStyle}" Padding="0" ClipToBounds="True">
+                <Grid>
+                    <Canvas x:Name="Stage" Background="Transparent" />
+                    <!-- „Jetzt"-Linie: hier muss der Ton getroffen werden -->
+                    <Rectangle Width="2" HorizontalAlignment="Left" Fill="{StaticResource SingolaGradient}" Opacity="0.85">
+                        <Rectangle.RenderTransform>
+                            <TranslateTransform x:Name="NowLine" />
+                        </Rectangle.RenderTransform>
+                    </Rectangle>
+                </Grid>
+            </Border>
+
+            <!-- Spieler-Chips: Pegel, Note, Punkte -->
+            <ItemsControl Grid.Row="3" Margin="0,12,0,0" ItemsSource="{Binding Players}" HorizontalAlignment="Center">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="6,0" Padding="14,8" CornerRadius="12" Background="{StaticResource StagePanelBrush}"
+                                BorderThickness="1.5" BorderBrush="{Binding ColorHex, Converter={StaticResource HexToBrush}}">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <!-- Ton getroffen → Chip leuchtet in Spielerfarbe -->
+                                        <DataTrigger Binding="{Binding IsHit}" Value="True">
+                                            <Setter Property="Effect">
+                                                <Setter.Value>
+                                                    <DropShadowEffect BlurRadius="18" ShadowDepth="0" Opacity="0.9" Color="White" />
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="12" Height="12" VerticalAlignment="Center"
+                                         Fill="{Binding ColorHex, Converter={StaticResource HexToBrush}}" />
+                                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding Name}" />
+                                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Width="34" TextAlignment="Center"
+                                           Foreground="{StaticResource StageTextDimBrush}" Text="{Binding Note}" />
+                                <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" FontSize="12" FontWeight="Bold"
+                                           Foreground="{Binding ColorHex, Converter={StaticResource HexToBrush}}"
+                                           Text="{Binding ComboText}" />
+                                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="19" FontWeight="Bold"
+                                           Text="{Binding Score}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+
+        <!-- ============================ EINSTELLUNGEN (Overlay) ============================ -->
+        <Border Grid.Row="1" Background="#A0000000"
+                Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVis}}">
+            <Border MaxWidth="560" VerticalAlignment="Center" Style="{StaticResource StageCardStyle}" Padding="24">
+                <StackPanel>
+                    <TextBlock FontSize="22" FontWeight="Bold" Foreground="{StaticResource SingolaGradient}" Text="Einstellungen" />
+                    <TextBlock Margin="0,14,0,4" Style="{StaticResource StageCaption}" Text="ELEVENLABS-API-KEY — für die automatische Songtext-Erkennung" />
+                    <ui:TextBox Text="{Binding ApiKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                PlaceholderText="sk_…" />
+                    <TextBlock Margin="0,8,0,0" FontSize="12" TextWrapping="Wrap"
+                               Foreground="{StaticResource StageTextDimBrush}"
+                               Text="Wird mit Audiola geteilt (gleiche Einstellungsdatei) — in einer App eintragen reicht." />
+                    <TextBlock Margin="0,12,0,0" FontSize="12" TextWrapping="Wrap"
+                               Foreground="{StaticResource StageTextDimBrush}"
+                               Text="🎨 Darstellung: Singola spielt immer im Bühnen-Dunkel — wie es sich für Karaoke gehört." />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                        <ui:Button Appearance="Primary" Icon="{ui:SymbolIcon Checkmark24}" Content="Speichern"
+                                   Command="{Binding SaveSettingsCommand}" />
+                        <ui:Button Margin="8,0,0,0" Content="Abbrechen" Command="{Binding CloseSettingsCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- ============================ ERGEBNIS ============================ -->
+        <StackPanel Grid.Row="1" MaxWidth="620" Margin="32" VerticalAlignment="Center"
+                    Visibility="{Binding IsFinished, Converter={StaticResource BoolToVis}}">
+            <TextBlock HorizontalAlignment="Center" FontSize="42" FontWeight="Black"
+                       Foreground="{StaticResource SingolaGradient}" Text="ERGEBNIS" />
+            <TextBlock HorizontalAlignment="Center" Margin="0,4,0,0" FontSize="14"
+                       Foreground="{StaticResource StageTextDimBrush}" Text="{Binding RoundText}" />
+            <ItemsControl Margin="0,22,0,0" ItemsSource="{Binding Ranking}" AlternationCount="4">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,0,10" Padding="18,12" CornerRadius="12"
+                                Background="{StaticResource StageCardBrush}"
+                                BorderThickness="1" BorderBrush="{Binding ColorHex, Converter={StaticResource HexToBrush}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="46" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" FontSize="24" FontWeight="Black" VerticalAlignment="Center"
+                                           Foreground="{StaticResource StageTextDimBrush}"
+                                           Text="{Binding Place, StringFormat='{}{0}.'}" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Ellipse Width="14" Height="14" VerticalAlignment="Center"
+                                             Fill="{Binding ColorHex, Converter={StaticResource HexToBrush}}" />
+                                    <TextBlock Margin="10,0,0,0" FontSize="19" FontWeight="SemiBold" Text="{Binding Name}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"
+                                               Foreground="{StaticResource StageTextDimBrush}"
+                                               Text="{Binding Score, StringFormat='Song: {0}'}" />
+                                    <TextBlock FontSize="24" FontWeight="Bold" VerticalAlignment="Center"
+                                               Text="{Binding TotalScore}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
+                <ui:Button Appearance="Primary" FontSize="15" FontWeight="Bold"
+                           Icon="{ui:SymbolIcon Next24}" Content="Nächster Song"
+                           Command="{Binding NextSongCommand}"
+                           Visibility="{Binding HasNextSong, Converter={StaticResource BoolToVis}}" />
+                <ui:ProgressRing Width="22" Height="22" Margin="10,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
+                                 Visibility="{Binding IsLoadingNext, Converter={StaticResource BoolToVis}}" />
+                <ui:Button Margin="10,0,0,0" Icon="{ui:SymbolIcon ArrowRepeatAll24}" Content="Nochmal"
+                           Command="{Binding StartRoundCommand}"
+                           Visibility="{Binding HasNextSong, Converter={StaticResource BoolToVis}, ConverterParameter=!}" />
+                <ui:Button Margin="10,0,0,0" Icon="{ui:SymbolIcon MusicNote224}" Content="Neuer Song / Spieler"
+                           Command="{Binding BackToSetupCommand}" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>

@@ -98,13 +98,16 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
         }
         try
         {
-            _recorder.Start();
+            _recorder.Start(RecordDeviceNumber);
             IsRecording = true;
             RecordedPath = null;
             Status = "Aufnahme läuft … sprich ins Mikrofon.";
         }
         catch (Exception ex) { Status = "Mikrofon-Fehler: " + ex.Message; }
     }
+
+    /// <summary>Mikrofon (NAudio-Gerätenummer) für die Aufnahme.</summary>
+    [ObservableProperty] private int _recordDeviceNumber;
 
     private async Task StopRecordingAsync()
     {

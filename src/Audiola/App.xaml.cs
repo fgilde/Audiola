@@ -128,6 +128,8 @@ public partial class App : Application
             System.Windows.Input.Mouse.PreviewMouseWheelEvent,
             new System.Windows.Input.MouseWheelEventHandler(OnScrollViewerPreviewWheel));
 
+        DispatcherUnhandledException += OnDispatcherUnhandledException;   // war nie verdrahtet
+
         await Host.StartAsync();
 
         // Gespeichertes Theme (Light/Dark) anwenden — Palette + WPF-UI + Akzent.
@@ -192,6 +194,9 @@ public partial class App : Application
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        // Platzhalter fuer zentrales Fehler-Logging.
+        // Loggen + App am Leben halten (eine UI-Exception darf nicht die ganze Sitzung töten).
+        try { File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "audiola.log"),
+            $"[{DateTimeOffset.UtcNow:O}] [Dispatcher] {e.Exception}\n\n"); } catch { }
+        e.Handled = true;
     }
 }
