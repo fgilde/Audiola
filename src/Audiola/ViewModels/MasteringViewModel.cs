@@ -24,6 +24,16 @@ public sealed partial class MasteringViewModel : ObservableObject
     private string? _sourcePath;
     private double _inputLufs = double.NegativeInfinity;
 
+    // Spur-Modus („Spur mastern"-Dialog nutzt dasselbe Panel/VM mit einer Einzelspur als Quelle).
+    private StemTrackViewModel? _trackTarget;
+    private List<(StemTrackViewModel Track, bool Solo, bool Mute)>? _soloSnapshot;
+
+    /// <summary>True, wenn eine einzelne Spur (statt des Studio-Mixes) die Quelle ist.</summary>
+    [ObservableProperty] private bool _isTrackSource;
+
+    /// <summary>Vom „Spur mastern"-Dialog abonniert — nach dem Anwenden schließen.</summary>
+    public event Action? CloseDialogRequested;
+
     public SessionState Session { get; }
     public TransportViewModel Transport { get; }
 
@@ -263,6 +273,85 @@ public sealed partial class MasteringViewModel : ObservableObject
         UpdateCommands();
     }
 
+    /// <summary>
+    /// Quelle auf eine einzelne Studio-Spur stellen („Spur mastern"): Spur rendern (Wellenform + LUFS)
+    /// und für die hörbare Live-Vorschau temporär solo schalten — der A/B-Schalter, Seek und alle
+    /// Regler funktionieren damit exakt wie beim Mastern des ganzen Mixes.
+    /// </summary>
+    public async Task PrepareFromTrackAsync(StemTrackViewModel track)
+    {
+        IsBusy = true;
+        StatusText = $"Rendere Spur „{track.Name}“ …";
+        UpdateCommands();
+
+        _trackTarget = track;
+        IsTrackSource = true;
+
+        // Solo-Zustand sichern und die Spur isolieren (hörbare Vorschau = nur diese Spur).
+        _soloSnapshot = _timeline.Tracks.Select(t => (t, t.IsSolo, t.IsMuted)).ToList();
+        foreach (var t in _timeline.Tracks) t.IsSolo = false;
+        track.IsSolo = true;
+        track.IsMuted = false;
+
+        try
+        {
+            var (temp, peaks, lufs) = await Task.Run(async () =>
+            {
+                var (samples, sr) = await _timeline.RenderTrackAsync(track);
+                var t = TempDir.File("trackmaster", ".wav", "src");
+                AudioEdits.WriteWav(t, samples, sr);
+                return (t, AudioEdits.ComputePeaks(samples), Dsp.LoudnessMeter.MeasureIntegratedLufs(samples, sr));
+            });
+            _sourcePath = temp;
+            _originalPeaks = peaks;
+            _masteredPeaks = null;
+            _inputLufs = lufs;
+            SourceLabel = $"Spur: {track.Name}";
+        }
+        catch (Exception ex)
+        {
+            _sourcePath = null;
+            SourceLabel = "Render-Fehler: " + ex.Message;
+        }
+        IsBusy = false;
+
+        PushMaster();
+        await UpdateMasteredWaveformAsync();
+        StatusText = _sourcePath is null ? SourceLabel : $"Quelle: {SourceLabel}";
+        UpdateCommands();
+    }
+
+    /// <summary>Spur-Modus beenden (Dialog zu): Solo/Mute wiederherstellen, Live-Master aus.</summary>
+    public void EndTrackPreview()
+    {
+        if (_soloSnapshot is not null)
+            foreach (var (t, solo, mute) in _soloSnapshot) { t.IsSolo = solo; t.IsMuted = mute; }
+        _soloSnapshot = null;
+        _trackTarget = null;
+        IsTrackSource = false;
+        OnDeactivated();
+    }
+
+    /// <summary>Spur mastern und im Studio durch das Ergebnis ersetzen (mit Undo).</summary>
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private async Task ApplyToTrackAsync()
+    {
+        if (_trackTarget is null || _sourcePath is null) return;
+        IsBusy = true;
+        StatusText = "Mastere Spur …";
+        try
+        {
+            var outp = TempDir.File("trackmaster", ".wav", "mastered");
+            var result = await _mastering.ProcessAndExportAsync(_sourcePath, outp, BuildSettings());
+            await _timeline.ApplyProcessedTrackAsync(_trackTarget, outp);
+            _snackbar.Success("Spur gemastert",
+                $"{_trackTarget.Name}: {result.InputLufs:F1} → {result.OutputLufs:F1} LUFS");
+            CloseDialogRequested?.Invoke();
+        }
+        catch (Exception ex) { UiError.Show("Spur mastern fehlgeschlagen", ex.Message); }
+        finally { IsBusy = false; }
+    }
+
     /// <summary>Aktuelle Einstellungen + Loudness-Gain in die Live-Vorschau schieben.</summary>
     private void PushMaster()
     {
@@ -309,6 +398,7 @@ public sealed partial class MasteringViewModel : ObservableObject
     {
         AnalyzeCommand.NotifyCanExecuteChanged();
         ExportCommand.NotifyCanExecuteChanged();
+        ApplyToTrackCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>

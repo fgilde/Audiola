@@ -936,7 +936,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     private void MasterTrack(StemTrackViewModel? track)
     {
         if (track is null) return;
-        var dlg = new Audiola.Views.Dialogs.TrackMasteringDialog(App.GetService<TrackMasteringViewModel>(), track)
+        var dlg = new Audiola.Views.Dialogs.TrackMasteringDialog(App.GetService<MasteringViewModel>(), track)
         {
             Owner = System.Windows.Application.Current?.MainWindow
         };

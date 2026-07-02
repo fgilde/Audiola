@@ -222,8 +222,11 @@
                 </DockPanel>
             </Border>
 
-            <!-- Arbeitsfläche -->
+            <!-- Arbeitsfläche. TextElement.Foreground: die frühere NavigationView vererbte die helle
+                 Textfarbe an ihre Seiten — der nackte Frame würde sonst das WPF-Default-Schwarz
+                 vererben (Texte ohne explizites Foreground wären auf dunklem Grund unlesbar). -->
             <Frame Grid.Column="1" x:Name="MainFrame"
+                   TextElement.Foreground="{StaticResource DawTextBrush}"
                    NavigationUIVisibility="Hidden" Background="Transparent" Focusable="False" />
         </Grid>
 

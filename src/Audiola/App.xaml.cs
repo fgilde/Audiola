@@ -103,9 +103,6 @@ public partial class App : Application
             services.AddTransient<SetupWizardViewModel>();
             services.AddTransient<Views.Dialogs.SetupWizardWindow>();
 
-            // Spur-Mastering-Dialog (frischer Zustand pro Aufruf).
-            services.AddTransient<TrackMasteringViewModel>();
-
             // Einsing-Studio (frischer Zustand pro Aufruf).
             services.AddTransient<SingAlongViewModel>();
         })
