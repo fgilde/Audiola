@@ -12,8 +12,7 @@ public partial class MainWindow : FluentWindow
     private static readonly string[] SupportedExtensions =
         [".wav", ".mp3", ".flac", ".aiff", ".aif", ".m4a", ".ogg"];
 
-    private readonly INavigationService _navigationService;
-    private readonly ITrackLoader _trackLoader;
+    private readonly IShellNavigation _navigationService;
     private readonly ISnackbarService _snackbarService;
     private readonly UpdateService _updates = new();
 
@@ -24,28 +23,25 @@ public partial class MainWindow : FluentWindow
     public MainWindow(
         MainWindowViewModel viewModel,
         TransportViewModel transport,
-        IServiceProvider serviceProvider,
-        INavigationService navigationService,
+        IShellNavigation shellNavigation,
         ISnackbarService snackbarService,
-        IContentDialogService contentDialogService,
-        ITrackLoader trackLoader)
+        IContentDialogService contentDialogService)
     {
         ViewModel = viewModel;
         Transport = transport;
-        _navigationService = navigationService;
+        _navigationService = shellNavigation;
         _snackbarService = snackbarService;
-        _trackLoader = trackLoader;
         DataContext = this;
 
         InitializeComponent();
 
-        RootNavigation.SetServiceProvider(serviceProvider);
-        navigationService.SetNavigationControl(RootNavigation);
+        ((ShellNavigation)shellNavigation).SetFrame(MainFrame);
+        shellNavigation.Navigated += (_, t) => SyncRail(t);
         snackbarService.SetSnackbarPresenter(RootSnackbarPresenter);
         contentDialogService.SetDialogHost(RootContentDialogPresenter);
 
-        // Erst navigieren, wenn das NavigationView-Template angewandt ist.
-        Loaded += (_, _) => RootNavigation.Navigate(typeof(Views.Pages.HomePage));
+        // Start direkt im Studio — die Arbeitsfläche ist das Zentrum der App.
+        Loaded += (_, _) => _navigationService.Navigate(typeof(Views.Pages.TimelinePage));
         Closing += OnWindowClosing;
 
         // Leises Auto-Update beim Start (nur in installierter Version).
@@ -228,10 +224,19 @@ public partial class MainWindow : FluentWindow
         }
     }
 
+    /// <summary>Navigation aus Rail (RadioButton) und Menü (MenuItem) — Ziel steckt im Tag.</summary>
     private void Nav_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is System.Windows.Controls.MenuItem { Tag: Type t })
+        if (sender is FrameworkElement { Tag: Type t })
             _navigationService.Navigate(t);
+    }
+
+    /// <summary>Markiert das Rail-Werkzeug der aktiven Seite (bzw. keins bei Menü-Zielen).</summary>
+    private void SyncRail(Type pageType)
+    {
+        foreach (var rb in RailItems.Children.OfType<System.Windows.Controls.RadioButton>()
+                     .Concat(RailFooter.Children.OfType<System.Windows.Controls.RadioButton>()))
+            rb.IsChecked = rb.Tag as Type == pageType;
     }
 
     private void PlayPause_Click(object sender, RoutedEventArgs e)

@@ -22,11 +22,10 @@ public sealed partial class EditorViewModel : ObservableObject
     private readonly LiveFxProcessor _liveFx;
     private readonly ISnackbarService _snackbar;
     private readonly TimelineViewModel _timeline;
-    private readonly INavigationService _navigation;
+    private readonly IShellNavigation _navigation;
     private ClipViewModel? _targetClip; // gesetzt ⇒ wir bearbeiten einen Studio-Clip
 
-    private static readonly string EditDir =
-        Path.Combine(Path.GetTempPath(), "Audiola", "edits");
+    private static readonly string EditDir = TempDir.Category("edits");
 
     private float[]? _buffer;
     private int _sampleRate;
@@ -57,7 +56,7 @@ public sealed partial class EditorViewModel : ObservableObject
         LiveFxProcessor liveFx,
         ISnackbarService snackbar,
         TimelineViewModel timeline,
-        INavigationService navigation)
+        IShellNavigation navigation)
     {
         _session = session;
         Session = session;
@@ -67,8 +66,6 @@ public sealed partial class EditorViewModel : ObservableObject
         _snackbar = snackbar;
         _timeline = timeline;
         _navigation = navigation;
-
-        Directory.CreateDirectory(EditDir);
     }
 
     public bool HasClipTarget => _targetClip is not null;
@@ -337,7 +334,7 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         if (_buffer is null) return;
 
-        var temp = Path.Combine(EditDir, $"edit_{Guid.NewGuid():N}.wav");
+        var temp = TempDir.File("edits", ".wav", "edit");
         AudioEdits.WriteWav(temp, _buffer, _sampleRate);
 
         // Im Clip-Modus die Sitzung NICHT überschreiben (Transport folgt sonst dem Studio).

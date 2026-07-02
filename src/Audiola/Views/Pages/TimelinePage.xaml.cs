@@ -329,7 +329,7 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
             ViewModel.SelectClip(clip);
             var editor = Audiola.App.GetService<EditorViewModel>();
             editor.LoadClipForEdit(clip);
-            Audiola.App.GetService<Wpf.Ui.INavigationService>().Navigate(typeof(EditorPage));
+            Audiola.App.GetService<Audiola.Services.IShellNavigation>().Navigate(typeof(EditorPage));
             e.Handled = true;
             return;
         }

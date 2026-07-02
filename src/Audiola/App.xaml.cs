@@ -17,8 +17,8 @@ public partial class App : Application
         .CreateDefaultBuilder()
         .ConfigureServices((_, services) =>
         {
-            // Navigation / UI-Infrastruktur (WPF-UI 3.0.5).
-            services.AddSingleton<INavigationService, NavigationService>();
+            // Navigation / UI-Infrastruktur: eigene Shell-Navigation (Frame) + WPF-UI-Snackbar/Dialoge.
+            services.AddSingleton<IShellNavigation>(sp => new ShellNavigation(sp));
             services.AddSingleton<ISnackbarService, SnackbarService>();
             services.AddSingleton<IContentDialogService, ContentDialogService>();
 

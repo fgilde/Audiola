@@ -6,18 +6,60 @@
     xmlns:controls="clr-namespace:Audiola.Controls"
     xmlns:pages="clr-namespace:Audiola.Views.Pages"
     Title="{Binding ViewModel.ApplicationTitle}"
-    Width="1200"
-    Height="780"
-    MinWidth="900"
-    MinHeight="600"
+    Width="1360"
+    Height="820"
+    MinWidth="980"
+    MinHeight="640"
     ExtendsContentIntoTitleBar="True"
-    WindowBackdropType="Mica"
+    WindowBackdropType="None"
+    Background="{StaticResource DawBgBrush}"
     WindowCornerPreference="Round"
     WindowStartupLocation="CenterScreen"
     Icon="pack://application:,,,/Assets/audiola.png"
     AllowDrop="True"
     DragOver="OnDragOver"
     Drop="OnFileDrop">
+
+    <ui:FluentWindow.Resources>
+        <!-- Rail-Werkzeug: RadioButton mit Akzentkante links, wenn aktiv. -->
+        <Style x:Key="RailItem" TargetType="RadioButton">
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Margin" Value="0,1" />
+            <Setter Property="GroupName" Value="Rail" />
+            <Setter Property="Foreground" Value="{StaticResource DawTextFaintBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid>
+                            <Border x:Name="bd" CornerRadius="8" Margin="4,0" Background="Transparent">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <Rectangle x:Name="edge" Width="3" HorizontalAlignment="Left" Margin="0,9"
+                                       RadiusX="1.5" RadiusY="1.5" Fill="Transparent" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource DawHoverBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource DawAccentSoftBrush}" />
+                                <Setter TargetName="edge" Property="Fill" Value="{StaticResource DawAccentLightBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="RailSeparator" TargetType="Rectangle">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Margin" Value="12,6" />
+            <Setter Property="Fill" Value="{StaticResource DawStrokeBrush}" />
+        </Style>
+    </ui:FluentWindow.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -27,136 +69,184 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <ui:TitleBar
-            Grid.Row="0"
-            Title="Audiola"
-            Grid.ColumnSpan="2">
+        <ui:TitleBar Grid.Row="0" Title="Audiola">
             <ui:TitleBar.Icon>
                 <ui:ImageIcon Source="pack://application:,,,/Assets/audiola.png" />
             </ui:TitleBar.Icon>
         </ui:TitleBar>
 
-        <!-- Menüleiste + nahtlose Echtzeit-Visualisierung -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <controls:SpectrumControl x:Name="Spectrum" Grid.Column="1" HorizontalAlignment="Right"
-                                      Width="180" Height="22" Margin="0,2,16,2" VerticalAlignment="Center" />
-        <Menu Grid.Column="0" Margin="8,0" Background="Transparent">
-            <MenuItem Header="_Datei">
-                <MenuItem Header="Audiodatei öffnen…" Click="OpenFile_Click" />
-                <MenuItem Header="Audio ins Studio hinzufügen…" Click="AddToStudio_Click" />
-                <Separator />
-                <MenuItem Header="Projekt öffnen…" Click="OpenProject_Click" />
-                <MenuItem Header="Projekt speichern" InputGestureText="Strg+S" Click="SaveProjectQuick_Click"
-                          IsEnabled="{Binding Transport.HasTrack}" />
-                <MenuItem Header="Projekt speichern unter…" Click="SaveProjectAs_Click"
-                          IsEnabled="{Binding Transport.HasTrack}" />
-                <MenuItem Header="Projekt schließen" Click="CloseProject_Click"
-                          IsEnabled="{Binding Transport.HasTrack}" />
-                <Separator />
-                <MenuItem Header="Beenden" Click="Exit_Click" />
-            </MenuItem>
-            <MenuItem Header="_Ansicht">
-                <MenuItem Header="Start" Tag="{x:Type pages:HomePage}" Click="Nav_Click" />
-                <MenuItem Header="Editor" Tag="{x:Type pages:EditorPage}" Click="Nav_Click" />
-                <MenuItem Header="Studio" Tag="{x:Type pages:TimelinePage}" Click="Nav_Click" />
-                <MenuItem Header="Mastering" Tag="{x:Type pages:MasteringPage}" Click="Nav_Click" />
-                <MenuItem Header="Equalizer" Tag="{x:Type pages:EqualizerPage}" Click="Nav_Click" />
-                <MenuItem Header="Provenienz" Tag="{x:Type pages:ProvenancePage}" Click="Nav_Click" />
-                <MenuItem Header="Mess-Harness" Tag="{x:Type pages:EvaluationPage}" Click="Nav_Click" />
-            </MenuItem>
-            <MenuItem Header="_Wiedergabe">
-                <MenuItem Header="Abspielen / Pause" Click="PlayPause_Click" />
-                <MenuItem Header="Stopp" Click="StopPlay_Click" />
-            </MenuItem>
-            <MenuItem Header="_Hilfe">
-                <MenuItem Header="Einrichtungs-Assistent…" Click="SetupWizard_Click" />
-                <Separator />
-                <MenuItem Header="Nach Updates suchen…" Click="CheckUpdates_Click" />
-                <Separator />
-                <MenuItem Header="Über Audiola" Click="About_Click" />
-            </MenuItem>
-        </Menu>
-        </Grid>
-
-        <ui:NavigationView
-            x:Name="RootNavigation"
-            Grid.Row="2"
-            IsBackButtonVisible="Collapsed"
-            IsPaneToggleVisible="True"
-            IsPaneOpen="True"
-            OpenPaneLength="220"
-            CompactPaneLength="48"
-            MenuItemsSource="{Binding ViewModel.MenuItems}"
-            FooterMenuItemsSource="{Binding ViewModel.FooterMenuItems}"
-            PaneDisplayMode="Left" />
-
-        <!-- Durchgehende Transportleiste (sichtbar, sobald ein Track geladen ist) -->
-        <Border
-            Grid.Row="3"
-            Background="{DynamicResource ControlFillColorDefaultBrush}"
-            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-            BorderThickness="0,1,0,0"
-            Padding="16,8"
-            Visibility="{Binding Transport.HasTrack, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <!-- ============ TRANSPORT-LEISTE (immer sichtbar) ============ -->
+        <Border Grid.Row="1" Background="{StaticResource DawPanelBrush}"
+                BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,1" Padding="8,6">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
+                <!-- Menü (kompakt) -->
+                <Menu Grid.Column="0" VerticalAlignment="Center" Background="Transparent">
+                    <MenuItem Header="_Datei">
+                        <MenuItem Header="Öffnen… (Audio/ZIP)" Click="OpenFile_Click" />
+                        <MenuItem Header="Audio ins Studio hinzufügen…" Click="AddToStudio_Click" />
+                        <Separator />
+                        <MenuItem Header="Projekt öffnen…" Click="OpenProject_Click" />
+                        <MenuItem Header="Projekt speichern" InputGestureText="Strg+S" Click="SaveProjectQuick_Click"
+                                  IsEnabled="{Binding Transport.HasTrack}" />
+                        <MenuItem Header="Projekt speichern unter…" Click="SaveProjectAs_Click"
+                                  IsEnabled="{Binding Transport.HasTrack}" />
+                        <MenuItem Header="Projekt schließen" Click="CloseProject_Click"
+                                  IsEnabled="{Binding Transport.HasTrack}" />
+                        <Separator />
+                        <MenuItem Header="Beenden" Click="Exit_Click" />
+                    </MenuItem>
+                    <MenuItem Header="_Hilfe">
+                        <MenuItem Header="Einrichtungs-Assistent…" Click="SetupWizard_Click" />
+                        <MenuItem Header="Mess-Harness" Tag="{x:Type pages:EvaluationPage}" Click="Nav_Click" />
+                        <Separator />
+                        <MenuItem Header="Nach Updates suchen…" Click="CheckUpdates_Click" />
+                        <Separator />
+                        <MenuItem Header="Über Audiola" Click="About_Click" />
+                    </MenuItem>
+                </Menu>
+
                 <!-- Play / Stop -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <ui:Button Width="44" Icon="{ui:SymbolIcon Play24}" Command="{Binding Transport.PlayPauseCommand}" />
-                    <ui:Button Width="44" Margin="6,0,0,0" Icon="{ui:SymbolIcon Stop24}" Command="{Binding Transport.StopCommand}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                    <ui:Button Width="46" Height="34" Icon="{ui:SymbolIcon Play24}" Appearance="Primary"
+                               Command="{Binding Transport.PlayPauseCommand}" IsEnabled="{Binding Transport.HasTrack}"
+                               ToolTip="Abspielen / Pause" />
+                    <ui:Button Width="42" Height="34" Margin="6,0,0,0" Icon="{ui:SymbolIcon Stop24}"
+                               Command="{Binding Transport.StopCommand}" IsEnabled="{Binding Transport.HasTrack}"
+                               ToolTip="Stopp" />
                 </StackPanel>
 
-                <!-- Trackname -->
-                <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center">
-                    <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Aktueller Track" />
-                    <TextBlock FontWeight="SemiBold" Text="{Binding Transport.TrackName}" TextTrimming="CharacterEllipsis" />
-                </StackPanel>
+                <!-- Zeitanzeige -->
+                <Border Grid.Column="2" Margin="14,0,0,0" Padding="12,3" CornerRadius="6"
+                        Background="{StaticResource DawBgBrush}" BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="1"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource DawTimeDisplay}" Text="{Binding Transport.PositionText}" />
+                        <TextBlock Style="{StaticResource DawTimeDisplay}" Margin="6,0"
+                                   Foreground="{StaticResource DawTextFaintBrush}" Text="/" />
+                        <TextBlock Style="{StaticResource DawTimeDisplay}"
+                                   Foreground="{StaticResource DawTextDimBrush}" Text="{Binding Transport.DurationText}" />
+                    </StackPanel>
+                </Border>
 
-                <!-- Wellenform + Position -->
-                <Grid Grid.Column="2" Margin="8,0" VerticalAlignment="Center">
-                    <controls:WaveformControl
-                        x:Name="TransportWaveform"
-                        Height="40" Cursor="Hand"
-                        MouseLeftButtonDown="Transport_WaveformMouseDown"
-                        Peaks="{Binding Transport.Peaks}"
-                        Progress="{Binding Transport.Progress}" />
-                </Grid>
+                <!-- Mix-Wellenform (klickbar zum Springen) -->
+                <controls:WaveformControl Grid.Column="3" x:Name="TransportWaveform"
+                                          Height="34" Margin="14,0" VerticalAlignment="Center" Cursor="Hand"
+                                          MouseLeftButtonDown="Transport_WaveformMouseDown"
+                                          Peaks="{Binding Transport.Peaks}"
+                                          Progress="{Binding Transport.Progress}" />
 
-                <!-- Zeit -->
-                <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="12,0" VerticalAlignment="Center">
-                    <TextBlock FontSize="12" Text="{Binding Transport.PositionText}" />
-                    <TextBlock FontSize="12" Margin="4,0" Text="/" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                    <TextBlock FontSize="12" Text="{Binding Transport.DurationText}" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                </StackPanel>
+                <!-- Echtzeit-Spektrum -->
+                <controls:SpectrumControl Grid.Column="4" x:Name="Spectrum"
+                                          Width="170" Height="30" Margin="0,0,14,0" VerticalAlignment="Center" />
 
-                <!-- Lautstärke -->
-                <StackPanel Grid.Column="4" Orientation="Horizontal" Margin="8,0,0,0" VerticalAlignment="Center">
-                    <ui:SymbolIcon Symbol="Speaker224" VerticalAlignment="Center" />
-                    <Slider Width="100" Margin="8,0,0,0" VerticalAlignment="Center"
+                <!-- Master-Lautstärke -->
+                <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0">
+                    <ui:SymbolIcon Symbol="Speaker224" VerticalAlignment="Center"
+                                   Foreground="{StaticResource DawTextDimBrush}" />
+                    <Slider Width="92" Margin="8,0,0,0" VerticalAlignment="Center"
                             Minimum="0" Maximum="1" Value="{Binding Transport.Volume, Mode=TwoWay}" />
                 </StackPanel>
             </Grid>
         </Border>
 
-        <ui:SnackbarPresenter
-            x:Name="RootSnackbarPresenter"
-            Grid.Row="2"
-            Grid.RowSpan="2" />
+        <!-- ============ HAUPTBEREICH: Rail + Arbeitsfläche ============ -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="52" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-        <ContentPresenter
-            x:Name="RootContentDialogPresenter"
-            Grid.Row="2"
-            Grid.RowSpan="2" />
+            <!-- Werkzeug-Rail -->
+            <Border Grid.Column="0" Background="{StaticResource DawPanelBrush}"
+                    BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,0,1,0">
+                <DockPanel LastChildFill="False">
+                    <StackPanel x:Name="RailItems" DockPanel.Dock="Top" Margin="0,6,0,0">
+                        <RadioButton x:Name="RailStudio" Style="{StaticResource RailItem}" IsChecked="True"
+                                     Tag="{x:Type pages:TimelinePage}" Click="Nav_Click" ToolTip="Studio (Timeline)">
+                            <ui:SymbolIcon Symbol="Timeline24" FontSize="19" />
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource RailItem}"
+                                     Tag="{x:Type pages:HomePage}" Click="Nav_Click" ToolTip="Projekte &amp; zuletzt geöffnet">
+                            <ui:SymbolIcon Symbol="Home24" FontSize="19" />
+                        </RadioButton>
+                        <Rectangle Style="{StaticResource RailSeparator}" />
+                        <RadioButton Style="{StaticResource RailItem}"
+                                     Tag="{x:Type pages:EqualizerPage}" Click="Nav_Click" ToolTip="Equalizer">
+                            <ui:SymbolIcon Symbol="Options24" FontSize="19" />
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource RailItem}"
+                                     Tag="{x:Type pages:MasteringPage}" Click="Nav_Click" ToolTip="Mastering">
+                            <ui:SymbolIcon Symbol="SoundWaveCircle24" FontSize="19" />
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource RailItem}"
+                                     Tag="{x:Type pages:SpatialAudioPage}" Click="Nav_Click" ToolTip="Spatial Audio (3D)">
+                            <ui:SymbolIcon Symbol="Headphones24" FontSize="19" />
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource RailItem}"
+                                     Tag="{x:Type pages:VoicesPage}" Click="Nav_Click" ToolTip="Stimmen (TTS &amp; Klonen)">
+                            <ui:SymbolIcon Symbol="PersonVoice24" FontSize="19" />
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource RailItem}"
+                                     Tag="{x:Type pages:MetadataPage}" Click="Nav_Click" ToolTip="Metadaten &amp; Tags">
+                            <ui:SymbolIcon Symbol="Tag24" FontSize="19" />
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource RailItem}"
+                                     Tag="{x:Type pages:VariationPage}" Click="Nav_Click" ToolTip="Klangvariation (Studio-Effekte)">
+                            <ui:SymbolIcon Symbol="Pulse24" FontSize="19" />
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource RailItem}"
+                                     Tag="{x:Type pages:ProvenancePage}" Click="Nav_Click" ToolTip="Provenienz-Analyse">
+                            <ui:SymbolIcon Symbol="DocumentSearch24" FontSize="19" />
+                        </RadioButton>
+                    </StackPanel>
+                    <StackPanel x:Name="RailFooter" DockPanel.Dock="Bottom" Margin="0,0,0,8">
+                        <Rectangle Style="{StaticResource RailSeparator}" />
+                        <RadioButton Style="{StaticResource RailItem}"
+                                     Tag="{x:Type pages:SettingsPage}" Click="Nav_Click" ToolTip="Einstellungen">
+                            <ui:SymbolIcon Symbol="Settings24" FontSize="19" />
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource RailItem}"
+                                     Tag="{x:Type pages:AboutPage}" Click="Nav_Click" ToolTip="Über Audiola">
+                            <ui:SymbolIcon Symbol="Info24" FontSize="19" />
+                        </RadioButton>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- Arbeitsfläche -->
+            <Frame Grid.Column="1" x:Name="MainFrame"
+                   NavigationUIVisibility="Hidden" Background="Transparent" Focusable="False" />
+        </Grid>
+
+        <!-- ============ STATUSLEISTE ============ -->
+        <Border Grid.Row="3" Background="{StaticResource DawPanelBrush}"
+                BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,1,0,0" Padding="12,4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Ellipse Width="7" Height="7" VerticalAlignment="Center" Fill="{StaticResource DawGreenBrush}" />
+                    <TextBlock Style="{StaticResource DawStatusText}" Margin="7,0,0,0" Text="Bereit" />
+                    <TextBlock Style="{StaticResource DawStatusText}" Margin="18,0,0,0"
+                               Text="{Binding Transport.TrackName}" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" Style="{StaticResource DawStatusText}"
+                           Text="{Binding ViewModel.ApplicationTitle}" />
+            </Grid>
+        </Border>
+
+        <ui:SnackbarPresenter x:Name="RootSnackbarPresenter" Grid.Row="2" Grid.RowSpan="2" />
+        <ContentPresenter x:Name="RootContentDialogPresenter" Grid.Row="2" Grid.RowSpan="2" />
     </Grid>
 </ui:FluentWindow>

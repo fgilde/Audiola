@@ -276,13 +276,24 @@
         <Border Grid.Row="2" Background="Transparent" AllowDrop="True"
                 DragOver="Timeline_DragOver" Drop="Timeline_Drop"
                 Visibility="{Binding ViewModel.HasTracks, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <ui:SymbolIcon Symbol="Layer24" FontSize="40" HorizontalAlignment="Center"
-                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-            <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" TextAlignment="Center"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Text="Noch keine Spuren.&#x0a;Audiodateien hierher ziehen, „Audio hinzufügen“ oder „Stems übernehmen“." />
-        </StackPanel>
+            <Border MaxWidth="520" Padding="44,36" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    CornerRadius="14" BorderThickness="2" BorderBrush="{StaticResource DawStrokeStrongBrush}"
+                    Background="{StaticResource DawPanelBrush}">
+                <StackPanel>
+                    <Rectangle Height="3" Width="72" RadiusX="1.5" RadiusY="1.5" HorizontalAlignment="Center"
+                               Fill="{StaticResource BrandGradient}" />
+                    <ui:SymbolIcon Symbol="MusicNote224" FontSize="42" Margin="0,18,0,0" HorizontalAlignment="Center"
+                                   Foreground="{StaticResource DawTextDimBrush}" />
+                    <TextBlock Margin="0,14,0,0" HorizontalAlignment="Center" FontSize="17" FontWeight="SemiBold"
+                               Text="Song hierher ziehen" />
+                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" TextAlignment="Center" FontSize="12.5"
+                               Foreground="{StaticResource DawTextFaintBrush}"
+                               Text="Audio, mehrere Dateien oder ein ZIP — jede Datei wird eine Spur.&#x0a;Danach: Stems trennen, einsingen, mastern, exportieren." />
+                    <ui:Button Margin="0,18,0,0" HorizontalAlignment="Center" Appearance="Primary"
+                               Icon="{ui:SymbolIcon FolderOpen24}" Content="Datei öffnen…"
+                               Command="{Binding ViewModel.AddAudioCommand}" />
+                </StackPanel>
+            </Border>
         </Border>
 
         <!-- Timeline (4-Quadranten: Ruler oben fixiert, Spurköpfe links fixiert) -->

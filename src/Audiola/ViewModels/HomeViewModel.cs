@@ -6,14 +6,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using Wpf.Ui;
-using Wpf.Ui.Controls;
 
 namespace Audiola.ViewModels;
 
 public sealed partial class HomeViewModel : ObservableObject
 {
     private readonly ITrackLoader _loader;
-    private readonly INavigationService _navigation;
+    private readonly IShellNavigation _navigation;
     private readonly ISnackbarService _snackbar;
     private readonly TimelineViewModel _timeline;
     private readonly ProjectWorkspace _workspace;
@@ -32,7 +31,7 @@ public sealed partial class HomeViewModel : ObservableObject
     public HomeViewModel(
         SessionState session,
         ITrackLoader loader,
-        INavigationService navigation,
+        IShellNavigation navigation,
         ISnackbarService snackbar,
         TimelineViewModel timeline,
         ProjectWorkspace workspace)
@@ -92,13 +91,11 @@ public sealed partial class HomeViewModel : ObservableObject
             {
                 await _workspace.OpenAsync(item.Path);
                 _navigation.Navigate(typeof(Views.Pages.TimelinePage));
-                _snackbar.Show("Projekt geladen", item.Name, ControlAppearance.Success,
-                    new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(2));
+                _snackbar.Success("Projekt geladen", item.Name, 2);
             }
             catch (Exception ex)
             {
-                _snackbar.Show("Öffnen fehlgeschlagen", ex.Message, ControlAppearance.Danger,
-                    new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(4));
+                _snackbar.Error("Öffnen fehlgeschlagen", ex.Message);
             }
             finally { IsLoading = false; }
         }
@@ -137,13 +134,11 @@ public sealed partial class HomeViewModel : ObservableObject
         try
         {
             if (File.Exists(path)) File.Delete(path);
-            _snackbar.Show(okText, Path.GetFileName(path), ControlAppearance.Success,
-                new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(2));
+            _snackbar.Success(okText, Path.GetFileName(path), 2);
         }
         catch (Exception ex)
         {
-            _snackbar.Show("Löschen fehlgeschlagen", ex.Message, ControlAppearance.Danger,
-                new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(4));
+            _snackbar.Error("Löschen fehlgeschlagen", ex.Message);
         }
     }
 
@@ -154,14 +149,12 @@ public sealed partial class HomeViewModel : ObservableObject
         {
             var track = await _loader.LoadAsync(path);
             await _timeline.AddAudioFileAsync(path, -1, 0); // als erste/weitere Studio-Spur
-            _snackbar.Show("Geladen", track.FileName, ControlAppearance.Success,
-                new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(2));
+            _snackbar.Success("Geladen", track.FileName, 2);
             _navigation.Navigate(typeof(Views.Pages.TimelinePage));
         }
         catch (Exception ex)
         {
-            _snackbar.Show("Fehler beim Laden", ex.Message, ControlAppearance.Danger,
-                new SymbolIcon(SymbolRegular.ErrorCircle24), TimeSpan.FromSeconds(4));
+            _snackbar.Error("Fehler beim Laden", ex.Message);
         }
         finally
         {

@@ -11,6 +11,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
+                <!-- DAW-Theme zuletzt: überschreibt die WPF-UI-Systembrushes mit der Studio-Palette. -->
+                <ResourceDictionary Source="pack://application:,,,/Themes/DawTheme.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <wpf:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <conv:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
