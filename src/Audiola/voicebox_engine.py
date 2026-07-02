@@ -343,6 +343,58 @@ def cmd_vc(args):
     sys.exit(1)
 
 
+def cmd_autotune(args):
+    """Zieht die Tonhöhe der Aufnahme (--input) auf die Referenz-Melodie (--reference) und behält
+    die Klangfarbe/Formanten der eigenen Stimme (WORLD-Vocoder). --strength 0..1 blendet die
+    Korrektur (0 = unverändert, 1 = exakt auf der Referenz)."""
+    import numpy as np
+    import soundfile as sf
+    try:
+        import pyworld as pw
+    except ImportError:
+        log("pyworld fehlt. Bitte einmalig einrichten (pip install pyworld).")
+        sys.exit(1)
+
+    def read_mono(path):
+        y, fs = sf.read(path, dtype="float64", always_2d=False)
+        if getattr(y, "ndim", 1) > 1:
+            y = y.mean(axis=1)
+        return np.ascontiguousarray(y, dtype=np.float64), fs
+
+    x, fs = read_mono(args.input)
+    r, rfs = read_mono(args.reference)
+    if rfs != fs:
+        import librosa
+        r = np.ascontiguousarray(librosa.resample(r, orig_sr=rfs, target_sr=fs), dtype=np.float64)
+
+    try:
+        strength = max(0.0, min(1.0, float(args.strength)))
+    except (TypeError, ValueError):
+        strength = 1.0
+
+    log("Analysiere Aufnahme (WORLD) …")
+    f0, t = pw.harvest(x, fs)
+    sp = pw.cheaptrick(x, f0, t, fs)
+    ap = pw.d4c(x, f0, t, fs)
+
+    log("Analysiere Referenz-Melodie …")
+    rf0, rt = pw.harvest(r, fs)
+    target = np.interp(t, rt, rf0)  # Referenz-F0 auf das Zeitraster der Aufnahme
+
+    # Nur korrigieren, wo BEIDE stimmhaft sind; sonst Originaltonhöhe behalten (Atmer/Pausen bleiben).
+    new_f0 = f0.copy()
+    both = (f0 > 0) & (target > 20.0)
+    new_f0[both] = np.exp(np.log(f0[both]) + strength * (np.log(target[both]) - np.log(f0[both])))
+
+    log("Synthetisiere korrigierte Stimme …")
+    y = pw.synthesize(np.ascontiguousarray(new_f0, dtype=np.float64), sp, ap, fs)
+    peak = float(np.max(np.abs(y))) if y.size else 0.0
+    if peak > 1.0:
+        y = y / peak * 0.98
+    sf.write(args.out, y.astype(np.float32), fs)
+    log("Fertig.")
+
+
 def main():
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -357,6 +409,7 @@ def main():
     vc = sub.add_parser("vc"); vc.add_argument("--input", required=True); vc.add_argument("--speaker", default=""); vc.add_argument("--out", required=True); vc.add_argument("--device", default="auto"); vc.add_argument("--models-dir", default=""); vc.add_argument("--diffusion-steps", default="30"); vc.add_argument("--auto-f0-adjust", default="False")
     sub.add_parser("gpu-check")
     sp = sub.add_parser("separate"); sp.add_argument("--input", required=True); sp.add_argument("--out-dir", required=True); sp.add_argument("--model", required=True)
+    at = sub.add_parser("autotune"); at.add_argument("--input", required=True); at.add_argument("--reference", required=True); at.add_argument("--out", required=True); at.add_argument("--strength", default="1.0")
 
     args = p.parse_args()
     {
@@ -367,6 +420,7 @@ def main():
         "vc": cmd_vc,
         "gpu-check": cmd_gpu_check,
         "separate": cmd_separate,
+        "autotune": cmd_autotune,
     }[args.cmd](args)
 
 

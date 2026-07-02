@@ -295,6 +295,22 @@
                     <ui:Button Margin="20,0,0,0" Icon="{ui:SymbolIcon CheckmarkCircle24}" Content="Als Spur übernehmen"
                                Appearance="Success" Command="{Binding AcceptCommand}" />
                 </StackPanel>
+                <!-- „Perfekt machen": Auto-Tune auf die Original-Melodie + optionale Stimm-Veredelung -->
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <ui:Button Content="✨ Perfekt machen" Appearance="Primary"
+                               Command="{Binding MakePerfectCommand}" IsEnabled="{Binding HasRecording}"
+                               ToolTip="Zieht deine Aufnahme auf die Original-Melodie (deine Stimme bleibt) und übernimmt sie als neue Spur." />
+                    <TextBlock Margin="16,0,6,0" VerticalAlignment="Center" FontSize="12"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Stärke" />
+                    <Slider Width="120" VerticalAlignment="Center" Minimum="0" Maximum="1"
+                            Value="{Binding MagicStrength, Mode=TwoWay}"
+                            ToolTip="0 = unverändert, 1 = exakt auf der Melodie" />
+                    <TextBlock Margin="16,0,6,0" VerticalAlignment="Center" FontSize="12"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Veredeln mit" />
+                    <ComboBox Width="200" ItemsSource="{Binding Voices}" DisplayMemberPath="Name"
+                              SelectedItem="{Binding SelectedVoice, Mode=TwoWay}"
+                              ToolTip="Optional: die korrigierte Stimme per seed-vc auf eine Zielstimme tauschen." />
+                </StackPanel>
             </StackPanel>
         </Border>
 

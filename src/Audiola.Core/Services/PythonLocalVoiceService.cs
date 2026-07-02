@@ -333,6 +333,33 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         return AudioProcessingHelper.ReadStereo(outWav);
     }
 
+    public async Task<(float[] Samples, int SampleRate)> AutoTuneAsync(string inputWav, string referenceWav,
+        double strength, IProgress<string>? progress = null, CancellationToken ct = default)
+    {
+        RequireScript();
+        await EnsureAutotuneAsync(progress, ct);
+        var outWav = TempWav("tuned");
+        var (code, _, err) = await RunAsync(
+            ["autotune", "--input", inputWav, "--reference", referenceWav, "--out", outWav,
+             "--strength", strength.ToString(System.Globalization.CultureInfo.InvariantCulture)],
+            progress, ct);
+        if (code != 0 || !File.Exists(outWav))
+            throw new InvalidOperationException($"Tonhöhen-Korrektur fehlgeschlagen: {Short(err)}");
+        return AudioProcessingHelper.ReadStereo(outWav);
+    }
+
+    /// <summary>Stellt die Tonhöhen-Korrektur bereit (WORLD-Vocoder). Idempotent über einen Marker.</summary>
+    private async Task EnsureAutotuneAsync(IProgress<string>? progress, CancellationToken ct)
+    {
+        await _env.EnsureAsync(progress, ct);
+        Directory.CreateDirectory(ModelsDir);
+        var marker = Path.Combine(ModelsDir, ".audiola_autotune_ok");
+        if (File.Exists(marker)) return;
+        progress?.Report("Richte Tonhöhen-Korrektur ein (pyworld) …");
+        await _env.InstallAsync(["pyworld", "soundfile"], null, progress, ct);
+        try { File.WriteAllText(marker, "ok"); } catch { }
+    }
+
     public async Task<IReadOnlyList<TranscriptSegment>> TranscribeAsync(string inputWav, string whisperModel, CancellationToken ct = default)
     {
         RequireScript();

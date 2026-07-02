@@ -21,6 +21,8 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     private readonly ISettingsService _settings;
     private readonly SongMetadata _songMeta;
     private readonly ISnackbarService _snackbar;
+    private readonly ILocalVoiceService _voice;
+    private readonly IVoiceProfileStore _voiceStore;
 
     private readonly VocalRecordingEngine _engine = new();
     private readonly LatencyCalibrator _calibrator = new();
@@ -30,12 +32,14 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     private string? _backingPath;
 
     public SingAlongViewModel(TimelineViewModel timeline, ISettingsService settings,
-        SongMetadata songMeta, ISnackbarService snackbar)
+        SongMetadata songMeta, ISnackbarService snackbar, ILocalVoiceService voice, IVoiceProfileStore voiceStore)
     {
         _timeline = timeline;
         _settings = settings;
         _songMeta = songMeta;
         _snackbar = snackbar;
+        _voice = voice;
+        _voiceStore = voiceStore;
         _engine.LatencySeconds = settings.Current.VocalLatencyMs / 1000.0;
         LatencyMs = settings.Current.VocalLatencyMs;
 
@@ -106,6 +110,12 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     [ObservableProperty] private int _points;
     private int _hits, _judged;
 
+    // ---- „Perfekt machen" (Auto-Tune + optional Stimm-Veredelung) ----
+    [ObservableProperty] private double _magicStrength = 0.85;   // 0 = aus, 1 = exakt auf der Melodie
+    [ObservableProperty] private bool _hasRecording;             // wurde tatsächlich etwas gesungen?
+    public ObservableCollection<VoiceOption> Voices { get; } = [];
+    [ObservableProperty] private VoiceOption? _selectedVoice;    // null-Profil = nur Tonhöhe
+
     public IReadOnlyList<PitchPoint> Reference => _reference;
     public IReadOnlyList<PitchSample> SungHistory => _sung;
     public event EventHandler? PitchUpdated;   // fürs Pitch-Band-Control
@@ -132,6 +142,12 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
 
         DurationSeconds = _timeline.DurationSeconds;
         LoadLyrics(_songMeta.Lyrics);   // vorhandene Lyrics aus den Metadaten übernehmen
+
+        // Ziel-Stimmen für die optionale Veredelung (seed-vc): „keine" + lokale Profile.
+        Voices.Clear();
+        Voices.Add(new VoiceOption("Nur Tonhöhe (deine Stimme)", null));
+        foreach (var p in _voiceStore.Profiles) Voices.Add(new VoiceOption(p.Name, p));
+        SelectedVoice = Voices.FirstOrDefault();
     }
 
     private void LoadLyrics(string? lrc)
@@ -314,6 +330,57 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         finally { IsBusy = false; }
     }
 
+    // ---- „Perfekt machen": Auto-Tune (+ optional Stimm-Veredelung) → neue Spur ----
+    [RelayCommand]
+    private async Task MakePerfectAsync()
+    {
+        if (IsBusy) return;
+        _engine.Stop();
+
+        var buf = _engine.VocalBuffer;
+        if (!HasRecording || buf.Length == 0) { Status = "Erst etwas einsingen."; return; }
+        var refPath = ReferenceTrack?.Clips.FirstOrDefault()?.SourcePath;
+        if (string.IsNullOrEmpty(refPath))
+        {
+            Status = "Keine Gesangsspur als Referenz gewählt (links in der Spurenliste).";
+            return;
+        }
+
+        IsBusy = true; Status = "Tonhöhe wird auf die Original-Melodie gezogen …";
+        try
+        {
+            var dir = Path.Combine(Path.GetTempPath(), "Audiola", "magic");
+            Directory.CreateDirectory(dir);
+            var prog = new Progress<string>(m => Status = m);
+
+            // 1) Aufnahme-Puffer → WAV
+            var inWav = Path.Combine(dir, $"in_{Guid.NewGuid():N}.wav");
+            AudioExporter.Export(new FloatArraySampleProvider(buf, _engine.SampleRate, 1), inWav);
+
+            // 2) Auto-Tune gegen die Referenz-Melodie (WORLD-Vocoder)
+            var (tuned, sr) = await _voice.AutoTuneAsync(inWav, refPath, MagicStrength, prog);
+            var resultWav = Path.Combine(dir, $"tuned_{Guid.NewGuid():N}.wav");
+            AudioExporter.Export(new FloatArraySampleProvider(tuned, sr, 2), resultWav);
+
+            // 3) Optional: Stimm-Veredelung per seed-vc (auf eine Zielstimme)
+            if (SelectedVoice?.Profile is { } prof)
+            {
+                Status = $"Stimme wird veredelt ({prof.Name}) …";
+                var (swapped, sr2) = await _voice.ChangeVoiceAsync(resultWav, prof, 50, autoF0Adjust: false, prog);
+                resultWav = Path.Combine(dir, $"voiced_{Guid.NewGuid():N}.wav");
+                AudioExporter.Export(new FloatArraySampleProvider(swapped, sr2, 2), resultWav);
+            }
+
+            // 4) Als neue Studio-Spur
+            await _timeline.AddAudioFileAsync(resultWav, -1, 0);
+            _snackbar.Show("Perfektioniert ✨", "Als neue Spur ins Studio eingefügt.",
+                ControlAppearance.Success, new SymbolIcon(SymbolRegular.CheckmarkCircle24), TimeSpan.FromSeconds(3));
+            Status = "Fertig — perfektionierte Spur eingefügt.";
+        }
+        catch (Exception ex) { UiError.Show("Perfekt machen fehlgeschlagen", ex.Message); Status = ""; }
+        finally { IsBusy = false; }
+    }
+
     // ---- Engine-Events ----
     private void OnPosition()
     {
@@ -355,6 +422,7 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         if (disp is not null && !disp.CheckAccess()) { disp.BeginInvoke(() => OnPitchDetected(sender, s)); return; }
 
         _sung.Add(s);
+        if (s.Level > 0.02f) HasRecording = true;   // es kam echter Gesang an
         SungHz = s.Hz;
         SungNote = s.Hz > 0 ? PitchDetector.MidiToName(PitchDetector.HzToMidi(s.Hz)) : "–";
 
@@ -411,3 +479,6 @@ public sealed class LyricLineViewModel(double timeSeconds, string text)
 
 /// <summary>Ein wählbares Aufnahme-Gerät (Mikrofon).</summary>
 public sealed record MicDevice(int Index, string Name);
+
+/// <summary>Ziel-Stimme für die optionale Veredelung — Profil = null bedeutet „nur Tonhöhe".</summary>
+public sealed record VoiceOption(string Name, Audiola.Models.VoiceProfile? Profile);

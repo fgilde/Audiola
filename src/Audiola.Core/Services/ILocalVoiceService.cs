@@ -63,4 +63,12 @@ public interface ILocalVoiceService
 
     /// <summary>Transkribiert eine Audiodatei via Whisper in Zeit-Segmente.</summary>
     Task<IReadOnlyList<TranscriptSegment>> TranscribeAsync(string inputWav, string whisperModel, CancellationToken ct = default);
+
+    /// <summary>
+    /// Tonhöhen-Korrektur (Auto-Tune): zieht die Aufnahme (<paramref name="inputWav"/>) auf die
+    /// Melodie der Referenz (<paramref name="referenceWav"/>) und behält die eigene Klangfarbe
+    /// (WORLD-Vocoder). <paramref name="strength"/> 0..1 blendet die Korrektur.
+    /// </summary>
+    Task<(float[] Samples, int SampleRate)> AutoTuneAsync(string inputWav, string referenceWav,
+        double strength, IProgress<string>? progress = null, CancellationToken ct = default);
 }
