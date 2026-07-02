@@ -78,6 +78,18 @@ public sealed partial class HomeViewModel : ObservableObject
             await Load(dialog.FileName);
     }
 
+    [RelayCommand]
+    private async Task OpenProjectDialogAsync()
+    {
+        var dialog = new OpenFileDialog { Title = "Projekt öffnen", Filter = "Audiola-Projekt|*.audiola|Alle Dateien|*.*" };
+        if (dialog.ShowDialog() != true) return;
+        await OpenAsync(new RecentItem(dialog.FileName,
+            Path.GetFileNameWithoutExtension(dialog.FileName), isProject: true));
+    }
+
+    [RelayCommand]
+    private void GoToStudio() => _navigation.Navigate(typeof(Views.Pages.TimelinePage));
+
     // ---- Einheitliche Aktionen für beide Listen ----
 
     [RelayCommand]

@@ -95,6 +95,27 @@
                         <MenuItem Header="Audio ins Studio hinzufügen…" Click="AddToStudio_Click" />
                         <Separator />
                         <MenuItem Header="Projekt öffnen…" Click="OpenProject_Click" />
+                        <MenuItem Header="Letzte Projekte" ItemsSource="{Binding Home.RecentProjects}"
+                                  IsEnabled="{Binding Home.HasRecentProjects}">
+                            <MenuItem.ItemContainerStyle>
+                                <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                    <Setter Property="Header" Value="{Binding Name}" />
+                                    <Setter Property="ToolTip" Value="{Binding Path}" />
+                                    <EventSetter Event="Click" Handler="RecentItem_Click" />
+                                </Style>
+                            </MenuItem.ItemContainerStyle>
+                        </MenuItem>
+                        <MenuItem Header="Letzte Dateien" ItemsSource="{Binding Home.RecentFiles}"
+                                  IsEnabled="{Binding Home.HasRecent}">
+                            <MenuItem.ItemContainerStyle>
+                                <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                    <Setter Property="Header" Value="{Binding Name}" />
+                                    <Setter Property="ToolTip" Value="{Binding Path}" />
+                                    <EventSetter Event="Click" Handler="RecentItem_Click" />
+                                </Style>
+                            </MenuItem.ItemContainerStyle>
+                        </MenuItem>
+                        <Separator />
                         <MenuItem Header="Projekt speichern" InputGestureText="Strg+S" Click="SaveProjectQuick_Click"
                                   IsEnabled="{Binding Transport.HasTrack}" />
                         <MenuItem Header="Projekt speichern unter…" Click="SaveProjectAs_Click"
@@ -170,13 +191,13 @@
                     BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,0,1,0">
                 <DockPanel LastChildFill="False">
                     <StackPanel x:Name="RailItems" DockPanel.Dock="Top" Margin="0,6,0,0">
-                        <RadioButton x:Name="RailStudio" Style="{StaticResource RailItem}" IsChecked="True"
-                                     Tag="{x:Type pages:TimelinePage}" Click="Nav_Click" ToolTip="Studio (Timeline)">
-                            <ui:SymbolIcon Symbol="Timeline24" FontSize="19" />
+                        <RadioButton Style="{StaticResource RailItem}" IsChecked="True"
+                                     Tag="{x:Type pages:HomePage}" Click="Nav_Click" ToolTip="Start — Projekte &amp; zuletzt geöffnet">
+                            <ui:SymbolIcon Symbol="Home24" FontSize="19" />
                         </RadioButton>
                         <RadioButton Style="{StaticResource RailItem}"
-                                     Tag="{x:Type pages:HomePage}" Click="Nav_Click" ToolTip="Projekte &amp; zuletzt geöffnet">
-                            <ui:SymbolIcon Symbol="Home24" FontSize="19" />
+                                     Tag="{x:Type pages:TimelinePage}" Click="Nav_Click" ToolTip="Studio (Timeline)">
+                            <ui:SymbolIcon Symbol="Timeline24" FontSize="19" />
                         </RadioButton>
                         <Rectangle Style="{StaticResource RailSeparator}" />
                         <RadioButton Style="{StaticResource RailItem}"

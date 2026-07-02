@@ -20,6 +20,9 @@ public partial class MainWindow : FluentWindow
 
     public TransportViewModel Transport { get; }
 
+    /// <summary>Zuletzt geöffnete Projekte/Dateien fürs Datei-Menü (geteilt mit der Startseite).</summary>
+    public HomeViewModel Home => App.GetService<HomeViewModel>();
+
     public MainWindow(
         MainWindowViewModel viewModel,
         TransportViewModel transport,
@@ -40,8 +43,8 @@ public partial class MainWindow : FluentWindow
         snackbarService.SetSnackbarPresenter(RootSnackbarPresenter);
         contentDialogService.SetDialogHost(RootContentDialogPresenter);
 
-        // Start direkt im Studio — die Arbeitsfläche ist das Zentrum der App.
-        Loaded += (_, _) => _navigationService.Navigate(typeof(Views.Pages.TimelinePage));
+        // Start auf der Startseite (Projekte & zuletzt geöffnet); Öffnen springt ins Studio.
+        Loaded += (_, _) => _navigationService.Navigate(typeof(Views.Pages.HomePage));
         Closing += OnWindowClosing;
 
         // Statusleiste: laufende Hintergrund-Arbeit des Studios anzeigen (Stems, Stimmtausch …).
@@ -258,6 +261,13 @@ public partial class MainWindow : FluentWindow
             // über den Dispatcher nachreichen, damit es nach Abschluss dieses Events läuft.
             await Dispatcher.BeginInvoke(new Action(Close));
         }
+    }
+
+    /// <summary>Eintrag aus „Letzte Projekte"/„Letzte Dateien" im Datei-Menü öffnen.</summary>
+    private void RecentItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.MenuItem { DataContext: ViewModels.RecentItem item })
+            Home.OpenCommand.Execute(item);
     }
 
     /// <summary>Navigation aus Rail (RadioButton) und Menü (MenuItem) — Ziel steckt im Tag.</summary>
