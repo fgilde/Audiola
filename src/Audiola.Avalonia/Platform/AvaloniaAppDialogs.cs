@@ -54,6 +54,24 @@ public sealed class AvaloniaAppDialogs(INotifier notifier) : IAppDialogs
         return Task.CompletedTask;
     }
 
+    public Task<VariationChoice?> PickVariationsAsync(IReadOnlyList<IAudioVariationProvider> providers, string scope)
+    {
+        NotPortedYet("Variationen-Auswahl");
+        return Task.FromResult<VariationChoice?>(null);
+    }
+
+    public Task<ViewModels.VoiceChoice?> PickVoiceAsync()
+    {
+        NotPortedYet("Stimmen-Auswahl");
+        return Task.FromResult<ViewModels.VoiceChoice?>(null);
+    }
+
+    public Task<TextToSpeechRequest?> AskTextToSpeechAsync()
+    {
+        NotPortedYet("Text zu Sprache");
+        return Task.FromResult<TextToSpeechRequest?>(null);
+    }
+
     private void NotPortedYet(string what) =>
         notifier.Warning(what, "Wird gerade auf die plattformübergreifende Oberfläche portiert.", 5);
 

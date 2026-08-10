@@ -13,7 +13,7 @@ public static class ShellPages
     {
         [ShellPage.Home] = typeof(HomePage),
         [ShellPage.Editor] = typeof(EditorPage),
-        [ShellPage.Timeline] = typeof(PendingPage),
+        [ShellPage.Timeline] = typeof(TimelinePage),
         [ShellPage.Equalizer] = typeof(EqualizerPage),
         [ShellPage.Mastering] = typeof(MasteringPage),
         [ShellPage.SpatialAudio] = typeof(SpatialAudioPage),

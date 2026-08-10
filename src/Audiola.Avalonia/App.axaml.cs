@@ -133,6 +133,7 @@ public partial class App : Application
         services.AddSingleton<EditorPage>();
         services.AddSingleton<SpatialAudioPage>();
         services.AddSingleton<VoicesPage>();
+        services.AddSingleton<TimelinePage>();
         services.AddSingleton<EditorViewModel>();
         services.AddSingleton<TimelineViewModel>();
         services.AddSingleton<EqualizerViewModel>();

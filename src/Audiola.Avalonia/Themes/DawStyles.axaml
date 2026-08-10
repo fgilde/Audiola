@@ -135,22 +135,34 @@
 
   <!-- Primär-Button (Play, „Übernehmen" …): Avalonias accent-Klasse zieht die Systemfarbe,
        hier stattdessen der Studio-Akzent wie in der WPF-Fassung. -->
-  <Style Selector="Button.accent">
+  <!-- Der Fluent-Standard zieht die Systemakzentfarbe im Template; deshalb hier direkt am
+       ContentPresenter überschreiben, sonst gewinnt die Windows-Farbe des Nutzers. -->
+  <Style Selector="Button.accent /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource DawAccentBrush}" />
-    <Setter Property="Foreground" Value="White" />
     <Setter Property="BorderBrush" Value="{DynamicResource DawAccentBrush}" />
+    <Setter Property="Foreground" Value="White" />
   </Style>
   <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource DawAccentLightBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource DawAccentLightBrush}" />
     <Setter Property="Foreground" Value="White" />
   </Style>
+  <Style Selector="Button.accent:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DawAccentBrush}" />
+    <Setter Property="Opacity" Value="0.85" />
+  </Style>
 
   <!-- Warn-/Aufnahme-Button (REC läuft): rot statt Akzentblau. -->
-  <Style Selector="Button.danger">
+  <Style Selector="Button.danger /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource DawRecBrush}" />
-    <Setter Property="Foreground" Value="White" />
     <Setter Property="BorderBrush" Value="{DynamicResource DawRecBrush}" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+
+  <!-- Schalter ohne „On/Off"-Beschriftung (die WPF-Fassung zeigt nur den Schalter). -->
+  <Style Selector="ToggleSwitch">
+    <Setter Property="OnContent" Value="" />
+    <Setter Property="OffContent" Value="" />
   </Style>
 
   <!-- Menüleiste und Menüs in Studio-Farben (Avalonias Fluent-Standard ist heller). -->

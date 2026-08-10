@@ -120,6 +120,32 @@ public sealed class WpfAppDialogs : IAppDialogs
         new PreviewDialog(url, fileName) { Owner = Owner }.ShowDialog();
         return Task.CompletedTask;
     }
+
+    public Task<VariationChoice?> PickVariationsAsync(IReadOnlyList<IAudioVariationProvider> providers, string scope)
+    {
+        var dialog = new VariationPickerWindow(providers, scope) { Owner = Owner };
+        VariationChoice? result = dialog.ShowDialog() == true
+                                 && dialog.SelectedProvider is { } provider
+                                 && dialog.SelectedVariationIds.Count > 0
+            ? new VariationChoice(provider, dialog.SelectedVariationIds)
+            : null;
+        return Task.FromResult(result);
+    }
+
+    public Task<VoiceChoice?> PickVoiceAsync()
+    {
+        var dialog = new VoiceSwapDialog { Owner = Owner };
+        return Task.FromResult(dialog.ShowDialog() == true ? dialog.Result : null);
+    }
+
+    public Task<TextToSpeechRequest?> AskTextToSpeechAsync()
+    {
+        var dialog = new TextToSpeechDialog { Owner = Owner };
+        TextToSpeechRequest? result = dialog.ShowDialog() == true && dialog.Result is { } voice
+            ? new TextToSpeechRequest(dialog.Text, voice, dialog.Speed, dialog.Stability, dialog.Similarity)
+            : null;
+        return Task.FromResult(result);
+    }
 }
 
 /// <summary>Theme-Umschaltung über den WPF-UI-<see cref="ThemeManager"/>.</summary>

@@ -19,6 +19,17 @@ public sealed record ExportDialogRequest(
     bool ElevenLabsAvailable,
     Func<ExportRequest, Task> PreviewAsync);
 
+/// <summary>Auswahl des Variationen-Dialogs: Provider plus angekreuzte Variationen.</summary>
+public sealed record VariationChoice(IAudioVariationProvider Provider, IReadOnlyList<string> VariationIds);
+
+/// <summary>Eingaben des Text-zu-Sprache-Dialogs.</summary>
+public sealed record TextToSpeechRequest(
+    string Text,
+    Audiola.ViewModels.VoiceChoice Voice,
+    double Speed,
+    double Stability,
+    double Similarity);
+
 /// <summary>Antwort der Speichern-Rückfrage beim Schließen/Wechseln eines Projekts.</summary>
 public enum SaveDiscardCancel
 {
@@ -53,4 +64,13 @@ public interface IAppDialogs
 
     /// <summary>Modale Datei-Vorschau (eingebetteter Browser bzw. Systembrowser als Rückfall).</summary>
     Task ShowFilePreviewAsync(string url, string fileName);
+
+    /// <summary>Variationen-Auswahl (Provider + Variationen); <c>null</c> = abgebrochen.</summary>
+    Task<VariationChoice?> PickVariationsAsync(IReadOnlyList<IAudioVariationProvider> providers, string scope);
+
+    /// <summary>Stimmen-Auswahl für den Stimmtausch (wählen/aufnehmen/hochladen); <c>null</c> = abgebrochen.</summary>
+    Task<Audiola.ViewModels.VoiceChoice?> PickVoiceAsync();
+
+    /// <summary>Text-zu-Sprache-Dialog; <c>null</c> = abgebrochen.</summary>
+    Task<TextToSpeechRequest?> AskTextToSpeechAsync();
 }

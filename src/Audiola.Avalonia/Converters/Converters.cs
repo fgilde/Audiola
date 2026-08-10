@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.IO;
+using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -58,6 +59,34 @@ public sealed class BytesToImageConverter : IValueConverter
         }
         catch { return null; }
     }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>[Sekunden, Pixel/Sekunde] → Breite in Pixeln (für Clips und Auswahlbereiche).</summary>
+public sealed class SecondsToWidthConverter : IMultiValueConverter
+{
+    public object Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
+        => values.Count >= 2 && values[0] is double seconds && values[1] is double pixelsPerSecond
+            ? Math.Max(2, seconds * pixelsPerSecond)
+            : 0d;
+}
+
+/// <summary>[Sekunden, Pixel/Sekunde] → linker Rand für die Position auf der Zeitachse.</summary>
+public sealed class SecondsToMarginConverter : IMultiValueConverter
+{
+    public object Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
+        => values.Count >= 2 && values[0] is double seconds && values[1] is double pixelsPerSecond
+            ? new Thickness(Math.Max(0, seconds * pixelsPerSecond), 0, 0, 0)
+            : new Thickness(0);
+}
+
+/// <summary>Pixel-X → linker Rand (Thickness) — für den Playhead, dessen VM nur die X-Position kennt.</summary>
+public sealed class PixelsToLeftMarginConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => new Thickness(value is double x ? Math.Max(0, x) : 0, 0, 0, 0);
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => throw new NotSupportedException();
