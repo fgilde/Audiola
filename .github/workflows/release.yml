@@ -56,7 +56,7 @@ jobs:
             rid: linux-x64
             platform: linux-x64
             channel: audiola-linux-x64
-            installer_pattern: "*Portable*.AppImage"
+            installer_pattern: "*.AppImage"
             download_suffix: AppImage
           - product: Singola
             project: src/Singola.Avalonia/Singola.Avalonia.csproj
@@ -92,7 +92,7 @@ jobs:
             rid: linux-x64
             platform: linux-x64
             channel: singola-linux-x64
-            installer_pattern: "*Portable*.AppImage"
+            installer_pattern: "*.AppImage"
             download_suffix: AppImage
 
     steps:
