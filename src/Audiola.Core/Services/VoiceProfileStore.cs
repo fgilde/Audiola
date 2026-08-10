@@ -19,7 +19,7 @@ public sealed class VoiceProfileStore : IVoiceProfileStore
     public VoiceProfileStore()
     {
         _dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Audiola", "voices");
+            AppPaths.LocalDataDirectory, "voices");
         Directory.CreateDirectory(_dir);
         _manifest = Path.Combine(_dir, "profiles.json");
         Load();

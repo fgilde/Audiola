@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseCompiledBindingsByDefault>true</UseCompiledBindingsByDefault>
+    <AssemblyName>Audiola</AssemblyName>
+    <RuntimeIdentifiers>win-x64;win-arm64;osx-x64;osx-arm64;linux-x64;linux-arm64</RuntimeIdentifiers>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="NAudio" Version="2.3.0" />
+    <PackageReference Include="JAJ.Packages.MiniAudioEx" Version="3.3.6" />
+    <PackageReference Include="Velopack" Version="0.0.1298" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Audiola.Core\Audiola.Core.csproj" />
+    <!-- These services and models are UI-framework-independent but have not yet moved to Core. -->
+    <Compile Include="..\Audiola\Services\IEvaluationService.cs" Link="Shared\Services\IEvaluationService.cs" />
+    <Compile Include="..\Audiola\Services\EvaluationService.cs" Link="Shared\Services\EvaluationService.cs" />
+    <Compile Include="..\Audiola\Services\IProvenanceService.cs" Link="Shared\Services\IProvenanceService.cs" />
+    <Compile Include="..\Audiola\Services\ProvenanceService.cs" Link="Shared\Services\ProvenanceService.cs" />
+    <Compile Include="..\Audiola\Models\EvaluationResult.cs" Link="Shared\Models\EvaluationResult.cs" />
+    <Compile Include="..\Audiola\Models\ProvenanceReport.cs" Link="Shared\Models\ProvenanceReport.cs" />
+    <Compile Include="..\Singola.Avalonia\Platform\MiniAudioPlatform.cs" Link="Platform\MiniAudioPlatform.cs" />
+    <Compile Include="..\Singola.Avalonia\Platform\WindowsNAudioPlayback.cs" Link="Platform\WindowsNAudioPlayback.cs" />
+  </ItemGroup>
+</Project>

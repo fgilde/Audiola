@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Audiola.Avalonia.Views.MetadataPage">
+  <ScrollViewer>
+    <StackPanel Margin="40" MaxWidth="820" Spacing="14">
+      <TextBlock FontSize="28" FontWeight="SemiBold" Text="Metadata" />
+      <TextBlock Foreground="#B9C2D0" TextWrapping="Wrap"
+                 Text="Project metadata is saved into the portable .audiola manifest and accompanies Core export flows that support tags." />
+      <Border Background="#20232B" CornerRadius="8" Padding="16">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="110,*" RowSpacing="10" ColumnSpacing="12">
+          <TextBlock VerticalAlignment="Center" Text="Title" />
+          <TextBox Grid.Column="1" Text="{Binding Parent.MetadataTitle, Mode=TwoWay}" />
+          <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="Artist" />
+          <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Parent.MetadataArtist, Mode=TwoWay}" />
+          <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="Album" />
+          <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Parent.MetadataAlbum, Mode=TwoWay}" />
+          <TextBlock Grid.Row="3" VerticalAlignment="Center" Text="Genre" />
+          <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Parent.MetadataGenre, Mode=TwoWay}" />
+        </Grid>
+      </Border>
+      <Border Background="#20232B" CornerRadius="8" Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock FontWeight="SemiBold" Text="Lyrics / LRC" />
+          <TextBox Height="170" AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding Parent.MetadataLyrics, Mode=TwoWay}" />
+        </StackPanel>
+      </Border>
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <Button Content="Choose cover…" Command="{Binding Parent.ChooseCoverCommand}" />
+        <TextBlock VerticalAlignment="Center" Foreground="#9CA8BA" Text="{Binding Parent.MetadataCoverStatus}" />
+        <Button Content="Save project…" Command="{Binding Parent.SaveProjectCommand}" />
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

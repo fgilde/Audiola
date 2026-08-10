@@ -28,7 +28,7 @@ public sealed class SongCacheEntry
 public static class SongCache
 {
     private static readonly string CacheDir = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Audiola", "songcache");
+        AppPaths.LocalDataDirectory, "songcache");
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 

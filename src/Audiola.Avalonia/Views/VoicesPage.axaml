@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Audiola.Avalonia.Views.VoicesPage">
+  <ScrollViewer>
+    <StackPanel Margin="40" MaxWidth="1000" Spacing="14">
+      <TextBlock FontSize="28" FontWeight="SemiBold" Text="Voices" />
+      <TextBlock Foreground="#B9C2D0" TextWrapping="Wrap"
+                 Text="Profiles and reference samples are stored outside projects. Only add a voice you own or are licensed to use." />
+      <Border Background="#20232B" CornerRadius="8" Padding="16">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Button Content="Refresh local models" Command="{Binding Parent.LoadVoiceModelsCommand}" />
+          <Button Content="Add profile from sample…" Command="{Binding Parent.AddVoiceProfileCommand}" />
+          <TextBlock VerticalAlignment="Center" Foreground="#9CA8BA" Text="{Binding Parent.VoiceStatus}" />
+        </StackPanel>
+      </Border>
+      <TextBlock Foreground="#FFCA7A" TextWrapping="Wrap" Text="{Binding Parent.VoiceEngineMessage}" />
+      <Border Background="#20232B" CornerRadius="8" Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock FontWeight="SemiBold" Text="Text-to-speech export" />
+          <ComboBox ItemsSource="{Binding Parent.VoiceProfiles}" SelectedItem="{Binding Parent.SelectedVoiceProfile}">
+            <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+          <TextBox AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding Parent.VoiceText, Mode=TwoWay}" />
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock VerticalAlignment="Center" Text="{Binding Parent.VoiceSpeed, StringFormat='Speed: {0:0.00}×'}" />
+            <Slider Grid.Column="1" Margin="10,0" Minimum="0.5" Maximum="1.5" Value="{Binding Parent.VoiceSpeed, Mode=TwoWay}" />
+            <Button Grid.Column="2" Content="Generate WAV…" Command="{Binding Parent.SynthesizeVoiceCommand}"
+                    IsEnabled="{Binding Parent.CanSynthesizeVoice}" />
+          </Grid>
+        </StackPanel>
+      </Border>
+      <Grid ColumnDefinitions="*,*" ColumnSpacing="20">
+        <StackPanel Spacing="8">
+          <TextBlock FontSize="17" FontWeight="SemiBold" Text="Stored profiles" />
+          <ItemsControl ItemsSource="{Binding Parent.VoiceProfiles}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Background="#20232B" CornerRadius="8" Padding="12" Margin="0,3">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel>
+                      <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                      <TextBlock FontSize="12" Foreground="#9CA8BA" Text="{Binding Description}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Remove" Command="{Binding DataContext.Parent.RemoveVoiceProfileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Spacing="8">
+          <TextBlock FontSize="17" FontWeight="SemiBold" Text="Local model catalog" />
+          <ItemsControl ItemsSource="{Binding Parent.VoiceModels}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Background="#20232B" CornerRadius="8" Padding="12" Margin="0,3">
+                  <StackPanel>
+                    <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                    <TextBlock FontSize="12" Foreground="#9CA8BA" Text="{Binding Description}" TextWrapping="Wrap" />
+                    <TextBlock FontSize="11" Foreground="#9CA8BA" Text="{Binding SizeText}" />
+                    <Button HorizontalAlignment="Left" Margin="0,6,0,0" Content="Install model"
+                            Command="{Binding DataContext.Parent.DownloadVoiceModelCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}"
+                            IsEnabled="{Binding DataContext.Parent.VoiceEngineAvailable, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

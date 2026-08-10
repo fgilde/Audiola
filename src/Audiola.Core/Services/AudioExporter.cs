@@ -1,4 +1,5 @@
 using System.IO;
+using System.Diagnostics;
 using CUETools.Codecs;
 using CUETools.Codecs.FLAKE;
 using NAudio.MediaFoundation;
@@ -9,7 +10,7 @@ namespace Audiola.Services;
 
 /// <summary>
 /// Schreibt einen Sample-Stream je nach Dateiendung als WAV, MP3, AAC/M4A oder FLAC.
-/// MP3/AAC laufen über Windows Media Foundation (auf Windows immer vorhanden),
+/// MP3/AAC laufen unter Windows über Windows Media Foundation und auf anderen Plattformen über FFmpeg,
 /// FLAC über den rein verwalteten FLAKE-Encoder (CUETools.Codecs.FLAKE) – damit
 /// unabhängig vom unzuverlässigen MF-FLAC-Encoder (MF_E_INVALIDMEDIATYPE).
 /// </summary>
@@ -31,14 +32,12 @@ public static class AudioExporter
         switch (ext)
         {
             case ".mp3":
-                EnsureMediaFoundation();
-                MediaFoundationEncoder.EncodeToMp3(new SampleToWaveProvider16(source), path, bitrate);
+                ExportLossy(source, path, bitrate, isAac: false);
                 break;
 
             case ".m4a":
             case ".aac":
-                EnsureMediaFoundation();
-                MediaFoundationEncoder.EncodeToAac(new SampleToWaveProvider16(source), path, bitrate);
+                ExportLossy(source, path, bitrate, isAac: true);
                 break;
 
             case ".flac":
@@ -49,6 +48,113 @@ public static class AudioExporter
             default:
                 WaveFileWriter.CreateWaveFile16(path, source);
                 break;
+        }
+    }
+
+    private static void ExportLossy(ISampleProvider source, string path, int bitrate, bool isAac)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            EnsureMediaFoundation();
+            if (isAac)
+                MediaFoundationEncoder.EncodeToAac(new SampleToWaveProvider16(source), path, bitrate);
+            else
+                MediaFoundationEncoder.EncodeToMp3(new SampleToWaveProvider16(source), path, bitrate);
+            return;
+        }
+
+        ExportWithFfmpeg(source, path, bitrate, isAac);
+    }
+
+    private static void ExportWithFfmpeg(ISampleProvider source, string path, int bitrate, bool isAac)
+    {
+        var ffmpeg = FfmpegExecutableLocator.Find();
+        var destination = Path.GetFullPath(path);
+        var destinationDirectory = Path.GetDirectoryName(destination)
+            ?? throw new InvalidOperationException($"Could not determine the output directory for '{path}'.");
+        var extension = Path.GetExtension(destination);
+        var inputPath = TempDir.File("export", ".wav", "ffmpeg-input");
+        var stagedOutputPath = Path.Combine(
+            destinationDirectory,
+            $".{Path.GetFileNameWithoutExtension(destination)}.{Guid.NewGuid():N}.tmp{extension}");
+
+        try
+        {
+            WaveFileWriter.CreateWaveFile16(inputPath, source);
+
+            var arguments = new List<string>
+            {
+                "-y",
+                "-hide_banner",
+                "-loglevel", "error",
+                "-i", inputPath,
+                "-vn",
+                "-c:a", isAac ? "aac" : "libmp3lame",
+                "-b:a", bitrate.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            };
+            if (isAac && extension.Equals(".m4a", StringComparison.OrdinalIgnoreCase))
+                arguments.AddRange(["-movflags", "+faststart"]);
+            arguments.Add(stagedOutputPath);
+
+            var result = RunFfmpeg(ffmpeg, arguments);
+            if (result.ExitCode != 0)
+            {
+                var details = string.IsNullOrWhiteSpace(result.Stderr)
+                    ? "FFmpeg did not provide an error message."
+                    : result.Stderr.Trim();
+                throw new InvalidOperationException($"FFmpeg failed to export '{destination}' (exit code {result.ExitCode}): {details}");
+            }
+
+            File.Move(stagedOutputPath, destination, overwrite: true);
+        }
+        finally
+        {
+            TryDelete(inputPath);
+            TryDelete(stagedOutputPath);
+        }
+    }
+
+    private static ProcessResult RunFfmpeg(string executable, IReadOnlyList<string> arguments)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = executable,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        foreach (var argument in arguments)
+            startInfo.ArgumentList.Add(argument);
+
+        try
+        {
+            using var process = Process.Start(startInfo)
+                ?? throw new InvalidOperationException($"Could not start FFmpeg at '{executable}'.");
+            var standardOutput = process.StandardOutput.ReadToEndAsync();
+            var standardError = process.StandardError.ReadToEndAsync();
+            process.WaitForExit();
+            return new ProcessResult(process.ExitCode, standardOutput.GetAwaiter().GetResult(), standardError.GetAwaiter().GetResult());
+        }
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            throw new InvalidOperationException($"Could not start FFmpeg at '{executable}'. Verify that it is executable.", ex);
+        }
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (IOException)
+        {
+            // Best effort cleanup; a locked temporary file cannot be removed yet.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Best effort cleanup; a locked temporary file cannot be removed yet.
         }
     }
 

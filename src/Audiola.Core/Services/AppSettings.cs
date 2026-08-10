@@ -46,7 +46,7 @@ public sealed class AppSettings
 
     /// <summary>Verzeichnis für heruntergeladene lokale Modelle.</summary>
     public string VoiceModelsDirectory { get; set; } =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Audiola", "voice-models");
+        Path.Combine(AppPaths.LocalDataDirectory, "voice-models");
 
     /// <summary>Standard-TTS-Modell für die lokale Sprachsynthese.</summary>
     public string LocalTtsModel { get; set; } = "kokoro";

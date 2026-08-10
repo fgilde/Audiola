@@ -7,106 +7,187 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release-Version (z. B. 0.1.1)'
+        description: Release version (for example, 0.1.1)
         required: true
-        default: '0.1.0'
+        default: 0.1.0
+
+permissions:
+  contents: write
 
 jobs:
-  release:
-    name: Audiola bauen, Velopack-Installer + Release veröffentlichen
-    runs-on: windows-2025
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-    permissions:
-      contents: write   # für das Erstellen des GitHub-Releases
+  package:
+    name: ${{ matrix.product }} · ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - product: Audiola
+            project: src/Audiola.Avalonia/Audiola.Avalonia.csproj
+            executable: Audiola
+            runner: windows-2025
+            rid: win-x64
+            platform: win-x64
+            channel: audiola-win-x64
+            installer_pattern: "*Setup*.exe"
+            download_suffix: Setup.exe
+          - product: Audiola
+            project: src/Audiola.Avalonia/Audiola.Avalonia.csproj
+            executable: Audiola
+            runner: macos-14
+            rid: osx-arm64
+            platform: osx-arm64
+            channel: audiola-osx-arm64
+            installer_pattern: "*.pkg"
+            download_suffix: Setup.pkg
+          - product: Audiola
+            project: src/Audiola.Avalonia/Audiola.Avalonia.csproj
+            executable: Audiola
+            runner: macos-13
+            rid: osx-x64
+            platform: osx-x64
+            channel: audiola-osx-x64
+            installer_pattern: "*.pkg"
+            download_suffix: Setup.pkg
+          - product: Audiola
+            project: src/Audiola.Avalonia/Audiola.Avalonia.csproj
+            executable: Audiola
+            runner: ubuntu-24.04
+            rid: linux-x64
+            platform: linux-x64
+            channel: audiola-linux-x64
+            installer_pattern: "*Portable*.AppImage"
+            download_suffix: AppImage
+          - product: Singola
+            project: src/Singola.Avalonia/Singola.Avalonia.csproj
+            executable: Singola
+            runner: windows-2025
+            rid: win-x64
+            platform: win-x64
+            channel: singola-win-x64
+            installer_pattern: "*Setup*.exe"
+            download_suffix: Setup.exe
+          - product: Singola
+            project: src/Singola.Avalonia/Singola.Avalonia.csproj
+            executable: Singola
+            runner: macos-14
+            rid: osx-arm64
+            platform: osx-arm64
+            channel: singola-osx-arm64
+            installer_pattern: "*.pkg"
+            download_suffix: Setup.pkg
+          - product: Singola
+            project: src/Singola.Avalonia/Singola.Avalonia.csproj
+            executable: Singola
+            runner: macos-13
+            rid: osx-x64
+            platform: osx-x64
+            channel: singola-osx-x64
+            installer_pattern: "*.pkg"
+            download_suffix: Setup.pkg
+          - product: Singola
+            project: src/Singola.Avalonia/Singola.Avalonia.csproj
+            executable: Singola
+            runner: ubuntu-24.04
+            rid: linux-x64
+            platform: linux-x64
+            channel: singola-linux-x64
+            installer_pattern: "*Portable*.AppImage"
+            download_suffix: AppImage
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0   # Velopack baut Delta-Pakete aus der Release-Historie
+          fetch-depth: 0
 
-      - name: Setup .NET 10
+      - name: Set up .NET
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
-      - name: Version ableiten
-        id: ver
+      - name: Resolve release version
+        id: version
         shell: bash
         run: |
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            v="${GITHUB_REF#refs/tags/v}"
-          elif [[ -n "${{ github.event.inputs.version }}" ]]; then
-            v="${{ github.event.inputs.version }}"
+            version="${GITHUB_REF#refs/tags/v}"
           else
-            v="0.1.0"
+            version="${{ inputs.version }}"
           fi
-          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Restore
-        run: dotnet restore src/Audiola/Audiola.csproj
-
-      - name: Audiola veröffentlichen (Windows-Desktop-App)
-        shell: pwsh
+      - name: Publish self-contained application
+        shell: bash
         run: |
-          # Velopack braucht einen einfachen Publish-Ordner (kein SingleFile), um das Update-Paket zu bauen.
-          dotnet publish src/Audiola/Audiola.csproj `
-            -c Release -r win-x64 --self-contained true `
-            -p:PublishSingleFile=false `
-            -p:Version=${{ steps.ver.outputs.version }} `
-            -o publish/app
+          dotnet publish "${{ matrix.project }}" \
+            --configuration Release \
+            --runtime "${{ matrix.rid }}" \
+            --self-contained true \
+            --property:PublishSingleFile=false \
+            --property:Version="${{ steps.version.outputs.version }}" \
+            --output publish/${{ matrix.product }}/${{ matrix.platform }}
 
-      - name: Velopack-CLI (vpk) installieren
-        run: dotnet tool install --global vpk
-
-      - name: Mit Velopack packen (Installer + Update-Paket)
-        shell: pwsh
+      - name: Bundle FFmpeg for cross-platform export
+        if: ${{ !startsWith(matrix.rid, 'win-') }}
+        shell: bash
         run: |
-          vpk pack `
-            --packId Audiola `
-            --packTitle "Audiola" `
-            --packAuthors "Florian Gilde" `
-            --packVersion ${{ steps.ver.outputs.version }} `
-            --packDir publish/app `
-            --mainExe Audiola.exe `
-            --icon src/Audiola/Assets/audiola.ico `
-            --outputDir releases
+          npm install --no-save ffmpeg-static
+          ffmpeg="$(node -p "require('ffmpeg-static')")"
+          test -x "$ffmpeg"
+          cp "$ffmpeg" "publish/${{ matrix.product }}/${{ matrix.platform }}/ffmpeg"
+          chmod +x "publish/${{ matrix.product }}/${{ matrix.platform }}/ffmpeg"
 
-      - name: Singola veröffentlichen (Karaoke-App)
-        shell: pwsh
+      - name: Install Velopack CLI
+        shell: bash
         run: |
-          dotnet publish src/Singola/Singola.csproj `
-            -c Release -r win-x64 --self-contained true `
-            -p:PublishSingleFile=false `
-            -p:Version=${{ steps.ver.outputs.version }} `
-            -o publish/singola
+          dotnet tool install --global vpk --version 0.0.1298
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
-      - name: Singola mit Velopack packen (eigener Channel gegen Dateikollisionen)
-        shell: pwsh
+      - name: Create platform package and product update feed
+        shell: bash
         run: |
-          vpk pack `
-            --packId Singola `
-            --packTitle "Singola" `
-            --packAuthors "Florian Gilde" `
-            --packVersion ${{ steps.ver.outputs.version }} `
-            --packDir publish/singola `
-            --mainExe Singola.exe `
-            --icon src/Audiola/Assets/audiola.ico `
-            --channel singola-win `
-            --outputDir releases-singola
-          # Setup deterministisch benennen — die Website verlinkt Singola-win-Setup.exe.
-          Get-ChildItem releases-singola/*Setup.exe | Rename-Item -NewName "Singola-win-Setup.exe"
+          main_exe="${{ matrix.executable }}"
+          if [[ "${{ matrix.rid }}" == win-* ]]; then main_exe="$main_exe.exe"; fi
+          output_dir="release/${{ matrix.product }}/${{ matrix.platform }}"
+          mkdir -p "$output_dir"
+          vpk pack \
+            --packId "${{ matrix.product }}" \
+            --packTitle "${{ matrix.product }}" \
+            --packAuthors "Florian Gilde" \
+            --packVersion "${{ steps.version.outputs.version }}" \
+            --packDir "publish/${{ matrix.product }}/${{ matrix.platform }}" \
+            --mainExe "$main_exe" \
+            --channel "${{ matrix.channel }}" \
+            --outputDir "$output_dir"
 
-      - name: GitHub-Release erstellen
-        if: startsWith(github.ref, 'refs/tags/v')
+          installer=$(find "$output_dir" -maxdepth 1 -type f -iname "${{ matrix.installer_pattern }}" -print -quit)
+          test -n "$installer"
+          mv "$installer" "$output_dir/${{ matrix.product }}-${{ matrix.platform }}-${{ matrix.download_suffix }}"
+
+      - name: Upload package and update feed
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.product }}-${{ matrix.platform }}
+          path: release/${{ matrix.product }}/${{ matrix.platform }}/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download release assets
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          name: Audiola ${{ steps.ver.outputs.version }}
+          name: Audiola ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
-          # Setup.exe = Installer-Download; releases.win.json + assets.win.json + RELEASES
-          # werden vom In-App-UpdateManager gelesen, um neue Versionen zu finden.
-          files: |
-            releases/*
-            releases-singola/*
+          files: release-assets/*

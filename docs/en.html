@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Audiola — Your audio studio for Windows</title>
-  <meta name="description" content="Audiola is a modern audio studio for Windows: multitrack timeline, AI stem separation, sing-along with auto-tune, mastering, 3D spatial audio and voice tools. Plus Singola — the karaoke stage for your party." />
+  <title>Audiola — Your audio studio for Windows, macOS and Linux</title>
+  <meta name="description" content="Audiola is a modern audio studio for Windows, macOS and Linux: multitrack timeline, AI stem separation, sing-along with auto-tune, mastering, 3D spatial audio and voice tools. Plus Singola — the karaoke stage for your party." />
   <meta name="theme-color" content="#0C0D12" />
   <link rel="icon" href="assets/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <meta property="og:title" content="Audiola — Your audio studio for Windows" />
+  <meta property="og:title" content="Audiola — Your audio studio for Windows, macOS and Linux" />
   <meta property="og:description" content="Separate · Mix · Sing · Master — one studio for everything. Plus Singola, the karaoke stage." />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://audiola.de/assets/shots/studio.png" />
@@ -43,14 +43,14 @@
       <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
     </div>
     <div class="hero-inner">
-      <p class="hero-kicker"><span class="dot"></span> FOR WINDOWS · FREE · OPEN SOURCE</p>
+      <p class="hero-kicker"><span class="dot"></span> WINDOWS · MACOS · LINUX · FREE · OPEN SOURCE</p>
       <h1>Your song.<br /><span class="grad">Fully in your hands.</span></h1>
       <p class="hero-sub">
         Audiola splits any song into its tracks with AI, lets you arrange, sing along,
         swap voices and master — in a studio that actually feels like one.
       </p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe">⭳&nbsp; Download Audiola</a>
+        <a class="btn btn-primary" href="#download">⭳&nbsp; Download Audiola</a>
         <a class="btn btn-ghost" href="#singola">🎤&nbsp; Discover Singola</a>
       </div>
       <div class="transport" aria-hidden="true">
@@ -187,7 +187,7 @@
         <article><h3>🏆 Playlists &amp; battles</h3><p>Whole playlists or random picks, multiple rounds, standings — until a winner is crowned.</p></article>
       </div>
       <div class="hero-cta center-cta">
-        <a class="btn btn-stage" href="https://github.com/fgilde/Audiola/releases/latest/download/Singola-win-Setup.exe">⭳&nbsp; Download Singola</a>
+        <a class="btn btn-stage" href="#download">⭳&nbsp; Download Singola</a>
         <span class="singola-note">Also opens .audiola projects — with ready-made lyrics &amp; vocal track.</span>
       </div>
     </div>
@@ -195,24 +195,38 @@
 
   <section class="download" id="download">
     <h2 class="center">Get <span class="grad">going.</span></h2>
+    <p class="dl-intro center">We will highlight the version that matches your system.</p>
+    <div class="platform-recommendation" id="platformRecommendation" role="status" aria-live="polite">
+      <span class="platform-rec-label">RECOMMENDED FOR YOUR SYSTEM</span>
+      <strong id="platformRecommendationText">Choose your platform</strong>
+    </div>
     <div class="dl-grid">
-      <article class="dl-card">
+      <article class="dl-card" data-product="Audiola">
         <img src="assets/logo.png" alt="" class="dl-logo" />
         <h3>Audiola</h3>
         <p>The complete studio: stems, timeline, sing-along, mastering, spatial, voices.</p>
-        <a class="btn btn-primary" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe">⭳&nbsp; Get Audiola setup</a>
+        <div class="platform-downloads" aria-label="Download options for Audiola">
+          <a class="platform-download btn btn-primary" data-platform="win" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-x64-Setup.exe"><span>Windows x64</span><small>Setup .exe</small></a>
+          <a class="platform-download" data-platform="mac-arm" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-osx-arm64-Setup.pkg"><span>macOS Apple Silicon</span><small>Setup .pkg</small></a>
+          <a class="platform-download" data-platform="mac-x64" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-osx-x64-Setup.pkg"><span>macOS Intel</span><small>Setup .pkg</small></a>
+          <a class="platform-download" data-platform="linux" href="https://github.com/fgilde/Audiola/releases/latest/download/Audiola-linux-x64-AppImage"><span>Linux x64</span><small>AppImage</small></a>
+        </div>
         <span class="dl-meta">Windows 10/11 · x64 · automatic updates</span>
       </article>
-      <article class="dl-card dl-stage">
+      <article class="dl-card dl-stage" data-product="Singola">
         <div class="dl-logo dl-mic">🎤</div>
         <h3>Singola</h3>
         <p>The karaoke stage: multiplayer, note band, playlists, party.</p>
-        <a class="btn btn-stage" href="https://github.com/fgilde/Audiola/releases/latest/download/Singola-win-Setup.exe">⭳&nbsp; Get Singola setup</a>
+        <div class="platform-downloads" aria-label="Download options for Singola">
+          <a class="platform-download btn btn-stage" data-platform="win" href="https://github.com/fgilde/Audiola/releases/latest/download/Singola-win-x64-Setup.exe"><span>Windows x64</span><small>Setup .exe</small></a>
+          <a class="platform-download" data-platform="mac-arm" href="https://github.com/fgilde/Audiola/releases/latest/download/Singola-osx-arm64-Setup.pkg"><span>macOS Apple Silicon</span><small>Setup .pkg</small></a>
+          <a class="platform-download" data-platform="mac-x64" href="https://github.com/fgilde/Audiola/releases/latest/download/Singola-osx-x64-Setup.pkg"><span>macOS Intel</span><small>Setup .pkg</small></a>
+          <a class="platform-download" data-platform="linux" href="https://github.com/fgilde/Audiola/releases/latest/download/Singola-linux-x64-AppImage"><span>Linux x64</span><small>AppImage</small></a>
+        </div>
         <span class="dl-meta">Windows 10/11 · x64 · shares settings with Audiola</span>
       </article>
     </div>
-    <p class="dl-foot">All versions &amp; changes on <a href="https://github.com/fgilde/Audiola/releases" target="_blank" rel="noopener">GitHub Releases</a>.
-       AI stem separation runs locally via Python + Demucs — the setup wizard helps on first launch.</p>
+    <p class="dl-foot">All platforms: <a href="https://github.com/fgilde/Audiola/releases" target="_blank" rel="noopener">GitHub Releases</a>. Find the matching installers and update feeds in GitHub Releases.</p>
   </section>
 
   <!-- ============ USED BY / BUILT WITH ============ -->
@@ -277,6 +291,41 @@
       if (e.key === 'ArrowLeft') show(idx - 1);
       if (e.key === 'ArrowRight') show(idx + 1);
     });
+    const platformNames = {
+      win: 'Windows x64',
+      'mac-arm': 'macOS Apple Silicon',
+      'mac-x64': 'macOS Intel',
+      linux: 'Linux x64'
+    };
+    const userAgent = navigator.userAgent || navigator.platform || '';
+    const detectedOs = /Win/i.test(userAgent) ? 'win' : /Mac|iPhone|iPad|iPod/i.test(userAgent) ? 'mac' : /Linux|X11/i.test(userAgent) ? 'linux' : null;
+    const recommendation = document.getElementById('platformRecommendationText');
+    const selectPlatform = platform => {
+      document.querySelectorAll('.platform-download').forEach(link => {
+        const match = link.dataset.platform === platform;
+        link.classList.toggle('is-recommended', match);
+        link.toggleAttribute('aria-current', match);
+      });
+    };
+    if (detectedOs === 'mac') {
+      const userAgentData = navigator.userAgentData;
+      if (userAgentData?.getHighEntropyValues) {
+        userAgentData.getHighEntropyValues(['architecture']).then(({ architecture }) => {
+          const platform = /arm/i.test(architecture) ? 'mac-arm' : 'mac-x64';
+          recommendation.textContent = platformNames[platform];
+          selectPlatform(platform);
+        }).catch(() => {
+          recommendation.textContent = document.documentElement.lang === 'de' ? 'macOS — Chip auswählen' : 'macOS — choose your chip';
+          selectPlatform(null);
+        });
+      } else {
+        recommendation.textContent = document.documentElement.lang === 'de' ? 'macOS — Chip auswählen' : 'macOS — choose your chip';
+        selectPlatform(null);
+      }
+    } else if (detectedOs) {
+      recommendation.textContent = platformNames[detectedOs];
+      selectPlatform(detectedOs);
+    }
     const cmp = document.getElementById('compare'), cmpTopEl = document.getElementById('cmpTop'), handle = document.getElementById('cmpHandle');
     const setCmp = x => { const r = cmp.getBoundingClientRect();
       const p = Math.min(Math.max((x - r.left) / r.width, 0.03), 0.97);

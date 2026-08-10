@@ -15,7 +15,7 @@ public sealed class ProjectService : IProjectService
     private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
 
     private static string ProjectsRoot => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Audiola", "projects");
+        AppPaths.LocalDataDirectory, "projects");
 
     public Task SaveAsync(string path, ProjectDto project) => Task.Run(() =>
     {

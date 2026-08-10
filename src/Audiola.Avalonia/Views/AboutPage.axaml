@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Audiola.Avalonia.Views.AboutPage">
+  <ScrollViewer>
+    <StackPanel Margin="40" MaxWidth="820" Spacing="14">
+      <TextBlock FontSize="34" FontWeight="Bold" Text="Audiola" />
+      <TextBlock FontSize="16" Foreground="#B9C2D0" Text="{Binding Parent.VersionText}" />
+      <Border Background="#20232B" CornerRadius="8" Padding="18">
+        <StackPanel Spacing="8">
+          <TextBlock FontSize="18" FontWeight="SemiBold" Text="Native Avalonia desktop host" />
+          <TextBlock TextWrapping="Wrap"
+                     Text="This host uses Audiola.Core for waveform extraction, portable projects, DSP mastering, effect variations, spatial WAV rendering, voice-profile storage, settings, and local tool integration." />
+          <TextBlock Foreground="#9CA8BA" Text="{Binding Parent.PlatformText}" />
+        </StackPanel>
+      </Border>
+      <Border Background="#20232B" CornerRadius="8" Padding="18">
+        <StackPanel Spacing="8">
+          <TextBlock FontWeight="SemiBold" Text="Availability and optional tools" />
+          <TextBlock TextWrapping="Wrap"
+                     Text="Transport playback is built in through the cross-platform MiniAudio backend. Demucs, local voice generation, and c2patool remain optional tools; their pages state when a service is unavailable and keep unsupported operations disabled." />
+        </StackPanel>
+      </Border>
+      <TextBlock Foreground="#9CA8BA" Text="https://github.com/fgilde/Audiola" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
