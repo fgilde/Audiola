@@ -28,16 +28,24 @@ public sealed class AvaloniaAppDialogs(INotifier notifier) : IAppDialogs
             ("Verwerfen", SaveDiscardCancel.Discard),
             ("Abbrechen", SaveDiscardCancel.Cancel));
 
-    public void ShowTrackMastering(object trackViewModel) => NotPortedYet("Spur mastern");
+    public void ShowTrackMastering(object trackViewModel)
+    {
+        if (trackViewModel is not ViewModels.StemTrackViewModel track) return;
+        var dialog = new Views.Dialogs.TrackMasteringDialog(AppServices.Get<ViewModels.MasteringViewModel>(), track);
+        if (HostWindow.Main is { } owner) dialog.ShowDialog(owner);
+        else dialog.Show();
+    }
 
     public void OpenSingAlong() => NotPortedYet("Einsing-Studio");
 
     public void ShowSetupWizard() => NotPortedYet("Einrichtungs-Assistent");
 
-    public Task<ExportRequest?> ShowExportAsync(ExportDialogRequest request)
+    public async Task<ExportRequest?> ShowExportAsync(ExportDialogRequest request)
     {
-        NotPortedYet("Export-Dialog");
-        return Task.FromResult<ExportRequest?>(null);
+        var dialog = new Views.Dialogs.ExportDialog(request.DefaultFileName, request.Seed, request.SeedLyrics,
+            request.GenerateLyrics, request.ElevenLabsAvailable, request.PreviewAsync);
+        await ShowModalAsync(dialog);
+        return dialog.Result;
     }
 
     public Task ShowFilePreviewAsync(string url, string fileName)
@@ -54,22 +62,37 @@ public sealed class AvaloniaAppDialogs(INotifier notifier) : IAppDialogs
         return Task.CompletedTask;
     }
 
-    public Task<VariationChoice?> PickVariationsAsync(IReadOnlyList<IAudioVariationProvider> providers, string scope)
+    public async Task<VariationChoice?> PickVariationsAsync(IReadOnlyList<IAudioVariationProvider> providers, string scope)
     {
-        NotPortedYet("Variationen-Auswahl");
-        return Task.FromResult<VariationChoice?>(null);
+        var dialog = new Views.Dialogs.VariationPickerWindow(providers, scope);
+        await ShowModalAsync(dialog);
+        return dialog.Result;
     }
 
-    public Task<ViewModels.VoiceChoice?> PickVoiceAsync()
+    public async Task<ViewModels.VoiceChoice?> PickVoiceAsync()
     {
-        NotPortedYet("Stimmen-Auswahl");
-        return Task.FromResult<ViewModels.VoiceChoice?>(null);
+        var dialog = new Views.Dialogs.VoiceSwapDialog();
+        await ShowModalAsync(dialog);
+        return dialog.Result;
     }
 
-    public Task<TextToSpeechRequest?> AskTextToSpeechAsync()
+    public async Task<TextToSpeechRequest?> AskTextToSpeechAsync()
     {
-        NotPortedYet("Text zu Sprache");
-        return Task.FromResult<TextToSpeechRequest?>(null);
+        var dialog = new Views.Dialogs.TextToSpeechDialog();
+        await ShowModalAsync(dialog);
+        return dialog.Result;
+    }
+
+    /// <summary>Zeigt das Fenster modal über dem Hauptfenster (bzw. frei, falls keins da ist).</summary>
+    private static Task ShowModalAsync(Window dialog)
+        => HostWindow.Active is { } owner ? dialog.ShowDialog(owner) : ShowAndWaitAsync(dialog);
+
+    private static Task ShowAndWaitAsync(Window dialog)
+    {
+        var completion = new TaskCompletionSource();
+        dialog.Closed += (_, _) => completion.TrySetResult();
+        dialog.Show();
+        return completion.Task;
     }
 
     private void NotPortedYet(string what) =>

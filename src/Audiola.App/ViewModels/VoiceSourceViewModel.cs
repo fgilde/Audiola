@@ -83,6 +83,11 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
     [ObservableProperty] private bool _isLoadingVoices;
     [ObservableProperty] private string _status = "";
     [ObservableProperty] private bool _isRecording;
+
+    /// <summary>Beschriftung des Aufnahme-Knopfs (die Views binden Text statt eigener Trigger).</summary>
+    public string RecordButtonLabel => IsRecording ? "■ Aufnahme stoppen" : "● Aufnahme starten";
+
+    partial void OnIsRecordingChanged(bool value) => OnPropertyChanged(nameof(RecordButtonLabel));
     [ObservableProperty] private string? _recordedPath;
     [ObservableProperty] private string? _uploadPath;
     [ObservableProperty] private string _newVoiceName = "Meine Stimme";

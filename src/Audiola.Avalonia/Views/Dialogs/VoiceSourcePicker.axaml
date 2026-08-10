@@ -1,0 +1,150 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:controls="using:Audiola.Controls"
+             xmlns:conv="using:Audiola.Avalonia.Converters"
+             xmlns:services="using:Audiola.Services"
+             xmlns:models="using:Audiola.Models"
+             xmlns:vm="using:Audiola.ViewModels"
+             x:Class="Audiola.Avalonia.Views.Dialogs.VoiceSourcePicker"
+             x:DataType="vm:VoiceSourceViewModel">
+
+  <!-- Port von Audiola/Views/Dialogs/VoiceSourcePicker.xaml.
+       Die Panel-Umschaltung läuft hier über die ViewModel-Zustände EngineMode/Mode
+       statt über Code-behind, das Sichtbarkeiten setzt. -->
+
+  <UserControl.Resources>
+    <conv:EnumEqualsConverter x:Key="Is" />
+  </UserControl.Resources>
+
+  <StackPanel>
+    <!-- Engine -->
+    <StackPanel Orientation="Horizontal" Margin="2,0,0,10" Spacing="18">
+      <RadioButton GroupName="veng" Content="ElevenLabs (Cloud)"
+                   IsChecked="{Binding EngineMode, Converter={StaticResource Is}, ConverterParameter=0, Mode=OneWay}"
+                   Click="Engine_Cloud" />
+      <RadioButton GroupName="veng" Content="Lokal (eigene Stimmen)"
+                   IsChecked="{Binding EngineMode, Converter={StaticResource Is}, ConverterParameter=1, Mode=OneWay}"
+                   Click="Engine_Local" />
+    </StackPanel>
+
+    <!-- ElevenLabs -->
+    <StackPanel IsVisible="{Binding EngineMode, Converter={StaticResource Is}, ConverterParameter=0}">
+      <StackPanel Orientation="Horizontal" Margin="2,0,0,10" Spacing="18">
+        <RadioButton GroupName="vsrc" Content="Stimme wählen"
+                     IsChecked="{Binding Mode, Converter={StaticResource Is}, ConverterParameter=0, Mode=OneWay}"
+                     Click="Mode_Pick" />
+        <RadioButton GroupName="vsrc" Content="Eigene aufnehmen"
+                     IsChecked="{Binding Mode, Converter={StaticResource Is}, ConverterParameter=1, Mode=OneWay}"
+                     Click="Mode_Record" />
+        <RadioButton GroupName="vsrc" Content="Audio-Datei hochladen"
+                     IsChecked="{Binding Mode, Converter={StaticResource Is}, ConverterParameter=2, Mode=OneWay}"
+                     Click="Mode_File" />
+      </StackPanel>
+
+      <!-- Stimme wählen -->
+      <StackPanel IsVisible="{Binding Mode, Converter={StaticResource Is}, ConverterParameter=0}">
+        <DockPanel LastChildFill="True" Margin="0,0,0,6">
+          <Button DockPanel.Dock="Right" Margin="8,0,0,0" Command="{Binding LoadVoicesCommand}"
+                  ToolTip.Tip="Stimmen neu laden">
+            <ic:SymbolIcon Symbol="ArrowSync" />
+          </Button>
+          <TextBlock VerticalAlignment="Center" FontWeight="Medium" Text="Verfügbare Stimmen" />
+        </DockPanel>
+        <Border CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+          <!-- Kategorie-Kopfzeilen sind eigene, nicht wählbare Einträge (siehe VoicesView). -->
+          <ListBox Height="170" Background="Transparent" BorderThickness="0"
+                   ItemsSource="{Binding VoicesView}" SelectedItem="{Binding SelectedVoice, Mode=TwoWay}">
+            <ListBox.DataTemplates>
+              <DataTemplate DataType="vm:VoiceGroupHeader">
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="4,8,0,2"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+              </DataTemplate>
+              <DataTemplate DataType="services:VoiceInfo">
+                <TextBlock Text="{Binding Name}" Margin="8,1" TextTrimming="CharacterEllipsis" />
+              </DataTemplate>
+            </ListBox.DataTemplates>
+            <ListBox.Styles>
+              <!-- Kopfzeilen sind nicht auswählbar. -->
+              <Style Selector="ListBoxItem">
+                <Setter Property="IsEnabled" Value="True" />
+              </Style>
+              <Style Selector="ListBoxItem:not(:empty) > TextBlock[FontWeight=SemiBold]">
+                <Setter Property="IsHitTestVisible" Value="False" />
+              </Style>
+            </ListBox.Styles>
+          </ListBox>
+        </Border>
+        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+          <ProgressBar Width="40" IsIndeterminate="True" VerticalAlignment="Center"
+                       IsVisible="{Binding IsLoadingVoices}" />
+          <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" FontSize="12"
+                     Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding Status}" />
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Aufnehmen -->
+      <StackPanel IsVisible="{Binding Mode, Converter={StaticResource Is}, ConverterParameter=1}">
+        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                   Text="Nimm ein paar Sätze auf. Beim „Übernehmen“ wird daraus eine Stimme erzeugt (geklont)." />
+        <controls:MicSelectorControl Margin="0,10,0,0" HorizontalAlignment="Left"
+                                     DeviceNumber="{Binding RecordDeviceNumber, Mode=TwoWay}" />
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+          <Button Width="180" Command="{Binding ToggleRecordCommand}" Classes.danger="{Binding IsRecording}"
+                  Content="{Binding RecordButtonLabel}" HorizontalContentAlignment="Center" />
+          <ic:SymbolIcon Symbol="Mic" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+        <TextBlock Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                   Text="{Binding Status}" />
+        <TextBox Margin="0,10,0,0" Watermark="Name der Stimme" Text="{Binding NewVoiceName, Mode=TwoWay}" />
+        <CheckBox Margin="0,8,0,0" IsChecked="{Binding KeepVoice, Mode=TwoWay}"
+                  Content="Stimme im ElevenLabs-Konto behalten (sonst nach Gebrauch löschen)" />
+      </StackPanel>
+
+      <!-- Datei hochladen -->
+      <StackPanel IsVisible="{Binding Mode, Converter={StaticResource Is}, ConverterParameter=2}">
+        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                   Text="Wähle eine Audiodatei mit der gewünschten Stimme. Beim „Übernehmen“ wird daraus eine Stimme erzeugt (geklont)." />
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+          <Button Command="{Binding BrowseFileCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="FolderOpen" /><TextBlock Text="Datei wählen…" />
+            </StackPanel>
+          </Button>
+          <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="{Binding UploadPath, TargetNullValue='keine Datei gewählt'}" />
+        </StackPanel>
+        <TextBox Margin="0,10,0,0" Watermark="Name der Stimme" Text="{Binding NewVoiceName, Mode=TwoWay}" />
+        <CheckBox Margin="0,8,0,0" IsChecked="{Binding KeepVoice, Mode=TwoWay}"
+                  Content="Stimme im ElevenLabs-Konto behalten (sonst nach Gebrauch löschen)" />
+      </StackPanel>
+    </StackPanel>
+
+    <!-- Lokal -->
+    <StackPanel IsVisible="{Binding EngineMode, Converter={StaticResource Is}, ConverterParameter=1}">
+      <TextBlock FontWeight="Medium" Text="Lokale Stimme wählen" Margin="0,0,0,6" />
+      <ComboBox HorizontalAlignment="Stretch" ItemsSource="{Binding LocalProfiles}"
+                SelectedItem="{Binding SelectedLocalProfile, Mode=TwoWay}"
+                DisplayMemberBinding="{Binding Name}" />
+      <TextBlock Margin="0,8,0,0" FontSize="12" TextWrapping="Wrap"
+                 Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                 Text="Lokale Stimmen werden unter „Stimmen“ erstellt und laufen über die lokale Engine (CUDA/CPU). „Spur aus Text“ funktioniert mit jedem lokalen Modell; der lokale Stimmtausch nutzt seed-vc (Sprache + Gesang, erhält die Melodie)." />
+
+      <!-- Feintuning für den lokalen Stimmtausch (Gesang) -->
+      <Border Margin="0,12,0,0" Padding="10" CornerRadius="6"
+              Background="{DynamicResource ControlFillColorDefaultBrush}">
+        <StackPanel>
+          <TextBlock FontWeight="Medium" Text="Stimmtausch-Qualität (Gesang)" />
+          <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="{Binding DiffusionSteps, StringFormat='Detail/Ausdruck (Diffusionsschritte): {0:F0}'}" />
+          <Slider Minimum="15" Maximum="100" Value="{Binding DiffusionSteps, Mode=TwoWay}" />
+          <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                     Text="Mehr = natürlicher/ausdrucksstärker, aber langsamer (GPU empfohlen)." />
+          <CheckBox Margin="0,8,0,0" IsChecked="{Binding AutoF0Adjust, Mode=TwoWay}"
+                    Content="Tonhöhe automatisch anpassen (aus = Original-Melodie/Betonung exakt behalten)" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

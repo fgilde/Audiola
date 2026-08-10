@@ -1,0 +1,53 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:dialogs="using:Audiola.Avalonia.Views.Dialogs"
+        xmlns:vm="using:Audiola.ViewModels"
+        x:Class="Audiola.Avalonia.Views.Dialogs.TextToSpeechDialog"
+        x:DataType="vm:VoiceSourceViewModel"
+        Title="Spur aus Text (Sprache)"
+        Width="600" Height="800"
+        MinWidth="440" MinHeight="540"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource DawBgBrush}"
+        Foreground="{DynamicResource DawTextBrush}">
+
+  <!-- Port von Audiola/Views/Dialogs/TextToSpeechDialog.xaml. -->
+
+  <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
+    <StackPanel Grid.Row="0" Margin="18,16,18,0">
+      <TextBlock FontWeight="SemiBold" Text="Text" Margin="0,0,0,4" />
+      <TextBox Name="TtsTextInput" MinHeight="90" MaxHeight="150" AcceptsReturn="True" TextWrapping="Wrap"
+               Text="Hallo, das ist ein Test." />
+      <TextBlock Margin="0,14,0,4" FontWeight="SemiBold" Text="Stimme" />
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="1" Margin="14,0,14,0" VerticalScrollBarVisibility="Auto">
+      <dialogs:VoiceSourcePicker />
+    </ScrollViewer>
+
+    <StackPanel Grid.Row="2" Margin="18,12,18,0">
+      <TextBlock FontWeight="SemiBold" Text="Einstellungen" Margin="0,0,0,4" />
+      <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                 Text="{Binding #SpeedSlider.Value, StringFormat='Geschwindigkeit: {0:F2}×'}" />
+      <Slider Name="SpeedSlider" Minimum="0.7" Maximum="1.2" Value="1.0" />
+      <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                 Text="{Binding #StabilitySlider.Value, StringFormat='Stabilität: {0:P0}'}" />
+      <Slider Name="StabilitySlider" Minimum="0" Maximum="1" Value="0.5" />
+      <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                 Text="{Binding #SimilaritySlider.Value, StringFormat='Ähnlichkeit: {0:P0}'}" />
+      <Slider Name="SimilaritySlider" Minimum="0" Maximum="1" Value="0.75" />
+    </StackPanel>
+
+    <TextBlock Grid.Row="3" Margin="18,4,18,0" FontSize="12"
+               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+               Text="Die erzeugte Sprache wird als neue Spur in die Timeline gelegt." />
+
+    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="18,10,18,16" Spacing="8">
+      <ProgressBar Width="50" Margin="0,0,4,0" VerticalAlignment="Center" IsIndeterminate="True"
+                   IsVisible="{Binding IsResolving}" />
+      <Button Content="Abbrechen" Click="Cancel_Click" IsEnabled="{Binding !IsResolving}" />
+      <Button Content="Erzeugen &amp; als Spur einfügen" Classes="accent" Click="Ok_Click"
+              IsEnabled="{Binding !IsResolving}" />
+    </StackPanel>
+  </Grid>
+</Window>
