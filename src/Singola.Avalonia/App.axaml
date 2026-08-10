@@ -4,39 +4,176 @@
              RequestedThemeVariant="Dark">
   <Application.Styles>
     <FluentTheme />
+
     <Style Selector="Window">
-      <Setter Property="Background" Value="#0E0B16" />
+      <Setter Property="Background" Value="#0B0814" />
       <Setter Property="Foreground" Value="#F2EEFB" />
+      <Setter Property="FontFamily" Value="Segoe UI Variable Display, Segoe UI, Inter, sans-serif" />
     </Style>
+
+    <!-- Flächen: Karte = Abschnitt, Panel = Element in einer Karte -->
     <Style Selector="Border.stage-card">
-      <Setter Property="Background" Value="#221935" />
-      <Setter Property="BorderBrush" Value="#332851" />
+      <Setter Property="Background" Value="#1B1430" />
+      <Setter Property="BorderBrush" Value="#372A5C" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="14" />
+      <Setter Property="CornerRadius" Value="18" />
     </Style>
     <Style Selector="Border.stage-panel">
-      <Setter Property="Background" Value="#181226" />
-      <Setter Property="BorderBrush" Value="#332851" />
+      <Setter Property="Background" Value="#140F24" />
+      <Setter Property="BorderBrush" Value="#312651" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="CornerRadius" Value="12" />
+    </Style>
+
+    <!-- Schrittnummer: macht die Reihenfolge Song → Spieler → Los sichtbar -->
+    <Style Selector="Border.step">
+      <Setter Property="Width" Value="34" />
+      <Setter Property="Height" Value="34" />
+      <Setter Property="CornerRadius" Value="17" />
+      <Setter Property="Background" Value="#B56BFF" />
+      <Setter Property="VerticalAlignment" Value="Top" />
+    </Style>
+    <Style Selector="Border.step > TextBlock">
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="FontSize" Value="17" />
+      <Setter Property="FontWeight" Value="Black" />
+      <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+
+    <Style Selector="TextBlock.h1">
+      <Setter Property="FontSize" Value="64" />
+      <Setter Property="FontWeight" Value="Black" />
+      <Setter Property="Foreground" Value="#EFA8FF" />
+    </Style>
+    <Style Selector="TextBlock.h2">
+      <Setter Property="FontSize" Value="20" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="#F2EEFB" />
     </Style>
     <Style Selector="TextBlock.caption">
       <Setter Property="FontSize" Value="11" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Foreground" Value="#B4A9D4" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="#A899CC" />
     </Style>
+    <Style Selector="TextBlock.hint">
+      <Setter Property="Foreground" Value="#A899CC" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="TextBlock.warn">
+      <Setter Property="Foreground" Value="#FFC24F" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
     <Style Selector="Button.stage-primary">
       <Setter Property="Background" Value="#B56BFF" />
       <Setter Property="Foreground" Value="#FFFFFF" />
-      <Setter Property="BorderBrush" Value="#D0A3FF" />
-      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="BorderBrush" Value="#D6ADFF" />
+      <Setter Property="CornerRadius" Value="11" />
+      <Setter Property="Padding" Value="16,8" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
+    <Style Selector="Button.stage-primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#C588FF" />
+    </Style>
     <Style Selector="Button.stage-secondary">
-      <Setter Property="Background" Value="#2B2142" />
+      <Setter Property="Background" Value="#251C3D" />
       <Setter Property="Foreground" Value="#F2EEFB" />
-      <Setter Property="BorderBrush" Value="#493A6B" />
-      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="BorderBrush" Value="#413168" />
+      <Setter Property="CornerRadius" Value="11" />
+      <Setter Property="Padding" Value="14,8" />
+    </Style>
+    <Style Selector="Button.stage-secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#32264F" />
+    </Style>
+
+    <!-- Der eine große Knopf, der die Show startet -->
+    <Style Selector="Button.cta">
+      <Setter Property="Foreground" Value="#FFFFFF" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="999" />
+      <Setter Property="Padding" Value="46,16" />
+      <Setter Property="FontSize" Value="21" />
+      <Setter Property="FontWeight" Value="Black" />
+    </Style>
+    <!-- Die Fläche zeichnet im Fluent-Template der ContentPresenter — der Verlauf muss dort landen. -->
+    <Style Selector="Button.cta /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="CornerRadius" Value="999" />
+      <Setter Property="Background">
+        <Setter.Value>
+          <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+            <GradientStop Color="#FF4FA3" Offset="0" />
+            <GradientStop Color="#B56BFF" Offset="1" />
+          </LinearGradientBrush>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style Selector="Button.cta:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background">
+        <Setter.Value>
+          <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+            <GradientStop Color="#FF6FB6" Offset="0" />
+            <GradientStop Color="#C588FF" Offset="1" />
+          </LinearGradientBrush>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style Selector="Button.cta:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#2A2140" />
+      <Setter Property="Foreground" Value="#6C5F8C" />
+    </Style>
+
+    <!-- Mikrofon-Pegel: Spur plus farbige Füllung -->
+    <Style Selector="Border.level-track">
+      <Setter Property="Height" Value="10" />
+      <Setter Property="Width" Value="140" />
+      <Setter Property="CornerRadius" Value="5" />
+      <Setter Property="Background" Value="#241B3D" />
+      <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+    <Style Selector="Border.level-fill">
+      <Setter Property="Height" Value="10" />
+      <Setter Property="CornerRadius" Value="5" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+
+    <!-- Punktestand auf der Bühne; leuchtet, solange der Ton getroffen wird -->
+    <Style Selector="Border.score-chip">
+      <Setter Property="Background" Value="#140F24" />
+      <Setter Property="BorderBrush" Value="#312651" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="CornerRadius" Value="14" />
+      <Setter Property="Padding" Value="16,9" />
+      <Setter Property="Margin" Value="7,0" />
+    </Style>
+    <Style Selector="Border.score-chip.hit">
+      <Setter Property="Background" Value="#2A1D4A" />
+      <Setter Property="BorderBrush" Value="#FFD35C" />
+    </Style>
+
+    <Style Selector="Border.winner-card">
+      <Setter Property="Background" Value="#2A1F16" />
+      <Setter Property="BorderBrush" Value="#FFD35C" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="CornerRadius" Value="18" />
+    </Style>
+
+    <Style Selector="ComboBox, TextBox, NumericUpDown">
+      <Setter Property="CornerRadius" Value="10" />
+    </Style>
+    <Style Selector="Expander">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="ToggleButton.stage-toggle">
+      <Setter Property="Background" Value="#251C3D" />
+      <Setter Property="BorderBrush" Value="#413168" />
+      <Setter Property="CornerRadius" Value="11" />
+      <Setter Property="Padding" Value="14,8" />
+    </Style>
+    <Style Selector="ToggleButton.stage-toggle:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#3DDC84" />
+      <Setter Property="Foreground" Value="#08170F" />
     </Style>
   </Application.Styles>
 </Application>

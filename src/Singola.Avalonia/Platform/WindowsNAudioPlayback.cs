@@ -1,4 +1,4 @@
-using Audiola.Services.Audio;
+﻿using Audiola.Services.Audio;
 using NAudio.Wave;
 
 namespace Singola.Avalonia.Platform;
@@ -20,7 +20,7 @@ internal sealed class WindowsNAudioPlayback : IAudioPlayback
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        if (!File.Exists(path)) throw new FileNotFoundException("Audio file was not found.", path);
+        if (!File.Exists(path)) throw new FileNotFoundException("Die Audiodatei wurde nicht gefunden.", path);
 
         Close();
         var reader = new AudioFileReader(path);
@@ -92,6 +92,6 @@ internal sealed class WindowsNAudioPlayback : IAudioPlayback
     private void EnsureOpen()
     {
         if (_reader is null || _output is null)
-            throw new InvalidOperationException("Open an audio file before controlling playback.");
+            throw new InvalidOperationException("Vor dem Steuern der Wiedergabe muss eine Datei geöffnet werden.");
     }
 }

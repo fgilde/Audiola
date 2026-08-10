@@ -1,5 +1,6 @@
 using Audiola.Dsp;
 using Audiola.Services.Audio;
+using NAudio.Wave;
 
 namespace Singola.Services;
 
@@ -11,7 +12,8 @@ public sealed class KaraokeEngine : IDisposable
 {
     private readonly IAudioPlatform _audio;
     private IAudioPlayback? _playback;
-    private readonly List<PlayerCapture> _captures = [];
+    private readonly List<PlayerCapture?> _captures = [];
+    private readonly List<string?> _captureErrors = [];
 
     public KaraokeEngine(IAudioPlatform audio) => _audio = audio;
 
@@ -20,8 +22,12 @@ public sealed class KaraokeEngine : IDisposable
     public double DurationSeconds => _playback?.Duration.TotalSeconds ?? 0;
     public event EventHandler? PlaybackEnded;
 
-    /// <summary>Starts song playback and one microphone capture stream per player.</summary>
-    public void Start(string songPath, IReadOnlyList<string> inputDeviceIds)
+    /// <summary>
+    /// Starts song playback and one microphone capture stream per player. When
+    /// <paramref name="recordPaths"/> is given, each player's microphone is written to that
+    /// WAV file so the round can be exported afterwards.
+    /// </summary>
+    public void Start(string songPath, IReadOnlyList<string> inputDeviceIds, IReadOnlyList<string>? recordPaths = null)
     {
         Stop();
 
@@ -30,10 +36,7 @@ public sealed class KaraokeEngine : IDisposable
         try
         {
             playback.Open(songPath);
-            foreach (var deviceId in inputDeviceIds)
-                _captures.Add(new PlayerCapture(_audio.CreateCapture(deviceId)));
-
-            foreach (var capture in _captures) capture.Start();
+            OpenCaptures(inputDeviceIds, recordPaths);
             playback.Play();
             _playback = playback;
         }
@@ -43,6 +46,48 @@ public sealed class KaraokeEngine : IDisposable
             playback.Dispose();
             StopCaptures();
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Opens the microphones without a song — the level meters in the setup screen use this so
+    /// players can verify their microphone before the round starts.
+    /// </summary>
+    public void StartMonitor(IReadOnlyList<string> inputDeviceIds)
+    {
+        Stop();
+        OpenCaptures(inputDeviceIds, null);
+    }
+
+    /// <summary>Why a player's microphone could not be opened, or <c>null</c> when it works.</summary>
+    public string? CaptureError(int index) =>
+        index >= 0 && index < _captureErrors.Count ? _captureErrors[index] : null;
+
+    /// <summary>
+    /// A microphone that fails to open must not abort the round: the other players keep singing
+    /// and the affected slot shows why its microphone is silent.
+    /// </summary>
+    private void OpenCaptures(IReadOnlyList<string> inputDeviceIds, IReadOnlyList<string>? recordPaths)
+    {
+        for (var index = 0; index < inputDeviceIds.Count; index++)
+        {
+            PlayerCapture? capture = null;
+            try
+            {
+                capture = new PlayerCapture(
+                    _audio.CreateCapture(inputDeviceIds[index]),
+                    recordPaths is null ? null : recordPaths.ElementAtOrDefault(index));
+                capture.Start();
+                _captures.Add(capture);
+                _captureErrors.Add(null);
+            }
+            catch (Exception ex)
+            {
+                // Sonst bliebe die Mitschnitt-Datei offen und die nächste Runde könnte sie nicht neu anlegen.
+                capture?.Dispose();
+                _captures.Add(null);
+                _captureErrors.Add(ex.Message);
+            }
         }
     }
 
@@ -65,7 +110,7 @@ public sealed class KaraokeEngine : IDisposable
 
     /// <summary>Current pitch (0 = none) and peak level since the last call.</summary>
     public (float Hz, float Level) ReadPlayer(int index) =>
-        index >= 0 && index < _captures.Count ? _captures[index].Read() : (0f, 0f);
+        index >= 0 && index < _captures.Count ? _captures[index]?.Read() ?? (0f, 0f) : (0f, 0f);
 
     public void Dispose() => Stop();
 
@@ -73,8 +118,9 @@ public sealed class KaraokeEngine : IDisposable
 
     private void StopCaptures()
     {
-        foreach (var capture in _captures) capture.Dispose();
+        foreach (var capture in _captures) capture?.Dispose();
         _captures.Clear();
+        _captureErrors.Clear();
     }
 
     /// <summary>Ring-buffered, mono 44.1 kHz microphone analysis matching the prior scoring window.</summary>
@@ -84,12 +130,20 @@ public sealed class KaraokeEngine : IDisposable
         private readonly IAudioCapture _capture;
         private readonly float[] _ring = new float[8192];
         private readonly object _sync = new();
+        private WaveFileWriter? _writer;
         private int _write;
         private float _peak;
 
-        public PlayerCapture(IAudioCapture capture)
+        public PlayerCapture(IAudioCapture capture, string? recordPath)
         {
             _capture = capture;
+            if (recordPath is not null)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(recordPath)!);
+                // ponytail: Schreiben passiert im Audio-Callback. Bei 44,1 kHz mono puffert der
+                // FileStream das weg; falls je Aussetzer auftreten, hier eine Queue dazwischen.
+                _writer = new WaveFileWriter(recordPath, new WaveFormat(Rate, 16, 1));
+            }
             _capture.SamplesAvailable += OnSamplesAvailable;
         }
 
@@ -116,6 +170,11 @@ public sealed class KaraokeEngine : IDisposable
         {
             _capture.SamplesAvailable -= OnSamplesAvailable;
             _capture.Dispose();
+            lock (_sync)
+            {
+                _writer?.Dispose();
+                _writer = null;
+            }
         }
 
         private void OnSamplesAvailable(object? sender, AudioSamplesEventArgs e)
@@ -135,6 +194,7 @@ public sealed class KaraokeEngine : IDisposable
                     _write = (_write + 1) % _ring.Length;
                     var magnitude = Math.Abs(sample);
                     if (magnitude > _peak) _peak = magnitude;
+                    _writer?.WriteSample(sample);
                 }
             }
         }

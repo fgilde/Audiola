@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Audiola.Services.Audio;
 using MiniAudioEx.Native;
 using static MiniAudioEx.Native.MiniAudioNative;
@@ -21,7 +21,7 @@ public sealed class MiniAudioPlatform : IAudioPlatform
         if (ma_context_init(null, _context) != ma_result.success)
         {
             _context.Free();
-            throw new InvalidOperationException("The native audio context could not be initialized.");
+            throw new InvalidOperationException("Das Audio-System konnte nicht gestartet werden.");
         }
     }
 
@@ -40,7 +40,7 @@ public sealed class MiniAudioPlatform : IAudioPlatform
         {
             ThrowIfDisposed();
             if (ma_context_get_devices(_context, out _, out ma_device_info[] captureDevices) != ma_result.success)
-                throw new InvalidOperationException("Microphone devices could not be enumerated.");
+                throw new InvalidOperationException("Die Mikrofone konnten nicht gelesen werden.");
 
             _captureDeviceIds.Clear();
             var devices = new List<AudioInputDevice>();
@@ -54,8 +54,10 @@ public sealed class MiniAudioPlatform : IAudioPlatform
                 devices.Add(new AudioInputDevice(id, captureDevice.GetName(), captureDevice.isDefault > 0));
             }
 
+            // Liefert die Aufzählung nichts (z. B. in einer Remote-Sitzung), bleibt das Standardgerät
+            // des Systems als Rückfallebene — CreateCapture("default") öffnet dann genau dieses.
             if (devices.Count == 0)
-                devices.Add(new AudioInputDevice("default", "System default microphone", true));
+                devices.Add(new AudioInputDevice("default", "Standard-Mikrofon des Systems", true));
 
             return devices;
         }
@@ -82,7 +84,7 @@ public sealed class MiniAudioPlatform : IAudioPlatform
                 {
                     _ = GetInputDevices();
                     if (!_captureDeviceIds.TryGetValue(inputDeviceId, out selectedDevice))
-                        throw new InvalidOperationException("The selected microphone is no longer available.");
+                        throw new InvalidOperationException("Das gewählte Mikrofon ist nicht mehr verfügbar.");
                 }
 
                 deviceId = selectedDevice;
@@ -171,7 +173,7 @@ internal sealed class MiniAudioPlayback : IAudioPlayback
     {
         ThrowIfDisposed();
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        if (!File.Exists(path)) throw new FileNotFoundException("Audio file was not found.", path);
+        if (!File.Exists(path)) throw new FileNotFoundException("Die Audiodatei wurde nicht gefunden.", path);
 
         Close();
         lock (_sync)
@@ -181,7 +183,7 @@ internal sealed class MiniAudioPlayback : IAudioPlayback
                 ? ma_decoder_init_file_w(path, ref decoderConfig, _decoder)
                 : ma_decoder_init_file(path, ref decoderConfig, _decoder);
             if (result != ma_result.success)
-                throw new InvalidOperationException($"The audio file could not be decoded ({result}).");
+                throw new InvalidOperationException($"Die Audiodatei konnte nicht dekodiert werden ({result}).");
 
             _decoderInitialized = true;
             unsafe
@@ -193,7 +195,7 @@ internal sealed class MiniAudioPlayback : IAudioPlayback
             if (_channels == 0 || _sampleRate == 0)
             {
                 CloseDecoder();
-                throw new InvalidOperationException("The audio file does not expose a usable PCM format.");
+                throw new InvalidOperationException("Die Audiodatei liefert kein nutzbares PCM-Format.");
             }
 
             var config = ma_device_config_init(ma_device_type.playback);
@@ -205,7 +207,7 @@ internal sealed class MiniAudioPlayback : IAudioPlayback
             if (ma_device_init(_context, ref config, _device) != ma_result.success)
             {
                 CloseDecoder();
-                throw new InvalidOperationException("The default audio output device could not be opened.");
+                throw new InvalidOperationException("Das Standard-Ausgabegerät konnte nicht geöffnet werden.");
             }
 
             _deviceInitialized = true;
@@ -225,7 +227,7 @@ internal sealed class MiniAudioPlayback : IAudioPlayback
             if (ma_device_start(_device) != ma_result.success)
             {
                 Volatile.Write(ref _isPlaying, 0);
-                throw new InvalidOperationException("Audio playback could not be started.");
+                throw new InvalidOperationException("Die Wiedergabe konnte nicht gestartet werden.");
             }
         }
     }
@@ -238,7 +240,7 @@ internal sealed class MiniAudioPlayback : IAudioPlayback
         if (ma_device_stop(_device) != ma_result.success)
         {
             Volatile.Write(ref _isPlaying, 1);
-            throw new InvalidOperationException("Audio playback could not be paused.");
+            throw new InvalidOperationException("Die Wiedergabe konnte nicht angehalten werden.");
         }
     }
 
@@ -256,7 +258,7 @@ internal sealed class MiniAudioPlayback : IAudioPlayback
             EnsureOpen();
             var frame = (ulong)(Math.Clamp(position.TotalSeconds, 0, Duration.TotalSeconds) * _sampleRate);
             if (ma_decoder_seek_to_pcm_frame(_decoder, frame) != ma_result.success)
-                throw new InvalidOperationException("Audio playback could not seek to the requested position.");
+                throw new InvalidOperationException("Die Wiedergabe konnte nicht an diese Stelle springen.");
             Interlocked.Exchange(ref _endRaised, 0);
         }
     }
@@ -335,7 +337,7 @@ internal sealed class MiniAudioPlayback : IAudioPlayback
 
     private void EnsureOpen()
     {
-        if (!_opened) throw new InvalidOperationException("Open an audio file before controlling playback.");
+        if (!_opened) throw new InvalidOperationException("Vor dem Steuern der Wiedergabe muss eine Datei geöffnet werden.");
     }
 
     private void ThrowIfDisposed()
@@ -389,11 +391,11 @@ internal sealed class MiniAudioCapture : IAudioCapture
         try
         {
             if (ma_device_init(_context, ref config, _device) != ma_result.success)
-                throw new InvalidOperationException("The microphone could not be opened.");
+                throw new InvalidOperationException("Das Mikrofon konnte nicht geöffnet werden (belegt oder kein Zugriff).");
             _deviceInitialized = true;
 
             if (ma_device_start(_device) != ma_result.success)
-                throw new InvalidOperationException("The microphone could not be started.");
+                throw new InvalidOperationException("Das Mikrofon konnte nicht gestartet werden.");
             Volatile.Write(ref _isRecording, 1);
         }
         finally

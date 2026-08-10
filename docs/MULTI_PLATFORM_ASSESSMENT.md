@@ -110,6 +110,28 @@ Avalonia-Fassung wird auf Windows, macOS und Linux ausgeliefert.
 | Geräte | `AudioDevices.InputNames` statt `WaveInEvent.DeviceCount`; die Mikrofonauswahl fragt `IAudioPlatform` |
 | Releases | Ein Produkt für alle Plattformen aus `src/Audiola.Avalonia` |
 
+## Singola nach dem Umbau
+
+Singola war beim Umbau unfertig geblieben; diese Lücken sind geschlossen:
+
+| Befund | Behandlung |
+| --- | --- |
+| `SingolaHostViewModel` — toter Demo-Rest, von nichts referenziert | entfernt |
+| Song per Drag & Drop ließ sich nicht ablegen, obwohl die Oberfläche es anbot | `DragDrop.AllowDrop` samt Handler nachgezogen |
+| Song als Startargument („Öffnen mit …“) wurde ignoriert | `PendingStartupFile` wie in der WPF-Fassung |
+| Mikrofone wurden nur beim Programmstart gelesen — ein später angestecktes Mikro blieb unsichtbar | lebende Geräteliste plus „Aktualisieren“; beim Zurück ins Setup automatisch |
+| Ein klemmendes Mikrofon fiel erst am Punktestand von 0 auf | Mikrofon-Test mit Pegelbalken, erkanntem Ton und Fehlertext pro Spieler |
+| Ein fehlgeschlagenes Mikrofon riss die ganze Runde ab | Runde läuft weiter, der betroffene Platz nennt den Grund |
+| Updates wurden still geladen und beim Beenden eingespielt | `SingolaUpdates` meldet die Version und bietet den Neustart an |
+| Fehlermeldungen der Audio-Schicht waren englisch | eingedeutscht (gilt auch für Audiola, das dieselben Dateien mitkompiliert) |
+
+Neu dazugekommen: **Mitschnitt der Runde herunterladen.** `KaraokeEngine`
+schreibt pro Spieler ein WAV mit, `KaraokeExport` mischt es über die Musik des
+Songs (Song als Leitspur, Stimmen geteilter Kopfraum, Normalisierung gegen
+Clipping) und schreibt WAV, MP3, M4A oder FLAC über den vorhandenen
+`AudioExporter`. Im Ergebnis gibt es dafür je Spieler „Aufnahme“ und, sobald
+mehrere Mitschnitte vorliegen, „Alle zusammen als Duett“.
+
 ### Offene Punkte
 
 - Die Abnahmematrix ist unter Windows durchgelaufen (Projekt-Roundtrip, Timeline,
@@ -119,6 +141,12 @@ Avalonia-Fassung wird auf Windows, macOS und Linux ausgeliefert.
 - `src/Audiola` (WPF) bleibt als Windows-Rückfallebene im Repo und baut weiter,
   wird aber nicht mehr veröffentlicht. Nach bestätigtem Durchlauf auf macOS und
   Linux kann es entfernt werden.
+- Singolas Mitschnitt ist auf dieser Maschine nicht mit echtem Mikrofon
+  geprüft: die Sitzung ist eine Remote-Sitzung, in der Windows keine
+  Aufnahmegeräte durchreicht (`WaveInEvent.DeviceCount` = 0). Geprüft sind der
+  Mix-Weg mit erzeugten Aufnahmen (WAV/MP3/FLAC, Resampling 48 → 44,1 kHz,
+  kürzere Stimme als Song, Normalisierung) und die Fehlerbehandlung ohne
+  Mikrofon. Offen bleibt eine Runde mit echtem Mikrofon.
 - Die Dateiverknüpfung für `.audiola` ist weiter Windows-spezifisch
   (`FileAssociation`, Registry). macOS/Linux brauchen `Info.plist` bzw. eine
   `.desktop`-Datei mit MIME-Typ.

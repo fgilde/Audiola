@@ -22,4 +22,21 @@ public sealed class AvaloniaFileDialogService : IFileDialogService
         });
         return files.Select(file => file.TryGetLocalPath() ?? file.Name).ToArray();
     }
+
+    public async Task<string?> SaveFileAsync(SaveDialogOptions options, CancellationToken cancellationToken = default)
+    {
+        var owner = _owner ?? throw new InvalidOperationException("The desktop window has not been initialized.");
+        var file = await owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = options.Title,
+            SuggestedFileName = options.SuggestedName,
+            DefaultExtension = options.Extensions.FirstOrDefault(),
+            ShowOverwritePrompt = true,
+            // Ein Eintrag pro Format, damit die Endung im Dialog wählbar ist und der Exporter
+            // daran das Ziel-Codec erkennt.
+            FileTypeChoices = [.. options.Extensions.Select(extension =>
+                new FilePickerFileType(extension.ToUpperInvariant()) { Patterns = [$"*.{extension}"] })]
+        });
+        return file?.TryGetLocalPath();
+    }
 }

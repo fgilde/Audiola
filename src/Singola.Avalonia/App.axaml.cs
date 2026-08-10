@@ -3,7 +3,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Singola.Avalonia.Platform;
-using Singola.Avalonia.ViewModels;
 using Singola.Avalonia.Views;
 
 namespace Singola.Avalonia;
@@ -30,6 +29,8 @@ public partial class App : Application
         {
             var window = _services.GetRequiredService<MainWindow>();
             _services.GetRequiredService<AvaloniaFileDialogService>().SetOwner(window);
+            // „Öffnen mit …“ bzw. Song als Startargument — wie in der Windows-Fassung.
+            window.PendingStartupFile = desktop.Args?.FirstOrDefault(File.Exists);
             desktop.MainWindow = window;
             desktop.Exit += (_, _) => _services?.Dispose();
         }
