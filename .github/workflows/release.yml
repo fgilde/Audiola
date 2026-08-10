@@ -34,7 +34,7 @@ jobs:
             platform: win-x64
             channel: audiola-win-x64
             installer_pattern: "*Setup*.exe"
-            download_suffix: Setup.exe
+            download_suffix: "-Setup.exe"
             icon: src/Audiola/Assets/audiola.ico
           - product: Audiola
             project: src/Audiola.Avalonia/Audiola.Avalonia.csproj
@@ -44,7 +44,7 @@ jobs:
             platform: osx-arm64
             channel: audiola-osx-arm64
             installer_pattern: "*.pkg"
-            download_suffix: Setup.pkg
+            download_suffix: "-Setup.pkg"
           - product: Audiola
             project: src/Audiola.Avalonia/Audiola.Avalonia.csproj
             executable: Audiola
@@ -53,7 +53,7 @@ jobs:
             platform: osx-x64
             channel: audiola-osx-x64
             installer_pattern: "*.pkg"
-            download_suffix: Setup.pkg
+            download_suffix: "-Setup.pkg"
           - product: Audiola
             project: src/Audiola.Avalonia/Audiola.Avalonia.csproj
             executable: Audiola
@@ -62,7 +62,7 @@ jobs:
             platform: linux-x64
             channel: audiola-linux-x64
             installer_pattern: "*.AppImage"
-            download_suffix: AppImage
+            download_suffix: ".AppImage"
           - product: Singola
             project: src/Singola.Avalonia/Singola.Avalonia.csproj
             executable: Singola
@@ -71,7 +71,7 @@ jobs:
             platform: win-x64
             channel: singola-win-x64
             installer_pattern: "*Setup*.exe"
-            download_suffix: Setup.exe
+            download_suffix: "-Setup.exe"
           - product: Singola
             project: src/Singola.Avalonia/Singola.Avalonia.csproj
             executable: Singola
@@ -80,7 +80,7 @@ jobs:
             platform: osx-arm64
             channel: singola-osx-arm64
             installer_pattern: "*.pkg"
-            download_suffix: Setup.pkg
+            download_suffix: "-Setup.pkg"
           - product: Singola
             project: src/Singola.Avalonia/Singola.Avalonia.csproj
             executable: Singola
@@ -89,7 +89,7 @@ jobs:
             platform: osx-x64
             channel: singola-osx-x64
             installer_pattern: "*.pkg"
-            download_suffix: Setup.pkg
+            download_suffix: "-Setup.pkg"
           - product: Singola
             project: src/Singola.Avalonia/Singola.Avalonia.csproj
             executable: Singola
@@ -98,7 +98,7 @@ jobs:
             platform: linux-x64
             channel: singola-linux-x64
             installer_pattern: "*.AppImage"
-            download_suffix: AppImage
+            download_suffix: ".AppImage"
 
     steps:
       - name: Checkout
@@ -171,7 +171,9 @@ jobs:
 
           installer=$(find "$output_dir" -maxdepth 1 -type f -iname "${{ matrix.installer_pattern }}" -print -quit)
           test -n "$installer"
-          mv "$installer" "$output_dir/${{ matrix.product }}-${{ matrix.platform }}-${{ matrix.download_suffix }}"
+          # Der Trenner steckt im Suffix: Linux braucht ".AppImage" als echte Endung,
+          # sonst erkennt der Desktop die Datei nicht als startbares Paket.
+          mv "$installer" "$output_dir/${{ matrix.product }}-${{ matrix.platform }}${{ matrix.download_suffix }}"
 
       - name: Remove non-deployment package artifacts
         shell: bash
