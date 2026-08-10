@@ -326,7 +326,7 @@
                         DurationSeconds="{Binding ViewModel.DurationSeconds}" />
                     <!-- Ziehbarer Playhead-Griff -->
                     <Border Width="14" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"
-                            Margin="{Binding ViewModel.PlayheadMargin}" Background="#FFFF5B5B"
+                            Margin="{Binding ViewModel.PlayheadX, Converter={StaticResource PixelsToLeftMarginConverter}}" Background="#FFFF5B5B"
                             CornerRadius="3" Cursor="SizeWE" ToolTip="Abspielposition ziehen"
                             MouseLeftButtonDown="Playhead_Down" MouseMove="Playhead_Move" MouseLeftButtonUp="Playhead_Up">
                         <Border.RenderTransform><TranslateTransform X="-7" /></Border.RenderTransform>
@@ -606,7 +606,7 @@
 
                         <!-- Playhead -->
                         <Rectangle Width="2" Fill="#FFFF5B5B" HorizontalAlignment="Left" VerticalAlignment="Stretch"
-                                   Margin="{Binding ViewModel.PlayheadMargin}" IsHitTestVisible="False" />
+                                   Margin="{Binding ViewModel.PlayheadX, Converter={StaticResource PixelsToLeftMarginConverter}}" IsHitTestVisible="False" />
                     </Grid>
             </ScrollViewer>
         </Grid>

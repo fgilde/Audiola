@@ -22,9 +22,11 @@
             <conv:RecordAppearanceConverter x:Key="RecordAppearanceConverter" />
             <conv:BoolToAccentAppearanceConverter x:Key="BoolToAccentAppearanceConverter" />
             <conv:StringToBrushConverter x:Key="StringToBrushConverter" />
+            <conv:IsVoiceGroupHeaderConverter x:Key="IsVoiceGroupHeaderConverter" />
             <conv:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
             <conv:SecondsToWidthConverter x:Key="SecondsToWidthConverter" />
             <conv:SecondsToMarginConverter x:Key="SecondsToMarginConverter" />
+            <conv:PixelsToLeftMarginConverter x:Key="PixelsToLeftMarginConverter" />
             <conv:BytesToImageConverter x:Key="BytesToImageConverter" />
 
             <!-- Immer sichtbare Scrollbalken (WPF-UI blendet sie sonst aus) -->

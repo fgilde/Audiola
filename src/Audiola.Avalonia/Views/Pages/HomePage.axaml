@@ -1,0 +1,234 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:Audiola.ViewModels"
+             x:Class="Audiola.Avalonia.Views.Pages.HomePage"
+             x:DataType="vm:HomeViewModel">
+
+  <!-- Port von Audiola/Views/Pages/HomePage.xaml. -->
+
+  <UserControl.Styles>
+    <!-- Schnellstart-Karte: großer Klickbereich mit Icon, Titel, Untertitel. -->
+    <Style Selector="Button.quickCard">
+      <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Margin" Value="0,0,14,0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="bd" Width="230" Padding="18,16" CornerRadius="12"
+                  Background="{DynamicResource DawPanelBrush}"
+                  BorderBrush="{DynamicResource DawStrokeBrush}" BorderThickness="1">
+            <ContentPresenter Content="{TemplateBinding Content}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.quickCard:pointerover /template/ Border#bd">
+      <Setter Property="Background" Value="{DynamicResource DawCardBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource DawAccentBrush}" />
+    </Style>
+
+    <!-- Listeneintrag (Projekt/Datei): ganze Zeile klickbar, Akzentkante links über Tag. -->
+    <Style Selector="Button.recentCard">
+      <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="bd" Padding="12,10" CornerRadius="10"
+                  Background="{DynamicResource DawPanelBrush}"
+                  BorderBrush="Transparent" BorderThickness="3,0,0,0">
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              HorizontalContentAlignment="Stretch" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.recentCard:pointerover /template/ Border#bd">
+      <Setter Property="Background" Value="{DynamicResource DawCardBrush}" />
+      <Setter Property="BorderBrush" Value="{ReflectionBinding $parent[Button].Tag}" />
+    </Style>
+    <!-- Fehlende Dateien gedimmt darstellen. -->
+    <Style Selector="Button.recentCard.missing">
+      <Setter Property="Opacity" Value="0.5" />
+    </Style>
+
+    <!-- Kleine Icon-Aktion (Entfernen/Löschen) am Zeilenende. -->
+    <Style Selector="Button.rowAction">
+      <Setter Property="Padding" Value="6" />
+      <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="bd" CornerRadius="6" Padding="{TemplateBinding Padding}" Background="Transparent">
+            <ContentPresenter Content="{TemplateBinding Content}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.rowAction:pointerover /template/ Border#bd">
+      <Setter Property="Background" Value="{DynamicResource DawHoverBrush}" />
+    </Style>
+    <Style Selector="Button.rowAction:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid>
+    <!-- Dezenter Marken-Glow hinter dem Hero -->
+    <Border Height="420" VerticalAlignment="Top" IsHitTestVisible="False">
+      <Border.Background>
+        <RadialGradientBrush Center="50%,10%" GradientOrigin="50%,10%" Radius="0.9">
+          <GradientStop Color="#2E3F8CFF" Offset="0" />
+          <GradientStop Color="#12B56BFF" Offset="0.55" />
+          <GradientStop Color="#00000000" Offset="1" />
+        </RadialGradientBrush>
+      </Border.Background>
+    </Border>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel MaxWidth="1060" Margin="42,40,42,32" HorizontalAlignment="Center">
+
+        <!-- ======= HERO ======= -->
+        <Image Source="avares://Audiola/Assets/audiola.png" Width="92" Height="92"
+               HorizontalAlignment="Center">
+          <Image.Effect>
+            <DropShadowEffect Color="#5B8CFF" BlurRadius="42" OffsetX="0" OffsetY="0" Opacity="0.55" />
+          </Image.Effect>
+        </Image>
+        <TextBlock Margin="0,14,0,0" HorizontalAlignment="Center" FontSize="40" FontWeight="Bold"
+                   Text="Audiola" />
+        <Rectangle Width="120" Height="3" Margin="0,10,0,0" RadiusX="1.5" RadiusY="1.5"
+                   HorizontalAlignment="Center" Fill="{StaticResource BrandGradient}" />
+        <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14"
+                   Foreground="{DynamicResource DawTextDimBrush}"
+                   Text="Trennen · Mischen · Einsingen · Mastern — dein Studio für alles." />
+
+        <!-- ======= SCHNELLSTART ======= -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,34,0,0">
+          <Button Classes="quickCard" Command="{Binding OpenFileCommand}">
+            <StackPanel>
+              <ic:SymbolIcon Symbol="MusicNote2" FontSize="26" Foreground="{DynamicResource DawAccentLightBrush}" />
+              <TextBlock Margin="0,10,0,2" FontWeight="SemiBold" FontSize="15" Text="Song öffnen" />
+              <TextBlock FontSize="12" Foreground="{DynamicResource DawTextFaintBrush}"
+                         Text="Audio laden — jede Datei wird eine Spur" TextWrapping="Wrap" />
+            </StackPanel>
+          </Button>
+          <Button Classes="quickCard" Command="{Binding OpenProjectDialogCommand}">
+            <StackPanel>
+              <ic:SymbolIcon Symbol="FolderOpen" FontSize="26" Foreground="#B56BFF" />
+              <TextBlock Margin="0,10,0,2" FontWeight="SemiBold" FontSize="15" Text="Projekt öffnen" />
+              <TextBlock FontSize="12" Foreground="{DynamicResource DawTextFaintBrush}"
+                         Text="Ein gespeichertes .audiola-Projekt fortsetzen" TextWrapping="Wrap" />
+            </StackPanel>
+          </Button>
+          <Button Classes="quickCard" Margin="0" Command="{Binding GoToStudioCommand}">
+            <StackPanel>
+              <ic:SymbolIcon Symbol="Timeline" FontSize="26" Foreground="{DynamicResource DawGreenBrush}" />
+              <TextBlock Margin="0,10,0,2" FontWeight="SemiBold" FontSize="15" Text="Zum Studio" />
+              <TextBlock FontSize="12" Foreground="{DynamicResource DawTextFaintBrush}"
+                         Text="Direkt zur Mehrspur-Arbeitsfläche" TextWrapping="Wrap" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+
+        <!-- ======= PROJEKTE | ZULETZT GEÖFFNET ======= -->
+        <Grid Margin="0,40,0,0" ColumnDefinitions="*,24,*">
+
+          <!-- Projekte (violette Akzentkante) -->
+          <StackPanel Grid.Column="0">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+              <ic:SymbolIcon Symbol="FolderOpen" FontSize="15" Foreground="#B56BFF" />
+              <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Classes="dawCaption" Text="PROJEKTE" />
+            </StackPanel>
+            <ItemsControl ItemsSource="{Binding RecentProjects}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:RecentItem">
+                  <Button Classes="recentCard" Classes.missing="{Binding !Exists}" Tag="#B56BFF"
+                          Command="{ReflectionBinding $parent[UserControl].DataContext.OpenCommand}"
+                          CommandParameter="{Binding}" ToolTip.Tip="{Binding Path}">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                      <Border Width="34" Height="34" CornerRadius="8" Background="#26B56BFF">
+                        <ic:SymbolIcon Symbol="FolderOpen" FontSize="16" Foreground="#B56BFF" />
+                      </Border>
+                      <StackPanel Grid.Column="1" Margin="11,0,8,0" VerticalAlignment="Center">
+                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock FontSize="11" Foreground="{DynamicResource DawTextFaintBrush}"
+                                   Text="{Binding DetailsText}" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Classes="rowAction" ToolTip.Tip="Aus der Liste entfernen"
+                                Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveCommand}"
+                                CommandParameter="{Binding}">
+                          <ic:SymbolIcon Symbol="Dismiss" FontSize="13" />
+                        </Button>
+                        <Button Classes="rowAction" ToolTip.Tip="Datei löschen"
+                                Command="{ReflectionBinding $parent[UserControl].DataContext.DeleteCommand}"
+                                CommandParameter="{Binding}">
+                          <ic:SymbolIcon Symbol="Delete" FontSize="13" />
+                        </Button>
+                      </StackPanel>
+                    </Grid>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock FontSize="12" Foreground="{DynamicResource DawTextFaintBrush}" TextWrapping="Wrap"
+                       IsVisible="{Binding !HasRecentProjects}"
+                       Text="Noch keine Projekte — speichere dein Studio über Datei → „Projekt speichern“ als .audiola." />
+          </StackPanel>
+
+          <!-- Zuletzt geöffnete Dateien (blaue Akzentkante) -->
+          <StackPanel Grid.Column="2">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+              <ic:SymbolIcon Symbol="History" FontSize="15" Foreground="{DynamicResource DawAccentLightBrush}" />
+              <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Classes="dawCaption" Text="ZULETZT GEÖFFNET" />
+            </StackPanel>
+            <ItemsControl ItemsSource="{Binding RecentFiles}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:RecentItem">
+                  <Button Classes="recentCard" Classes.missing="{Binding !Exists}" Tag="#3F8CFF"
+                          Command="{ReflectionBinding $parent[UserControl].DataContext.OpenCommand}"
+                          CommandParameter="{Binding}" ToolTip.Tip="{Binding Path}">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                      <Border Width="34" Height="34" CornerRadius="8" Background="#263F8CFF">
+                        <ic:SymbolIcon Symbol="MusicNote2" FontSize="16" Foreground="{DynamicResource DawAccentLightBrush}" />
+                      </Border>
+                      <StackPanel Grid.Column="1" Margin="11,0,8,0" VerticalAlignment="Center">
+                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock FontSize="11" Foreground="{DynamicResource DawTextFaintBrush}"
+                                   Text="{Binding DetailsText}" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Classes="rowAction" ToolTip.Tip="Aus der Liste entfernen"
+                                Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveCommand}"
+                                CommandParameter="{Binding}">
+                          <ic:SymbolIcon Symbol="Dismiss" FontSize="13" />
+                        </Button>
+                        <Button Classes="rowAction" ToolTip.Tip="Datei löschen"
+                                Command="{ReflectionBinding $parent[UserControl].DataContext.DeleteCommand}"
+                                CommandParameter="{Binding}">
+                          <ic:SymbolIcon Symbol="Delete" FontSize="13" />
+                        </Button>
+                      </StackPanel>
+                    </Grid>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock FontSize="12" Foreground="{DynamicResource DawTextFaintBrush}" TextWrapping="Wrap"
+                       IsVisible="{Binding !HasRecent}"
+                       Text="Noch nichts geöffnet — zieh einfach eine Audiodatei oder ein ZIP ins Fenster." />
+          </StackPanel>
+        </Grid>
+
+        <ProgressBar Margin="0,26,0,0" Width="180" HorizontalAlignment="Center" IsIndeterminate="True"
+                     IsVisible="{Binding IsLoading}" />
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

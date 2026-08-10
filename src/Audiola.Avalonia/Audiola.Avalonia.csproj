@@ -16,6 +16,7 @@
     <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="FluentIcons.Avalonia" Version="1.1.312" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageReference Include="NAudio" Version="2.3.0" />
     <PackageReference Include="JAJ.Packages.MiniAudioEx" Version="3.3.6" />
@@ -26,13 +27,9 @@
     <AvaloniaResource Include="..\Audiola\Assets\audiola.ico" Link="Assets\audiola.ico" />
     <AvaloniaResource Include="..\Audiola\Assets\audiola.png" Link="Assets\audiola.png" />
     <ProjectReference Include="..\Audiola.Core\Audiola.Core.csproj" />
-    <!-- These services and models are UI-framework-independent but have not yet moved to Core. -->
-    <Compile Include="..\Audiola\Services\IEvaluationService.cs" Link="Shared\Services\IEvaluationService.cs" />
-    <Compile Include="..\Audiola\Services\EvaluationService.cs" Link="Shared\Services\EvaluationService.cs" />
-    <Compile Include="..\Audiola\Services\IProvenanceService.cs" Link="Shared\Services\IProvenanceService.cs" />
-    <Compile Include="..\Audiola\Services\ProvenanceService.cs" Link="Shared\Services\ProvenanceService.cs" />
-    <Compile Include="..\Audiola\Models\EvaluationResult.cs" Link="Shared\Models\EvaluationResult.cs" />
-    <Compile Include="..\Audiola\Models\ProvenanceReport.cs" Link="Shared\Models\ProvenanceReport.cs" />
+    <!-- Geteilte ViewModels + Dienste (identisch mit der WPF-App). -->
+    <ProjectReference Include="..\Audiola.App\Audiola.App.csproj" />
+    <!-- Audio-Backends: von Singola mitgenutzt (miniaudio für alle Plattformen). -->
     <Compile Include="..\Singola.Avalonia\Platform\MiniAudioPlatform.cs" Link="Platform\MiniAudioPlatform.cs" />
     <Compile Include="..\Singola.Avalonia\Platform\WindowsNAudioPlayback.cs" Link="Platform\WindowsNAudioPlayback.cs" />
   </ItemGroup>

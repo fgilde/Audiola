@@ -1,53 +1,113 @@
-<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <Style Selector="Window">
-    <Setter Property="Background" Value="{StaticResource DawBackgroundBrush}" />
-    <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
-    <Setter Property="FontFamily" Value="Segoe UI" />
-  </Style>
-  <Style Selector="TextBlock">
-    <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
-  </Style>
-  <Style Selector="Button">
-    <Setter Property="Background" Value="{StaticResource DawCardBrush}" />
-    <Setter Property="BorderBrush" Value="{StaticResource DawStrokeBrush}" />
-    <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
-    <Setter Property="CornerRadius" Value="6" />
-    <Setter Property="Padding" Value="11,6" />
-  </Style>
-  <Style Selector="Button:pointerover">
-    <Setter Property="Background" Value="{StaticResource DawHoverBrush}" />
-  </Style>
-  <Style Selector="Button.accent">
-    <Setter Property="Background" Value="{StaticResource DawAccentBrush}" />
-    <Setter Property="BorderBrush" Value="{StaticResource DawAccentLightBrush}" />
-  </Style>
-  <Style Selector="TextBox, ComboBox">
-    <Setter Property="Background" Value="{StaticResource DawCardBrush}" />
-    <Setter Property="BorderBrush" Value="{StaticResource DawStrokeBrush}" />
-    <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
-  </Style>
-  <Style Selector="Menu">
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="Foreground" Value="{StaticResource DawTextDimBrush}" />
-  </Style>
-  <Style Selector="MenuItem">
-    <Setter Property="Foreground" Value="{StaticResource DawTextBrush}" />
-  </Style>
-  <Style Selector="ListBox">
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="BorderThickness" Value="0" />
-  </Style>
-  <Style Selector="ListBoxItem">
-    <Setter Property="Foreground" Value="{StaticResource DawTextDimBrush}" />
-    <Setter Property="Padding" Value="10,8" />
-    <Setter Property="Margin" Value="3,2" />
-    <Setter Property="CornerRadius" Value="6" />
-  </Style>
-  <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="{StaticResource DawHoverBrush}" />
-  </Style>
-  <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-    <Setter Property="Background" Value="{StaticResource DawAccentSoftBrush}" />
-  </Style>
-</Styles>
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- ============================================================
+       Audiola DAW-Theme — dieselbe Studio-Palette wie die WPF-App
+       (Themes/DawColors.*.xaml + DawTheme.xaml), nur mit Avalonias
+       eigenem Varianten-Mechanismus: RequestedThemeVariant tauscht
+       die Dictionaries, alle DynamicResource-Verweise ziehen mit.
+       Deshalb braucht es hier KEIN Brush-Ersetzen zur Laufzeit.
+
+       Die Keys heißen absichtlich genau wie in der WPF-App — inklusive
+       der dort überschriebenen WPF-UI-Systemnamen (CardStrokeColorDefaultBrush
+       usw.), damit portierte Views unverändert weiterbinden.
+       ============================================================ -->
+
+  <ResourceDictionary.ThemeDictionaries>
+
+    <ResourceDictionary x:Key="Dark">
+      <Color x:Key="DawBg">#121318</Color>
+      <Color x:Key="DawPanel">#1A1C23</Color>
+      <Color x:Key="DawCard">#20232D</Color>
+      <Color x:Key="DawHover">#2A2E3A</Color>
+      <Color x:Key="DawStroke">#2C303B</Color>
+      <Color x:Key="DawStrokeStrong">#3A3F4D</Color>
+      <Color x:Key="DawText">#E9EBF2</Color>
+      <Color x:Key="DawTextDim">#A7ADC0</Color>
+      <Color x:Key="DawTextFaint">#757C90</Color>
+      <Color x:Key="DawAccent">#3F8CFF</Color>
+      <Color x:Key="DawAccentLight">#6BD6FF</Color>
+      <Color x:Key="DawAccentViolet">#B56BFF</Color>
+      <Color x:Key="DawAccentSoft">#2E3F8CFF</Color>
+      <Color x:Key="DawGreen">#3DDC84</Color>
+      <Color x:Key="DawYellow">#FFC24B</Color>
+      <Color x:Key="DawRed">#FF5350</Color>
+      <Color x:Key="DawRec">#FF3B30</Color>
+      <Color x:Key="DawTimeline">#15151B</Color>
+      <Color x:Key="DawScrollThumb">#66FFFFFF</Color>
+      <Color x:Key="DawScrollTrack">#14FFFFFF</Color>
+    </ResourceDictionary>
+
+    <ResourceDictionary x:Key="Light">
+      <Color x:Key="DawBg">#EEF0F4</Color>
+      <Color x:Key="DawPanel">#FFFFFF</Color>
+      <Color x:Key="DawCard">#F4F6FA</Color>
+      <Color x:Key="DawHover">#E6EAF2</Color>
+      <Color x:Key="DawStroke">#DCE0E8</Color>
+      <Color x:Key="DawStrokeStrong">#C3C9D6</Color>
+      <Color x:Key="DawText">#1B1E27</Color>
+      <Color x:Key="DawTextDim">#4E5566</Color>
+      <Color x:Key="DawTextFaint">#7B8394</Color>
+      <Color x:Key="DawAccent">#2F6FE0</Color>
+      <Color x:Key="DawAccentLight">#2478C6</Color>
+      <Color x:Key="DawAccentViolet">#8B47D6</Color>
+      <Color x:Key="DawAccentSoft">#242F6FE0</Color>
+      <Color x:Key="DawGreen">#1E9E5A</Color>
+      <Color x:Key="DawYellow">#B8860B</Color>
+      <Color x:Key="DawRed">#D93A36</Color>
+      <Color x:Key="DawRec">#E0342A</Color>
+      <Color x:Key="DawTimeline">#E4E7EE</Color>
+      <Color x:Key="DawScrollThumb">#59000000</Color>
+      <Color x:Key="DawScrollTrack">#10000000</Color>
+    </ResourceDictionary>
+
+  </ResourceDictionary.ThemeDictionaries>
+
+  <!-- ————— Palette-Brushes —————
+       DynamicResource auf die Farb-Keys: die stecken in den Varianten-Dictionaries
+       oben und wechseln mit RequestedThemeVariant. -->
+  <SolidColorBrush x:Key="DawBgBrush" Color="{DynamicResource DawBg}" />
+  <SolidColorBrush x:Key="DawPanelBrush" Color="{DynamicResource DawPanel}" />
+  <SolidColorBrush x:Key="DawCardBrush" Color="{DynamicResource DawCard}" />
+  <SolidColorBrush x:Key="DawHoverBrush" Color="{DynamicResource DawHover}" />
+  <SolidColorBrush x:Key="DawStrokeBrush" Color="{DynamicResource DawStroke}" />
+  <SolidColorBrush x:Key="DawStrokeStrongBrush" Color="{DynamicResource DawStrokeStrong}" />
+  <SolidColorBrush x:Key="DawTextBrush" Color="{DynamicResource DawText}" />
+  <SolidColorBrush x:Key="DawTextDimBrush" Color="{DynamicResource DawTextDim}" />
+  <SolidColorBrush x:Key="DawTextFaintBrush" Color="{DynamicResource DawTextFaint}" />
+  <SolidColorBrush x:Key="DawAccentBrush" Color="{DynamicResource DawAccent}" />
+  <SolidColorBrush x:Key="DawAccentLightBrush" Color="{DynamicResource DawAccentLight}" />
+  <SolidColorBrush x:Key="DawAccentVioletBrush" Color="{DynamicResource DawAccentViolet}" />
+  <SolidColorBrush x:Key="DawAccentSoftBrush" Color="{DynamicResource DawAccentSoft}" />
+  <SolidColorBrush x:Key="DawGreenBrush" Color="{DynamicResource DawGreen}" />
+  <SolidColorBrush x:Key="DawYellowBrush" Color="{DynamicResource DawYellow}" />
+  <SolidColorBrush x:Key="DawRedBrush" Color="{DynamicResource DawRed}" />
+  <SolidColorBrush x:Key="DawRecBrush" Color="{DynamicResource DawRec}" />
+  <SolidColorBrush x:Key="DawTimelineBrush" Color="{DynamicResource DawTimeline}" />
+  <SolidColorBrush x:Key="DawScrollThumbBrush" Color="{DynamicResource DawScrollThumb}" />
+  <SolidColorBrush x:Key="DawScrollTrackBrush" Color="{DynamicResource DawScrollTrack}" />
+
+  <!-- Marken-Gradient (Frequenzverlauf) — für Logo-Akzente und den Playhead-Glow. -->
+  <LinearGradientBrush x:Key="BrandGradient" StartPoint="0%,0%" EndPoint="100%,0%">
+    <GradientStop Color="#3F8CFF" Offset="0" />
+    <GradientStop Color="#6BD6FF" Offset="0.5" />
+    <GradientStop Color="#B56BFF" Offset="1" />
+  </LinearGradientBrush>
+
+  <!-- ————— Alias-Keys der WPF-Fassung —————
+       Die portierten Views binden weiterhin an diese Namen; hier zeigen sie
+       auf dieselben Studio-Farben wie dort. -->
+  <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="{DynamicResource DawBg}" />
+  <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="{DynamicResource DawBg}" />
+  <SolidColorBrush x:Key="SolidBackgroundFillColorSecondaryBrush" Color="{DynamicResource DawPanel}" />
+  <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="{DynamicResource DawPanel}" />
+  <SolidColorBrush x:Key="CardBackgroundFillColorSecondaryBrush" Color="{DynamicResource DawCard}" />
+  <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="{DynamicResource DawCard}" />
+  <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="{DynamicResource DawHover}" />
+  <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="{DynamicResource DawStroke}" />
+  <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="{DynamicResource DawStrokeStrong}" />
+  <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="{DynamicResource DawText}" />
+  <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="{DynamicResource DawTextDim}" />
+  <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="{DynamicResource DawTextFaint}" />
+
+</ResourceDictionary>

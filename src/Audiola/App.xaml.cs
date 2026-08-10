@@ -22,6 +22,13 @@ public partial class App : Application
             services.AddSingleton<ISnackbarService, SnackbarService>();
             services.AddSingleton<IContentDialogService, ContentDialogService>();
 
+            // Host-Umsetzungen der geteilten UI-Verträge (Avalonia stellt eigene bereit).
+            services.AddSingleton<INotifier, WpfNotifier>();
+            services.AddSingleton<IFileDialogs, WpfFileDialogs>();
+            services.AddSingleton<IAppDialogs, WpfAppDialogs>();
+            services.AddSingleton<IAppTheme, WpfAppTheme>();
+            services.AddSingleton<UpdateService>();
+
             // Eigene Dienste.
             services.AddSingleton<ISettingsService, SettingsService>();
             services.AddSingleton<IWaveformService, WaveformService>();
@@ -130,10 +137,20 @@ public partial class App : Application
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;   // war nie verdrahtet
 
+        // Geteilten Code an den WPF-Host binden (UI-Thread, Fehlerdialog, Dienstzugriff).
+        var dispatcher = Dispatcher;
+        DispatcherHelper.Configure(
+            dispatcher.CheckAccess,
+            action => dispatcher.Invoke(action),
+            action => dispatcher.BeginInvoke(action));
+        UiError.Configure((title, message) =>
+            MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Error));
+        AppServices.Configure(Host.Services);
+
         await Host.StartAsync();
 
         // Gespeichertes Theme (Light/Dark) anwenden — Palette + WPF-UI + Akzent.
-        ThemeManager.Apply(GetService<ISettingsService>().Current.Theme);
+        GetService<IAppTheme>().Apply(GetService<ISettingsService>().Current.Theme);
 
         // .audiola-Dateien mit Audiola verknüpfen (Doppelklick + App-Icon; HKCU, idempotent).
         FileAssociation.EnsureRegistered();

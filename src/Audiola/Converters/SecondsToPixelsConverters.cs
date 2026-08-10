@@ -31,3 +31,13 @@ public sealed class SecondsToMarginConverter : IMultiValueConverter
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
+
+/// <summary>Pixel-X → linker Rand (Thickness) — für den Playhead, dessen VM nur die X-Position kennt.</summary>
+public sealed class PixelsToLeftMarginConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => new Thickness(value is double x ? Math.Max(0, x) : 0, 0, 0, 0);
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}

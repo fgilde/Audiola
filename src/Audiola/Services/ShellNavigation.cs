@@ -1,27 +1,37 @@
 using System.Windows.Controls;
+using Audiola.Views.Pages;
 using Wpf.Ui.Controls;
 
 namespace Audiola.Services;
 
 /// <summary>
-/// Schlanke Shell-Navigation der DAW-Oberfläche: hostet die (Singleton-)Seiten in einem
+/// WPF-Umsetzung der Shell-Navigation: hostet die (Singleton-)Seiten in einem
 /// <see cref="Frame"/> im Zentrum des Hauptfensters. Ersetzt die frühere NavigationView
 /// (Settings-App-Muster) — die Werkzeugleiste (Rail) und Menüs rufen <see cref="Navigate"/> auf.
 /// </summary>
-public interface IShellNavigation
-{
-    /// <summary>Zeigt die Seite des Typs im Haupt-Frame (löst sie aus dem DI-Container).</summary>
-    void Navigate(Type pageType);
-
-    /// <summary>Wird nach jedem Seitenwechsel ausgelöst (für die aktive Markierung in der Rail).</summary>
-    event EventHandler<Type>? Navigated;
-}
-
 public sealed class ShellNavigation(IServiceProvider services) : IShellNavigation
 {
+    /// <summary>Zuordnung des host-neutralen Schlüssels auf den WPF-Seitentyp.</summary>
+    private static readonly Dictionary<ShellPage, Type> PageTypes = new()
+    {
+        [ShellPage.Home] = typeof(HomePage),
+        [ShellPage.Editor] = typeof(EditorPage),
+        [ShellPage.Timeline] = typeof(TimelinePage),
+        [ShellPage.Equalizer] = typeof(EqualizerPage),
+        [ShellPage.Mastering] = typeof(MasteringPage),
+        [ShellPage.SpatialAudio] = typeof(SpatialAudioPage),
+        [ShellPage.Voices] = typeof(VoicesPage),
+        [ShellPage.Variation] = typeof(VariationPage),
+        [ShellPage.Provenance] = typeof(ProvenancePage),
+        [ShellPage.Evaluation] = typeof(EvaluationPage),
+        [ShellPage.Settings] = typeof(SettingsPage),
+        [ShellPage.Metadata] = typeof(MetadataPage),
+        [ShellPage.About] = typeof(AboutPage)
+    };
+
     private Frame? _frame;
 
-    public event EventHandler<Type>? Navigated;
+    public event EventHandler<ShellPage>? Navigated;
 
     /// <summary>Vom Hauptfenster einmalig gesetzt; hält das Journal leer (kein Back-Stack nötig).</summary>
     public void SetFrame(Frame frame)
@@ -33,15 +43,16 @@ public sealed class ShellNavigation(IServiceProvider services) : IShellNavigatio
         };
     }
 
-    public void Navigate(Type pageType)
+    public void Navigate(ShellPage page)
     {
         if (_frame is null) return;
-        if (services.GetService(pageType) is not Page page) return;
-        if (ReferenceEquals(_frame.Content, page)) return;   // schon aktiv
+        if (!PageTypes.TryGetValue(page, out var pageType)) return;
+        if (services.GetService(pageType) is not Page target) return;
+        if (ReferenceEquals(_frame.Content, target)) return;   // schon aktiv
 
         (_frame.Content as INavigationAware)?.OnNavigatedFrom();
-        _frame.Navigate(page);
-        (page as INavigationAware)?.OnNavigatedTo();
-        Navigated?.Invoke(this, pageType);
+        _frame.Navigate(target);
+        (target as INavigationAware)?.OnNavigatedTo();
+        Navigated?.Invoke(this, page);
     }
 }

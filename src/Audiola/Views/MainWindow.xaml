@@ -91,10 +91,10 @@
                 <!-- Menü (kompakt) -->
                 <Menu Grid.Column="0" VerticalAlignment="Center" Background="Transparent">
                     <MenuItem Header="_Datei">
-                        <MenuItem Header="Öffnen… (Audio/ZIP)" InputGestureText="Strg+O" Click="OpenFile_Click" />
-                        <MenuItem Header="Audio ins Studio hinzufügen…" Click="AddToStudio_Click" />
+                        <MenuItem Header="Öffnen… (Audio/ZIP)" InputGestureText="Strg+O" Command="{Binding ViewModel.OpenFileCommand}" />
+                        <MenuItem Header="Audio ins Studio hinzufügen…" Command="{Binding ViewModel.AddToStudioCommand}" />
                         <Separator />
-                        <MenuItem Header="Projekt öffnen…" Click="OpenProject_Click" />
+                        <MenuItem Header="Projekt öffnen…" Command="{Binding ViewModel.OpenProjectCommand}" />
                         <MenuItem Header="Letzte Projekte" ItemsSource="{Binding Home.RecentProjects}"
                                   IsEnabled="{Binding Home.HasRecentProjects}">
                             <MenuItem.ItemContainerStyle>
@@ -116,22 +116,22 @@
                             </MenuItem.ItemContainerStyle>
                         </MenuItem>
                         <Separator />
-                        <MenuItem Header="Projekt speichern" InputGestureText="Strg+S" Click="SaveProjectQuick_Click"
+                        <MenuItem Header="Projekt speichern" InputGestureText="Strg+S" Command="{Binding ViewModel.SaveProjectCommand}"
                                   IsEnabled="{Binding Transport.HasTrack}" />
-                        <MenuItem Header="Projekt speichern unter…" InputGestureText="Strg+Umschalt+S" Click="SaveProjectAs_Click"
+                        <MenuItem Header="Projekt speichern unter…" InputGestureText="Strg+Umschalt+S" Command="{Binding ViewModel.SaveProjectAsCommand}"
                                   IsEnabled="{Binding Transport.HasTrack}" />
-                        <MenuItem Header="Projekt schließen" Click="CloseProject_Click"
+                        <MenuItem Header="Projekt schließen" Command="{Binding ViewModel.CloseProjectCommand}"
                                   IsEnabled="{Binding Transport.HasTrack}" />
                         <Separator />
                         <MenuItem Header="Beenden" Click="Exit_Click" />
                     </MenuItem>
                     <MenuItem Header="_Hilfe">
-                        <MenuItem Header="Einrichtungs-Assistent…" Click="SetupWizard_Click" />
-                        <MenuItem Header="Mess-Harness" Tag="{x:Type pages:EvaluationPage}" Click="Nav_Click" />
+                        <MenuItem Header="Einrichtungs-Assistent…" Command="{Binding ViewModel.ShowSetupWizardCommand}" />
+                        <MenuItem Header="Mess-Harness" Tag="Evaluation" Click="Nav_Click" />
                         <Separator />
-                        <MenuItem Header="Nach Updates suchen…" Click="CheckUpdates_Click" />
+                        <MenuItem Header="Nach Updates suchen…" Command="{Binding ViewModel.CheckUpdatesCommand}" />
                         <Separator />
-                        <MenuItem Header="Über Audiola" Click="About_Click" />
+                        <MenuItem Header="Über Audiola" Tag="About" Click="Nav_Click" />
                     </MenuItem>
                 </Menu>
 
@@ -194,51 +194,51 @@
                 <DockPanel LastChildFill="False">
                     <StackPanel x:Name="RailItems" DockPanel.Dock="Top" Margin="0,6,0,0">
                         <RadioButton Style="{StaticResource RailItem}" IsChecked="True"
-                                     Tag="{x:Type pages:HomePage}" Click="Nav_Click" ToolTip="Start — Projekte &amp; zuletzt geöffnet">
+                                     Tag="Home" Click="Nav_Click" ToolTip="Start — Projekte &amp; zuletzt geöffnet">
                             <ui:SymbolIcon Symbol="Home24" FontSize="19" />
                         </RadioButton>
                         <RadioButton Style="{StaticResource RailItem}"
-                                     Tag="{x:Type pages:TimelinePage}" Click="Nav_Click" ToolTip="Studio (Timeline)">
+                                     Tag="Timeline" Click="Nav_Click" ToolTip="Studio (Timeline)">
                             <ui:SymbolIcon Symbol="Timeline24" FontSize="19" />
                         </RadioButton>
                         <Rectangle Style="{StaticResource RailSeparator}" />
                         <RadioButton Style="{StaticResource RailItem}"
-                                     Tag="{x:Type pages:EqualizerPage}" Click="Nav_Click" ToolTip="Equalizer">
+                                     Tag="Equalizer" Click="Nav_Click" ToolTip="Equalizer">
                             <ui:SymbolIcon Symbol="Options24" FontSize="19" />
                         </RadioButton>
                         <RadioButton Style="{StaticResource RailItem}"
-                                     Tag="{x:Type pages:MasteringPage}" Click="Nav_Click" ToolTip="Mastering">
+                                     Tag="Mastering" Click="Nav_Click" ToolTip="Mastering">
                             <ui:SymbolIcon Symbol="SoundWaveCircle24" FontSize="19" />
                         </RadioButton>
                         <RadioButton Style="{StaticResource RailItem}"
-                                     Tag="{x:Type pages:SpatialAudioPage}" Click="Nav_Click" ToolTip="Spatial Audio (3D)">
+                                     Tag="SpatialAudio" Click="Nav_Click" ToolTip="Spatial Audio (3D)">
                             <ui:SymbolIcon Symbol="Headphones24" FontSize="19" />
                         </RadioButton>
                         <RadioButton Style="{StaticResource RailItem}"
-                                     Tag="{x:Type pages:VoicesPage}" Click="Nav_Click" ToolTip="Stimmen (TTS &amp; Klonen)">
+                                     Tag="Voices" Click="Nav_Click" ToolTip="Stimmen (TTS &amp; Klonen)">
                             <ui:SymbolIcon Symbol="PersonVoice24" FontSize="19" />
                         </RadioButton>
                         <RadioButton Style="{StaticResource RailItem}"
-                                     Tag="{x:Type pages:MetadataPage}" Click="Nav_Click" ToolTip="Metadaten &amp; Tags">
+                                     Tag="Metadata" Click="Nav_Click" ToolTip="Metadaten &amp; Tags">
                             <ui:SymbolIcon Symbol="Tag24" FontSize="19" />
                         </RadioButton>
                         <RadioButton Style="{StaticResource RailItem}"
-                                     Tag="{x:Type pages:VariationPage}" Click="Nav_Click" ToolTip="Klangvariation (Studio-Effekte)">
+                                     Tag="Variation" Click="Nav_Click" ToolTip="Klangvariation (Studio-Effekte)">
                             <ui:SymbolIcon Symbol="Pulse24" FontSize="19" />
                         </RadioButton>
                         <RadioButton Style="{StaticResource RailItem}"
-                                     Tag="{x:Type pages:ProvenancePage}" Click="Nav_Click" ToolTip="Provenienz-Analyse">
+                                     Tag="Provenance" Click="Nav_Click" ToolTip="Provenienz-Analyse">
                             <ui:SymbolIcon Symbol="DocumentSearch24" FontSize="19" />
                         </RadioButton>
                     </StackPanel>
                     <StackPanel x:Name="RailFooter" DockPanel.Dock="Bottom" Margin="0,0,0,8">
                         <Rectangle Style="{StaticResource RailSeparator}" />
                         <RadioButton Style="{StaticResource RailItem}"
-                                     Tag="{x:Type pages:SettingsPage}" Click="Nav_Click" ToolTip="Einstellungen">
+                                     Tag="Settings" Click="Nav_Click" ToolTip="Einstellungen">
                             <ui:SymbolIcon Symbol="Settings24" FontSize="19" />
                         </RadioButton>
                         <RadioButton Style="{StaticResource RailItem}"
-                                     Tag="{x:Type pages:AboutPage}" Click="Nav_Click" ToolTip="Über Audiola">
+                                     Tag="About" Click="Nav_Click" ToolTip="Über Audiola">
                             <ui:SymbolIcon Symbol="Info24" FontSize="19" />
                         </RadioButton>
                     </StackPanel>

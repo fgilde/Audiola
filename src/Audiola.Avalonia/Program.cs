@@ -1,4 +1,5 @@
 using Avalonia;
+using System.IO;
 using System.Runtime.InteropServices;
 using Velopack;
 using Velopack.Sources;
@@ -11,6 +12,7 @@ internal static class Program
     public static void Main(string[] args)
     {
         VelopackApp.Build().Run();
+        App.StartupFile = args.FirstOrDefault(File.Exists);
         if (UpdateChannel is { } channel)
             StartBackgroundUpdates(channel);
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

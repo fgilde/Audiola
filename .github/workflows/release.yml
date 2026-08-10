@@ -22,8 +22,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Windows liefert weiterhin die vollständige WPF-Fassung. Die Avalonia-Oberfläche
+          # holt den Funktionsumfang gerade nach (siehe docs/MULTI_PLATFORM_ASSESSMENT.md,
+          # „Delivery gate"); erst wenn sie die Abnahmematrix erfüllt, wird hier umgestellt.
           - product: Audiola
-            project: src/Audiola.Avalonia/Audiola.Avalonia.csproj
+            project: src/Audiola/Audiola.csproj
             executable: Audiola
             runner: windows-2025
             rid: win-x64

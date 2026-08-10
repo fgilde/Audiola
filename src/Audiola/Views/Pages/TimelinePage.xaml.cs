@@ -21,13 +21,13 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
     // ---- Auto-Scroll: Playhead bei Wiedergabe im sichtbaren Bereich halten ----
     private void Vm_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ViewModel.PlayheadMargin) && ViewModel.IsPlaying)
+        if (e.PropertyName == nameof(ViewModel.PlayheadX) && ViewModel.IsPlaying)
             EnsurePlayheadVisible();
     }
 
     private void EnsurePlayheadVisible()
     {
-        var x = ViewModel.PlayheadMargin.Left;
+        var x = ViewModel.PlayheadX;
         var left = LaneScroll.HorizontalOffset;
         var vw = LaneScroll.ViewportWidth;
         if (vw <= 0) return;
@@ -365,7 +365,7 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
             ViewModel.SelectClip(clip);
             var editor = Audiola.App.GetService<EditorViewModel>();
             editor.LoadClipForEdit(clip);
-            Audiola.App.GetService<Audiola.Services.IShellNavigation>().Navigate(typeof(EditorPage));
+            AppServices.Get<Audiola.Services.IShellNavigation>().Navigate(Audiola.Services.ShellPage.Editor);
             e.Handled = true;
             return;
         }

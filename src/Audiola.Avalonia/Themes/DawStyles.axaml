@@ -1,0 +1,169 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- ============================================================
+       Shell-Styles der DAW-Oberfläche — Gegenstück zu den benannten
+       Styles in Audiola/Themes/DawTheme.xaml. Avalonia adressiert
+       Styles über Selektoren, deshalb tragen die Views eine Klasse
+       (Classes="dawPanel") statt Style="{StaticResource DawPanelStyle}".
+       ============================================================ -->
+
+  <!-- Panel: die Grundfläche aller Docks/Karten. -->
+  <Style Selector="Border.dawPanel">
+    <Setter Property="Background" Value="{DynamicResource DawPanelBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DawStrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+
+  <!-- Abschnitts-Überschrift in Panels (kleine, gedimmte Caption). -->
+  <Style Selector="TextBlock.dawCaption">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
+  </Style>
+
+  <!-- Transport-Zeitanzeige: große Monospace-Ziffern wie im Studio. -->
+  <Style Selector="TextBlock.dawTimeDisplay">
+    <Setter Property="FontFamily" Value="Consolas,Menlo,DejaVu Sans Mono,monospace" />
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- Statusleisten-Text. -->
+  <Style Selector="TextBlock.dawStatusText">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- Seiten-Titel: großer Kopf jeder Seite im Marken-Farbverlauf. -->
+  <Style Selector="TextBlock.dawPageTitle">
+    <Setter Property="FontSize" Value="24" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource BrandGradient}" />
+  </Style>
+
+  <!-- Werkzeug-Button der Icon-Rail (links): quadratisch, ruhig, klarer Hover. -->
+  <Style Selector="RadioButton.dawRail">
+    <Setter Property="Width" Value="40" />
+    <Setter Property="Height" Value="40" />
+    <Setter Property="Margin" Value="0,2" />
+    <Setter Property="Foreground" Value="{DynamicResource DawTextDimBrush}" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="bd" CornerRadius="8" Background="Transparent">
+          <ContentPresenter Content="{TemplateBinding Content}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="RadioButton.dawRail:pointerover /template/ Border#bd">
+    <Setter Property="Background" Value="{DynamicResource DawHoverBrush}" />
+  </Style>
+  <Style Selector="RadioButton.dawRail:pointerover">
+    <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
+  </Style>
+  <Style Selector="RadioButton.dawRail:checked /template/ Border#bd">
+    <Setter Property="Background" Value="{DynamicResource DawAccentSoftBrush}" />
+  </Style>
+  <Style Selector="RadioButton.dawRail:checked">
+    <Setter Property="Foreground" Value="{DynamicResource DawAccentBrush}" />
+  </Style>
+  <Style Selector="RadioButton.dawRail:disabled">
+    <Setter Property="Opacity" Value="0.35" />
+  </Style>
+
+  <!-- Icon-Button der Werkzeugleisten (Transport, Kopfzeilen): wie Rail, aber ohne Auswahlzustand. -->
+  <Style Selector="Button.dawIcon">
+    <Setter Property="Width" Value="40" />
+    <Setter Property="Height" Value="40" />
+    <Setter Property="Margin" Value="0,2" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource DawTextDimBrush}" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="bd" CornerRadius="8" Background="Transparent">
+          <ContentPresenter Content="{TemplateBinding Content}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="Button.dawIcon:pointerover /template/ Border#bd">
+    <Setter Property="Background" Value="{DynamicResource DawHoverBrush}" />
+  </Style>
+  <Style Selector="Button.dawIcon:pressed /template/ Border#bd">
+    <Setter Property="Background" Value="{DynamicResource DawAccentSoftBrush}" />
+  </Style>
+  <Style Selector="Button.dawIcon:disabled">
+    <Setter Property="Opacity" Value="0.35" />
+  </Style>
+
+  <!-- Dock-Tab (unteres Panel): flacher Tab mit Akzent-Unterstreichung. -->
+  <Style Selector="RadioButton.dawDockTab">
+    <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="bd" Padding="12,6" CornerRadius="6,6,0,0" Background="Transparent">
+          <StackPanel>
+            <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center" />
+            <Rectangle Name="underline" Height="2" Margin="0,4,0,0"
+                       RadiusX="1" RadiusY="1" Fill="Transparent" />
+          </StackPanel>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="RadioButton.dawDockTab:pointerover">
+    <Setter Property="Foreground" Value="{DynamicResource DawTextDimBrush}" />
+  </Style>
+  <Style Selector="RadioButton.dawDockTab:checked">
+    <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
+  </Style>
+  <Style Selector="RadioButton.dawDockTab:checked /template/ Rectangle#underline">
+    <Setter Property="Fill" Value="{StaticResource BrandGradient}" />
+  </Style>
+
+  <!-- Primär-Button (Play, „Übernehmen" …): Avalonias accent-Klasse zieht die Systemfarbe,
+       hier stattdessen der Studio-Akzent wie in der WPF-Fassung. -->
+  <Style Selector="Button.accent">
+    <Setter Property="Background" Value="{DynamicResource DawAccentBrush}" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DawAccentBrush}" />
+  </Style>
+  <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DawAccentLightBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DawAccentLightBrush}" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+
+  <!-- Menüleiste und Menüs in Studio-Farben (Avalonias Fluent-Standard ist heller). -->
+  <Style Selector="Menu">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Menu > MenuItem">
+    <Setter Property="Foreground" Value="{DynamicResource DawTextDimBrush}" />
+    <Setter Property="Padding" Value="10,6" />
+  </Style>
+  <Style Selector="Menu > MenuItem:selected">
+    <Setter Property="Foreground" Value="{DynamicResource DawTextBrush}" />
+  </Style>
+
+  <!-- Scrollbalken: schlank und halbtransparent wie in der WPF-Fassung. -->
+  <Style Selector="ScrollBar">
+    <Setter Property="Background" Value="{DynamicResource DawScrollTrackBrush}" />
+  </Style>
+  <Style Selector="ScrollBar /template/ Thumb">
+    <Setter Property="Background" Value="{DynamicResource DawScrollThumbBrush}" />
+  </Style>
+
+</Styles>

@@ -4,6 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:controls="clr-namespace:Audiola.Controls"
+    xmlns:vm="clr-namespace:Audiola.ViewModels;assembly=Audiola.App"
+    xmlns:services="clr-namespace:Audiola.Services;assembly=Audiola.App"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     mc:Ignorable="d" Loaded="OnLoaded">
@@ -34,23 +36,29 @@
                     <TextBlock VerticalAlignment="Center" FontWeight="Medium" Text="Verfügbare Stimmen" />
                 </DockPanel>
                 <Border CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                    <!-- Kategorie-Kopfzeilen sind eigene, nicht wählbare Einträge (statt GroupStyle,
+                         das die Avalonia-Fassung nicht kennt) — siehe VoiceSourceViewModel.VoicesView. -->
                     <ListBox Height="170" Background="Transparent" BorderThickness="0"
                              ItemsSource="{Binding VoicesView}" SelectedItem="{Binding SelectedVoice, Mode=TwoWay}">
-                        <ListBox.GroupStyle>
-                            <GroupStyle>
-                                <GroupStyle.HeaderTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="4,8,0,2"
-                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                    </DataTemplate>
-                                </GroupStyle.HeaderTemplate>
-                            </GroupStyle>
-                        </ListBox.GroupStyle>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
+                        <ListBox.Resources>
+                            <DataTemplate DataType="{x:Type vm:VoiceGroupHeader}">
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="4,8,0,2"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type services:VoiceInfo}">
                                 <TextBlock Text="{Binding Name}" Margin="8,1" TextTrimming="CharacterEllipsis" />
                             </DataTemplate>
-                        </ListBox.ItemTemplate>
+                        </ListBox.Resources>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Converter={StaticResource IsVoiceGroupHeaderConverter}}" Value="True">
+                                        <Setter Property="IsEnabled" Value="False" />
+                                        <Setter Property="Focusable" Value="False" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
                     </ListBox>
                 </Border>
                 <StackPanel Orientation="Horizontal" Margin="0,6,0,0">

@@ -12,7 +12,7 @@ public partial class VoiceSwapDialog : FluentWindow
     public VoiceSwapDialog()
     {
         _vm = new VoiceSourceViewModel(App.GetService<IVoiceChangeService>(), App.GetService<IAudioRecorder>(),
-            App.GetService<IVoiceProfileStore>());
+            App.GetService<IVoiceProfileStore>(), App.GetService<IFileDialogs>());
         DataContext = _vm;
         InitializeComponent();
         Loaded += async (_, _) => await _vm.LoadVoicesAsync();

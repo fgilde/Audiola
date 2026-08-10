@@ -54,7 +54,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Ellipse Width="{Binding DotSize}" Height="{Binding DotSize}"
-                                                 Fill="{Binding AccentBrush}" Stroke="White" StrokeThickness="1"
+                                                 Fill="{Binding AccentColor, Converter={StaticResource StringToBrushConverter}}" Stroke="White" StrokeThickness="1"
                                                  Cursor="SizeAll" ToolTip="{Binding Name}"
                                                  MouseLeftButtonDown="Dot_Down" MouseMove="Dot_Move" MouseLeftButtonUp="Dot_Up" />
                                     </DataTemplate>
@@ -121,7 +121,7 @@
                         <ui:Card Margin="0,0,0,10" Padding="14">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                    <Border Width="12" Height="12" CornerRadius="3" Background="{Binding AccentBrush}" VerticalAlignment="Center" />
+                                    <Border Width="12" Height="12" CornerRadius="3" Background="{Binding AccentColor, Converter={StaticResource StringToBrushConverter}}" VerticalAlignment="Center" />
                                     <TextBlock Margin="8,0,0,0" FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding Name}" />
                                     <CheckBox Margin="16,0,0,0" Content="Stumm" IsChecked="{Binding Muted, Mode=TwoWay}" />
                                 </StackPanel>
