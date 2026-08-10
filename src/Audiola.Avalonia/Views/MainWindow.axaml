@@ -4,6 +4,7 @@
         xmlns:pages="using:Audiola.Avalonia.Views"
         x:Class="Audiola.Avalonia.Views.MainWindow"
         Title="{Binding ApplicationTitle}" Width="1360" Height="820"
+        Icon="/Assets/audiola.ico"
         MinWidth="940" MinHeight="620"
         Background="#16181D">
   <Window.DataTemplates>

@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseCompiledBindingsByDefault>true</UseCompiledBindingsByDefault>
     <AssemblyName>Audiola</AssemblyName>
+    <ApplicationIcon>..\Audiola\Assets\audiola.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64;win-arm64;osx-x64;osx-arm64;linux-x64;linux-arm64</RuntimeIdentifiers>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -22,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AvaloniaResource Include="..\Audiola\Assets\audiola.ico" Link="Assets\audiola.ico" />
     <ProjectReference Include="..\Audiola.Core\Audiola.Core.csproj" />
     <!-- These services and models are UI-framework-independent but have not yet moved to Core. -->
     <Compile Include="..\Audiola\Services\IEvaluationService.cs" Link="Shared\Services\IEvaluationService.cs" />

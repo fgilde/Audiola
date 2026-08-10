@@ -20,7 +20,8 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         var services = new ServiceCollection();
-        services.AddSingleton<IFileDialogService, AvaloniaFileDialogService>();
+        services.AddSingleton<AvaloniaFileDialogService>();
+        services.AddSingleton<IFileDialogService>(provider => provider.GetRequiredService<AvaloniaFileDialogService>());
         services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<IProjectService, ProjectService>();
         services.AddSingleton<IWaveformService, WaveformService>();

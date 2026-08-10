@@ -31,6 +31,7 @@ jobs:
             channel: audiola-win-x64
             installer_pattern: "*Setup*.exe"
             download_suffix: Setup.exe
+            icon: src/Audiola/Assets/audiola.ico
           - product: Audiola
             project: src/Audiola.Avalonia/Audiola.Avalonia.csproj
             executable: Audiola
@@ -151,6 +152,8 @@ jobs:
           if [[ "${{ matrix.rid }}" == win-* ]]; then main_exe="$main_exe.exe"; fi
           output_dir="release/${{ matrix.product }}/${{ matrix.platform }}"
           mkdir -p "$output_dir"
+          icon_args=()
+          if [[ -n "${{ matrix.icon }}" ]]; then icon_args=(--icon "${{ matrix.icon }}"); fi
           vpk pack \
             --packId "${{ matrix.product }}" \
             --packTitle "${{ matrix.product }}" \
@@ -159,7 +162,8 @@ jobs:
             --packDir "publish/${{ matrix.product }}/${{ matrix.platform }}" \
             --mainExe "$main_exe" \
             --channel "${{ matrix.channel }}" \
-            --outputDir "$output_dir"
+            --outputDir "$output_dir" \
+            "${icon_args[@]}"
 
           installer=$(find "$output_dir" -maxdepth 1 -type f -iname "${{ matrix.installer_pattern }}" -print -quit)
           test -n "$installer"
