@@ -8,9 +8,9 @@ using Avalonia.Media;
 namespace Audiola.Avalonia.Platform;
 
 /// <summary>
-/// Eigene Fenster der Avalonia-Fassung. Rückfragen sind vollständig; die großen Dialoge
-/// (Export, Spur mastern, Einsing-Studio, Vorschau, Einrichtungs-Assistent) werden in der
-/// laufenden Migration nachgezogen und melden sich bis dahin als noch nicht verfügbar.
+/// Eigene Fenster der Avalonia-Fassung: Export, Spur mastern, Variationen, Stimmtausch,
+/// Text zu Sprache, Einsing-Studio, Einrichtungs-Assistent und die Rückfragen.
+/// Die Datei-Vorschau nutzt den Systembrowser (WebView2 gibt es nur unter Windows).
 /// </summary>
 public sealed class AvaloniaAppDialogs(INotifier notifier) : IAppDialogs
 {
@@ -36,9 +36,19 @@ public sealed class AvaloniaAppDialogs(INotifier notifier) : IAppDialogs
         else dialog.Show();
     }
 
-    public void OpenSingAlong() => NotPortedYet("Einsing-Studio");
+    public void OpenSingAlong()
+    {
+        // Eigenes Fenster, nicht-modal – kann neben dem Studio liegen.
+        var window = new Views.Dialogs.SingAlongWindow(AppServices.Get<ViewModels.SingAlongViewModel>());
+        window.Show();
+    }
 
-    public void ShowSetupWizard() => NotPortedYet("Einrichtungs-Assistent");
+    public void ShowSetupWizard()
+    {
+        var dialog = new Views.Dialogs.SetupWizardWindow(AppServices.Get<ViewModels.SetupWizardViewModel>());
+        if (HostWindow.Main is { } owner) dialog.ShowDialog(owner);
+        else dialog.Show();
+    }
 
     public async Task<ExportRequest?> ShowExportAsync(ExportDialogRequest request)
     {
@@ -94,9 +104,6 @@ public sealed class AvaloniaAppDialogs(INotifier notifier) : IAppDialogs
         dialog.Show();
         return completion.Task;
     }
-
-    private void NotPortedYet(string what) =>
-        notifier.Warning(what, "Wird gerade auf die plattformübergreifende Oberfläche portiert.", 5);
 
     /// <summary>Baut eine schlichte modale Rückfrage mit beliebigen Antwortknöpfen.</summary>
     private static Task<T> AskAsync<T>(string title, string message, params (string Label, T Result)[] choices)

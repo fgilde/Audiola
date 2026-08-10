@@ -73,6 +73,17 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _prepared;
     [ObservableProperty] private bool _isRecording;
     [ObservableProperty] private bool _isPlaying;
+
+    /// <summary>Beschriftungen der Transport-Knöpfe (die Views binden Text statt eigener Trigger).</summary>
+    public string PlayButtonLabel => IsPlaying ? "⏸  Pause" : "▶  Wiedergabe";
+
+    public string RecordButtonLabel => IsCountingIn ? "✕  Vorzähler abbrechen"
+        : IsRecording ? "⏹  Aufnahme stoppen"
+        : "⏺  Aufnahme";
+
+    partial void OnIsPlayingChanged(bool value) => OnPropertyChanged(nameof(PlayButtonLabel));
+
+    partial void OnIsRecordingChanged(bool value) => OnPropertyChanged(nameof(RecordButtonLabel));
     [ObservableProperty] private double _positionSeconds;
     [ObservableProperty] private double _durationSeconds;
     [ObservableProperty] private string _positionText = "0:00 / 0:00";
@@ -286,7 +297,11 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _countInEnabled = true;
     [ObservableProperty] private int _countIn;                    // 3..1 während des Vorzählers, 0 = aus
     public bool IsCountingIn => CountIn > 0;
-    partial void OnCountInChanged(int value) => OnPropertyChanged(nameof(IsCountingIn));
+    partial void OnCountInChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsCountingIn));
+        OnPropertyChanged(nameof(RecordButtonLabel));
+    }
 
     private int _countInToken;                                     // invalidiert laufende Countdowns
 

@@ -5,7 +5,6 @@ namespace Audiola.Avalonia.Views;
 
 /// <summary>
 /// Zuordnung des host-neutralen Seiten-Schlüssels auf das Avalonia-Steuerelement.
-/// Noch nicht portierte Seiten zeigen <see cref="PendingPage"/>.
 /// </summary>
 public static class ShellPages
 {

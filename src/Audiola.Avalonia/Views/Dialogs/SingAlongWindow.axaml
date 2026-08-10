@@ -1,0 +1,299 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ic="using:FluentIcons.Avalonia"
+        xmlns:controls="using:Audiola.Controls"
+        xmlns:vm="using:Audiola.ViewModels"
+        x:Class="Audiola.Avalonia.Views.Dialogs.SingAlongWindow"
+        x:DataType="vm:SingAlongViewModel"
+        Title="Einsingen"
+        Width="1040" Height="760"
+        MinWidth="820" MinHeight="600"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource DawBgBrush}"
+        Foreground="{DynamicResource DawTextBrush}">
+
+  <!-- Port von Audiola/Views/Dialogs/SingAlongWindow.xaml — Karaoke-Studio.
+       Die WPF-DataTrigger sind hier Style-Klassen bzw. IsVisible-Bindungen; die blinkende
+       Aufnahme-Anzeige läuft über eine Avalonia-Animation. -->
+
+  <Window.Styles>
+    <!-- Mute/Solo-Umschalter mit deutlichem Aktiv-Zustand. -->
+    <Style Selector="ToggleButton.tagToggle">
+      <Setter Property="MinWidth" Value="30" />
+      <Setter Property="Margin" Value="4,0,0,0" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="bd" CornerRadius="6" Padding="7,3"
+                  Background="#18FFFFFF" BorderThickness="1" BorderBrush="#22FFFFFF">
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="ToggleButton.tagToggle:pointerover /template/ Border#bd">
+      <Setter Property="BorderBrush" Value="#55FFFFFF" />
+    </Style>
+    <Style Selector="ToggleButton.tagToggle.mute:checked /template/ Border#bd">
+      <Setter Property="Background" Value="#FF3B30" />
+      <Setter Property="BorderBrush" Value="#FF3B30" />
+    </Style>
+    <Style Selector="ToggleButton.tagToggle.solo:checked /template/ Border#bd">
+      <Setter Property="Background" Value="#E0A800" />
+      <Setter Property="BorderBrush" Value="#E0A800" />
+    </Style>
+    <Style Selector="ToggleButton.tagToggle:checked">
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <!-- Spuren-Zeile: ausgewählte (= Gesangs-)Spur mit Akzent + linkem Balken. -->
+    <Style Selector="ListBox.trackList > ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,2" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="bd" CornerRadius="8" Padding="10,7"
+                  Background="#12FFFFFF" BorderThickness="2,0,0,0" BorderBrush="Transparent">
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                              HorizontalContentAlignment="Stretch" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="ListBox.trackList > ListBoxItem:pointerover /template/ Border#bd">
+      <Setter Property="Background" Value="#20FFFFFF" />
+    </Style>
+    <Style Selector="ListBox.trackList > ListBoxItem:selected /template/ Border#bd">
+      <Setter Property="Background" Value="#2A6BD6FF" />
+      <Setter Property="BorderBrush" Value="#6BD6FF" />
+    </Style>
+
+    <!-- Aufnahme-Anzeige blinkt, solange aufgenommen wird. -->
+    <Style Selector="Border.recBadge">
+      <Style.Animations>
+        <Animation Duration="0:0:1.2" IterationCount="INFINITE">
+          <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1" /></KeyFrame>
+          <KeyFrame Cue="50%"><Setter Property="Opacity" Value="0.3" /></KeyFrame>
+          <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1" /></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+
+    <!-- Pitch-Band-Rahmen wird rot, solange aufgenommen wird. -->
+    <Style Selector="Border.pitchFrame">
+      <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+    </Style>
+    <Style Selector="Border.pitchFrame.recording">
+      <Setter Property="BorderBrush" Value="#FF3B30" />
+    </Style>
+
+    <!-- Ton-Treffer-Anzeige. -->
+    <Style Selector="Border.pitchDot">
+      <Setter Property="Background" Value="{DynamicResource DawTextFaintBrush}" />
+    </Style>
+    <Style Selector="Border.pitchDot.onPitch">
+      <Setter Property="Background" Value="#4CD964" />
+    </Style>
+
+    <Style Selector="Button.success /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource DawGreenBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource DawGreenBrush}" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+  </Window.Styles>
+
+  <Panel>
+    <Grid RowDefinitions="Auto,*,Auto">
+
+      <!-- Setup-Leiste: Mikrofon, Vorbereiten, Kalibrieren -->
+      <Border Grid.Row="0" Margin="12,12,12,0" Padding="12,10" CornerRadius="10"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock VerticalAlignment="Center" Text="Mikrofon:" FontSize="13" />
+            <controls:MicSelectorControl Margin="8,0,0,0" DeviceNumber="{Binding SelectedMicNumber, Mode=TwoWay}" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Classes="accent" Command="{Binding PrepareCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ic:SymbolIcon Symbol="MusicNote2" /><TextBlock Text="Backing vorbereiten" />
+              </StackPanel>
+            </Button>
+            <Button Command="{Binding CalibrateCommand}"
+                    ToolTip.Tip="Klick-Test — bitte OHNE Kopfhörer, damit das Mikro die Klicks hört.">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ic:SymbolIcon Symbol="Timer" /><TextBlock Text="Latenz kalibrieren" />
+              </StackPanel>
+            </Button>
+            <Button Command="{Binding ExtractLyricsCommand}" IsVisible="{Binding NeedsLyrics}"
+                    ToolTip.Tip="Liedtext aus der Gesangsspur erkennen (getaktet) und projektweit speichern.">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ic:SymbolIcon Symbol="TextBulletListSquare" /><TextBlock Text="Lyrics extrahieren" />
+              </StackPanel>
+            </Button>
+            <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="{Binding LatencyMs, StringFormat='Versatz: {0:F0} ms'}" />
+            <TextBlock VerticalAlignment="Center" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding CalibrationStatus}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- Hauptbereich -->
+      <Grid Grid.Row="1" Margin="12,8,12,0" ColumnDefinitions="264,*">
+
+        <!-- Spuren -->
+        <Border Grid.Column="0" Padding="12" CornerRadius="10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" FontWeight="SemiBold" Text="Spuren" />
+            <TextBlock DockPanel.Dock="Top" Margin="0,2,0,8" FontSize="11" TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="Gesangsspur auswählen (liefert die Referenz-Melodie) und stummschalten, damit du nur das Playback hörst." />
+            <ListBox Classes="trackList" ItemsSource="{Binding Tracks}"
+                     SelectedItem="{Binding ReferenceTrack, Mode=TwoWay}"
+                     Background="Transparent" BorderThickness="0">
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="vm:StemTrackViewModel">
+                  <Grid ColumnDefinitions="*,Auto,Auto">
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="{Binding Name}"
+                               TextTrimming="CharacterEllipsis" />
+                    <ToggleButton Grid.Column="1" Classes="tagToggle mute" Content="M"
+                                  ToolTip.Tip="Stummschalten" IsChecked="{Binding IsMuted, Mode=TwoWay}" />
+                    <ToggleButton Grid.Column="2" Classes="tagToggle solo" Content="S"
+                                  ToolTip.Tip="Solo" IsChecked="{Binding IsSolo, Mode=TwoWay}" />
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+        </Border>
+
+        <!-- Karaoke -->
+        <Grid Grid.Column="1" Margin="12,0,0,0" RowDefinitions="Auto,Auto,*">
+
+          <!-- Score-Zeile -->
+          <Border Grid.Row="0" Padding="14,10" CornerRadius="10"
+                  Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+            <StackPanel Orientation="Horizontal">
+              <!-- Aufnahme-Indikator (blinkt während der Aufnahme) -->
+              <Border Classes="recBadge" VerticalAlignment="Center" Margin="0,0,16,0" Padding="10,4"
+                      CornerRadius="14" Background="#33FF3B30" IsVisible="{Binding IsRecording}">
+                <StackPanel Orientation="Horizontal">
+                  <Ellipse Width="12" Height="12" Fill="#FF3B30" VerticalAlignment="Center" />
+                  <TextBlock Margin="7,0,0,0" VerticalAlignment="Center" FontWeight="Bold"
+                             Foreground="#FF6B60" Text="AUFNAHME" />
+                </StackPanel>
+              </Border>
+              <TextBlock VerticalAlignment="Center" FontSize="26" FontWeight="Bold"
+                         Text="{Binding ScorePercent, StringFormat='{}{0}%'}" />
+              <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="13"
+                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                         Text="{Binding Points, StringFormat='{}{0} Punkte'}" />
+              <Border Classes="pitchDot" Classes.onPitch="{Binding IsOnPitch}"
+                      Width="12" Height="12" Margin="20,0,0,0" CornerRadius="6" VerticalAlignment="Center" />
+              <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="13"
+                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                         Text="{Binding TargetNote, StringFormat='Ziel {0}'}" />
+              <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="13"
+                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                         Text="{Binding SungNote, StringFormat='· Du {0}'}" />
+            </StackPanel>
+          </Border>
+
+          <!-- Lyrics -->
+          <StackPanel Grid.Row="1" Margin="0,8,0,0">
+            <TextBlock HorizontalAlignment="Center" FontSize="15" TextTrimming="CharacterEllipsis"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding LyricPrev}" />
+            <TextBlock HorizontalAlignment="Center" Margin="0,4" FontSize="30" FontWeight="Bold"
+                       TextWrapping="Wrap" TextAlignment="Center" Text="{Binding LyricCurrent}" />
+            <!-- Vorlauf: füllt sich bis zum Einsatz der nächsten Zeile -->
+            <ProgressBar Width="240" Height="5" Margin="0,6" HorizontalAlignment="Center"
+                         Minimum="0" Maximum="1" Value="{Binding NextLineProgress}"
+                         Foreground="#6BD6FF" IsVisible="{Binding HasLyrics}" />
+            <TextBlock HorizontalAlignment="Center" FontSize="16" TextTrimming="CharacterEllipsis"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding LyricNext}" />
+          </StackPanel>
+
+          <!-- Pitch-Band -->
+          <Border Grid.Row="2" Classes="pitchFrame" Classes.recording="{Binding IsRecording}"
+                  Margin="0,8,0,0" CornerRadius="10" ClipToBounds="True" BorderThickness="2">
+            <controls:PitchLaneControl />
+          </Border>
+        </Grid>
+      </Grid>
+
+      <!-- Transport -->
+      <Border Grid.Row="2" Margin="12,8,12,12" Padding="14,10" CornerRadius="10"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <StackPanel>
+          <!-- Positionsleiste: ziehen zum Springen (Punch-in). Aufnahme überschreibt ab hier. -->
+          <Slider Name="PosSlider" Minimum="0" Maximum="{Binding DurationSeconds}"
+                  Value="{Binding PositionSeconds, Mode=OneWay}"
+                  PointerPressed="Pos_ScrubStart" PointerReleased="Pos_ScrubEnd"
+                  ToolTip.Tip="Ziehen zum Springen — an dieser Stelle aufnehmen überschreibt ab hier." />
+          <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+            <!-- Wiedergabe / Pause -->
+            <Button MinWidth="150" HorizontalContentAlignment="Center" Command="{Binding TogglePlayCommand}"
+                    IsEnabled="{Binding Prepared}" Content="{Binding PlayButtonLabel}" />
+            <!-- Aufnahme / Stopp -->
+            <Button MinWidth="180" Margin="8,0,0,0" Classes="danger" HorizontalContentAlignment="Center"
+                    Command="{Binding ToggleRecordCommand}" IsEnabled="{Binding Prepared}"
+                    Content="{Binding RecordButtonLabel}" />
+            <ToggleSwitch Margin="12,0,0,0" VerticalAlignment="Center" Content="Vorzähler"
+                          IsChecked="{Binding CountInEnabled, Mode=TwoWay}"
+                          ToolTip.Tip="3-Sekunden-Countdown vor jeder Aufnahme" />
+            <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="13"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding PositionText}" />
+            <Button Margin="20,0,0,0" Classes="success" Command="{Binding AcceptCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ic:SymbolIcon Symbol="CheckmarkCircle" /><TextBlock Text="Als Spur übernehmen" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+          <!-- „Perfekt machen": Auto-Tune auf die Original-Melodie + optionale Stimm-Veredelung -->
+          <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+            <Button Classes="accent" Content="✨ Perfekt machen" Command="{Binding MakePerfectCommand}"
+                    IsEnabled="{Binding HasRecording}"
+                    ToolTip.Tip="Zieht deine Aufnahme auf die Original-Melodie (deine Stimme bleibt) und übernimmt sie als neue Spur." />
+            <TextBlock Margin="16,0,6,0" VerticalAlignment="Center" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Stärke" />
+            <Slider Width="120" VerticalAlignment="Center" Minimum="0" Maximum="1"
+                    Value="{Binding MagicStrength, Mode=TwoWay}"
+                    ToolTip.Tip="0 = unverändert, 1 = exakt auf der Melodie" />
+            <TextBlock Margin="16,0,6,0" VerticalAlignment="Center" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Veredeln mit" />
+            <ComboBox Width="200" ItemsSource="{Binding Voices}" DisplayMemberBinding="{Binding Name}"
+                      SelectedItem="{Binding SelectedVoice, Mode=TwoWay}"
+                      ToolTip.Tip="Optional: die korrigierte Stimme per seed-vc auf eine Zielstimme tauschen." />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- Vorzähler-Overlay: 3-2-1 vor der Aufnahme (nochmal ⏺ drücken bricht ab) -->
+    <Border Background="#90000000" IsHitTestVisible="False" IsVisible="{Binding IsCountingIn}">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <TextBlock FontSize="128" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"
+                   Text="{Binding CountIn}" />
+        <TextBlock Margin="0,4,0,0" FontSize="16" Foreground="#CCFFFFFF" HorizontalAlignment="Center"
+                   Text="Bereit machen — die Aufnahme startet gleich" />
+      </StackPanel>
+    </Border>
+
+    <!-- Busy-Overlay -->
+    <Border Background="#B0000000" IsVisible="{Binding IsBusy}">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <ProgressBar Width="180" IsIndeterminate="True" HorizontalAlignment="Center" />
+        <TextBlock Margin="0,14,0,0" Foreground="White" HorizontalAlignment="Center" Text="{Binding Status}" />
+      </StackPanel>
+    </Border>
+  </Panel>
+</Window>

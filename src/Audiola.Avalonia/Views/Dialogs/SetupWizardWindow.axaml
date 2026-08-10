@@ -1,0 +1,214 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ic="using:FluentIcons.Avalonia"
+        xmlns:conv="using:Audiola.Avalonia.Converters"
+        xmlns:vm="using:Audiola.ViewModels"
+        x:Class="Audiola.Avalonia.Views.Dialogs.SetupWizardWindow"
+        x:DataType="vm:SetupWizardViewModel"
+        Title="Einrichtungs-Assistent"
+        Width="740" Height="680"
+        MinWidth="560" MinHeight="540"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource DawBgBrush}"
+        Foreground="{DynamicResource DawTextBrush}">
+
+  <!-- Port von Audiola/Views/Dialogs/SetupWizardWindow.xaml.
+       Statt eines TabControls mit versteckten Reitern blendet hier jeder Schritt sich
+       selbst per StepIndex ein — das ist in Avalonia der direktere Weg. -->
+
+  <Window.Resources>
+    <conv:EnumEqualsConverter x:Key="Is" />
+  </Window.Resources>
+
+  <Panel>
+    <Grid RowDefinitions="Auto,*,Auto">
+
+      <!-- Kopf -->
+      <TextBlock Grid.Row="0" Margin="24,18,24,0" FontSize="12"
+                 Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding StepCaption}" />
+
+      <ScrollViewer Grid.Row="1" Margin="24,8,24,0" VerticalScrollBarVisibility="Auto">
+        <Panel>
+
+          <!-- 0: Willkommen -->
+          <StackPanel IsVisible="{Binding StepIndex, Converter={StaticResource Is}, ConverterParameter=0}">
+            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Willkommen bei Audiola 👋" />
+            <TextBlock Margin="0,12,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Audiola nutzt lokale KI für Sprachsynthese, Stimmtausch, Transkription und Stem-Trennung. Diese läuft in einer eigenen, von Audiola verwalteten Python-Umgebung — du musst nichts manuell installieren." />
+            <TextBlock Margin="0,12,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Dieser Assistent richtet das Nötige ein: GPU/CUDA prüfen, das lokale Sprachmodell und die Stem-Trennung laden, und optional einen ElevenLabs-Schlüssel hinterlegen." />
+            <Border Margin="0,16,0,0" Padding="12" CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+              <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                         Text="Tipp: Die Downloads sind teils mehrere GB groß. Eine NVIDIA-GPU (CUDA) beschleunigt alles erheblich. Du kannst den Assistenten jederzeit über „Hilfe → Einrichtungs-Assistent“ erneut öffnen." />
+            </Border>
+          </StackPanel>
+
+          <!-- 1: GPU / CUDA -->
+          <StackPanel IsVisible="{Binding StepIndex, Converter={StaticResource Is}, ConverterParameter=1}">
+            <TextBlock FontSize="22" FontWeight="SemiBold" Text="GPU &amp; CUDA" />
+            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Mit einer NVIDIA-GPU (CUDA) laufen lokale Modelle um ein Vielfaches schneller. Ohne CUDA läuft alles auf der CPU — funktioniert, ist aber deutlich langsamer." />
+            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+              <TextBlock VerticalAlignment="Center" Text="Rechen-Gerät:" />
+              <ComboBox Width="140" Margin="10,0,0,0" ItemsSource="{Binding Devices}"
+                        SelectedItem="{Binding Device, Mode=TwoWay}" />
+            </StackPanel>
+            <Border Margin="0,16,0,0" Padding="12" CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+              <TextBlock TextWrapping="Wrap" Text="{Binding GpuStatus}" />
+            </Border>
+            <StackPanel Orientation="Horizontal" Margin="0,12,0,0" Spacing="8">
+              <Button Command="{Binding CheckGpuCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <ic:SymbolIcon Symbol="ArrowSync" /><TextBlock Text="GPU prüfen" />
+                </StackPanel>
+              </Button>
+              <Button Classes="accent" Command="{Binding InstallCudaCommand}" IsVisible="{Binding CudaInstallable}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <ic:SymbolIcon Symbol="ArrowDownload" /><TextBlock Text="CUDA-Torch installieren" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </StackPanel>
+
+          <!-- 2: Lokale Modelle -->
+          <StackPanel IsVisible="{Binding StepIndex, Converter={StaticResource Is}, ConverterParameter=2}">
+            <TextBlock FontSize="22" FontWeight="SemiBold" Text="Lokale Modelle" />
+            <TextBlock Margin="0,8,0,12" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Lade mindestens das Sprachmodell (Qwen3-TTS) für lokale Stimmen. Die übrigen sind optional und können auch später über die Seite „Stimmen“ geladen werden." />
+            <ItemsControl ItemsSource="{Binding Models}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:WizardModelItem">
+                  <Border Margin="0,0,0,8" Padding="12" CornerRadius="8"
+                          Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal">
+                          <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                          <Border Margin="8,0,0,0" Padding="6,1" CornerRadius="4" VerticalAlignment="Center"
+                                  Background="{DynamicResource DawYellowBrush}" IsVisible="{Binding Required}">
+                            <TextBlock FontSize="10" Foreground="#1B1E27" Text="benötigt" />
+                          </Border>
+                        </StackPanel>
+                        <TextBlock Margin="0,2,0,0" FontSize="12" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding Description}" />
+                        <TextBlock Margin="0,4,0,0" FontSize="11"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding Status}" />
+                      </StackPanel>
+                      <Panel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                        <Button IsVisible="{Binding CanDownload}"
+                                Command="{ReflectionBinding $parent[ItemsControl].DataContext.DownloadModelCommand}"
+                                CommandParameter="{Binding}">
+                          <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:SymbolIcon Symbol="ArrowDownload" /><TextBlock Text="Laden" />
+                          </StackPanel>
+                        </Button>
+                        <ProgressBar Width="60" IsIndeterminate="True" IsVisible="{Binding IsDownloading}" />
+                        <ic:SymbolIcon Symbol="CheckmarkCircle" FontSize="22"
+                                       Foreground="{DynamicResource DawGreenBrush}" IsVisible="{Binding Installed}" />
+                      </Panel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+
+          <!-- 3: Stem-Trennung -->
+          <StackPanel IsVisible="{Binding StepIndex, Converter={StaticResource Is}, ConverterParameter=3}">
+            <TextBlock FontSize="22" FontWeight="SemiBold" Text="Stem-Trennung" />
+            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Zerlegt einen Song in einzelne Spuren — Gesang, Schlagzeug, Bass, Gitarre, Klavier u. a. Das ist die Grundlage für Remixe, Karaoke und gezieltes Bearbeiten. Die Komponente (audio-separator) wird einmalig in die verwaltete Umgebung installiert." />
+            <Border Margin="0,16,0,0" Padding="12" CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+              <TextBlock TextWrapping="Wrap" Text="{Binding StemStatus}" />
+            </Border>
+            <Button Margin="0,12,0,0" Classes="accent" HorizontalAlignment="Left" Command="{Binding InstallStemCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ic:SymbolIcon Symbol="ArrowDownload" /><TextBlock Text="Stem-Trennung einrichten" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <!-- 4: ElevenLabs -->
+          <StackPanel IsVisible="{Binding StepIndex, Converter={StaticResource Is}, ConverterParameter=4}">
+            <TextBlock FontSize="22" FontWeight="SemiBold" Text="ElevenLabs (optional)" />
+            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Optional: ElevenLabs ist ein Cloud-Dienst für besonders natürliche Stimmen (Text-zu-Sprache, Stimmtausch) und Transkription — als Alternative zu den lokalen Modellen. Dafür brauchst du einen API-Schlüssel von elevenlabs.io. Lässt du das Feld leer, nutzt Audiola ausschließlich die lokalen Modelle." />
+            <TextBlock Margin="0,16,0,4" FontWeight="SemiBold" Text="ElevenLabs API-Key" />
+            <TextBox Watermark="xi-api-key (optional)" Text="{Binding ElevenLabsApiKey, Mode=TwoWay}" />
+            <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="Hinweis: Nur eigene oder lizenzierte Zielstimmen verwenden." />
+          </StackPanel>
+
+          <!-- 5: Fertig -->
+          <StackPanel IsVisible="{Binding StepIndex, Converter={StaticResource Is}, ConverterParameter=5}">
+            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Fast geschafft 🎉" />
+            <TextBlock Margin="0,12,0,8" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Status:" />
+            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+              <Panel>
+                <ic:SymbolIcon Symbol="CheckmarkCircle" Foreground="{DynamicResource DawGreenBrush}"
+                               IsVisible="{Binding LocalVoiceReady}" />
+                <ic:SymbolIcon Symbol="Warning" Foreground="{DynamicResource DawYellowBrush}"
+                               IsVisible="{Binding !LocalVoiceReady}" />
+              </Panel>
+              <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="Lokale Stimmen (Qwen3-TTS)" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+              <Panel>
+                <ic:SymbolIcon Symbol="CheckmarkCircle" Foreground="{DynamicResource DawGreenBrush}"
+                               IsVisible="{Binding StemReady}" />
+                <ic:SymbolIcon Symbol="Warning" Foreground="{DynamicResource DawYellowBrush}"
+                               IsVisible="{Binding !StemReady}" />
+              </Panel>
+              <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="Stem-Trennung" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+              <Panel>
+                <ic:SymbolIcon Symbol="CheckmarkCircle" Foreground="{DynamicResource DawGreenBrush}"
+                               IsVisible="{Binding CudaActive}" />
+                <ic:SymbolIcon Symbol="Info" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               IsVisible="{Binding !CudaActive}" />
+              </Panel>
+              <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="CUDA-Beschleunigung (sonst CPU)" />
+            </StackPanel>
+            <TextBlock Margin="0,16,0,0" TextWrapping="Wrap" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="Fehlt ein benötigter Punkt (gelbes Symbol), geh über „Zurück“ zum jeweiligen Schritt. Mit „Fertig“ schließt du den Assistenten." />
+          </StackPanel>
+        </Panel>
+      </ScrollViewer>
+
+      <!-- Footer -->
+      <Border Grid.Row="2" Padding="24,12" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <Grid>
+          <Button HorizontalAlignment="Left" Content="Später" Click="Later_Click" />
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Command="{Binding BackCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ic:SymbolIcon Symbol="ArrowLeft" /><TextBlock Text="Zurück" />
+              </StackPanel>
+            </Button>
+            <Button Classes="accent" Content="Weiter" Command="{Binding NextCommand}"
+                    IsVisible="{Binding !IsLastStep}" />
+            <Button Classes="accent" Command="{Binding FinishCommand}" IsVisible="{Binding IsLastStep}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ic:SymbolIcon Symbol="Checkmark" /><TextBlock Text="Fertig" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- Busy-Overlay -->
+    <Border Background="#B0000000" IsVisible="{Binding IsBusy}">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <ProgressBar Width="200" IsIndeterminate="True" HorizontalAlignment="Center" />
+        <TextBlock Margin="0,16,0,0" MaxWidth="420" TextWrapping="Wrap" TextAlignment="Center"
+                   Foreground="White" Text="{Binding BusyText}" />
+      </StackPanel>
+    </Border>
+  </Panel>
+</Window>

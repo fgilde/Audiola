@@ -147,9 +147,6 @@ public partial class App : Application
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MetadataViewModel>();
 
-        // Noch nicht portierte Seiten teilen sich eine Hinweis-Ansicht.
-        services.AddTransient<PendingPage>();
-
         // Einsing-Studio (frischer Zustand pro Aufruf).
         services.AddTransient<SingAlongViewModel>();
         services.AddTransient<SetupWizardViewModel>();

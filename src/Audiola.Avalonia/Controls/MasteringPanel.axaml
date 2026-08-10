@@ -4,6 +4,7 @@
              xmlns:controls="using:Audiola.Controls"
              xmlns:vm="using:Audiola.ViewModels"
              x:Class="Audiola.Controls.MasteringPanel"
+             Name="PanelRoot"
              x:DataType="vm:MasteringViewModel">
 
   <!-- Gemeinsames Mastering-Panel: identisch auf der Mastering-Seite (Studio-Mix) und im
@@ -160,7 +161,7 @@
 
     <!-- Aktionen (im „Spur mastern"-Dialog ausgeblendet — dort liegen sie im Dialog-Footer) -->
     <StackPanel Orientation="Horizontal" Margin="0,4,0,0" Spacing="8"
-                IsVisible="{Binding $parent[controls:MasteringPanel].ShowActions}">
+                IsVisible="{Binding #PanelRoot.ShowActions}">
       <Button Classes="accent" Command="{Binding ApplyToTrackCommand}"
               IsVisible="{Binding IsTrackSource}"
               ToolTip.Tip="Spur mastern und im Studio ersetzen (Strg+Z macht es rückgängig)">
