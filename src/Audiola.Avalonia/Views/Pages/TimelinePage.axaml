@@ -396,22 +396,23 @@
                       Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                       PointerPressed="TrackHeader_PointerPressed">
                 <Border.ContextMenu>
+                  <!-- Kontextmenüs sind Popups außerhalb des visuellen Baums; Bindungen auf
+                       Vorfahren greifen dort nicht. Deshalb Click-Handler, die die Spur über
+                       den DataContext bzw. die Auswahl bestimmen. -->
                   <ContextMenu>
                     <MenuItem Header="Stems trennen → automatisch (erkennen + beste Qualität)"
-                              Command="{ReflectionBinding $parent[UserControl].DataContext.SeparateTrackAutoCommand}"
-                              CommandParameter="{Binding}" />
-                    <MenuItem Header="Stems trennen → 4 (schnell)"
-                              Command="{ReflectionBinding $parent[UserControl].DataContext.SeparateTrackCommand}"
-                              CommandParameter="{Binding}" />
+                              Click="TrackSeparateAuto_Click" />
+                    <MenuItem Header="Stems trennen → 4 (schnell)" Click="TrackSeparate_Click" />
                     <MenuItem Header="Trennen (HQ · audio-separator)">
                       <MenuItem Header="RoFormer (Vocals / Instrumental)" Tag="roformer" Click="SeparateHq_Click" />
                       <MenuItem Header="Demucs 6 Stems (Gitarre / Klavier)" Tag="demucs6s" Click="SeparateHq_Click" />
                       <MenuItem Header="Karaoke (Lead / Background)" Tag="karaoke" Click="SeparateHq_Click" />
                     </MenuItem>
                     <Separator />
-                    <MenuItem Header="Spur duplizieren"
-                              Command="{ReflectionBinding $parent[UserControl].DataContext.DuplicateTrackCommand}"
-                              CommandParameter="{Binding}" />
+                    <MenuItem Header="Variationen / Effekte…" Click="TrackVariations_Click" />
+                    <MenuItem Header="Stimme tauschen…" Click="TrackVoiceChange_Click" />
+                    <Separator />
+                    <MenuItem Header="Spur duplizieren" Click="TrackDuplicate_Click" />
                     <MenuItem Header="Farbe">
                       <MenuItem Header="Blau" Tag="#5B8CFF" Click="TrackColor_Click" />
                       <MenuItem Header="Rot" Tag="#FF6B6B" Click="TrackColor_Click" />
@@ -422,15 +423,9 @@
                       <MenuItem Header="Cyan" Tag="#6BD6FF" Click="TrackColor_Click" />
                       <MenuItem Header="Gelb" Tag="#D6C054" Click="TrackColor_Click" />
                     </MenuItem>
-                    <MenuItem Header="Spur mastern…"
-                              Command="{ReflectionBinding $parent[UserControl].DataContext.MasterTrackCommand}"
-                              CommandParameter="{Binding}" />
-                    <MenuItem Header="Spur exportieren…"
-                              Command="{ReflectionBinding $parent[UserControl].DataContext.ExportTrackCommand}"
-                              CommandParameter="{Binding}" />
-                    <MenuItem Header="Spur löschen"
-                              Command="{ReflectionBinding $parent[UserControl].DataContext.DeleteTrackCommand}"
-                              CommandParameter="{Binding}" />
+                    <MenuItem Header="Spur mastern…" Click="TrackMaster_Click" />
+                    <MenuItem Header="Spur exportieren…" Click="TrackExport_Click" />
+                    <MenuItem Header="Spur löschen" Click="TrackDelete_Click" />
                   </ContextMenu>
                 </Border.ContextMenu>
                 <Grid ColumnDefinitions="6,*">
@@ -527,12 +522,9 @@
                                 <MenuItem Header="ElevenLabs" Click="TranscribeEleven_Click" />
                               </MenuItem>
                               <Separator />
-                              <MenuItem Header="Markierten Bereich ausschneiden"
-                                        Command="{ReflectionBinding $parent[UserControl].DataContext.CutRegionCommand}" />
-                              <MenuItem Header="Am Playhead teilen"
-                                        Command="{ReflectionBinding $parent[UserControl].DataContext.SplitAtPlayheadCommand}" />
-                              <MenuItem Header="Clip löschen"
-                                        Command="{ReflectionBinding $parent[UserControl].DataContext.DeleteSelectedCommand}" />
+                              <MenuItem Header="Markierten Bereich ausschneiden" Click="ClipCutRegion_Click" />
+                              <MenuItem Header="Am Playhead teilen" Click="ClipSplit_Click" />
+                              <MenuItem Header="Clip löschen" Click="ClipDelete_Click" />
                             </ContextMenu>
                           </Border.ContextMenu>
                           <Border.Margin>

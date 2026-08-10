@@ -51,6 +51,10 @@
     <Setter Property="Width" Value="40" />
     <Setter Property="Height" Value="40" />
     <Setter Property="Margin" Value="0,2" />
+    <!-- Die Rail ist breiter als der Knopf; ohne das sitzt er am linken Rand. -->
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
     <Setter Property="Foreground" Value="{DynamicResource DawTextDimBrush}" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="Template">

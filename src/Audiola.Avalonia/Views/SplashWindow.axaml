@@ -1,0 +1,73 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Audiola.Avalonia.Views.SplashWindow"
+        Width="460" Height="260"
+        SystemDecorations="None"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="True"
+        WindowStartupLocation="CenterScreen">
+
+  <!-- Startbild: erscheint sofort, während DI-Container, Audio-Kontext und Projekt
+       geladen werden — und schließt sich, sobald das Hauptfenster steht. -->
+
+  <Border CornerRadius="16" ClipToBounds="True" Background="#121318"
+          BorderBrush="#2C303B" BorderThickness="1">
+    <Panel>
+      <!-- Marken-Glow hinter dem Logo -->
+      <Border>
+        <Border.Background>
+          <RadialGradientBrush Center="50%,38%" GradientOrigin="50%,38%" Radius="0.8">
+            <GradientStop Color="#403F8CFF" Offset="0" />
+            <GradientStop Color="#20B56BFF" Offset="0.6" />
+            <GradientStop Color="#00000000" Offset="1" />
+          </RadialGradientBrush>
+        </Border.Background>
+      </Border>
+
+      <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,8">
+        <Image Source="avares://Audiola/Assets/audiola.png" Width="88" Height="88"
+               HorizontalAlignment="Center">
+          <Image.Effect>
+            <DropShadowEffect Color="#5B8CFF" BlurRadius="40" OffsetX="0" OffsetY="0" Opacity="0.6" />
+          </Image.Effect>
+        </Image>
+        <TextBlock Margin="0,14,0,0" HorizontalAlignment="Center" FontSize="30" FontWeight="Bold"
+                   Foreground="#E9EBF2" Text="Audiola" />
+        <!-- Frequenzverlauf der Marke -->
+        <Rectangle Width="140" Height="3" Margin="0,10,0,0" RadiusX="1.5" RadiusY="1.5"
+                   HorizontalAlignment="Center">
+          <Rectangle.Fill>
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+              <GradientStop Color="#3F8CFF" Offset="0" />
+              <GradientStop Color="#6BD6FF" Offset="0.5" />
+              <GradientStop Color="#B56BFF" Offset="1" />
+            </LinearGradientBrush>
+          </Rectangle.Fill>
+        </Rectangle>
+        <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="12"
+                   Foreground="#A7ADC0" Text="Trennen · Mischen · Einsingen · Mastern" />
+      </StackPanel>
+
+      <!-- Ladebalken am unteren Rand, im Markenverlauf -->
+      <Border Height="3" VerticalAlignment="Bottom" Background="#1AFFFFFF">
+        <Rectangle Name="LoadBar" Height="3" HorizontalAlignment="Left" Width="0">
+          <Rectangle.Fill>
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+              <GradientStop Color="#3F8CFF" Offset="0" />
+              <GradientStop Color="#6BD6FF" Offset="0.5" />
+              <GradientStop Color="#B56BFF" Offset="1" />
+            </LinearGradientBrush>
+          </Rectangle.Fill>
+          <Rectangle.Transitions>
+            <Transitions>
+              <DoubleTransition Property="Width" Duration="0:0:0.35" />
+            </Transitions>
+          </Rectangle.Transitions>
+        </Rectangle>
+      </Border>
+    </Panel>
+  </Border>
+</Window>

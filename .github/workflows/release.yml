@@ -161,7 +161,7 @@ jobs:
           vpk pack \
             --packId "${{ matrix.product }}" \
             --packTitle "${{ matrix.product }}" \
-            --packAuthors "Florian Gilde" \
+            --packAuthors "gilde.org" \
             --packVersion "${{ steps.version.outputs.version }}" \
             --packDir "publish/${{ matrix.product }}/${{ matrix.platform }}" \
             --mainExe "$main_exe" \

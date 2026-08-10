@@ -14,6 +14,11 @@
     <Version>1.0.0</Version>
     <!-- Velopack muss seine Install/Update-Hooks vor dem WPF-Start ausführen — siehe Program.cs. -->
     <StartupObject>Audiola.Program</StartupObject>
+    <!-- Herausgeber, wie Windows ihn in den Datei-Eigenschaften und im Setup zeigt. -->
+    <Company>gilde.org</Company>
+    <Authors>gilde.org</Authors>
+    <Product>Audiola</Product>
+    <Copyright>© gilde.org</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

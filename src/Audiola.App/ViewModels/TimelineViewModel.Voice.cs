@@ -14,6 +14,26 @@ public sealed partial class TimelineViewModel
     /// lokal über seed-vc oder über ElevenLabs). Performance/Timing/Betonung bleiben erhalten;
     /// löscht die Stimme danach, wenn sie nur temporär (geklont) war.
     /// </summary>
+    /// <summary>
+    /// Tauscht die Stimme aller Clips einer Spur mit derselben Zielstimme — der Weg über das
+    /// Spur-Kontextmenü. Eine bestehende Bereichsauswahl wird vorher verworfen, weil hier
+    /// bewusst die ganze Spur gemeint ist.
+    /// </summary>
+    public async Task ChangeTrackVoiceAsync(StemTrackViewModel track, VoiceChoice choice)
+    {
+        if (track is null || choice is null || IsVoiceChanging) return;
+
+        var clips = track.Clips.ToList();
+        if (clips.Count == 0) return;
+
+        ClearSelection();
+        foreach (var clip in clips)
+        {
+            SelectClip(clip);
+            await ChangeSelectedClipVoiceAsync(choice);
+        }
+    }
+
     public async Task ChangeSelectedClipVoiceAsync(VoiceChoice choice)
     {
         var clip = SelectedClip;

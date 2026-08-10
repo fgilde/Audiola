@@ -82,14 +82,14 @@ public partial class TimelinePage : UserControl, INavigationAware
     // ---- HQ-Trennung (audio-separator) ----
     private async void SeparateHq_Click(object? sender, RoutedEventArgs e)
     {
-        if (sender is MenuItem { Tag: string key, DataContext: StemTrackViewModel track })
+        if (sender is MenuItem { Tag: string key } && MenuTrack(sender) is { } track)
             await _vm.SeparateTrackHqAsync(track, key);
     }
 
     // ---- Spurfarbe setzen (Kontextmenü) ----
     private void TrackColor_Click(object? sender, RoutedEventArgs e)
     {
-        if (sender is MenuItem { Tag: string hex, DataContext: StemTrackViewModel track })
+        if (sender is MenuItem { Tag: string hex } && MenuTrack(sender) is { } track)
             track.CustomColor = hex;
     }
 
@@ -257,6 +257,65 @@ public partial class TimelinePage : UserControl, INavigationAware
     {
         if (_vm.SelectedClip is { } clip)
             await OpenVariationsAsync([clip], "Ausgewählter Clip");
+    }
+
+    // ---- Spur-Kontextmenü: Variationen und Stimmtausch auf allen Clips der Spur ----
+
+    /// <summary>
+    /// Die Spur hinter einem Kontextmenü-Eintrag. Avalonia reicht den DataContext des Owners
+    /// nicht in jedem Fall ins Menü durch — deshalb die ausgewählte Spur als Rückfall
+    /// (der Rechtsklick auf den Spurkopf wählt sie ohnehin aus).
+    /// </summary>
+    private StemTrackViewModel? MenuTrack(object? sender)
+        => (sender as Control)?.DataContext as StemTrackViewModel ?? _vm.SelectedTrack;
+
+    private async void TrackSeparateAuto_Click(object? sender, RoutedEventArgs e)
+    {
+        if (MenuTrack(sender) is { } track) await _vm.SeparateTrackAutoCommand.ExecuteAsync(track);
+    }
+
+    private async void TrackSeparate_Click(object? sender, RoutedEventArgs e)
+    {
+        if (MenuTrack(sender) is { } track) await _vm.SeparateTrackCommand.ExecuteAsync(track);
+    }
+
+    private void TrackDuplicate_Click(object? sender, RoutedEventArgs e)
+    {
+        if (MenuTrack(sender) is { } track) _vm.DuplicateTrackCommand.Execute(track);
+    }
+
+    private void TrackMaster_Click(object? sender, RoutedEventArgs e)
+    {
+        if (MenuTrack(sender) is { } track) _vm.MasterTrackCommand.Execute(track);
+    }
+
+    private async void TrackExport_Click(object? sender, RoutedEventArgs e)
+    {
+        if (MenuTrack(sender) is { } track) await _vm.ExportTrackCommand.ExecuteAsync(track);
+    }
+
+    private void TrackDelete_Click(object? sender, RoutedEventArgs e)
+    {
+        if (MenuTrack(sender) is { } track) _vm.DeleteTrackCommand.Execute(track);
+    }
+
+    private void ClipCutRegion_Click(object? sender, RoutedEventArgs e) => _vm.CutRegionCommand.Execute(null);
+
+    private void ClipSplit_Click(object? sender, RoutedEventArgs e) => _vm.SplitAtPlayheadCommand.Execute(null);
+
+    private void ClipDelete_Click(object? sender, RoutedEventArgs e) => _vm.DeleteSelectedCommand.Execute(null);
+
+    private async void TrackVariations_Click(object? sender, RoutedEventArgs e)
+    {
+        if (MenuTrack(sender) is not { } track || track.Clips.Count == 0) return;
+        await OpenVariationsAsync([.. track.Clips], $"Spur „{track.DisplayName}“");
+    }
+
+    private async void TrackVoiceChange_Click(object? sender, RoutedEventArgs e)
+    {
+        if (MenuTrack(sender) is not { } track || track.Clips.Count == 0) return;
+        if (await AppServices.Get<IAppDialogs>().PickVoiceAsync() is { } choice)
+            await _vm.ChangeTrackVoiceAsync(track, choice);
     }
 
     private async Task OpenVariationsAsync(IReadOnlyList<ClipViewModel> clips, string scope)

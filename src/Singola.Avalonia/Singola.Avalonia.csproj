@@ -8,6 +8,11 @@
     <AssemblyName>Singola</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RuntimeIdentifiers>win-x64;win-arm64;osx-x64;osx-arm64;linux-x64;linux-arm64</RuntimeIdentifiers>
+    <!-- Herausgeber, wie Windows ihn in den Datei-Eigenschaften und im Setup zeigt. -->
+    <Company>gilde.org</Company>
+    <Authors>gilde.org</Authors>
+    <Product>Singola</Product>
+    <Copyright>© gilde.org</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

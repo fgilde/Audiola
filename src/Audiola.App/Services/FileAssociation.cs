@@ -8,6 +8,10 @@ namespace Audiola.Services;
 /// Adminrechte nötig): Doppelklick öffnet Audiola mit dem Projekt, die Dateien tragen das
 /// App-Icon. Läuft idempotent bei jedem Start und aktualisiert damit auch den Exe-Pfad
 /// nach App-Updates.
+///
+/// Nur Windows. macOS erledigt das über die <c>CFBundleDocumentTypes</c> im Bundle,
+/// Linux über eine <c>.desktop</c>-Datei samt MIME-Typ — beides ist Sache des Pakets,
+/// nicht der laufenden App.
 /// </summary>
 public static class FileAssociation
 {
@@ -15,6 +19,7 @@ public static class FileAssociation
 
     public static void EnsureRegistered()
     {
+        if (!OperatingSystem.IsWindows()) return;
         try
         {
             var exe = Environment.ProcessPath;
@@ -51,6 +56,7 @@ public static class FileAssociation
     private const int SHCNE_ASSOCCHANGED = 0x08000000;
     private const int SHCNF_IDLIST = 0x0000;
 
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     [DllImport("shell32.dll")]
     private static extern void SHChangeNotify(int eventId, int flags, IntPtr item1, IntPtr item2);
 }

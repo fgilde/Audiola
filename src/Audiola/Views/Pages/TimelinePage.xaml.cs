@@ -293,6 +293,32 @@ public partial class TimelinePage : Page, INavigableView<TimelineViewModel>, INa
             await ViewModel.AddTextToSpeechTrackAsync(dlg.Text, r, dlg.Speed, dlg.Stability, dlg.Similarity);
     }
 
+    // ---- Spur-Kontextmenü: Variationen und Stimmtausch auf allen Clips der Spur ----
+    private async void TrackVariations_Click(object sender, RoutedEventArgs e)
+    {
+        if (TrackFromMenu(sender) is not { } track) return;
+        await OpenVariationsAsync([.. track.Clips], $"Spur „{track.DisplayName}“");
+    }
+
+    private async void TrackVoiceChange_Click(object sender, RoutedEventArgs e)
+    {
+        if (TrackFromMenu(sender) is not { } track || track.Clips.Count == 0) return;
+        var dlg = new Audiola.Views.Dialogs.VoiceSwapDialog { Owner = System.Windows.Window.GetWindow(this) };
+        if (dlg.ShowDialog() == true && dlg.Result is { } choice)
+            await ViewModel.ChangeTrackVoiceAsync(track, choice);
+    }
+
+    /// <summary>Die Spur hinter einem Kontextmenü-Eintrag (das Menü hängt am Spurkopf).</summary>
+    private static ViewModels.StemTrackViewModel? TrackFromMenu(object sender)
+    {
+        DependencyObject? d = sender as DependencyObject;
+        while (d != null && d is not System.Windows.Controls.ContextMenu)
+            d = System.Windows.Media.VisualTreeHelper.GetParent(d) ?? LogicalTreeHelper.GetParent(d);
+        return d is System.Windows.Controls.ContextMenu cm
+               && cm.PlacementTarget is FrameworkElement { DataContext: ViewModels.StemTrackViewModel track }
+            ? track : null;
+    }
+
     private async System.Threading.Tasks.Task OpenVariationsAsync(IReadOnlyList<ClipViewModel> clips, string scope)
     {
         var providers = ViewModel.VariationProviders;

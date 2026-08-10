@@ -24,7 +24,13 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Startbild sofort zeigen — Container, Audio-Kontext und ein evtl. übergebenes
+        // Projekt brauchen einen Moment.
+        var splash = ApplicationLifetime is IClassicDesktopStyleApplicationLifetime ? new SplashWindow() : null;
+        splash?.Show();
+
         _services = BuildServices();
+        splash?.SetProgress(0.5);
 
         // Geteilten Code an den Avalonia-Host binden (UI-Thread, Fehlerdialog, Dienstzugriff).
         DispatcherHelper.Configure(
@@ -39,11 +45,23 @@ public partial class App : Application
         _services.GetRequiredService<IAppTheme>().Apply(
             _services.GetRequiredService<ISettingsService>().Current.Theme);
 
+        // .audiola-Dateien mit Audiola verknüpfen (Doppelklick + Datei-Icon; unter Windows
+        // per HKCU, idempotent — auf macOS/Linux übernimmt das das Paket).
+        FileAssociation.EnsureRegistered();
+
+        splash?.SetProgress(0.8);
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var window = _services.GetRequiredService<MainWindow>();
             window.PendingStartupFile = StartupFile;
             desktop.MainWindow = window;
+            splash?.SetProgress(1);
+            window.Opened += (_, _) =>
+            {
+                splash?.Close();
+                window.Activate();
+            };
             desktop.Exit += (_, _) =>
             {
                 _services?.GetService<ISettingsService>()?.Save();
