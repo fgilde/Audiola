@@ -1,4 +1,5 @@
 using System.IO;
+using System.Runtime.InteropServices;
 using Velopack;
 using Velopack.Sources;
 
@@ -7,6 +8,11 @@ namespace Audiola.Services;
 /// <summary>
 /// Auto-Update über die GitHub-Releases via Velopack. Funktioniert nur, wenn die App über das
 /// Velopack-Setup installiert wurde (<see cref="IsManaged"/>); im Dev-/Portable-Build ein No-Op.
+///
+/// Der Kanal muss explizit gesetzt werden: die Pakete werden pro Plattform in eigene Kanäle
+/// veröffentlicht (audiola-win-x64, audiola-osx-arm64 …). Ohne <c>ExplicitChannel</c> sucht
+/// Velopack einen Feed nach eigenem Namensschema, den es hier nicht gibt — dann wird nie ein
+/// Update gefunden.
 /// </summary>
 public sealed class UpdateService
 {
@@ -18,7 +24,9 @@ public sealed class UpdateService
     {
         try
         {
-            _mgr = new UpdateManager(new GithubSource(Repository, null, prerelease: false));
+            _mgr = new UpdateManager(
+                new GithubSource(Repository, null, prerelease: false),
+                new UpdateOptions { ExplicitChannel = Channel });
         }
         catch (Exception ex)
         {
@@ -26,8 +34,18 @@ public sealed class UpdateService
         }
     }
 
+    /// <summary>Der Velopack-Kanal dieser Plattform — muss zu den Kanälen im Release-Workflow passen.</summary>
+    public static string Channel =>
+        OperatingSystem.IsWindows() ? "audiola-win-x64" :
+        OperatingSystem.IsMacOS() && RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "audiola-osx-arm64" :
+        OperatingSystem.IsMacOS() ? "audiola-osx-x64" :
+        "audiola-linux-x64";
+
     /// <summary>True, wenn die App aus einer Velopack-Installation läuft (nur dann Self-Update).</summary>
     public bool IsManaged => _mgr?.IsInstalled == true;
+
+    /// <summary>Die laufende Version (für die Rückfrage beim Update).</summary>
+    public string CurrentVersion => _mgr?.CurrentVersion?.ToString() ?? "";
 
     public async Task<UpdateInfo?> CheckAsync()
     {

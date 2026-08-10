@@ -322,17 +322,38 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     // ---- Updates ----
 
-    /// <summary>Beim Start still nach Updates suchen und ggf. anwenden (nur installierte Version).</summary>
+    /// <summary>
+    /// Beim Start nach Updates suchen und eines anbieten (nur installierte Version). Bewusst mit
+    /// Rückfrage statt still im Hintergrund: ein Neustart mitten in der Arbeit wäre überraschend,
+    /// und ohne Hinweis merkt niemand, dass eine neue Fassung bereitliegt.
+    /// </summary>
     public async Task AutoUpdateAsync()
     {
         try
         {
             var info = await _updates.CheckAsync();
             if (info is null) return;
+
+            var version = info.TargetFullRelease.Version.ToString();
+            Status = $"Update {version} verfügbar";
+            _snackbar.Info("Update verfügbar",
+                $"Version {version} steht bereit — über Hilfe → „Nach Updates suchen…“ installieren.", 8);
+
+            if (!_dialogs.Confirm("Update verfügbar",
+                    $"Version {version} ist verfügbar (installiert: {_updates.CurrentVersion})."
+                    + Environment.NewLine + Environment.NewLine
+                    + "Jetzt herunterladen und neu starten?"))
+                return;
+
+            IsWorking = true;
+            Status = $"Update {version} wird geladen …";
             if (await _updates.DownloadAsync(info))
                 _updates.ApplyAndRestart(info);
+            else
+                _snackbar.Error("Update fehlgeschlagen", "Siehe audiola.log.", 6);
         }
         catch { /* Update-Fehler dürfen den Start nicht stören */ }
+        finally { IsWorking = false; }
     }
 
     [RelayCommand]
