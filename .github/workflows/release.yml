@@ -165,6 +165,12 @@ jobs:
           test -n "$installer"
           mv "$installer" "$output_dir/${{ matrix.product }}-${{ matrix.platform }}-${{ matrix.download_suffix }}"
 
+      - name: Remove non-deployment package artifacts
+        shell: bash
+        run: |
+          output_dir="release/${{ matrix.product }}/${{ matrix.platform }}"
+          rm -f "$output_dir"/assets.*.json "$output_dir"/RELEASES-* "$output_dir"/*-Portable.zip
+
       - name: Upload package and update feed
         uses: actions/upload-artifact@v4
         with:
