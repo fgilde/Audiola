@@ -1,5 +1,6 @@
 using Audiola.Models;
 using NAudio.Wave;
+using Audiola.Services.Audio;
 
 namespace Audiola.Services;
 
@@ -14,7 +15,7 @@ public sealed class WaveformService : IWaveformService
 
     private static AudioTrack Load(string filePath, int targetBuckets, CancellationToken ct)
     {
-        using var reader = new AudioFileReader(filePath);
+        using var reader = PortableAudioFile.Open(filePath);
 
         var totalSamples = reader.Length / sizeof(float);
         var channels = reader.WaveFormat.Channels;

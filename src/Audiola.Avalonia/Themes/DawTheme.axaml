@@ -36,6 +36,16 @@
       <Color x:Key="DawTimeline">#15151B</Color>
       <Color x:Key="DawScrollThumb">#66FFFFFF</Color>
       <Color x:Key="DawScrollTrack">#14FFFFFF</Color>
+
+      <!-- Fluent-Controls (Slider, CheckBox, ToggleButton …) ziehen die Systemakzentfarbe.
+           Hier auf den Studio-Akzent gesetzt, sonst erscheint die Windows-Farbe des Nutzers. -->
+      <Color x:Key="SystemAccentColor">#3F8CFF</Color>
+      <Color x:Key="SystemAccentColorLight1">#5B9CFF</Color>
+      <Color x:Key="SystemAccentColorLight2">#7BB0FF</Color>
+      <Color x:Key="SystemAccentColorLight3">#9EC4FF</Color>
+      <Color x:Key="SystemAccentColorDark1">#3579D9</Color>
+      <Color x:Key="SystemAccentColorDark2">#2A66B8</Color>
+      <Color x:Key="SystemAccentColorDark3">#1F5296</Color>
     </ResourceDictionary>
 
     <ResourceDictionary x:Key="Light">
@@ -59,6 +69,14 @@
       <Color x:Key="DawTimeline">#E4E7EE</Color>
       <Color x:Key="DawScrollThumb">#59000000</Color>
       <Color x:Key="DawScrollTrack">#10000000</Color>
+
+      <Color x:Key="SystemAccentColor">#2F6FE0</Color>
+      <Color x:Key="SystemAccentColorLight1">#4A83E8</Color>
+      <Color x:Key="SystemAccentColorLight2">#6B9BEF</Color>
+      <Color x:Key="SystemAccentColorLight3">#8FB4F5</Color>
+      <Color x:Key="SystemAccentColorDark1">#2A62C7</Color>
+      <Color x:Key="SystemAccentColorDark2">#2354A8</Color>
+      <Color x:Key="SystemAccentColorDark3">#1C458A</Color>
     </ResourceDictionary>
 
   </ResourceDictionary.ThemeDictionaries>

@@ -1,6 +1,7 @@
 using Audiola.Models;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using Audiola.Services.Audio;
 
 namespace Audiola.Services;
 
@@ -26,7 +27,7 @@ public sealed class StemMixService : IStemMixService
             var inputs = new List<ISampleProvider>();
             foreach (var stem in active)
             {
-                var reader = new AudioFileReader(stem.FilePath);
+                var reader = PortableAudioFile.Open(stem.FilePath);
                 readers.Add(reader);
 
                 ISampleProvider provider = reader;

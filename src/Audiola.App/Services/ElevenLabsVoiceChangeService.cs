@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using Audiola.Services.Audio;
 
 namespace Audiola.Services;
 
@@ -275,7 +276,7 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
 
     private static (float[] Samples, int SampleRate) DecodeToStereo(string path)
     {
-        using var reader = new AudioFileReader(path);
+        using var reader = PortableAudioFile.Open(path);
         ISampleProvider sp = reader;
         if (sp.WaveFormat.Channels == 1)
             sp = new MonoToStereoSampleProvider(sp);

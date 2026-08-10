@@ -1,5 +1,6 @@
 using Audiola.ViewModels;
 using NAudio.Wave;
+using Audiola.Services.Audio;
 
 namespace Audiola.Services;
 
@@ -11,7 +12,7 @@ namespace Audiola.Services;
 public sealed class SpatialPreviewEngine : IDisposable
 {
     private const int Sr = 48000;
-    private WaveOutEvent? _out;
+    private PortableWaveOut? _out;
 
     public bool IsPlaying { get; private set; }
     public event EventHandler? Stopped;
@@ -24,7 +25,7 @@ public sealed class SpatialPreviewEngine : IDisposable
         if (snapshot.Count == 0 || monos.All(m => m.Length == 0)) return;
 
         var provider = new SpatialMixProvider(snapshot, monos, Sr);
-        _out = new WaveOutEvent { DesiredLatency = 160 };
+        _out = new PortableWaveOut { DesiredLatency = 160 };
         _out.PlaybackStopped += OnStopped;
         _out.Init(provider);
         _out.Play();

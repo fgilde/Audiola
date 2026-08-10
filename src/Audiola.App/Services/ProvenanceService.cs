@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Audiola.Models;
 using NAudio.Wave;
+using Audiola.Services.Audio;
 
 namespace Audiola.Services;
 
@@ -55,7 +56,7 @@ public sealed class ProvenanceService : IProvenanceService
         // 1) Formatinfo.
         try
         {
-            using var reader = new AudioFileReader(filePath);
+            using var reader = PortableAudioFile.Open(filePath);
             var wf = reader.WaveFormat;
             findings.Add(new Finding("Format",
                 $"{Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant()}, " +

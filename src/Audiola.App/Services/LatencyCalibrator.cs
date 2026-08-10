@@ -1,6 +1,7 @@
 using System.IO;
 using Audiola.Services;
 using NAudio.Wave;
+using Audiola.Services.Audio;
 
 namespace Audiola.Services;
 
@@ -24,7 +25,7 @@ public sealed class LatencyCalibrator
         var clickPath = WriteClickSignal();
         var recorded = new List<float>(capacity: (int)(TotalSeconds * Rate) + Rate);
 
-        using var mic = new WaveInEvent { DeviceNumber = deviceNumber, WaveFormat = new WaveFormat(Rate, 16, 1), BufferMilliseconds = 30 };
+        using var mic = new PortableWaveIn { DeviceNumber = deviceNumber, WaveFormat = new WaveFormat(Rate, 16, 1), BufferMilliseconds = 30 };
         mic.DataAvailable += (_, e) =>
         {
             int n = e.BytesRecorded / 2;
@@ -35,8 +36,8 @@ public sealed class LatencyCalibrator
             }
         };
 
-        using var reader = new AudioFileReader(clickPath);
-        using var outp = new WaveOutEvent();
+        using var reader = PortableAudioFile.Open(clickPath);
+        using var outp = new PortableWaveOut();
         outp.Init(reader);
         var done = new TaskCompletionSource();
         outp.PlaybackStopped += (_, _) => done.TrySetResult();

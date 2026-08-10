@@ -5,6 +5,7 @@ using Audiola.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NAudio.Wave;
+using Audiola.Services.Audio;
 
 namespace Audiola.ViewModels;
 
@@ -54,7 +55,7 @@ public sealed partial class VoicesViewModel : ObservableObject
 
     // Vorschau
     [ObservableProperty] private string _previewText = "Hallo, das ist ein Test der lokalen Stimme.";
-    private WaveOutEvent? _previewOut;
+    private PortableWaveOut? _previewOut;
     private AudioFileReader? _previewReader;
 
     // Neues Profil
@@ -224,8 +225,8 @@ public sealed partial class VoicesViewModel : ObservableObject
             var path = TempDir.File("voice", ".wav", "preview");
             AudioEdits.WriteWav(path, samples, sr);
 
-            _previewReader = new AudioFileReader(path);
-            _previewOut = new WaveOutEvent();
+            _previewReader = PortableAudioFile.Open(path);
+            _previewOut = new PortableWaveOut();
             _previewOut.Init(_previewReader);
             _previewOut.Play();
             Status = "Vorschau läuft.";

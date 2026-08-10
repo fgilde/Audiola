@@ -1,5 +1,6 @@
 using Audiola.Dsp;
 using NAudio.Wave;
+using Audiola.Services.Audio;
 
 namespace Audiola.Services;
 
@@ -19,9 +20,9 @@ public sealed class VocalRecordingEngine : IDisposable
     private const int Rate = 44100;
     private const int Win = 2048;   // Analysefenster für die Tonhöhe (~46 ms)
 
-    private WaveOutEvent? _out;
+    private PortableWaveOut? _out;
     private AudioFileReader? _backing;
-    private WaveInEvent? _mic;
+    private PortableWaveIn? _mic;
 
     private float[] _vocal = [];    // Mono, volle Songlänge (44,1 kHz) — die gesammelte Aufnahme
     private long _writePos;         // aktuelle Schreibposition im Puffer (kann anfangs negativ sein)
@@ -59,8 +60,8 @@ public sealed class VocalRecordingEngine : IDisposable
     public void LoadBacking(string wavPath)
     {
         DisposePlayback();
-        _backing = new AudioFileReader(wavPath);
-        _out = new WaveOutEvent();
+        _backing = PortableAudioFile.Open(wavPath);
+        _out = new PortableWaveOut();
         _out.Init(_backing);
         _out.PlaybackStopped += OnPlaybackStopped;
 
@@ -85,7 +86,7 @@ public sealed class VocalRecordingEngine : IDisposable
             // Erster aufgenommener Sample gehört – latenzkorrigiert – an diese Puffer-Position.
             _writePos = (long)Math.Round((fromSec - LatencySeconds) * Rate);
             _winFill = 0;
-            _mic = new WaveInEvent { DeviceNumber = DeviceNumber, WaveFormat = new WaveFormat(Rate, 16, 1), BufferMilliseconds = 40 };
+            _mic = new PortableWaveIn { DeviceNumber = DeviceNumber, WaveFormat = new WaveFormat(Rate, 16, 1), BufferMilliseconds = 40 };
             _mic.DataAvailable += OnMic;
             _mic.StartRecording();
             IsRecording = true;

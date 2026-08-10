@@ -7,10 +7,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <RootNamespace>Audiola</RootNamespace>
+    <!-- Die miniaudio-Callbacks arbeiten auf rohen Puffern (siehe Services/Audio). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CUETools.Codecs.FLAKE" Version="1.0.5" />
+    <PackageReference Include="JAJ.Packages.MiniAudioEx" Version="3.3.6" />
     <PackageReference Include="NAudio" Version="2.3.0" />
   </ItemGroup>
 

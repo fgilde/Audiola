@@ -1,5 +1,6 @@
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using Audiola.Services.Audio;
 
 namespace Audiola.Services;
 
@@ -12,7 +13,7 @@ public sealed class NAudioPlayerService : IAudioPlayerService
 {
     private readonly LiveEqProcessor _liveEq;
     private readonly LiveFxProcessor _liveFx;
-    private WaveOutEvent? _output;
+    private PortableWaveOut? _output;
     private AudioFileReader? _reader;
     private readonly UiTimer _timer;
     private float _volume = 1.0f;
@@ -59,13 +60,14 @@ public sealed class NAudioPlayerService : IAudioPlayerService
         _reader?.Dispose();
         _output?.Dispose();
 
-        _reader = new AudioFileReader(filePath) { Volume = _volume };
+        _reader = PortableAudioFile.Open(filePath);
+        _reader.Volume = _volume;
         _liveEq.Configure(_reader.WaveFormat.SampleRate);
         _liveFx.Configure(_reader.WaveFormat.SampleRate);
 
         ISampleProvider chain = new LiveEqSampleProvider(_reader, _liveEq);
         chain = new LiveFxSampleProvider(chain, _liveFx);
-        _output = new WaveOutEvent();
+        _output = new PortableWaveOut();
         _output.Init(chain.ToWaveProvider());
         _output.PlaybackStopped += OnPlaybackStopped;
 

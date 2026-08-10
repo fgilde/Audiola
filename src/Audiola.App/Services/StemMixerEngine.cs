@@ -1,6 +1,7 @@
 using Audiola.ViewModels;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using Audiola.Services.Audio;
 
 namespace Audiola.Services;
 
@@ -11,7 +12,7 @@ namespace Audiola.Services;
 public sealed class StemMixerEngine : IDisposable
 {
     private readonly UiTimer _timer;
-    private WaveOutEvent? _output;
+    private PortableWaveOut? _output;
     private readonly List<AudioFileReader> _readers = [];
     private readonly List<ClipSampleProvider> _clips = [];
     private CountingSampleProvider? _counter;
@@ -132,7 +133,7 @@ public sealed class StemMixerEngine : IDisposable
         _spectrum = new SpectrumSampleProvider(chain);                           // Tap für die Spektrum-Anzeige
         BuildBandMapping(_sampleRate);
         _counter = new CountingSampleProvider(_spectrum);
-        _output = new WaveOutEvent();
+        _output = new PortableWaveOut();
         _output.Init(_counter.ToWaveProvider());
         _output.PlaybackStopped += OnPlaybackStopped;
 
@@ -206,7 +207,7 @@ public sealed class StemMixerEngine : IDisposable
 
         void AddClip(StemTrackViewModel vm, ClipViewModel? clip, string path, double offsetSec, double srcStartSec, double lenSec)
         {
-            var reader = new AudioFileReader(path);
+            var reader = PortableAudioFile.Open(path);
             readers.Add(reader);
 
             ISampleProvider provider = reader;

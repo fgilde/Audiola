@@ -1,12 +1,13 @@
 using System.IO;
 using NAudio.Wave;
+using Audiola.Services.Audio;
 
 namespace Audiola.Services;
 
 /// <summary>Mikrofon-Aufnahme via NAudio <see cref="WaveInEvent"/> → 44,1 kHz/16-bit/Mono-WAV.</summary>
 public sealed class AudioRecorder : IAudioRecorder
 {
-    private WaveInEvent? _waveIn;
+    private PortableWaveIn? _waveIn;
     private WaveFileWriter? _writer;
     private string? _path;
     private TaskCompletionSource<string>? _tcs;
@@ -19,7 +20,7 @@ public sealed class AudioRecorder : IAudioRecorder
 
         _path = TempDir.File("rec", ".wav", "rec");
 
-        _waveIn = new WaveInEvent { DeviceNumber = deviceNumber, WaveFormat = new WaveFormat(44100, 16, 1) };
+        _waveIn = new PortableWaveIn { DeviceNumber = deviceNumber, WaveFormat = new WaveFormat(44100, 16, 1) };
         _writer = new WaveFileWriter(_path, _waveIn.WaveFormat);
         _tcs = new TaskCompletionSource<string>();
 

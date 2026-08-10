@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Audiola.Dsp;
 using NAudio.Wave;
+using Audiola.Services.Audio;
 
 namespace Audiola.Services;
 
@@ -17,7 +18,7 @@ public static class MelodyExtractor
     /// <summary>Liest die Datei und liefert die Melodie als Notenliste (leer, wenn nichts Tonales gefunden).</summary>
     public static IReadOnlyList<MelodyNote> ExtractFromFile(string audioPath)
     {
-        using var reader = new AudioFileReader(audioPath);
+        using var reader = PortableAudioFile.Open(audioPath);
         var channels = reader.WaveFormat.Channels;
         var rate = reader.WaveFormat.SampleRate;
 

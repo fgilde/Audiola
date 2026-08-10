@@ -1,5 +1,6 @@
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using Audiola.Services.Audio;
 
 namespace Audiola.Services;
 
@@ -7,7 +8,7 @@ public static class AudioProcessingHelper
 {
     public static (float[] Samples, int SampleRate) ReadStereo(string filePath)
     {
-        using var reader = new AudioFileReader(filePath);
+        using var reader = PortableAudioFile.Open(filePath);
         ISampleProvider provider = reader;
         if (provider.WaveFormat.Channels == 1)
             provider = new MonoToStereoSampleProvider(provider);
