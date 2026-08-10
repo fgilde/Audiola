@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:Audiola.Avalonia.Controls"
+             x:Class="Audiola.Avalonia.Views.TimelinePage">
+  <Grid Margin="28" RowDefinitions="Auto,*,Auto">
+    <StackPanel Spacing="5">
+      <TextBlock FontSize="28" FontWeight="SemiBold" Text="Timeline" />
+      <TextBlock Foreground="#B9C2D0" Text="Editable project tracks, embedded-media project save/load, and Core-powered stem separation." />
+      <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,9,0,0">
+        <Button Content="Add audio…" Command="{Binding Parent.OpenAudioCommand}" />
+        <Button Content="Separate selected track" Command="{Binding Parent.SeparateTrackCommand}" />
+        <Button Content="Move up" Command="{Binding Parent.MoveSelectedTrackUpCommand}" />
+        <Button Content="Remove" Command="{Binding Parent.RemoveSelectedTrackCommand}" />
+        <Button Content="Save project…" Command="{Binding Parent.SaveProjectCommand}" />
+      </StackPanel>
+    </StackPanel>
+    <Grid Grid.Row="1" Margin="0,20,0,12" ColumnDefinitions="300,*" ColumnSpacing="16">
+      <Border Background="#20232B" CornerRadius="8" Padding="8">
+        <ListBox ItemsSource="{Binding Parent.Tracks}" SelectedItem="{Binding Parent.SelectedTrack}">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Grid Margin="5" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBox Text="{Binding Name, Mode=TwoWay}" BorderThickness="0" Background="Transparent" FontWeight="SemiBold" />
+                  <TextBlock FontSize="11" Foreground="#9CA8BA" Text="{Binding DurationText}" />
+                </StackPanel>
+                <CheckBox Grid.Column="1" VerticalAlignment="Center" Content="Mute" IsChecked="{Binding IsMuted, Mode=TwoWay}" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Border>
+      <StackPanel Grid.Column="1" Spacing="12">
+        <Border Background="#20232B" CornerRadius="8" Padding="16">
+          <StackPanel Spacing="10">
+            <TextBlock FontWeight="SemiBold" Text="{Binding Parent.ActiveTrack.FileName, TargetNullValue='No active track'}" />
+            <controls:WaveformView Height="230" Peaks="{Binding Parent.ActiveTrack.Peaks}"
+                                   Progress="{Binding Parent.PlaybackProgress}" SeekCommand="{Binding Parent.SeekCommand}" />
+            <TextBlock Foreground="#9CA8BA" Text="{Binding Parent.SelectedTrack.DurationText, TargetNullValue='Import audio to create waveform peaks.'}" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="{Binding Parent.PlayPauseLabel}" Command="{Binding Parent.PlayPauseCommand}"
+                      IsEnabled="{Binding Parent.IsTransportAvailable}" />
+              <Button Content="Stop" Command="{Binding Parent.StopCommand}" IsEnabled="{Binding Parent.IsTransportAvailable}" />
+              <TextBlock VerticalAlignment="Center" FontFamily="Consolas"
+                         Text="{Binding Parent.PlaybackPositionText, StringFormat='{}{0} / '}" />
+              <TextBlock VerticalAlignment="Center" FontFamily="Consolas" Text="{Binding Parent.PlaybackDurationText}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
+          <StackPanel>
+            <TextBlock Text="{Binding Parent.SelectedTrack.Volume, StringFormat='Volume: {0:P0}'}" />
+            <Slider Minimum="0" Maximum="2" Value="{Binding Parent.SelectedTrack.Volume, Mode=TwoWay}" />
+          </StackPanel>
+          <StackPanel Grid.Column="1">
+            <TextBlock Text="{Binding Parent.SelectedTrack.Pan, StringFormat='Pan: {0:0.00}'}" />
+            <Slider Minimum="-1" Maximum="1" Value="{Binding Parent.SelectedTrack.Pan, Mode=TwoWay}" />
+          </StackPanel>
+        </Grid>
+      </StackPanel>
+    </Grid>
+    <TextBlock Grid.Row="2" Foreground="#9CA8BA" Text="Stem separation remains disabled until Demucs is installed in the configured Python environment." />
+  </Grid>
+</UserControl>

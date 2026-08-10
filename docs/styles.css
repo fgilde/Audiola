@@ -349,3 +349,27 @@ a { color: var(--cyan); text-decoration: none; }
   .feature-grid, .dl-grid, .singola-grid, .gal-grid { grid-template-columns: 1fr; }
   .hero { padding-top: 60px; }
 }
+/* ————— Cross-platform downloads ————— */
+.dl-intro { color: var(--dim); margin: 10px auto 18px; }
+.platform-recommendation {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px;
+  width: fit-content; max-width: 100%; margin: 0 auto 26px; padding: 9px 15px;
+  border: 1px solid var(--stroke); border-radius: 999px; background: var(--panel);
+}
+.platform-rec-label { font-family: "JetBrains Mono"; font-size: 10.5px; letter-spacing: .08em; color: var(--cyan); }
+.platform-recommendation strong { font-size: 13px; }
+.platform-downloads { display: grid; width: 100%; gap: 9px; margin-top: 4px; }
+.platform-download {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;
+  padding: 10px 13px; border: 1px solid var(--stroke); border-radius: 10px;
+  color: var(--text); background: var(--card); font-size: 14px; font-weight: 600;
+  transition: transform .12s ease, border-color .2s, box-shadow .2s;
+}
+.platform-download:hover { transform: translateY(-2px); border-color: var(--cyan); }
+.platform-download small { color: var(--faint); font-family: "JetBrains Mono"; font-size: 10.5px; font-weight: 500; }
+.platform-download.is-recommended { border-color: var(--cyan); box-shadow: 0 0 22px rgba(107, 214, 255, .18); }
+.dl-stage .platform-download.is-recommended { border-color: var(--pink); box-shadow: 0 0 22px rgba(255, 79, 163, .18); }
+@media (max-width: 500px) {
+  .platform-recommendation { border-radius: 12px; text-align: center; }
+  .platform-download { align-items: flex-start; flex-direction: column; gap: 2px; }
+}

@@ -4,21 +4,21 @@
 
 # Audiola
 
-### A modern Windows audio studio — arrange, separate, remix, master and master in 3D.
+### A modern cross-platform audio studio — arrange, separate, remix, master and master in 3D.
 
-A full audio-production studio for Windows built on **.NET 10 + WPF (Fluent / WPF-UI)**, with a companion **.NET 10 Blazor WebAssembly** web app. Drag a song in, split it into stems, edit on a multitrack timeline, swap or synthesize voices with local AI, master to broadcast loudness and export an immersive 3D mix — all in one app that provisions everything it needs.
+A full audio-production studio for Windows, macOS, and Linux built on **.NET 10 + Avalonia**, with a companion **.NET 10 Blazor WebAssembly** web app. Drag a song in, split it into stems, edit on a multitrack timeline, swap or synthesize voices with local AI, master to broadcast loudness and export an immersive 3D mix — all in one app that provisions everything it needs.
 
 <br/>
 
-[![Download](https://img.shields.io/badge/Download-Latest%20Release-5B8CFF?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/fgilde/Audiola/releases/latest/download/Audiola-win-Setup.exe)
+[![Download](https://img.shields.io/badge/Download-Latest%20Release-5B8CFF?style=for-the-badge&logo=download&logoColor=white)](https://github.com/fgilde/Audiola/releases/latest)
 &nbsp;
 [![Documentation](https://img.shields.io/badge/Docs-GitHub%20Pages-6BD6FF?style=for-the-badge&logo=readthedocs&logoColor=white)](https://fgilde.github.io/Audiola/)
 
 <br/>
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)](https://github.com/fgilde/Audiola/releases/latest)
-[![UI](https://img.shields.io/badge/UI-WPF--UI%20(Fluent)-5B8CFF)](https://github.com/lepoco/wpfui)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-0078D6?logo=linux&logoColor=white)](https://github.com/fgilde/Audiola/releases/latest)
+[![UI](https://img.shields.io/badge/UI-Avalonia-5B8CFF)](https://avaloniaui.net/)
 [![Auto-update](https://img.shields.io/badge/Updates-Velopack-2EA043)](https://velopack.io)
 [![Build](https://img.shields.io/github/actions/workflow/status/fgilde/Audiola/release.yml?label=build)](https://github.com/fgilde/Audiola/actions)
 [![License](https://img.shields.io/badge/License-Proprietary-lightgrey)](#license)
@@ -61,7 +61,7 @@ Audiola is a desktop audio studio that brings the heavy parts of modern music pr
 
 It is **self-provisioning** — the AI/ML features run through a managed Python environment that the app sets up, populates and updates for you. There is no manual `pip install` to run; click a button and Audiola downloads the model it needs into its own isolated environment.
 
-Audiola ships as a Windows desktop app and is accompanied by a Blazor WebAssembly web companion.
+Audiola and Singola ship as Windows, macOS, and Linux desktop apps and are accompanied by a Blazor WebAssembly web companion.
 
 ---
 
@@ -213,7 +213,7 @@ A complete voice toolkit, with local AI models that the app downloads and runs f
 
 ## Requirements
 
-- **Windows 10 / 11 (x64).**
+- **Windows 10 / 11 (x64), macOS (Apple Silicon or Intel), or Linux x64.**
 - **Running the installer:** nothing else — the released build is self-contained.
 - **AI/ML features** (stem separation, local voices, transcription): a **Python** interpreter on your system that Audiola can use as the base for its managed environment. Everything else (model downloads, dependency installs) is handled in-app.
 - **Optional NVIDIA GPU + CUDA** for dramatically faster stem separation, voice conversion and transcription.
@@ -223,9 +223,13 @@ A complete voice toolkit, with local AI models that the app downloads and runs f
 
 ## Install
 
-Download the latest **`Audiola-win-Setup.exe`** from the [**Releases**](https://github.com/fgilde/Audiola/releases/latest) page and run it.
+Use the [download page](https://fgilde.github.io/Audiola/) to select the recommended package, or download it from [**Releases**](https://github.com/fgilde/Audiola/releases/latest):
 
-Audiola **updates itself automatically** on launch, powered by [Velopack](https://velopack.io).
+- Windows x64: `Audiola-win-x64-Setup.exe`
+- macOS Apple Silicon / Intel: `Audiola-osx-arm64-Setup.pkg` / `Audiola-osx-x64-Setup.pkg`
+- Linux x64: `Audiola-linux-x64-AppImage`
+
+Audiola and Singola **update themselves automatically** on launch, powered by [Velopack](https://velopack.io).
 
 ---
 
@@ -243,15 +247,15 @@ If you'd rather wire up Python yourself, point Audiola's Python path at any inte
 
 ## Build & run from source
 
-Requires the **.NET 10 SDK** on Windows.
+Requires the **.NET 10 SDK** on Windows, macOS, or Linux.
 
 ```powershell
 # Clone
 git clone https://github.com/fgilde/Audiola.git
 cd Audiola
 
-# Run the WPF desktop app
-dotnet run --project src/Audiola/Audiola.csproj
+# Run the Avalonia desktop app
+dotnet run --project src/Audiola.Avalonia/Audiola.Avalonia.csproj
 ```
 
 Build the whole solution:
@@ -264,10 +268,11 @@ dotnet build Audiola.sln -c Release
 
 | Project | Target | Purpose |
 |---|---|---|
-| `src/Audiola/Audiola.csproj` | `net10.0-windows` | The WPF desktop studio app (entry point). |
-| `src/Audiola.Core/Audiola.Core.csproj` | `net10.0-windows` | Shared DSP, mastering, stem separation, voices, project format. |
+| `src/Audiola.Avalonia/Audiola.Avalonia.csproj` | `net10.0` | Cross-platform Avalonia desktop studio app. |
+| `src/Singola.Avalonia/Singola.Avalonia.csproj` | `net10.0` | Cross-platform Avalonia karaoke app. |
+| `src/Audiola.Core/Audiola.Core.csproj` | `net10.0` | Shared DSP, mastering, stem separation, voices, project format. |
 | `src/Audiola.Web/Audiola.Web.csproj` | `net10.0` | Blazor WebAssembly web companion. |
-| `src/Audiola.Api/Audiola.Api.csproj` | `net10.0-windows` | API that hosts the WASM client (same origin). |
+| `src/Audiola.Api/Audiola.Api.csproj` | `net10.0` | API that hosts the WASM client (same origin). |
 | `src/Audiola.AppHost/Audiola.AppHost.csproj` | `net10.0` | .NET Aspire app host for the web stack. |
 
 ---
@@ -282,7 +287,7 @@ A **.NET 10 Blazor WebAssembly** companion (`src/Audiola.Web`) is hosted by `src
 
 ## Tech stack
 
-**.NET 10** · **WPF** · [**WPF-UI**](https://github.com/lepoco/wpfui) (Fluent / Mica) · [**NAudio**](https://github.com/naudio/NAudio) + NAudio.Lame · SoundTouch · [**CommunityToolkit.Mvvm**](https://github.com/CommunityToolkit/dotnet) · [**TagLibSharp**](https://github.com/mono/taglib-sharp) · [**Velopack**](https://velopack.io) (auto-update) · **.NET 10 Blazor WebAssembly** + [**.NET Aspire**](https://learn.microsoft.com/dotnet/aspire/) · [**MudBlazor.Extensions**](https://github.com/fgilde/MudBlazor.Extensions) · [AuralizeBlazor](https://github.com/fgilde/AuralizeBlazor).
+**.NET 10** · [**Avalonia**](https://avaloniaui.net/) (Fluent) · [**NAudio**](https://github.com/naudio/NAudio) + NAudio.Lame · SoundTouch · [**CommunityToolkit.Mvvm**](https://github.com/CommunityToolkit/dotnet) · [**TagLibSharp**](https://github.com/mono/taglib-sharp) · [**Velopack**](https://velopack.io) (auto-update) · **.NET 10 Blazor WebAssembly** + [**.NET Aspire**](https://learn.microsoft.com/dotnet/aspire/) · [**MudBlazor.Extensions**](https://github.com/fgilde/MudBlazor.Extensions) · [AuralizeBlazor](https://github.com/fgilde/AuralizeBlazor).
 
 Python sidecars power the AI/ML parts: [**Demucs**](https://github.com/facebookresearch/demucs), [**audio-separator**](https://github.com/nomadkaraoke/python-audio-separator), [**faster-whisper**](https://github.com/SYSTRAN/faster-whisper), [**seed-vc**](https://github.com/Plachtaa/seed-vc), Kokoro, Qwen3-TTS, Coqui XTTS v2 and Chatterbox.
 

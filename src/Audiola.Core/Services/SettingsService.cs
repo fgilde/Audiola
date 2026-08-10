@@ -6,10 +6,7 @@ namespace Audiola.Services;
 /// <summary>Laedt/speichert <see cref="AppSettings"/> als JSON im AppData-Ordner.</summary>
 public sealed class SettingsService : ISettingsService
 {
-    private static readonly string SettingsPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "Audiola",
-        "settings.json");
+    private static readonly string SettingsPath = Path.Combine(AppPaths.RoamingDataDirectory, "settings.json");
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 

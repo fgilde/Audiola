@@ -1,0 +1,69 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Audiola.Avalonia.ViewModels"
+        xmlns:pages="using:Audiola.Avalonia.Views"
+        x:Class="Audiola.Avalonia.Views.MainWindow"
+        Title="{Binding ApplicationTitle}" Width="1360" Height="820"
+        MinWidth="940" MinHeight="620"
+        Background="#16181D">
+  <Window.DataTemplates>
+    <DataTemplate DataType="vm:HomePageViewModel"><pages:HomePage /></DataTemplate>
+    <DataTemplate DataType="vm:EditorPageViewModel"><pages:EditorPage /></DataTemplate>
+    <DataTemplate DataType="vm:TimelinePageViewModel"><pages:TimelinePage /></DataTemplate>
+    <DataTemplate DataType="vm:EqualizerPageViewModel"><pages:EqualizerPage /></DataTemplate>
+    <DataTemplate DataType="vm:MasteringPageViewModel"><pages:MasteringPage /></DataTemplate>
+    <DataTemplate DataType="vm:SpatialAudioPageViewModel"><pages:SpatialAudioPage /></DataTemplate>
+    <DataTemplate DataType="vm:VoicesPageViewModel"><pages:VoicesPage /></DataTemplate>
+    <DataTemplate DataType="vm:VariationsPageViewModel"><pages:VariationsPage /></DataTemplate>
+    <DataTemplate DataType="vm:ProvenancePageViewModel"><pages:ProvenancePage /></DataTemplate>
+    <DataTemplate DataType="vm:EvaluationPageViewModel"><pages:EvaluationPage /></DataTemplate>
+    <DataTemplate DataType="vm:MetadataPageViewModel"><pages:MetadataPage /></DataTemplate>
+    <DataTemplate DataType="vm:SettingsPageViewModel"><pages:SettingsPage /></DataTemplate>
+    <DataTemplate DataType="vm:AboutPageViewModel"><pages:AboutPage /></DataTemplate>
+  </Window.DataTemplates>
+
+  <Grid RowDefinitions="Auto,*,Auto">
+    <Border Background="#20232B" BorderBrush="#343842" BorderThickness="0,0,0,1" Padding="16,10">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <TextBlock FontSize="22" FontWeight="SemiBold" Text="Audiola" VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="28,0,0,0" Spacing="8">
+          <Button Content="Open audio…" Command="{Binding OpenAudioCommand}" />
+          <Button Content="Open project…" Command="{Binding OpenProjectCommand}" />
+          <Button Content="Save project" Command="{Binding SaveProjectCommand}" />
+          <Button Content="{Binding PlayPauseLabel}" Command="{Binding PlayPauseCommand}" IsEnabled="{Binding IsTransportAvailable}" />
+          <Button Content="Stop" Command="{Binding StopCommand}" IsEnabled="{Binding IsTransportAvailable}" />
+          <TextBlock VerticalAlignment="Center" FontFamily="Consolas" Text="{Binding PlaybackPositionText}" />
+          <TextBlock VerticalAlignment="Center" Foreground="#9CA8BA" Text="{Binding PlaybackDurationText}" />
+          <Slider Width="130" VerticalAlignment="Center" Minimum="0" Maximum="1"
+                  Value="{Binding PlaybackProgress, Mode=TwoWay}" IsEnabled="{Binding IsTransportAvailable}" />
+          <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" Foreground="#B9C2D0"
+                     Text="{Binding ActiveTrack.FileName, TargetNullValue='No audio loaded'}" />
+        </StackPanel>
+        <TextBlock Grid.Column="2" VerticalAlignment="Center" Foreground="#92D6FF" Text="{Binding ProjectName}" />
+      </Grid>
+    </Border>
+
+    <Grid Grid.Row="1" ColumnDefinitions="196,*">
+      <Border Background="#20232B" BorderBrush="#343842" BorderThickness="0,0,1,0">
+        <ListBox Margin="8" ItemsSource="{Binding Pages}" SelectedItem="{Binding SelectedPage}">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Width="18" Text="{Binding Icon}" FontSize="16" />
+                <TextBlock Text="{Binding Title}" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Border>
+      <ContentControl Grid.Column="1" Content="{Binding SelectedPage.Content}" />
+    </Grid>
+
+    <Border Grid.Row="2" Background="#20232B" BorderBrush="#343842" BorderThickness="0,1,0,0" Padding="16,7">
+      <Grid ColumnDefinitions="Auto,*">
+        <Ellipse Width="8" Height="8" Fill="#51D88A" />
+        <TextBlock Grid.Column="1" Margin="9,0,0,0" Foreground="#C4CBD8" Text="{Binding Status}" />
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

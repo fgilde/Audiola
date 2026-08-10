@@ -184,13 +184,13 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
     }
 
     /// <summary>
-    /// Erstellt (einmalig) ein isoliertes venv im seed-vc-Repo und gibt dessen python.exe zurück.
+    /// Erstellt (einmalig) ein isoliertes venv im seed-vc-Repo und gibt dessen Python-Executable zurück.
     /// Getrennt vom Haupt-venv, damit seed-vcs transformers-Pin qwen-tts nicht zerstört.
     /// </summary>
     private async Task<string> EnsureSeedVcVenvAsync(string repo, IProgress<string>? progress, CancellationToken ct)
     {
         var venvDir = Path.Combine(repo, ".venv");
-        var venvPy = Path.Combine(venvDir, "Scripts", "python.exe");
+        var venvPy = AppPaths.PythonExecutable(venvDir);
         if (!File.Exists(venvPy))
         {
             progress?.Report("Erstelle isolierte seed-vc-Umgebung (eigene Paketversionen) …");

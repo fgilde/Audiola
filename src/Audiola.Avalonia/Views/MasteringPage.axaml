@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Audiola.Avalonia.Views.MasteringPage">
+  <ScrollViewer>
+    <StackPanel Margin="40" MaxWidth="900" Spacing="14">
+      <TextBlock FontSize="28" FontWeight="SemiBold" Text="Mastering" />
+      <TextBlock Foreground="#B9C2D0" Text="Core DSP: EQ → compressor → LUFS normalization → clipping protection." />
+      <Border Background="#20232B" CornerRadius="8" Padding="16">
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
+          <StackPanel Spacing="8">
+            <TextBlock Text="Preset" />
+            <ComboBox ItemsSource="{Binding Parent.MasteringProfiles}" SelectedItem="{Binding Parent.SelectedMasteringProfile}" />
+            <CheckBox Content="Enable compressor" IsChecked="{Binding Parent.CompressorEnabled, Mode=TwoWay}" />
+            <TextBlock Text="{Binding Parent.ThresholdDb, StringFormat='Threshold: {0:0} dB'}" />
+            <Slider Minimum="-40" Maximum="-4" Value="{Binding Parent.ThresholdDb, Mode=TwoWay}" />
+            <TextBlock Text="{Binding Parent.Ratio, StringFormat='Ratio: {0:0.0}:1'}" />
+            <Slider Minimum="1" Maximum="10" Value="{Binding Parent.Ratio, Mode=TwoWay}" />
+          </StackPanel>
+          <StackPanel Grid.Column="1" Spacing="8">
+            <CheckBox Content="Normalize loudness" IsChecked="{Binding Parent.NormalizeLoudness, Mode=TwoWay}" />
+            <TextBlock Text="{Binding Parent.TargetLufs, StringFormat='Target: {0:0} LUFS'}" />
+            <Slider Minimum="-24" Maximum="-6" Value="{Binding Parent.TargetLufs, Mode=TwoWay}" />
+            <Button Margin="0,8,0,0" Content="Measure active file" Command="{Binding Parent.MeasureLoudnessCommand}" />
+            <Button Content="Export mastered WAV…" Command="{Binding Parent.ExportMasterCommand}" />
+            <Button Content="Reset settings" Command="{Binding Parent.ResetMasteringCommand}" />
+          </StackPanel>
+        </Grid>
+      </Border>
+      <TextBlock Foreground="#9CA8BA" TextWrapping="Wrap" Text="{Binding Parent.MasteringStatus}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Audiola.Avalonia.Views.ProvenancePage">
+  <ScrollViewer>
+    <StackPanel Margin="40" MaxWidth="960" Spacing="14">
+      <TextBlock FontSize="28" FontWeight="SemiBold" Text="Provenance" />
+      <TextBlock Foreground="#B9C2D0" TextWrapping="Wrap"
+                 Text="Read-only scan for format, embedded C2PA/JUMBF/XMP/ID3 markers, and generator traces. This does not determine authorship." />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Content="Analyze active track" Command="{Binding Parent.AnalyzeCurrentTrackCommand}" />
+        <Button Content="Choose file…" Command="{Binding Parent.AnalyzeFileCommand}" />
+      </StackPanel>
+      <TextBlock Foreground="#9CA8BA" TextWrapping="Wrap" Text="{Binding Parent.ProvenanceStatus}" />
+      <TextBlock Foreground="#FFCA7A" TextWrapping="Wrap" Text="{Binding Parent.C2paHelp}" />
+      <ItemsControl ItemsSource="{Binding Parent.ProvenanceFindings}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Background="#20232B" CornerRadius="8" Padding="13" Margin="0,3">
+              <StackPanel>
+                <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+                <TextBlock FontSize="12" Foreground="#9CA8BA" Text="{Binding Category}" />
+                <TextBlock TextWrapping="Wrap" Text="{Binding Detail}" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBox IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="150"
+               Text="{Binding Parent.ProvenanceAssessment}" />
+      <TextBlock FontWeight="SemiBold" Text="c2patool output (when installed)" />
+      <TextBox IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="100"
+               Text="{Binding Parent.ProvenanceRaw}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

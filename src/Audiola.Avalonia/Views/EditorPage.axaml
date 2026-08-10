@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:Audiola.Avalonia.Controls"
+             x:Class="Audiola.Avalonia.Views.EditorPage">
+  <ScrollViewer>
+    <StackPanel Margin="40" Spacing="16">
+      <TextBlock FontSize="28" FontWeight="SemiBold" Text="Editor" />
+      <TextBlock Foreground="#B9C2D0" Text="Apply a Core studio effect non-destructively and export it as a new timeline track." />
+      <Border Background="#20232B" CornerRadius="8" Padding="16">
+        <StackPanel Spacing="12">
+          <TextBlock FontWeight="SemiBold" Text="{Binding Parent.ActiveTrack.FileName, TargetNullValue='No audio selected'}" />
+          <controls:WaveformView Height="270" Peaks="{Binding Parent.ActiveTrack.Peaks}"
+                                 Progress="{Binding Parent.PlaybackProgress}" SeekCommand="{Binding Parent.SeekCommand}" />
+          <TextBlock Foreground="#9CA8BA" Text="{Binding Parent.ActiveTrack.Duration, StringFormat='Duration: {0:mm\\:ss}', TargetNullValue='Import audio from Home or Timeline.'}" />
+        </StackPanel>
+      </Border>
+      <Border Background="#20232B" CornerRadius="8" Padding="16">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <ComboBox Width="230" ItemsSource="{Binding Parent.Variations}" SelectedItem="{Binding Parent.SelectedVariation}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Content="Apply and export…" Command="{Binding Parent.ApplyVariationCommand}" />
+          <TextBlock VerticalAlignment="Center" Foreground="#9CA8BA"
+                     Text="{Binding Parent.SelectedVariation.Description}" />
+        </StackPanel>
+      </Border>
+      <TextBlock Foreground="#9CA8BA" TextWrapping="Wrap"
+                 Text="The selected effect is processed by Audiola.Core; the original is never changed. Exported audio is re-imported with fresh waveform metadata." />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

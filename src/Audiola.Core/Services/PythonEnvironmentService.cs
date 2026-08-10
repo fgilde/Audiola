@@ -5,7 +5,7 @@ using System.Text;
 namespace Audiola.Services;
 
 /// <summary>
-/// Verwaltete venv unter <c>%LocalAppData%/Audiola/pyenv</c>. Wird aus der vom Nutzer
+/// Verwaltete venv im plattformüblichen Audiola-Datenordner. Wird aus der vom Nutzer
 /// hinterlegten Basis-Python (Einstellungen) erzeugt; Pakete werden dort hinein installiert,
 /// ohne die System-Python zu verändern.
 /// </summary>
@@ -15,10 +15,9 @@ public sealed class PythonEnvironmentService : IPythonEnvironment
 
     public PythonEnvironmentService(ISettingsService settings) => _settings = settings;
 
-    private static string EnvDir => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Audiola", "pyenv");
+    private static string EnvDir => Path.Combine(AppPaths.LocalDataDirectory, "pyenv");
 
-    public string PythonExe => Path.Combine(EnvDir, "Scripts", "python.exe");
+    public string PythonExe => AppPaths.PythonExecutable(EnvDir);
 
     public bool Exists => File.Exists(PythonExe);
 

@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Audiola.Avalonia.Views.EvaluationPage">
+  <ScrollViewer>
+    <StackPanel Margin="40" MaxWidth="900" Spacing="14">
+      <TextBlock FontSize="28" FontWeight="SemiBold" Text="Evaluation" />
+      <TextBlock Foreground="#B9C2D0" TextWrapping="Wrap"
+                 Text="Evaluate a detector's labeled CSV. Expected columns: truth/label and predicted/verdict and/or score; positive class is AI." />
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <Button Content="Load CSV…" Command="{Binding Parent.LoadEvaluationCsvCommand}" />
+        <TextBlock VerticalAlignment="Center" Foreground="#9CA8BA" Text="{Binding Parent.EvaluationStatus}" />
+      </StackPanel>
+      <Border Background="#20232B" CornerRadius="8" Padding="16">
+        <StackPanel Spacing="6">
+          <TextBlock Text="{Binding Parent.EvaluationThreshold, StringFormat='Score threshold: {0:0.00}'}" />
+          <Slider Minimum="0" Maximum="1" Value="{Binding Parent.EvaluationThreshold, Mode=TwoWay}" />
+        </StackPanel>
+      </Border>
+      <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+        <Border Background="#20232B" CornerRadius="8" Padding="16">
+          <StackPanel Spacing="7">
+            <TextBlock FontWeight="SemiBold" Text="Confusion matrix" />
+            <TextBlock Text="{Binding Parent.TruePositives, StringFormat='True positives: {0}'}" />
+            <TextBlock Text="{Binding Parent.FalsePositives, StringFormat='False positives: {0}'}" />
+            <TextBlock Text="{Binding Parent.TrueNegatives, StringFormat='True negatives: {0}'}" />
+            <TextBlock Text="{Binding Parent.FalseNegatives, StringFormat='False negatives: {0}'}" />
+            <TextBlock Foreground="#9CA8BA" Text="{Binding Parent.EvaluationSkipped, StringFormat='Skipped: {0}'}" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Background="#20232B" CornerRadius="8" Padding="16">
+          <StackPanel Spacing="7">
+            <TextBlock FontWeight="SemiBold" Text="Metrics" />
+            <TextBlock Text="{Binding Parent.Accuracy, StringFormat='Accuracy: {0}'}" />
+            <TextBlock Text="{Binding Parent.Precision, StringFormat='Precision: {0}'}" />
+            <TextBlock Text="{Binding Parent.Recall, StringFormat='Recall: {0}'}" />
+            <TextBlock Text="{Binding Parent.F1, StringFormat='F1: {0}'}" />
+            <TextBlock Text="{Binding Parent.Specificity, StringFormat='Specificity: {0}'}" />
+            <TextBlock Text="{Binding Parent.FalsePositiveRate, StringFormat='False-positive rate: {0}'}" />
+            <TextBlock Text="{Binding Parent.FalseNegativeRate, StringFormat='False-negative rate: {0}'}" />
+          </StackPanel>
+        </Border>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
