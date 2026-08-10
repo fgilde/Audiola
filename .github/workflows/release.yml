@@ -43,7 +43,7 @@ jobs:
           - product: Audiola
             project: src/Audiola.Avalonia/Audiola.Avalonia.csproj
             executable: Audiola
-            runner: macos-13
+            runner: macos-15-intel
             rid: osx-x64
             platform: osx-x64
             channel: audiola-osx-x64
@@ -79,7 +79,7 @@ jobs:
           - product: Singola
             project: src/Singola.Avalonia/Singola.Avalonia.csproj
             executable: Singola
-            runner: macos-13
+            runner: macos-15-intel
             rid: osx-x64
             platform: osx-x64
             channel: singola-osx-x64
