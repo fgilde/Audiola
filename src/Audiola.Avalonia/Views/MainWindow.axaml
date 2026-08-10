@@ -80,11 +80,11 @@
           </MenuItem>
           <MenuItem Header="_Hilfe">
             <MenuItem Header="Einrichtungs-Assistent…" Command="{Binding ShowSetupWizardCommand}" />
-            <MenuItem Header="Mess-Harness" Command="{Binding NavigateCommand}" CommandParameter="Evaluation" />
+            <MenuItem Header="Mess-Harness" Tag="Evaluation" Click="Nav_Click" />
             <Separator />
             <MenuItem Header="Nach Updates suchen…" Command="{Binding CheckUpdatesCommand}" />
             <Separator />
-            <MenuItem Header="Über Audiola" Command="{Binding NavigateCommand}" CommandParameter="About" />
+            <MenuItem Header="Über Audiola" Tag="About" Click="Nav_Click" />
           </MenuItem>
         </Menu>
 
