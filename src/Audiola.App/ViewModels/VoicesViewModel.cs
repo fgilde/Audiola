@@ -64,6 +64,11 @@ public sealed partial class VoicesViewModel : ObservableObject
     [ObservableProperty] private string? _samplePath;
     [ObservableProperty] private bool _isRecording;
 
+    /// <summary>Beschriftung des Aufnahme-Knopfs (die Views binden Text statt eigener Trigger).</summary>
+    public string RecordButtonLabel => IsRecording ? "■  Stopp" : "●  Aufnehmen";
+
+    partial void OnIsRecordingChanged(bool value) => OnPropertyChanged(nameof(RecordButtonLabel));
+
     partial void OnSelectedDeviceChanged(string value)
     {
         _settings.Current.VoiceDevice = value;
