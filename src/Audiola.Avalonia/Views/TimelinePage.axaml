@@ -2,63 +2,128 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="using:Audiola.Avalonia.Controls"
              x:Class="Audiola.Avalonia.Views.TimelinePage">
-  <Grid Margin="28" RowDefinitions="Auto,*,Auto">
-    <StackPanel Spacing="5">
-      <TextBlock FontSize="28" FontWeight="SemiBold" Text="Timeline" />
-      <TextBlock Foreground="#B9C2D0" Text="Editable project tracks, embedded-media project save/load, and Core-powered stem separation." />
-      <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,9,0,0">
-        <Button Content="Add audio…" Command="{Binding Parent.OpenAudioCommand}" />
-        <Button Content="Separate selected track" Command="{Binding Parent.SeparateTrackCommand}" />
-        <Button Content="Move up" Command="{Binding Parent.MoveSelectedTrackUpCommand}" />
-        <Button Content="Remove" Command="{Binding Parent.RemoveSelectedTrackCommand}" />
-        <Button Content="Save project…" Command="{Binding Parent.SaveProjectCommand}" />
+  <Grid Margin="20" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
+    <Grid ColumnDefinitions="*,Auto">
+      <StackPanel Spacing="3">
+        <TextBlock FontSize="24" FontWeight="SemiBold" Text="Studio timeline" />
+        <TextBlock Foreground="{StaticResource DawTextDimBrush}" Text="Arrange, balance, and prepare your project tracks." />
       </StackPanel>
-    </StackPanel>
-    <Grid Grid.Row="1" Margin="0,20,0,12" ColumnDefinitions="300,*" ColumnSpacing="16">
-      <Border Background="#20232B" CornerRadius="8" Padding="8">
-        <ListBox ItemsSource="{Binding Parent.Tracks}" SelectedItem="{Binding Parent.SelectedTrack}">
-          <ListBox.ItemTemplate>
-            <DataTemplate>
-              <Grid Margin="5" ColumnDefinitions="*,Auto">
-                <StackPanel>
-                  <TextBox Text="{Binding Name, Mode=TwoWay}" BorderThickness="0" Background="Transparent" FontWeight="SemiBold" />
-                  <TextBlock FontSize="11" Foreground="#9CA8BA" Text="{Binding DurationText}" />
-                </StackPanel>
-                <CheckBox Grid.Column="1" VerticalAlignment="Center" Content="Mute" IsChecked="{Binding IsMuted, Mode=TwoWay}" />
-              </Grid>
-            </DataTemplate>
-          </ListBox.ItemTemplate>
-        </ListBox>
+      <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{StaticResource DawTextFaintBrush}"
+                 Text="{Binding Parent.ProjectName}" />
+    </Grid>
+
+    <Border Grid.Row="1" Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}"
+            BorderThickness="1" CornerRadius="7" Padding="8">
+      <StackPanel Orientation="Horizontal" Spacing="7">
+        <Button Classes="accent" Content="＋ Add audio" Command="{Binding Parent.OpenAudioCommand}" />
+        <Button Content="Separate stems" Command="{Binding Parent.SeparateTrackCommand}" IsEnabled="{Binding Parent.HasAudio}" />
+        <Button Content="Move track up" Command="{Binding Parent.MoveSelectedTrackUpCommand}" IsEnabled="{Binding Parent.HasTracks}" />
+        <Button Content="Remove track" Command="{Binding Parent.RemoveSelectedTrackCommand}" IsEnabled="{Binding Parent.HasTracks}" />
+        <Border Width="1" Background="{StaticResource DawStrokeBrush}" Margin="4,0" />
+        <Button Content="{Binding Parent.PlayPauseLabel}" Command="{Binding Parent.PlayPauseCommand}"
+                IsEnabled="{Binding Parent.IsTransportAvailable}" />
+        <Button Content="■ Stop" Command="{Binding Parent.StopCommand}" IsEnabled="{Binding Parent.IsTransportAvailable}" />
+        <TextBlock VerticalAlignment="Center" Margin="6,0,0,0" FontFamily="Cascadia Mono,Consolas"
+                   Text="{Binding Parent.PlaybackPositionText}" />
+        <TextBlock VerticalAlignment="Center" Foreground="{StaticResource DawTextFaintBrush}" Text="/" />
+        <TextBlock VerticalAlignment="Center" Foreground="{StaticResource DawTextDimBrush}" FontFamily="Cascadia Mono,Consolas"
+                   Text="{Binding Parent.PlaybackDurationText}" />
+        <Button Margin="12,0,0,0" Content="Save project" Command="{Binding Parent.SaveProjectCommand}"
+                IsEnabled="{Binding Parent.HasTracks}" />
+      </StackPanel>
+    </Border>
+
+    <Grid Grid.Row="2" ColumnDefinitions="248,*,228" ColumnSpacing="12">
+      <Border Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}"
+              BorderThickness="1" CornerRadius="7">
+        <Grid RowDefinitions="Auto,*,Auto">
+          <Grid Margin="12,10,12,6" ColumnDefinitions="*,Auto">
+            <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource DawTextFaintBrush}" Text="TRACKS" />
+            <TextBlock Grid.Column="1" FontSize="11" Foreground="{StaticResource DawTextFaintBrush}"
+                       Text="{Binding Parent.Tracks.Count, StringFormat='{}{0}'}" />
+          </Grid>
+          <ListBox Grid.Row="1" ItemsSource="{Binding Parent.Tracks}" SelectedItem="{Binding Parent.SelectedTrack}">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                  <Border Width="4" Height="34" CornerRadius="2" Background="{StaticResource DawAccentBrush}" />
+                  <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBox Text="{Binding Name, Mode=TwoWay}" Padding="0" BorderThickness="0"
+                             Background="Transparent" FontWeight="SemiBold" />
+                    <TextBlock FontSize="10" Foreground="{StaticResource DawTextFaintBrush}" Text="{Binding DurationText}" />
+                  </StackPanel>
+                  <CheckBox Grid.Column="2" VerticalAlignment="Center" IsChecked="{Binding IsMuted, Mode=TwoWay}" ToolTip.Tip="Mute track">
+                    <TextBlock FontSize="11" Text="M" />
+                  </CheckBox>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <TextBlock Grid.Row="2" Margin="12,6,12,12" FontSize="11" Foreground="{StaticResource DawTextFaintBrush}"
+                     Text="Select a track to focus the studio transport." TextWrapping="Wrap" />
+        </Grid>
       </Border>
-      <StackPanel Grid.Column="1" Spacing="12">
-        <Border Background="#20232B" CornerRadius="8" Padding="16">
-          <StackPanel Spacing="10">
-            <TextBlock FontWeight="SemiBold" Text="{Binding Parent.ActiveTrack.FileName, TargetNullValue='No active track'}" />
-            <controls:WaveformView Height="230" Peaks="{Binding Parent.ActiveTrack.Peaks}"
-                                   Progress="{Binding Parent.PlaybackProgress}" SeekCommand="{Binding Parent.SeekCommand}" />
-            <TextBlock Foreground="#9CA8BA" Text="{Binding Parent.SelectedTrack.DurationText, TargetNullValue='Import audio to create waveform peaks.'}" />
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <Button Content="{Binding Parent.PlayPauseLabel}" Command="{Binding Parent.PlayPauseCommand}"
-                      IsEnabled="{Binding Parent.IsTransportAvailable}" />
-              <Button Content="Stop" Command="{Binding Parent.StopCommand}" IsEnabled="{Binding Parent.IsTransportAvailable}" />
-              <TextBlock VerticalAlignment="Center" FontFamily="Consolas"
-                         Text="{Binding Parent.PlaybackPositionText, StringFormat='{}{0} / '}" />
-              <TextBlock VerticalAlignment="Center" FontFamily="Consolas" Text="{Binding Parent.PlaybackDurationText}" />
+
+      <Border Grid.Column="1" Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}"
+              BorderThickness="1" CornerRadius="7" Padding="12">
+        <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource DawTextFaintBrush}" Text="ARRANGEMENT" />
+              <TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}" Text="00:00" />
+              <TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}" Text="00:30" />
+              <TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}" Text="01:00" />
+              <TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}" Text="01:30" />
             </StackPanel>
-          </StackPanel>
-        </Border>
-        <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
-          <StackPanel>
-            <TextBlock Text="{Binding Parent.SelectedTrack.Volume, StringFormat='Volume: {0:P0}'}" />
+            <TextBlock Grid.Column="1" Foreground="{StaticResource DawTextFaintBrush}" FontSize="11"
+                       Text="{Binding Parent.ActiveTrack.FileName, TargetNullValue='No active track'}" />
+          </Grid>
+          <Slider Grid.Row="1" Minimum="0" Maximum="1" Value="{Binding Parent.PlaybackProgress, Mode=TwoWay}"
+                  IsEnabled="{Binding Parent.IsTransportAvailable}" />
+          <Grid Grid.Row="2">
+            <Border Background="{StaticResource DawBackgroundBrush}" CornerRadius="5" Padding="12">
+              <controls:WaveformView Peaks="{Binding Parent.ActiveTrack.Peaks}" Progress="{Binding Parent.PlaybackProgress}"
+                                     SeekCommand="{Binding Parent.SeekCommand}" WaveBrush="{StaticResource DawAccentLightBrush}" />
+            </Border>
+            <Border IsVisible="{Binding Parent.IsWorking}" Background="#B0101318" CornerRadius="5">
+              <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                <ProgressBar Width="180" IsIndeterminate="True" />
+                <TextBlock HorizontalAlignment="Center" Text="{Binding Parent.Status}" />
+              </StackPanel>
+            </Border>
+          </Grid>
+        </Grid>
+      </Border>
+
+      <Border Grid.Column="2" Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}"
+              BorderThickness="1" CornerRadius="7" Padding="12">
+        <StackPanel Spacing="12">
+          <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource DawTextFaintBrush}" Text="CHANNEL STRIP" />
+          <TextBlock FontWeight="SemiBold" Text="{Binding Parent.SelectedTrack.Name, TargetNullValue='No track selected'}" />
+          <TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}"
+                     Text="{Binding Parent.SelectedTrack.DurationText, TargetNullValue='Import audio to begin.'}" />
+          <StackPanel Spacing="4">
+            <TextBlock FontSize="11" Text="{Binding Parent.SelectedTrack.Volume, StringFormat='Volume  {0:P0}'}" />
             <Slider Minimum="0" Maximum="2" Value="{Binding Parent.SelectedTrack.Volume, Mode=TwoWay}" />
           </StackPanel>
-          <StackPanel Grid.Column="1">
-            <TextBlock Text="{Binding Parent.SelectedTrack.Pan, StringFormat='Pan: {0:0.00}'}" />
+          <StackPanel Spacing="4">
+            <TextBlock FontSize="11" Text="{Binding Parent.SelectedTrack.Pan, StringFormat='Pan  {0:0.00}'}" />
             <Slider Minimum="-1" Maximum="1" Value="{Binding Parent.SelectedTrack.Pan, Mode=TwoWay}" />
           </StackPanel>
-        </Grid>
-      </StackPanel>
+          <Border Margin="0,6,0,0" Padding="10" Background="{StaticResource DawCardBrush}" CornerRadius="5">
+            <TextBlock FontSize="11" Foreground="{StaticResource DawTextDimBrush}" TextWrapping="Wrap"
+                       Text="Stem separation adds detected parts as editable project tracks." />
+          </Border>
+        </StackPanel>
+      </Border>
     </Grid>
-    <TextBlock Grid.Row="2" Foreground="#9CA8BA" Text="Stem separation remains disabled until Demucs is installed in the configured Python environment." />
+
+    <Border Grid.Row="3" Background="{StaticResource DawCardBrush}" CornerRadius="6" Padding="10">
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource DawAccentLightBrush}" Text="STUDIO" />
+        <TextBlock Grid.Column="1" Margin="10,0,0,0" FontSize="11" Foreground="{StaticResource DawTextDimBrush}"
+                   Text="{Binding Parent.Status}" />
+      </Grid>
+    </Border>
   </Grid>
 </UserControl>

@@ -1,54 +1,5 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Audiola.Avalonia.Views.SpatialAudioPage">
-  <ScrollViewer>
-    <StackPanel Margin="40" MaxWidth="1000" Spacing="14">
-      <TextBlock FontSize="28" FontWeight="SemiBold" Text="Spatial Audio" />
-      <TextBlock Foreground="#B9C2D0" TextWrapping="Wrap"
-                 Text="Position each imported track and render binaural headphone audio or an interoperable 5.1, 7.1, or 7.1.4 WAV bed." />
-      <Border Background="#20232B" CornerRadius="8" Padding="16">
-        <StackPanel Orientation="Horizontal" Spacing="10">
-          <TextBlock VerticalAlignment="Center" Text="Surround layout" />
-          <ComboBox Width="120" ItemsSource="{Binding Parent.SpatialLayouts}" SelectedItem="{Binding Parent.SelectedSpatialLayoutName}" />
-          <Button Content="Auto-arrange" Command="{Binding Parent.AutoArrangeSpatialCommand}" />
-          <Button Content="Export binaural WAV…" Command="{Binding Parent.ExportBinauralCommand}" />
-          <Button Content="Export surround WAV…" Command="{Binding Parent.ExportSurroundCommand}" />
-        </StackPanel>
-      </Border>
-      <ItemsControl ItemsSource="{Binding Parent.SpatialSources}">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Border Background="#20232B" CornerRadius="8" Padding="14" Margin="0,4">
-              <StackPanel Spacing="8">
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                  <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
-                  <CheckBox Content="Mute" IsChecked="{Binding Muted, Mode=TwoWay}" />
-                </StackPanel>
-                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="14">
-                  <StackPanel>
-                    <TextBlock Text="{Binding AzimuthDeg, StringFormat='Azimuth: {0:0}°'}" />
-                    <Slider Minimum="-180" Maximum="180" Value="{Binding AzimuthDeg, Mode=TwoWay}" />
-                  </StackPanel>
-                  <StackPanel Grid.Column="1">
-                    <TextBlock Text="{Binding ElevationDeg, StringFormat='Elevation: {0:0}°'}" />
-                    <Slider Minimum="0" Maximum="90" Value="{Binding ElevationDeg, Mode=TwoWay}" />
-                  </StackPanel>
-                  <StackPanel Grid.Column="2">
-                    <TextBlock Text="{Binding Distance, StringFormat='Distance: {0:0.00}'}" />
-                    <Slider Minimum="0.3" Maximum="3" Value="{Binding Distance, Mode=TwoWay}" />
-                  </StackPanel>
-                  <StackPanel Grid.Column="3">
-                    <TextBlock Text="{Binding GainDb, StringFormat='Gain: {0:+0.0;-0.0;0} dB'}" />
-                    <Slider Minimum="-12" Maximum="12" Value="{Binding GainDb, Mode=TwoWay}" />
-                  </StackPanel>
-                </Grid>
-              </StackPanel>
-            </Border>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-      <TextBlock Foreground="#9CA8BA" Text="{Binding Parent.SpatialStatus}" />
-      <TextBlock Foreground="#9CA8BA" TextWrapping="Wrap" Text="{Binding Parent.SpatialPreviewMessage}" />
-    </StackPanel>
-  </ScrollViewer>
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Audiola.Avalonia.Views.SpatialAudioPage">
+ <ScrollViewer><StackPanel Margin="32" MaxWidth="1100" Spacing="14"><Grid ColumnDefinitions="*,Auto"><StackPanel><TextBlock FontSize="28" FontWeight="SemiBold" Text="Spatial audio" /><TextBlock Foreground="{StaticResource DawTextDimBrush}" Text="Place project tracks in an immersive binaural or surround render." /></StackPanel><StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="7" VerticalAlignment="Center"><ComboBox Width="90" ItemsSource="{Binding Parent.SpatialLayouts}" SelectedItem="{Binding Parent.SelectedSpatialLayoutName}" /><Button Content="Auto-arrange" Command="{Binding Parent.AutoArrangeSpatialCommand}" /></StackPanel></Grid>
+ <Border Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="1" CornerRadius="8" Padding="14"><StackPanel><TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource DawTextFaintBrush}" Text="SOURCES / POSITIONING" /><ItemsControl ItemsSource="{Binding Parent.SpatialSources}"><ItemsControl.ItemTemplate><DataTemplate><Border Margin="0,7,0,0" Background="{StaticResource DawCardBrush}" CornerRadius="6" Padding="12"><Grid ColumnDefinitions="145,*,*,*,Auto" ColumnSpacing="12"><StackPanel><TextBlock FontWeight="SemiBold" Text="{Binding Name}" /><CheckBox Content="Mute" IsChecked="{Binding Muted}" /></StackPanel><StackPanel Grid.Column="1"><TextBlock FontSize="11" Text="{Binding AzimuthDeg, StringFormat='Azimuth  {0:0}°'}" /><Slider Minimum="-180" Maximum="180" Value="{Binding AzimuthDeg}" /></StackPanel><StackPanel Grid.Column="2"><TextBlock FontSize="11" Text="{Binding ElevationDeg, StringFormat='Elevation  {0:0}°'}" /><Slider Minimum="0" Maximum="90" Value="{Binding ElevationDeg}" /></StackPanel><StackPanel Grid.Column="3"><TextBlock FontSize="11" Text="{Binding Distance, StringFormat='Distance  {0:0.00}'}" /><Slider Minimum=".3" Maximum="3" Value="{Binding Distance}" /></StackPanel><TextBlock Grid.Column="4" VerticalAlignment="Center" Foreground="{StaticResource DawAccentLightBrush}" Text="{Binding GainDb, StringFormat='{}{0:+0.0;-0.0;0} dB'}" /></Grid></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></StackPanel></Border>
+ <StackPanel Orientation="Horizontal" Spacing="8"><Button Classes="accent" Content="Export binaural WAV…" Command="{Binding Parent.ExportBinauralCommand}" /><Button Content="Export surround WAV…" Command="{Binding Parent.ExportSurroundCommand}" /><TextBlock VerticalAlignment="Center" Foreground="{StaticResource DawTextDimBrush}" Text="{Binding Parent.SpatialStatus}" /></StackPanel><TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}" Text="{Binding Parent.SpatialPreviewMessage}" TextWrapping="Wrap" /></StackPanel></ScrollViewer>
 </UserControl>

@@ -32,6 +32,10 @@ public sealed partial class AudiolaHostViewModel : ObservableObject, IDisposable
     private IReadOnlyList<EvalRow> _evaluationRows = [];
     private string? _openedPlaybackPath;
     private bool _updatingPlaybackProgress;
+    private float[]? _editorBuffer;
+    private int _editorSampleRate;
+    private string? _editorSourcePath;
+    private readonly Stack<float[]> _editorUndo = [];
 
     public AudiolaHostViewModel(
         IFileDialogService fileDialogs,
@@ -165,11 +169,17 @@ public sealed partial class AudiolaHostViewModel : ObservableObject, IDisposable
     [ObservableProperty] private double _midGainDb;
     [ObservableProperty] private double _highShelfGainDb;
     [ObservableProperty] private bool _normalizeLoudness = true;
+    [ObservableProperty] private IReadOnlyList<float>? _editorPeaks;
+    [ObservableProperty] private double _editorSelectionStart;
+    [ObservableProperty] private double _editorSelectionEnd = 1;
 
     public bool HasAudio => ActiveTrack is not null;
     public bool IsTransportAvailable => HasAudio;
     public string PlayPauseLabel => IsPlaying ? "Pause" : "Play";
     public bool HasTracks => Tracks.Count > 0;
+    public bool HasEditorBuffer => _editorBuffer is not null;
+    public bool HasEditorSelection => HasEditorBuffer && EditorSelectionEnd > EditorSelectionStart;
+    public bool CanUndoEditor => _editorUndo.Count > 0;
     public bool VoiceEngineAvailable => _voices.ScriptAvailable;
     public bool CanSynthesizeVoice => VoiceEngineAvailable && SelectedVoiceProfile is not null && !string.IsNullOrWhiteSpace(VoiceText);
     public string VoiceEngineMessage => VoiceEngineAvailable
@@ -189,6 +199,8 @@ public sealed partial class AudiolaHostViewModel : ObservableObject, IDisposable
             EnsureSpatialSources();
         if (value?.Content is VoicesPageViewModel && VoiceModels.Count == 0)
             _ = LoadVoiceModelsAsync();
+        if (value?.Content is EditorPageViewModel)
+            EnsureEditorLoaded();
     }
 
     partial void OnSelectedTrackChanged(ProjectTrackItem? value)
@@ -210,7 +222,11 @@ public sealed partial class AudiolaHostViewModel : ObservableObject, IDisposable
         AnalyzeCurrentTrackCommand.NotifyCanExecuteChanged();
         PlayPauseCommand.NotifyCanExecuteChanged();
         StopCommand.NotifyCanExecuteChanged();
+        EnsureEditorLoaded();
     }
+
+    partial void OnEditorSelectionStartChanged(double value) => NotifyEditorState();
+    partial void OnEditorSelectionEndChanged(double value) => NotifyEditorState();
 
     partial void OnIsPlayingChanged(bool value) => OnPropertyChanged(nameof(PlayPauseLabel));
 
@@ -423,6 +439,61 @@ public sealed partial class AudiolaHostViewModel : ObservableObject, IDisposable
     {
         if (variation is not null)
             SelectedVariation = variation;
+    }
+
+    private void EnsureEditorLoaded()
+    {
+        if (ActiveTrack is null || _editorSourcePath == ActiveTrack.FilePath) return;
+        try
+        {
+            var (samples, sampleRate) = AudioProcessingHelper.ReadStereo(ActiveTrack.FilePath);
+            _editorBuffer = samples; _editorSampleRate = sampleRate; _editorSourcePath = ActiveTrack.FilePath;
+            _editorUndo.Clear(); EditorSelectionStart = 0; EditorSelectionEnd = 1;
+            EditorPeaks = AudioEdits.ComputePeaks(samples);
+            NotifyEditorState();
+        }
+        catch (Exception ex) { Status = $"Editor could not load audio: {ex.Message}"; }
+    }
+
+    private (int Start, int End) EditorRange()
+    {
+        var frames = AudioEdits.FrameCount(_editorBuffer!);
+        return ((int)(Math.Clamp(EditorSelectionStart, 0, 1) * frames),
+            (int)(Math.Clamp(EditorSelectionEnd, 0, 1) * frames));
+    }
+
+    private void ApplyEditorEdit(float[] next, string action)
+    {
+        _editorUndo.Push(_editorBuffer!); _editorBuffer = next; EditorPeaks = AudioEdits.ComputePeaks(next);
+        Status = $"{action}. Export or bake the edited result to the timeline.";
+        NotifyEditorState();
+    }
+
+    private void NotifyEditorState()
+    {
+        OnPropertyChanged(nameof(HasEditorBuffer)); OnPropertyChanged(nameof(HasEditorSelection)); OnPropertyChanged(nameof(CanUndoEditor));
+        TrimEditorCommand.NotifyCanExecuteChanged(); DeleteEditorCommand.NotifyCanExecuteChanged(); SilenceEditorCommand.NotifyCanExecuteChanged();
+        FadeInEditorCommand.NotifyCanExecuteChanged(); FadeOutEditorCommand.NotifyCanExecuteChanged(); NormalizeEditorCommand.NotifyCanExecuteChanged();
+        EchoEditorCommand.NotifyCanExecuteChanged(); ReverbEditorCommand.NotifyCanExecuteChanged(); WidenEditorCommand.NotifyCanExecuteChanged();
+        ReverseEditorCommand.NotifyCanExecuteChanged(); UndoEditorCommand.NotifyCanExecuteChanged(); ExportEditorCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(HasEditorSelection))] private void TrimEditor() { var r = EditorRange(); ApplyEditorEdit(AudioEdits.Trim(_editorBuffer!, r.Start, r.End), "Trimmed selection"); EditorSelectionStart = 0; EditorSelectionEnd = 1; }
+    [RelayCommand(CanExecute = nameof(HasEditorSelection))] private void DeleteEditor() { var r = EditorRange(); var next = AudioEdits.Delete(_editorBuffer!, r.Start, r.End); if (AudioEdits.FrameCount(next) > 0) ApplyEditorEdit(next, "Deleted selection"); }
+    [RelayCommand(CanExecute = nameof(HasEditorSelection))] private void SilenceEditor() { var r = EditorRange(); ApplyEditorEdit(AudioEdits.Silence(_editorBuffer!, r.Start, r.End), "Silenced selection"); }
+    [RelayCommand(CanExecute = nameof(HasEditorSelection))] private void FadeInEditor() { var r = EditorRange(); ApplyEditorEdit(AudioEdits.Fade(_editorBuffer!, r.Start, r.End, true), "Applied fade-in"); }
+    [RelayCommand(CanExecute = nameof(HasEditorSelection))] private void FadeOutEditor() { var r = EditorRange(); ApplyEditorEdit(AudioEdits.Fade(_editorBuffer!, r.Start, r.End, false), "Applied fade-out"); }
+    [RelayCommand(CanExecute = nameof(HasEditorBuffer))] private void NormalizeEditor() { var r = EditorRange(); ApplyEditorEdit(AudioEffects.Normalize(_editorBuffer!, r.Start, r.End), "Normalized"); }
+    [RelayCommand(CanExecute = nameof(HasEditorBuffer))] private void EchoEditor() { var r = EditorRange(); ApplyEditorEdit(AudioEffects.Echo(_editorBuffer!, r.Start, r.End, _editorSampleRate), "Applied echo"); }
+    [RelayCommand(CanExecute = nameof(HasEditorBuffer))] private void ReverbEditor() { var r = EditorRange(); ApplyEditorEdit(AudioEffects.Reverb(_editorBuffer!, r.Start, r.End, _editorSampleRate), "Applied reverb"); }
+    [RelayCommand(CanExecute = nameof(HasEditorBuffer))] private void WidenEditor() { var r = EditorRange(); ApplyEditorEdit(AudioEffects.StereoWiden(_editorBuffer!, r.Start, r.End, 1.6), "Widened stereo"); }
+    [RelayCommand(CanExecute = nameof(HasEditorBuffer))] private void ReverseEditor() { var r = EditorRange(); ApplyEditorEdit(AudioEffects.Reverse(_editorBuffer!, r.Start, r.End), "Reversed audio"); }
+    [RelayCommand(CanExecute = nameof(CanUndoEditor))] private void UndoEditor() { _editorBuffer = _editorUndo.Pop(); EditorPeaks = AudioEdits.ComputePeaks(_editorBuffer); Status = "Undid editor change."; NotifyEditorState(); }
+    [RelayCommand(CanExecute = nameof(HasEditorBuffer))] private async Task ExportEditorAsync()
+    {
+        var path = await _fileDialogs.SaveFileAsync(new FileDialogOptions("Export edited audio", SuggestedFileName: "audiola-edit.wav", Extensions: ["wav"]));
+        if (path is null) return; if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase)) path += ".wav";
+        AudioEdits.WriteWav(path, _editorBuffer!, _editorSampleRate); await AddAudioAsync(path); Status = "Edited audio exported and baked into the timeline.";
     }
 
     [RelayCommand(CanExecute = nameof(HasAudio))]

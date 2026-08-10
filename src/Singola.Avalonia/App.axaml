@@ -4,5 +4,39 @@
              RequestedThemeVariant="Dark">
   <Application.Styles>
     <FluentTheme />
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#0E0B16" />
+      <Setter Property="Foreground" Value="#F2EEFB" />
+    </Style>
+    <Style Selector="Border.stage-card">
+      <Setter Property="Background" Value="#221935" />
+      <Setter Property="BorderBrush" Value="#332851" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="14" />
+    </Style>
+    <Style Selector="Border.stage-panel">
+      <Setter Property="Background" Value="#181226" />
+      <Setter Property="BorderBrush" Value="#332851" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="#B4A9D4" />
+    </Style>
+    <Style Selector="Button.stage-primary">
+      <Setter Property="Background" Value="#B56BFF" />
+      <Setter Property="Foreground" Value="#FFFFFF" />
+      <Setter Property="BorderBrush" Value="#D0A3FF" />
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.stage-secondary">
+      <Setter Property="Background" Value="#2B2142" />
+      <Setter Property="Foreground" Value="#F2EEFB" />
+      <Setter Property="BorderBrush" Value="#493A6B" />
+      <Setter Property="CornerRadius" Value="9" />
+    </Style>
   </Application.Styles>
 </Application>

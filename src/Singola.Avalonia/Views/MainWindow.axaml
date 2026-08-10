@@ -3,50 +3,195 @@
         xmlns:vm="using:Singola.ViewModels"
         xmlns:controls="using:Singola.Avalonia.Controls"
         x:Class="Singola.Avalonia.Views.MainWindow"
+        x:Name="Root"
         x:DataType="vm:MainViewModel"
-        Title="Singola" Width="900" Height="600" MinWidth="640" MinHeight="400">
-  <Grid Margin="28" RowDefinitions="Auto,*">
-    <TextBlock FontSize="30" FontWeight="Bold" Text="SINGOLA" />
-    <ScrollViewer Grid.Row="1">
-      <StackPanel Spacing="18" Margin="0,20,0,0">
-        <TextBlock FontSize="18" Text="{Binding SongStatus}" TextWrapping="Wrap" />
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Content="Choose song…" Click="ChooseSong_Click" />
-          <Button Content="Start" Command="{Binding StartRoundCommand}" IsEnabled="{Binding CanStart}" />
-          <Button Content="Pause / Resume" Command="{Binding TogglePauseCommand}" IsVisible="{Binding IsSinging}" />
-          <Button Content="Stop" Command="{Binding StopRoundCommand}" IsVisible="{Binding IsSinging}" />
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <Button Content="Add player" Command="{Binding AddPlayerCommand}" />
-          <Button Content="Playlist" Command="{Binding CreatePlaylistCommand}" />
-          <Button Content="Settings" Command="{Binding OpenSettingsCommand}" />
-        </StackPanel>
-        <ItemsControl ItemsSource="{Binding Players}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Border Padding="10" Margin="0,4" Background="#282434">
-                <Grid ColumnDefinitions="*,220,Auto,Auto">
-                  <TextBlock Text="{Binding Name}" />
-                  <ComboBox Grid.Column="1" ItemsSource="{Binding InputDevices}" SelectedItem="{Binding InputDevice}" />
-                  <TextBlock Grid.Column="2" Text="{Binding Score}" Margin="12,0" />
-                  <TextBlock Grid.Column="3" Text="{Binding Note}" />
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-        <Border Padding="12" Background="#201A2B">
-          <StackPanel>
-            <TextBlock FontWeight="Bold" Text="Lyrics" />
-            <TextBlock Text="{Binding LyricPrev}" Opacity="0.6" />
-            <TextBlock Text="{Binding LyricCurrent}" FontSize="20" />
-            <TextBlock Text="{Binding LyricNext}" Opacity="0.6" />
-            <TextBlock Text="{Binding TimeText}" />
+        Title="Singola" Width="1180" Height="780" MinWidth="900" MinHeight="620">
+  <Grid>
+    <Border IsHitTestVisible="False">
+      <Border.Background>
+        <RadialGradientBrush Center="0.5,0.1" RadiusX="0.95" RadiusY="0.95">
+          <GradientStop Color="#2EB56BFF" Offset="0" />
+          <GradientStop Color="#14FF4FA3" Offset="0.5" />
+          <GradientStop Color="#000E0B16" Offset="1" />
+        </RadialGradientBrush>
+      </Border.Background>
+    </Border>
+
+    <ScrollViewer IsVisible="{Binding IsSetup}" VerticalScrollBarVisibility="Auto">
+      <StackPanel MaxWidth="860" Margin="32,24,32,32" HorizontalAlignment="Center" Spacing="14">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Grid.ColumnSpan="2" HorizontalAlignment="Center">
+            <TextBlock FontSize="54" FontWeight="Black" HorizontalAlignment="Center" Foreground="#EAA4FF" Text="SINGOLA" />
+            <TextBlock Margin="0,2,0,8" HorizontalAlignment="Center" Foreground="#B4A9D4"
+                       Text="Song rein · Mikros verteilen · lossingen — Lyrics &amp; Noten kommen von selbst." />
+          </StackPanel>
+          <Button Grid.Column="1" Classes="stage-secondary" Content="⚙ Einstellungen" Command="{Binding OpenSettingsCommand}" />
+        </Grid>
+
+        <Border Classes="stage-card" Padding="18">
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel>
+              <TextBlock Classes="caption" Text="SONG" />
+              <TextBlock Margin="0,8,0,0" FontSize="19" FontWeight="SemiBold" Text="{Binding SongTitle}" IsVisible="{Binding HasSong}" />
+              <TextBlock Margin="0,2,0,0" Foreground="#B4A9D4" TextWrapping="Wrap" Text="{Binding SongStatus}" />
+            </StackPanel>
+            <Button Grid.Column="1" VerticalAlignment="Center" Classes="stage-primary" Content="♫ Song öffnen…" Click="ChooseSong_Click" />
+          </Grid>
+        </Border>
+
+        <Border Classes="stage-card" Padding="18">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="caption" Text="PLAYLIST &amp; SPIELMODUS" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ComboBox MinWidth="200" ItemsSource="{Binding Playlists}" SelectedItem="{Binding SelectedPlaylist}" />
+                <Button Classes="stage-secondary" Content="+ Song dazu" Command="{Binding AddSongToPlaylistCommand}" />
+                <Button Classes="stage-secondary" Content="Playlist löschen" Command="{Binding DeletePlaylistCommand}" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <TextBox Width="160" Watermark="Neue Playlist…" Text="{Binding NewPlaylistName}" />
+                <Button Classes="stage-secondary" Content="Anlegen" Command="{Binding CreatePlaylistCommand}" />
+              </StackPanel>
+            </Grid>
+            <ItemsControl MaxHeight="130" ItemsSource="{Binding SelectedPlaylistSongs}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="0,2" ColumnDefinitions="*,Auto">
+                    <TextBlock VerticalAlignment="Center" Foreground="#CFC5E7" TextTrimming="CharacterEllipsis" Text="{Binding}" />
+                    <Button Grid.Column="1" Padding="7,2" Classes="stage-secondary" Content="×"
+                            Command="{Binding #Root.DataContext.RemoveSongFromPlaylistCommand}" CommandParameter="{Binding}" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock VerticalAlignment="Center" Foreground="#B4A9D4" Text="Spielmodus" />
+              <ComboBox Width="190" SelectedIndex="{Binding PlayMode}">
+                <ComboBoxItem Content="Nur dieser Song" />
+                <ComboBoxItem Content="Ganze Playlist" />
+                <ComboBoxItem Content="Zufällige Songs" />
+              </ComboBox>
+              <TextBlock VerticalAlignment="Center" Foreground="#B4A9D4" Text="Anzahl" IsVisible="{Binding PlayMode}" />
+              <NumericUpDown Width="72" Minimum="1" Maximum="50" Value="{Binding RandomCount}" />
+            </StackPanel>
           </StackPanel>
         </Border>
-        <controls:KaraokeStage x:Name="Stage" Height="220"
-                               IsVisible="{Binding IsSinging}" />
+
+        <Border Classes="stage-card" Padding="18">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="caption" Text="SPIELER — jede/r mit eigenem Mikrofon" />
+            <ItemsControl ItemsSource="{Binding Players}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Classes="stage-panel" Margin="0,0,0,8" Padding="12,10">
+                    <Grid ColumnDefinitions="Auto,200,*,Auto" ColumnSpacing="12">
+                      <Ellipse Width="16" Height="16" Fill="{Binding ColorHex}" VerticalAlignment="Center" />
+                      <TextBox Grid.Column="1" Text="{Binding Name}" />
+                      <ComboBox Grid.Column="2" ItemsSource="{Binding InputDevices}" SelectedItem="{Binding InputDevice}" />
+                      <Button Grid.Column="3" Classes="stage-secondary" Content="×"
+                              Command="{Binding #Root.DataContext.RemovePlayerCommand}" CommandParameter="{Binding}" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <Button Classes="stage-secondary" Content="+ Spieler hinzufügen" Command="{Binding AddPlayerCommand}" />
+              <TextBlock VerticalAlignment="Center" FontSize="11" Foreground="#B4A9D4"
+                         Text="Bis zu 4 Spieler — mehrere Spieler brauchen verschiedene Mikrofone." />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <Button HorizontalAlignment="Center" Margin="0,8,0,0" Padding="34,12" Classes="stage-primary"
+                FontSize="17" Content="▶ Los geht's!" IsEnabled="{Binding CanStart}" Command="{Binding StartRoundCommand}" />
       </StackPanel>
     </ScrollViewer>
+
+    <Grid IsVisible="{Binding IsSinging}" Margin="26,20,26,18" RowDefinitions="Auto,Auto,*,Auto">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="14">
+          <TextBlock FontSize="18" FontWeight="SemiBold" Text="{Binding SongTitle}" />
+          <TextBlock VerticalAlignment="Center" FontFamily="Consolas" Foreground="#B4A9D4" Text="{Binding TimeText}" />
+          <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#EAA4FF" Text="{Binding RoundText}" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <Button Classes="stage-secondary" Content="❚❚ Pause" Command="{Binding TogglePauseCommand}" />
+          <Button Classes="stage-secondary" Content="■ Beenden" Command="{Binding StopRoundCommand}" />
+        </StackPanel>
+      </Grid>
+      <ProgressBar Grid.Row="0" Margin="0,38,0,0" Height="4" Minimum="0" Maximum="1" Value="{Binding Progress}" Foreground="#FF4FA3" Background="#22FFFFFF" />
+      <StackPanel Grid.Row="1" Margin="0,28,0,14">
+        <TextBlock HorizontalAlignment="Center" FontSize="16" Opacity="0.45" Text="{Binding LyricPrev}" />
+        <TextBlock HorizontalAlignment="Center" Margin="0,6" FontSize="34" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" Text="{Binding LyricCurrent}" />
+        <TextBlock HorizontalAlignment="Center" FontSize="17" Opacity="0.6" Text="{Binding LyricNext}" />
+      </StackPanel>
+      <Border Grid.Row="2" Classes="stage-card" Padding="0" ClipToBounds="True">
+        <controls:KaraokeStage x:Name="Stage" />
+      </Border>
+      <ItemsControl Grid.Row="3" Margin="0,12,0,0" HorizontalAlignment="Center" ItemsSource="{Binding Players}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Classes="stage-panel" Margin="6,0" Padding="14,8">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Ellipse Width="12" Height="12" Fill="{Binding ColorHex}" VerticalAlignment="Center" />
+                <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding Name}" />
+                <TextBlock Width="34" VerticalAlignment="Center" Foreground="#B4A9D4" TextAlignment="Center" Text="{Binding Note}" />
+                <TextBlock VerticalAlignment="Center" Foreground="#FFB5E0" FontWeight="Bold" Text="{Binding ComboText}" />
+                <TextBlock VerticalAlignment="Center" FontSize="19" FontWeight="Bold" Text="{Binding Score}" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Grid>
+
+    <Border IsVisible="{Binding IsSettingsOpen}" Background="#A0000000">
+      <Border Classes="stage-card" MaxWidth="560" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="10">
+          <TextBlock FontSize="22" FontWeight="Bold" Foreground="#EAA4FF" Text="Einstellungen" />
+          <TextBlock Classes="caption" Text="ELEVENLABS-API-KEY — für die automatische Songtext-Erkennung" />
+          <TextBox Text="{Binding ApiKey}" Watermark="sk_…" />
+          <TextBlock Foreground="#B4A9D4" TextWrapping="Wrap"
+                     Text="Wird mit Audiola geteilt. Die Karaoke-Bühne bleibt immer im dunklen Party-Look." />
+          <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+            <Button Classes="stage-primary" Content="Speichern" Command="{Binding SaveSettingsCommand}" />
+            <Button Classes="stage-secondary" Content="Abbrechen" Command="{Binding CloseSettingsCommand}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Border>
+
+    <StackPanel IsVisible="{Binding IsFinished}" MaxWidth="620" Margin="32" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+      <TextBlock HorizontalAlignment="Center" FontSize="42" FontWeight="Black" Foreground="#EAA4FF" Text="ERGEBNIS" />
+      <TextBlock HorizontalAlignment="Center" Foreground="#B4A9D4" Text="{Binding RoundText}" />
+      <ItemsControl Margin="0,12,0,0" ItemsSource="{Binding Ranking}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Classes="stage-card" Margin="0,0,0,10" Padding="18,12">
+              <Grid ColumnDefinitions="46,*,Auto">
+                <TextBlock FontSize="24" FontWeight="Black" Foreground="#B4A9D4" Text="{Binding Place}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                  <Ellipse Width="14" Height="14" Fill="{Binding ColorHex}" VerticalAlignment="Center" />
+                  <TextBlock FontSize="19" FontWeight="SemiBold" Text="{Binding Name}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+                  <TextBlock VerticalAlignment="Center" Foreground="#B4A9D4" Text="{Binding Score, StringFormat=Song: {0}}" />
+                  <TextBlock FontSize="24" FontWeight="Bold" Text="{Binding TotalScore}" />
+                </StackPanel>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="10">
+        <Button Classes="stage-primary" Content="Nächster Song" Command="{Binding NextSongCommand}" IsVisible="{Binding HasNextSong}" />
+        <Button Classes="stage-primary" Content="Nochmal" Command="{Binding StartRoundCommand}" />
+        <Button Classes="stage-secondary" Content="Neuer Song / Spieler" Command="{Binding BackToSetupCommand}" />
+      </StackPanel>
+    </StackPanel>
   </Grid>
 </Window>

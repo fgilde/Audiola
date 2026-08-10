@@ -1,32 +1,3 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Audiola.Avalonia.Views.SettingsPage">
-  <ScrollViewer>
-    <StackPanel Margin="40" MaxWidth="850" Spacing="14">
-      <TextBlock FontSize="28" FontWeight="SemiBold" Text="Settings" />
-      <TextBlock Foreground="#B9C2D0" Text="Settings persist in the cross-platform Audiola application-data directory." />
-      <Border Background="#20232B" CornerRadius="8" Padding="16">
-        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="170,*" RowSpacing="12" ColumnSpacing="12">
-          <TextBlock VerticalAlignment="Center" Text="Python executable" />
-          <TextBox Grid.Column="1" Text="{Binding Parent.PythonPath, Mode=TwoWay}" Watermark="python or full executable path" />
-          <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="Demucs model" />
-          <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Parent.DemucsModels}" SelectedItem="{Binding Parent.DemucsModel}" />
-          <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="Stem output folder" />
-          <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Parent.StemOutputDirectory, Mode=TwoWay}" />
-        </Grid>
-      </Border>
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button Content="Save settings" Command="{Binding Parent.SaveSettingsCommand}" />
-        <Button Content="Check Demucs" Command="{Binding Parent.CheckDemucsCommand}" />
-        <Button Content="System theme" Command="{Binding Parent.SetThemeCommand}" CommandParameter="System" />
-        <Button Content="Light" Command="{Binding Parent.SetThemeCommand}" CommandParameter="Light" />
-        <Button Content="Dark" Command="{Binding Parent.SetThemeCommand}" CommandParameter="Dark" />
-      </StackPanel>
-      <TextBlock Foreground="#9CA8BA" TextWrapping="Wrap" Text="{Binding Parent.SettingsStatus}" />
-      <Border Background="#20232B" CornerRadius="8" Padding="14">
-        <TextBlock TextWrapping="Wrap"
-                   Text="Stem separation stays disabled until the selected Python environment has Demucs installed. The app will not claim it is available before the check succeeds." />
-      </Border>
-    </StackPanel>
-  </ScrollViewer>
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Audiola.Avalonia.Views.SettingsPage">
+ <ScrollViewer><StackPanel Margin="32" MaxWidth="900" Spacing="14"><TextBlock FontSize="28" FontWeight="SemiBold" Text="Settings" /><TextBlock Foreground="{StaticResource DawTextDimBrush}" Text="Configure optional local audio tools and the application appearance." /><Border Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="1" CornerRadius="7" Padding="16"><Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="12"><TextBlock Text="Python executable" /><TextBox Grid.Column="1" Text="{Binding Parent.PythonPath}" Watermark="python or executable path" /><TextBlock Grid.Row="1" Text="Demucs model" /><ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Parent.DemucsModels}" SelectedItem="{Binding Parent.DemucsModel}" /><TextBlock Grid.Row="2" Text="Stem output folder" /><TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Parent.StemOutputDirectory}" /></Grid></Border><StackPanel Orientation="Horizontal" Spacing="8"><Button Classes="accent" Content="Save settings" Command="{Binding Parent.SaveSettingsCommand}" /><Button Content="Check Demucs" Command="{Binding Parent.CheckDemucsCommand}" /><Button Content="Dark theme" Command="{Binding Parent.SetThemeCommand}" CommandParameter="Dark" /><Button Content="Light theme" Command="{Binding Parent.SetThemeCommand}" CommandParameter="Light" /><Button Content="System theme" Command="{Binding Parent.SetThemeCommand}" CommandParameter="System" /></StackPanel><Border Background="{StaticResource DawCardBrush}" CornerRadius="6" Padding="10"><TextBlock Foreground="{StaticResource DawTextDimBrush}" Text="{Binding Parent.SettingsStatus}" TextWrapping="Wrap" /></Border></StackPanel></ScrollViewer>
 </UserControl>

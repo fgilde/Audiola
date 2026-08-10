@@ -1,0 +1,27 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Color x:Key="DawBackgroundColor">#101318</Color>
+  <Color x:Key="DawPanelColor">#181D25</Color>
+  <Color x:Key="DawCardColor">#202733</Color>
+  <Color x:Key="DawStrokeColor">#303A49</Color>
+  <Color x:Key="DawHoverColor">#273445</Color>
+  <Color x:Key="DawTextColor">#F0F5FC</Color>
+  <Color x:Key="DawTextDimColor">#AAB7C9</Color>
+  <Color x:Key="DawTextFaintColor">#718096</Color>
+  <Color x:Key="DawAccentColor">#3F8CFF</Color>
+  <Color x:Key="DawAccentLightColor">#6BD6FF</Color>
+  <Color x:Key="DawAccentVioletColor">#B56BFF</Color>
+  <Color x:Key="DawAccentSoftColor">#2E3F8CFF</Color>
+
+  <SolidColorBrush x:Key="DawBackgroundBrush" Color="{StaticResource DawBackgroundColor}" />
+  <SolidColorBrush x:Key="DawPanelBrush" Color="{StaticResource DawPanelColor}" />
+  <SolidColorBrush x:Key="DawCardBrush" Color="{StaticResource DawCardColor}" />
+  <SolidColorBrush x:Key="DawStrokeBrush" Color="{StaticResource DawStrokeColor}" />
+  <SolidColorBrush x:Key="DawHoverBrush" Color="{StaticResource DawHoverColor}" />
+  <SolidColorBrush x:Key="DawTextBrush" Color="{StaticResource DawTextColor}" />
+  <SolidColorBrush x:Key="DawTextDimBrush" Color="{StaticResource DawTextDimColor}" />
+  <SolidColorBrush x:Key="DawTextFaintBrush" Color="{StaticResource DawTextFaintColor}" />
+  <SolidColorBrush x:Key="DawAccentBrush" Color="{StaticResource DawAccentColor}" />
+  <SolidColorBrush x:Key="DawAccentLightBrush" Color="{StaticResource DawAccentLightColor}" />
+  <SolidColorBrush x:Key="DawAccentSoftBrush" Color="{StaticResource DawAccentSoftColor}" />
+</ResourceDictionary>

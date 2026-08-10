@@ -6,7 +6,7 @@
         Title="{Binding ApplicationTitle}" Width="1360" Height="820"
         Icon="/Assets/audiola.ico"
         MinWidth="940" MinHeight="620"
-        Background="#16181D">
+        Background="{StaticResource DawBackgroundBrush}">
   <Window.DataTemplates>
     <DataTemplate DataType="vm:HomePageViewModel"><pages:HomePage /></DataTemplate>
     <DataTemplate DataType="vm:EditorPageViewModel"><pages:EditorPage /></DataTemplate>
@@ -23,47 +23,73 @@
     <DataTemplate DataType="vm:AboutPageViewModel"><pages:AboutPage /></DataTemplate>
   </Window.DataTemplates>
 
-  <Grid RowDefinitions="Auto,*,Auto">
-    <Border Background="#20232B" BorderBrush="#343842" BorderThickness="0,0,0,1" Padding="16,10">
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
+    <Border Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,0,0,1" Padding="16,6">
       <Grid ColumnDefinitions="Auto,*,Auto">
-        <TextBlock FontSize="22" FontWeight="SemiBold" Text="Audiola" VerticalAlignment="Center" />
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="28,0,0,0" Spacing="8">
-          <Button Content="Open audio…" Command="{Binding OpenAudioCommand}" />
-          <Button Content="Open project…" Command="{Binding OpenProjectCommand}" />
-          <Button Content="Save project" Command="{Binding SaveProjectCommand}" />
-          <Button Content="{Binding PlayPauseLabel}" Command="{Binding PlayPauseCommand}" IsEnabled="{Binding IsTransportAvailable}" />
-          <Button Content="Stop" Command="{Binding StopCommand}" IsEnabled="{Binding IsTransportAvailable}" />
-          <TextBlock VerticalAlignment="Center" FontFamily="Consolas" Text="{Binding PlaybackPositionText}" />
-          <TextBlock VerticalAlignment="Center" Foreground="#9CA8BA" Text="{Binding PlaybackDurationText}" />
-          <Slider Width="130" VerticalAlignment="Center" Minimum="0" Maximum="1"
-                  Value="{Binding PlaybackProgress, Mode=TwoWay}" IsEnabled="{Binding IsTransportAvailable}" />
-          <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" Foreground="#B9C2D0"
-                     Text="{Binding ActiveTrack.FileName, TargetNullValue='No audio loaded'}" />
+        <StackPanel Orientation="Horizontal" Spacing="9">
+          <Image Width="24" Height="24" Source="/Assets/audiola.png" />
+          <TextBlock FontSize="19" FontWeight="SemiBold" Text="Audiola" VerticalAlignment="Center" />
+          <TextBlock FontSize="11" Foreground="{StaticResource DawAccentLightBrush}" Text="STUDIO" VerticalAlignment="Center" />
         </StackPanel>
-        <TextBlock Grid.Column="2" VerticalAlignment="Center" Foreground="#92D6FF" Text="{Binding ProjectName}" />
+        <Menu Grid.Column="1" Margin="26,0,0,0" VerticalAlignment="Center">
+          <MenuItem Header="_File">
+            <MenuItem Header="Open audio…" Command="{Binding OpenAudioCommand}" InputGesture="Ctrl+O" />
+            <MenuItem Header="Open project…" Command="{Binding OpenProjectCommand}" />
+            <Separator />
+            <MenuItem Header="Save project" Command="{Binding SaveProjectCommand}" InputGesture="Ctrl+S" />
+          </MenuItem>
+          <MenuItem Header="_Studio">
+            <MenuItem Header="Timeline" Command="{Binding NavigateCommand}" CommandParameter="{Binding Pages[2]}" />
+            <MenuItem Header="Editor" Command="{Binding NavigateCommand}" CommandParameter="{Binding Pages[1]}" />
+          </MenuItem>
+        </Menu>
+        <TextBlock Grid.Column="2" VerticalAlignment="Center" Foreground="{StaticResource DawAccentLightBrush}" Text="{Binding ProjectName}" />
       </Grid>
     </Border>
 
-    <Grid Grid.Row="1" ColumnDefinitions="196,*">
-      <Border Background="#20232B" BorderBrush="#343842" BorderThickness="0,0,1,0">
-        <ListBox Margin="8" ItemsSource="{Binding Pages}" SelectedItem="{Binding SelectedPage}">
+    <Border Grid.Row="1" Background="{StaticResource DawCardBrush}" BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,0,0,1" Padding="16,8">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+        <Button Classes="accent" Content="＋ Add audio" Command="{Binding OpenAudioCommand}" />
+        <Button Grid.Column="1" Margin="7,0,0,0" Content="Open project" Command="{Binding OpenProjectCommand}" />
+        <Button Grid.Column="2" Margin="7,0,0,0" Content="Save" Command="{Binding SaveProjectCommand}" />
+        <Border Grid.Column="3" Margin="18,0,0,0" Padding="10,3" CornerRadius="5" Background="{StaticResource DawBackgroundBrush}" BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="1">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <Button Padding="7,3" Content="{Binding PlayPauseLabel}" Command="{Binding PlayPauseCommand}" IsEnabled="{Binding IsTransportAvailable}" />
+            <Button Padding="7,3" Content="■" Command="{Binding StopCommand}" IsEnabled="{Binding IsTransportAvailable}" />
+            <TextBlock VerticalAlignment="Center" FontFamily="Cascadia Mono,Consolas" Text="{Binding PlaybackPositionText}" />
+            <TextBlock VerticalAlignment="Center" Foreground="{StaticResource DawTextFaintBrush}" Text="/" />
+            <TextBlock VerticalAlignment="Center" Foreground="{StaticResource DawTextDimBrush}" FontFamily="Cascadia Mono,Consolas" Text="{Binding PlaybackDurationText}" />
+          </StackPanel>
+        </Border>
+        <Slider Grid.Column="4" Margin="18,0" VerticalAlignment="Center" Minimum="0" Maximum="1" Value="{Binding PlaybackProgress, Mode=TwoWay}" IsEnabled="{Binding IsTransportAvailable}" />
+        <TextBlock Grid.Column="5" VerticalAlignment="Center" Foreground="{StaticResource DawTextDimBrush}" Text="{Binding ActiveTrack.FileName, TargetNullValue='No audio loaded'}" />
+      </Grid>
+    </Border>
+
+    <Grid Grid.Row="2" ColumnDefinitions="210,*">
+      <Border Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,0,1,0">
+        <Grid RowDefinitions="Auto,*">
+          <TextBlock Margin="18,16,18,6" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource DawTextFaintBrush}" Text="WORKSPACE" />
+          <ListBox Grid.Row="1" Margin="8,2" ItemsSource="{Binding Pages}" SelectedItem="{Binding SelectedPage}">
           <ListBox.ItemTemplate>
             <DataTemplate>
               <StackPanel Orientation="Horizontal" Spacing="10">
-                <TextBlock Width="18" Text="{Binding Icon}" FontSize="16" />
+                <TextBlock Width="20" Text="{Binding Icon}" FontSize="17" Foreground="{StaticResource DawAccentLightBrush}" />
                 <TextBlock Text="{Binding Title}" />
               </StackPanel>
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
+        </Grid>
       </Border>
       <ContentControl Grid.Column="1" Content="{Binding SelectedPage.Content}" />
     </Grid>
 
-    <Border Grid.Row="2" Background="#20232B" BorderBrush="#343842" BorderThickness="0,1,0,0" Padding="16,7">
-      <Grid ColumnDefinitions="Auto,*">
-        <Ellipse Width="8" Height="8" Fill="#51D88A" />
-        <TextBlock Grid.Column="1" Margin="9,0,0,0" Foreground="#C4CBD8" Text="{Binding Status}" />
+    <Border Grid.Row="3" Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="0,1,0,0" Padding="16,7">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Ellipse Width="7" Height="7" Fill="{StaticResource DawAccentLightBrush}" />
+        <TextBlock Grid.Column="1" Margin="9,0,0,0" Foreground="{StaticResource DawTextDimBrush}" Text="{Binding Status}" />
+        <TextBlock Grid.Column="2" Foreground="{StaticResource DawTextFaintBrush}" Text="AUDIO WORKSPACE" />
       </Grid>
     </Border>
   </Grid>

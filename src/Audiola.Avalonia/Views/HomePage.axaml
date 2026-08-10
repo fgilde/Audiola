@@ -1,51 +1,10 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Audiola.Avalonia.Views.HomePage">
-  <ScrollViewer>
-    <StackPanel Margin="40" MaxWidth="1000" Spacing="18">
-      <TextBlock FontSize="34" FontWeight="Bold" Text="Your audio workspace" />
-      <TextBlock FontSize="16" Foreground="#B9C2D0" TextWrapping="Wrap"
-                 Text="Open an audio file to build waveform metadata and add it to a native Avalonia timeline, or reopen a portable Audiola project." />
-      <StackPanel Orientation="Horizontal" Spacing="12">
-        <Button Padding="18,10" Content="Open audio…" Command="{Binding Parent.OpenAudioCommand}" />
-        <Button Padding="18,10" Content="Open project…" Command="{Binding Parent.OpenProjectCommand}" />
-        <Button Padding="18,10" Content="New timeline" Command="{Binding Parent.NavigateCommand}"
-                CommandParameter="{Binding Parent.Pages[2]}" />
-      </StackPanel>
-      <Grid ColumnDefinitions="*,*" ColumnSpacing="22">
-        <Border Background="#20232B" CornerRadius="8" Padding="16">
-          <StackPanel Spacing="10">
-            <TextBlock FontWeight="SemiBold" FontSize="17" Text="Recent audio" />
-            <ItemsControl ItemsSource="{Binding Parent.RecentFiles}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <StackPanel Margin="0,4">
-                    <TextBlock Text="{Binding Name}" />
-                    <TextBlock FontSize="12" Foreground="#9CA8BA" Text="{Binding Details}" />
-                  </StackPanel>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            <TextBlock Foreground="#9CA8BA" Text="Recent files are recorded when audio is imported." />
-          </StackPanel>
-        </Border>
-        <Border Grid.Column="1" Background="#20232B" CornerRadius="8" Padding="16">
-          <StackPanel Spacing="10">
-            <TextBlock FontWeight="SemiBold" FontSize="17" Text="Recent projects" />
-            <ItemsControl ItemsSource="{Binding Parent.RecentProjects}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <StackPanel Margin="0,4">
-                    <TextBlock Text="{Binding Name}" />
-                    <TextBlock FontSize="12" Foreground="#9CA8BA" Text="{Binding Details}" />
-                  </StackPanel>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            <TextBlock Foreground="#9CA8BA" Text="Projects embed their media and restore editable tracks." />
-          </StackPanel>
-        </Border>
-      </Grid>
-    </StackPanel>
-  </ScrollViewer>
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Audiola.Avalonia.Views.HomePage">
+  <ScrollViewer><StackPanel Margin="32" MaxWidth="1120" Spacing="18">
+    <Grid ColumnDefinitions="*,Auto"><StackPanel Spacing="5"><TextBlock FontSize="34" FontWeight="Bold" Text="Audiola studio" /><TextBlock Foreground="{StaticResource DawTextDimBrush}" Text="Create, arrange, restore, and export audio projects." /></StackPanel><TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{StaticResource DawAccentLightBrush}" Text="AUDIO WORKSPACE" /></Grid>
+    <Border Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="1" CornerRadius="8" Padding="20"><Grid ColumnDefinitions="*,Auto"><StackPanel Spacing="8"><TextBlock FontSize="19" FontWeight="SemiBold" Text="Start a session" /><TextBlock Foreground="{StaticResource DawTextDimBrush}" TextWrapping="Wrap" Text="Import audio into the multitrack studio, or continue a portable Audiola project." /><StackPanel Orientation="Horizontal" Spacing="8"><Button Classes="accent" Content="＋ Open audio" Command="{Binding Parent.OpenAudioCommand}" /><Button Content="Open project" Command="{Binding Parent.OpenProjectCommand}" /><Button Content="Go to timeline" Command="{Binding Parent.NavigateCommand}" CommandParameter="{Binding Parent.Pages[2]}" /></StackPanel></StackPanel><TextBlock Grid.Column="1" FontSize="48" Foreground="{StaticResource DawAccentBrush}" Text="♬" VerticalAlignment="Center" /></Grid></Border>
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
+      <Border Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="1" CornerRadius="8" Padding="14"><StackPanel Spacing="10"><TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource DawTextFaintBrush}" Text="RECENT AUDIO" /><ItemsControl ItemsSource="{Binding Parent.RecentFiles}"><ItemsControl.ItemTemplate><DataTemplate><Border Background="{StaticResource DawCardBrush}" CornerRadius="5" Padding="10" Margin="0,2"><StackPanel><TextBlock FontWeight="SemiBold" Text="{Binding Name}" /><TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}" Text="{Binding Details}" /></StackPanel></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl><TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}" Text="Imported audio appears here." /></StackPanel></Border>
+      <Border Grid.Column="1" Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}" BorderThickness="1" CornerRadius="8" Padding="14"><StackPanel Spacing="10"><TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource DawTextFaintBrush}" Text="RECENT PROJECTS" /><ItemsControl ItemsSource="{Binding Parent.RecentProjects}"><ItemsControl.ItemTemplate><DataTemplate><Border Background="{StaticResource DawCardBrush}" CornerRadius="5" Padding="10" Margin="0,2"><StackPanel><TextBlock FontWeight="SemiBold" Text="{Binding Name}" /><TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}" Text="{Binding Details}" /></StackPanel></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl><TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}" Text="Projects retain editable track settings." /></StackPanel></Border>
+    </Grid>
+  </StackPanel></ScrollViewer>
 </UserControl>

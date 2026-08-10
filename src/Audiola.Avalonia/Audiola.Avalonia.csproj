@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <AvaloniaResource Include="..\Audiola\Assets\audiola.ico" Link="Assets\audiola.ico" />
+    <AvaloniaResource Include="..\Audiola\Assets\audiola.png" Link="Assets\audiola.png" />
     <ProjectReference Include="..\Audiola.Core\Audiola.Core.csproj" />
     <!-- These services and models are UI-framework-independent but have not yet moved to Core. -->
     <Compile Include="..\Audiola\Services\IEvaluationService.cs" Link="Shared\Services\IEvaluationService.cs" />

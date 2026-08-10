@@ -2,32 +2,96 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="using:Audiola.Avalonia.Controls"
              x:Class="Audiola.Avalonia.Views.EditorPage">
-  <ScrollViewer>
-    <StackPanel Margin="40" Spacing="16">
-      <TextBlock FontSize="28" FontWeight="SemiBold" Text="Editor" />
-      <TextBlock Foreground="#B9C2D0" Text="Apply a Core studio effect non-destructively and export it as a new timeline track." />
-      <Border Background="#20232B" CornerRadius="8" Padding="16">
-        <StackPanel Spacing="12">
-          <TextBlock FontWeight="SemiBold" Text="{Binding Parent.ActiveTrack.FileName, TargetNullValue='No audio selected'}" />
-          <controls:WaveformView Height="270" Peaks="{Binding Parent.ActiveTrack.Peaks}"
-                                 Progress="{Binding Parent.PlaybackProgress}" SeekCommand="{Binding Parent.SeekCommand}" />
-          <TextBlock Foreground="#9CA8BA" Text="{Binding Parent.ActiveTrack.Duration, StringFormat='Duration: {0:mm\\:ss}', TargetNullValue='Import audio from Home or Timeline.'}" />
-        </StackPanel>
+  <Grid Margin="20" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
+    <Grid ColumnDefinitions="*,Auto">
+      <StackPanel Spacing="3">
+        <TextBlock FontSize="24" FontWeight="SemiBold" Text="Audio editor" />
+        <TextBlock Foreground="{StaticResource DawTextDimBrush}" Text="Apply a non-destructive studio variation and export it as a new track." />
+      </StackPanel>
+      <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{StaticResource DawTextFaintBrush}"
+                 Text="{Binding Parent.ActiveTrack.FileName, TargetNullValue='No audio selected'}" />
+    </Grid>
+
+    <Border Grid.Row="1" Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}"
+            BorderThickness="1" CornerRadius="7" Padding="8">
+      <StackPanel Orientation="Horizontal" Spacing="7">
+        <Button Content="Open audio" Command="{Binding Parent.OpenAudioCommand}" />
+        <Button Content="{Binding Parent.PlayPauseLabel}" Command="{Binding Parent.PlayPauseCommand}"
+                IsEnabled="{Binding Parent.IsTransportAvailable}" />
+        <Button Content="■ Stop" Command="{Binding Parent.StopCommand}" IsEnabled="{Binding Parent.IsTransportAvailable}" />
+        <TextBlock VerticalAlignment="Center" FontFamily="Cascadia Mono,Consolas" Text="{Binding Parent.PlaybackPositionText}" />
+        <TextBlock VerticalAlignment="Center" Foreground="{StaticResource DawTextFaintBrush}" Text="/" />
+        <TextBlock VerticalAlignment="Center" Foreground="{StaticResource DawTextDimBrush}" FontFamily="Cascadia Mono,Consolas"
+                   Text="{Binding Parent.PlaybackDurationText}" />
+      </StackPanel>
+    </Border>
+
+    <Grid Grid.Row="2" ColumnDefinitions="*,280" ColumnSpacing="12">
+      <Border Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}"
+              BorderThickness="1" CornerRadius="7" Padding="12">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource DawTextFaintBrush}" Text="SOURCE WAVEFORM" />
+            <TextBlock Grid.Column="1" FontSize="11" Foreground="{StaticResource DawTextFaintBrush}"
+                       Text="{Binding Parent.ActiveTrack.Duration, StringFormat='Duration  {0:mm\\:ss}', TargetNullValue='No media'}" />
+          </Grid>
+          <Grid Grid.Row="1">
+            <Border Background="{StaticResource DawBackgroundBrush}" CornerRadius="5" Padding="12">
+              <controls:WaveformView Peaks="{Binding Parent.EditorPeaks}" Progress="{Binding Parent.PlaybackProgress}"
+                                     SeekCommand="{Binding Parent.SeekCommand}" WaveBrush="{StaticResource DawAccentLightBrush}" />
+            </Border>
+            <Border IsVisible="{Binding Parent.IsWorking}" Background="#B0101318" CornerRadius="5">
+              <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                <ProgressBar Width="180" IsIndeterminate="True" />
+                <TextBlock HorizontalAlignment="Center" Text="{Binding Parent.Status}" />
+              </StackPanel>
+            </Border>
+          </Grid>
+          <StackPanel Grid.Row="2" Spacing="5">
+            <TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}" Text="Range selection (start / end)" />
+            <Grid ColumnDefinitions="*,*"><Slider Minimum="0" Maximum="1" Value="{Binding Parent.EditorSelectionStart}" /><Slider Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding Parent.EditorSelectionEnd}" /></Grid>
+          </StackPanel>
+        </Grid>
       </Border>
-      <Border Background="#20232B" CornerRadius="8" Padding="16">
-        <StackPanel Orientation="Horizontal" Spacing="12">
-          <ComboBox Width="230" ItemsSource="{Binding Parent.Variations}" SelectedItem="{Binding Parent.SelectedVariation}">
+
+      <Border Grid.Column="1" Background="{StaticResource DawPanelBrush}" BorderBrush="{StaticResource DawStrokeBrush}"
+              BorderThickness="1" CornerRadius="7" Padding="14">
+        <StackPanel Spacing="12">
+          <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource DawTextFaintBrush}" Text="EFFECT RACK" />
+          <TextBlock FontWeight="SemiBold" Text="Selection tools" />
+          <WrapPanel ItemHeight="30" ItemWidth="76"><Button Content="Trim" Command="{Binding Parent.TrimEditorCommand}" /><Button Content="Delete" Command="{Binding Parent.DeleteEditorCommand}" /><Button Content="Silence" Command="{Binding Parent.SilenceEditorCommand}" /><Button Content="Fade in" Command="{Binding Parent.FadeInEditorCommand}" /><Button Content="Fade out" Command="{Binding Parent.FadeOutEditorCommand}" /><Button Content="Undo" Command="{Binding Parent.UndoEditorCommand}" /></WrapPanel>
+          <TextBlock FontWeight="SemiBold" Text="Core DSP" />
+          <WrapPanel ItemHeight="30" ItemWidth="76"><Button Content="Normalize" Command="{Binding Parent.NormalizeEditorCommand}" /><Button Content="Echo" Command="{Binding Parent.EchoEditorCommand}" /><Button Content="Reverb" Command="{Binding Parent.ReverbEditorCommand}" /><Button Content="Widen" Command="{Binding Parent.WidenEditorCommand}" /><Button Content="Reverse" Command="{Binding Parent.ReverseEditorCommand}" /></WrapPanel>
+          <TextBlock FontWeight="SemiBold" Text="Studio variation" />
+          <ComboBox ItemsSource="{Binding Parent.Variations}" SelectedItem="{Binding Parent.SelectedVariation}">
             <ComboBox.ItemTemplate>
               <DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
-          <Button Content="Apply and export…" Command="{Binding Parent.ApplyVariationCommand}" />
-          <TextBlock VerticalAlignment="Center" Foreground="#9CA8BA"
-                     Text="{Binding Parent.SelectedVariation.Description}" />
+          <Border Background="{StaticResource DawCardBrush}" CornerRadius="5" Padding="10">
+            <TextBlock FontSize="12" Foreground="{StaticResource DawTextDimBrush}" TextWrapping="Wrap"
+                       Text="{Binding Parent.SelectedVariation.Description, TargetNullValue='Select an effect to see its description.'}" />
+          </Border>
+          <Button Classes="accent" Content="Apply and export…" Command="{Binding Parent.ApplyVariationCommand}"
+                  IsEnabled="{Binding Parent.HasAudio}" />
+          <Button Content="Bake edited WAV to timeline…" Command="{Binding Parent.ExportEditorCommand}" IsEnabled="{Binding Parent.HasEditorBuffer}" />
+          <Border Background="{StaticResource DawCardBrush}" CornerRadius="5" Padding="10">
+            <StackPanel Spacing="4">
+              <TextBlock FontSize="11" FontWeight="SemiBold" Text="NON-DESTRUCTIVE" />
+              <TextBlock FontSize="11" Foreground="{StaticResource DawTextFaintBrush}" TextWrapping="Wrap"
+                         Text="Audiola.Core creates a new export and imports it into the timeline." />
+            </StackPanel>
+          </Border>
         </StackPanel>
       </Border>
-      <TextBlock Foreground="#9CA8BA" TextWrapping="Wrap"
-                 Text="The selected effect is processed by Audiola.Core; the original is never changed. Exported audio is re-imported with fresh waveform metadata." />
-    </StackPanel>
-  </ScrollViewer>
+    </Grid>
+
+    <Border Grid.Row="3" Background="{StaticResource DawCardBrush}" CornerRadius="6" Padding="10">
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource DawAccentLightBrush}" Text="EDITOR" />
+        <TextBlock Grid.Column="1" Margin="10,0,0,0" FontSize="11" Foreground="{StaticResource DawTextDimBrush}"
+                   Text="{Binding Parent.Status}" />
+      </Grid>
+    </Border>
+  </Grid>
 </UserControl>
