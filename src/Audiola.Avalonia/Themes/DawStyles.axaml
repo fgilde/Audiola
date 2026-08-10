@@ -146,6 +146,13 @@
     <Setter Property="Foreground" Value="White" />
   </Style>
 
+  <!-- Warn-/Aufnahme-Button (REC läuft): rot statt Akzentblau. -->
+  <Style Selector="Button.danger">
+    <Setter Property="Background" Value="{DynamicResource DawRecBrush}" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DawRecBrush}" />
+  </Style>
+
   <!-- Menüleiste und Menüs in Studio-Farben (Avalonias Fluent-Standard ist heller). -->
   <Style Selector="Menu">
     <Setter Property="Background" Value="Transparent" />

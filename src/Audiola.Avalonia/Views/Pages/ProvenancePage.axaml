@@ -1,0 +1,104 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:models="using:Audiola.Models"
+             xmlns:conv="using:Audiola.Avalonia.Converters"
+             xmlns:vm="using:Audiola.ViewModels"
+             x:Class="Audiola.Avalonia.Views.Pages.ProvenancePage"
+             x:DataType="vm:ProvenanceViewModel">
+
+  <UserControl.Resources>
+    <conv:EnumEqualsConverter x:Key="EnumEquals" />
+  </UserControl.Resources>
+
+  <!-- Port von Audiola/Views/Pages/ProvenancePage.xaml. Die Befund-Symbole kommen hier über
+       Style-Klassen (Avalonia hat keine DataTemplate.Triggers). -->
+
+  <Grid Margin="42,24,42,24" RowDefinitions="Auto,Auto,*">
+
+    <!-- Kopf -->
+    <StackPanel Grid.Row="0">
+      <TextBlock Classes="dawPageTitle" Text="Provenienz &amp; KI-Erkennung" />
+      <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"
+                 Text="Liest aus, welche Herkunfts-/Wasserzeichen-Daten eingebettet sind, und erklärt, warum ein Track als KI eingestuft werden kann. Reine Analyse — es wird nichts verändert." />
+    </StackPanel>
+
+    <!-- Aktionen -->
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,16,0,0">
+      <Button Classes="accent" Command="{Binding AnalyzeTrackCommand}"
+              ToolTip.Tip="Analysiert den geladenen Track – oder, falls keiner geladen ist, den aktuellen Studio-Mix.">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <ic:SymbolIcon Symbol="DocumentSearch" />
+          <TextBlock Text="Track / Studio-Mix analysieren" />
+        </StackPanel>
+      </Button>
+      <Button Margin="8,0,0,0" Command="{Binding AnalyzeFileCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <ic:SymbolIcon Symbol="FolderOpen" />
+          <TextBlock Text="Datei wählen …" />
+        </StackPanel>
+      </Button>
+      <ProgressBar Width="80" Margin="16,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
+                   IsVisible="{Binding IsBusy}" />
+      <TextBlock Margin="12,0,0,0" VerticalAlignment="Center"
+                 Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding StatusText}" />
+    </StackPanel>
+
+    <!-- Ergebnis -->
+    <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
+      <StackPanel>
+        <!-- Befundliste -->
+        <ItemsControl ItemsSource="{Binding Findings}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="models:Finding">
+              <Border Margin="0,0,0,8" Padding="14,10" CornerRadius="8"
+                      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                <Grid ColumnDefinitions="Auto,Auto,*">
+                  <!-- Symbol und Farbe richten sich nach der Einstufung. -->
+                  <Panel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,12,0">
+                    <ic:SymbolIcon Symbol="Info"
+                                   IsVisible="{Binding Severity, Converter={StaticResource EnumEquals}, ConverterParameter=Info}" />
+                    <ic:SymbolIcon Symbol="Warning" Foreground="#FFB454"
+                                   IsVisible="{Binding Severity, Converter={StaticResource EnumEquals}, ConverterParameter=AiIndicator}" />
+                    <ic:SymbolIcon Symbol="Important" Foreground="#FF6B6B"
+                                   IsVisible="{Binding Severity, Converter={StaticResource EnumEquals}, ConverterParameter=Notice}" />
+                  </Panel>
+
+                  <Border Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0" Padding="8,2" CornerRadius="4"
+                          Background="{DynamicResource ControlFillColorSecondaryBrush}">
+                    <TextBlock FontSize="11" Text="{Binding Category}" />
+                  </Border>
+
+                  <StackPanel Grid.Column="2">
+                    <TextBlock FontWeight="SemiBold" Text="{Binding Title}" TextWrapping="Wrap" />
+                    <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding Detail}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Bewertung -->
+        <Border Margin="0,8,0,0" Padding="16" CornerRadius="8"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                IsVisible="{Binding Assessment, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="Bewertung" Margin="0,0,0,8" />
+            <TextBlock FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12"
+                       Text="{Binding Assessment}" TextWrapping="Wrap" />
+          </StackPanel>
+        </Border>
+
+        <!-- C2PA-Rohausgabe -->
+        <Expander Margin="0,8,0,0" Header="c2patool-Rohausgabe (C2PA-Manifest)"
+                  HorizontalAlignment="Stretch" IsVisible="{Binding HasC2paRaw}">
+          <TextBox IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" MaxHeight="320"
+                   FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12"
+                   Text="{Binding C2paRaw, Mode=OneWay}" />
+        </Expander>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

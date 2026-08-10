@@ -12,17 +12,17 @@ public static class ShellPages
     public static readonly Dictionary<ShellPage, Type> ViewTypes = new()
     {
         [ShellPage.Home] = typeof(HomePage),
-        [ShellPage.Editor] = typeof(PendingPage),
+        [ShellPage.Editor] = typeof(EditorPage),
         [ShellPage.Timeline] = typeof(PendingPage),
-        [ShellPage.Equalizer] = typeof(PendingPage),
-        [ShellPage.Mastering] = typeof(PendingPage),
+        [ShellPage.Equalizer] = typeof(EqualizerPage),
+        [ShellPage.Mastering] = typeof(MasteringPage),
         [ShellPage.SpatialAudio] = typeof(PendingPage),
         [ShellPage.Voices] = typeof(PendingPage),
-        [ShellPage.Variation] = typeof(PendingPage),
-        [ShellPage.Provenance] = typeof(PendingPage),
-        [ShellPage.Evaluation] = typeof(PendingPage),
-        [ShellPage.Settings] = typeof(PendingPage),
-        [ShellPage.Metadata] = typeof(PendingPage),
-        [ShellPage.About] = typeof(PendingPage)
+        [ShellPage.Variation] = typeof(VariationPage),
+        [ShellPage.Provenance] = typeof(ProvenancePage),
+        [ShellPage.Evaluation] = typeof(EvaluationPage),
+        [ShellPage.Settings] = typeof(SettingsPage),
+        [ShellPage.Metadata] = typeof(MetadataPage),
+        [ShellPage.About] = typeof(AboutPage)
     };
 }

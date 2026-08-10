@@ -1,0 +1,157 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:controls="using:Audiola.Controls"
+             xmlns:vm="using:Audiola.ViewModels"
+             x:Class="Audiola.Avalonia.Views.Pages.SettingsPage"
+             x:DataType="vm:SettingsViewModel">
+
+  <!-- Port von Audiola/Views/Pages/SettingsPage.xaml.
+       ui:CardControl (Icon | Beschriftung | Bedienelement) wird hier durch die Klasse
+       „settingCard" nachgebildet. -->
+
+  <UserControl.Styles>
+    <Style Selector="Border.settingCard">
+      <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="14,12" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto">
+    <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+      <TextBlock Classes="dawPageTitle" Text="Einstellungen" />
+
+      <!-- Demucs -->
+      <TextBlock Margin="0,24,0,8" FontWeight="SemiBold" Text="Stem-Trennung (Demucs)" />
+
+      <Border Classes="settingCard">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <ic:SymbolIcon Grid.Column="0" Symbol="Code" VerticalAlignment="Center" Margin="0,0,14,0" />
+          <StackPanel Grid.Column="1" VerticalAlignment="Center">
+            <TextBlock Text="Python-Pfad" FontWeight="Medium" />
+            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12"
+                       Text="z. B. python, python3 oder Pfad zur venv (Windows: Scripts\python.exe, sonst bin/python)" />
+          </StackPanel>
+          <TextBox Grid.Column="2" Width="280" VerticalAlignment="Center" Text="{Binding PythonPath, Mode=TwoWay}" />
+        </Grid>
+      </Border>
+
+      <Border Classes="settingCard">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <ic:SymbolIcon Grid.Column="0" Symbol="BrainCircuit" VerticalAlignment="Center" Margin="0,0,14,0" />
+          <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="Demucs-Modell" FontWeight="Medium" />
+          <ComboBox Grid.Column="2" Width="200" VerticalAlignment="Center"
+                    ItemsSource="{Binding AvailableModels}" SelectedItem="{Binding DemucsModel, Mode=TwoWay}" />
+        </Grid>
+      </Border>
+
+      <Border Classes="settingCard">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <ic:SymbolIcon Grid.Column="0" Symbol="Folder" VerticalAlignment="Center" Margin="0,0,14,0" />
+          <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="Ausgabeordner" FontWeight="Medium" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal">
+            <TextBox Width="280" VerticalAlignment="Center" Text="{Binding OutputDirectory, Mode=TwoWay}" />
+            <Button Margin="8,0,0,0" Content="…" Command="{Binding BrowseOutputCommand}" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+        <Button Command="{Binding CheckDemucsCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:SymbolIcon Symbol="Play" />
+            <TextBlock Text="Demucs pruefen" />
+          </StackPanel>
+        </Button>
+        <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" Text="{Binding DemucsStatus}" />
+      </StackPanel>
+
+      <!-- ElevenLabs Voice-Changer -->
+      <TextBlock Margin="0,28,0,8" FontWeight="SemiBold" Text="Stimme tauschen (ElevenLabs)" />
+
+      <Border Margin="0,0,0,8" Padding="14,12" CornerRadius="8"
+              Background="{DynamicResource DawAccentSoftBrush}"
+              BorderBrush="{DynamicResource DawAccentBrush}" BorderThickness="1">
+        <Grid ColumnDefinitions="Auto,*">
+          <ic:SymbolIcon Grid.Column="0" Symbol="Info" VerticalAlignment="Top" Margin="0,2,12,0"
+                         Foreground="{DynamicResource DawAccentLightBrush}" />
+          <StackPanel Grid.Column="1">
+            <TextBlock FontWeight="SemiBold" Text="Hinweis" />
+            <TextBlock Margin="0,2,0,0" TextWrapping="Wrap"
+                       Text="Nur eigene oder lizenzierte Zielstimmen verwenden. Das Nachbilden einer fremden Person ohne deren Einwilligung ist nicht zulässig." />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <Border Classes="settingCard">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <ic:SymbolIcon Grid.Column="0" Symbol="Key" VerticalAlignment="Center" Margin="0,0,14,0" />
+          <StackPanel Grid.Column="1" VerticalAlignment="Center">
+            <TextBlock Text="API-Key" FontWeight="Medium" />
+            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12"
+                       Text="ElevenLabs xi-api-key" />
+          </StackPanel>
+          <TextBox Grid.Column="2" Width="280" VerticalAlignment="Center"
+                   Text="{Binding ElevenLabsApiKey, Mode=TwoWay}" />
+        </Grid>
+      </Border>
+
+      <Border Classes="settingCard">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <ic:SymbolIcon Grid.Column="0" Symbol="MicRecord" VerticalAlignment="Top" Margin="0,2,14,0" />
+          <StackPanel Grid.Column="1" VerticalAlignment="Top" Margin="0,0,12,0">
+            <TextBlock Text="Eigene Stimme erstellen (ElevenLabs)" FontWeight="Medium" />
+            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" TextWrapping="Wrap"
+                       Text="Aus einer Aufnahme oder vorhandenen WAV (ElevenLabs Instant Voice Cloning). Lokale Stimmen erstellst du auf der Seite „Stimmen“." />
+          </StackPanel>
+          <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+            <TextBox Width="280" Watermark="Name der neuen Stimme" Text="{Binding NewVoiceName, Mode=TwoWay}" />
+            <controls:MicSelectorControl Margin="0,8,0,0" HorizontalAlignment="Right"
+                                         DeviceNumber="{Binding RecordDeviceNumber, Mode=TwoWay}" />
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Right">
+              <Button Command="{Binding ToggleRecordCommand}" Classes.danger="{Binding IsRecording}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <ic:SymbolIcon Symbol="Mic" />
+                  <TextBlock Text="{Binding RecordButtonText}" />
+                </StackPanel>
+              </Button>
+              <Button Margin="8,0,0,0" Command="{Binding CreateVoiceFromFileCommand}"
+                      IsEnabled="{Binding !IsVoiceBusy}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <ic:SymbolIcon Symbol="FolderArrowUp" />
+                  <TextBlock Text="Aus WAV erstellen" />
+                </StackPanel>
+              </Button>
+              <ProgressBar Width="60" Margin="8,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
+                           IsVisible="{Binding IsVoiceBusy}" />
+            </StackPanel>
+            <TextBlock Margin="0,6,0,0" HorizontalAlignment="Right"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12"
+                       Text="{Binding VoiceStatus}" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Darstellung -->
+      <TextBlock Margin="0,28,0,8" FontWeight="SemiBold" Text="Darstellung" />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Command="{Binding SetThemeLightCommand}" Classes.accent="{Binding IsLightTheme}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:SymbolIcon Symbol="WeatherSunny" />
+            <TextBlock Text="Hell" />
+          </StackPanel>
+        </Button>
+        <Button Command="{Binding SetThemeDarkCommand}" Classes.accent="{Binding IsDarkTheme}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:SymbolIcon Symbol="WeatherMoon" />
+            <TextBlock Text="Dunkel" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

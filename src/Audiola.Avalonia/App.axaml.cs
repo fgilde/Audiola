@@ -122,6 +122,15 @@ public partial class App : Application
         // Seiten + ViewModels.
         services.AddSingleton<HomePage>();
         services.AddSingleton<HomeViewModel>();
+        services.AddSingleton<EqualizerPage>();
+        services.AddSingleton<MasteringPage>();
+        services.AddSingleton<AboutPage>();
+        services.AddSingleton<VariationPage>();
+        services.AddSingleton<ProvenancePage>();
+        services.AddSingleton<MetadataPage>();
+        services.AddSingleton<EvaluationPage>();
+        services.AddSingleton<SettingsPage>();
+        services.AddSingleton<EditorPage>();
         services.AddSingleton<EditorViewModel>();
         services.AddSingleton<TimelineViewModel>();
         services.AddSingleton<EqualizerViewModel>();

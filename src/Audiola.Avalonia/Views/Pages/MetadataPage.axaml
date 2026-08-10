@@ -1,0 +1,133 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:conv="using:Audiola.Avalonia.Converters"
+             xmlns:vm="using:Audiola.ViewModels"
+             x:Class="Audiola.Avalonia.Views.Pages.MetadataPage"
+             x:DataType="vm:MetadataViewModel">
+
+  <!-- Port von Audiola/Views/Pages/MetadataPage.xaml. -->
+
+  <UserControl.Resources>
+    <conv:BytesToImageConverter x:Key="BytesToImage" />
+  </UserControl.Resources>
+
+  <Grid Margin="42,24,42,24" RowDefinitions="Auto,Auto,*">
+
+    <!-- Kopf -->
+    <StackPanel Grid.Row="0">
+      <TextBlock Classes="dawPageTitle" Text="Metadaten" />
+      <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                 Text="Song-Tags für das Projekt — werden beim Öffnen gelesen, im Projekt gespeichert und bei jedem Export geschrieben." />
+    </StackPanel>
+
+    <!-- Aktionen -->
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,16,0,0">
+      <Button Command="{Binding ImportFromFileCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <ic:SymbolIcon Symbol="DocumentArrowDown" />
+          <TextBlock Text="Tags aus Datei laden" />
+        </StackPanel>
+      </Button>
+      <Button Margin="8,0,0,0" Command="{Binding ClearCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <ic:SymbolIcon Symbol="Eraser" />
+          <TextBlock Text="Leeren" />
+        </StackPanel>
+      </Button>
+      <ProgressBar Width="60" Margin="16,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
+                   IsVisible="{Binding IsBusy}" />
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
+      <StackPanel MaxWidth="820" HorizontalAlignment="Left">
+
+        <Grid ColumnDefinitions="Auto,*">
+
+          <!-- Cover -->
+          <StackPanel Grid.Column="0" Width="180" Margin="0,0,20,0">
+            <Border Width="180" Height="180" CornerRadius="10"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+              <Panel>
+                <ic:SymbolIcon Symbol="Image" FontSize="56" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               IsVisible="{Binding !Meta.HasCover}" />
+                <Image Stretch="UniformToFill" Source="{Binding Meta.CoverArt, Converter={StaticResource BytesToImage}}" />
+              </Panel>
+            </Border>
+            <Button Margin="0,10,0,0" HorizontalAlignment="Stretch" Command="{Binding ChooseCoverCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                <ic:SymbolIcon Symbol="Image" />
+                <TextBlock Text="Cover wählen" />
+              </StackPanel>
+            </Button>
+            <Button Margin="0,6,0,0" HorizontalAlignment="Stretch" Command="{Binding RemoveCoverCommand}"
+                    IsVisible="{Binding Meta.HasCover}">
+              <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                <ic:SymbolIcon Symbol="Delete" />
+                <TextBlock Text="Cover entfernen" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <!-- Tag-Felder -->
+          <StackPanel Grid.Column="1">
+            <TextBlock FontWeight="SemiBold" Text="Titel" />
+            <TextBox Margin="0,2,0,8" Text="{Binding Meta.Title, Mode=TwoWay}" />
+            <TextBlock FontWeight="SemiBold" Text="Interpret" />
+            <TextBox Margin="0,2,0,8" Text="{Binding Meta.Artist, Mode=TwoWay}" />
+            <TextBlock FontWeight="SemiBold" Text="Album" />
+            <TextBox Margin="0,2,0,8" Text="{Binding Meta.Album, Mode=TwoWay}" />
+            <Grid ColumnDefinitions="*,90,90">
+              <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                <TextBlock FontWeight="SemiBold" Text="Genre" />
+                <TextBox Margin="0,2,0,8" Text="{Binding Meta.Genre, Mode=TwoWay}" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                <TextBlock FontWeight="SemiBold" Text="Jahr" />
+                <TextBox Margin="0,2,0,8" Text="{Binding Meta.Year, Mode=TwoWay}" />
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock FontWeight="SemiBold" Text="Track" />
+                <TextBox Margin="0,2,0,8" Text="{Binding Meta.TrackNumber, Mode=TwoWay}" />
+              </StackPanel>
+            </Grid>
+            <TextBlock FontWeight="SemiBold" Text="Album-Interpret" />
+            <TextBox Margin="0,2,0,8" Text="{Binding Meta.AlbumArtist, Mode=TwoWay}" />
+            <TextBlock FontWeight="SemiBold" Text="Kommentar" />
+            <TextBox Margin="0,2,0,8" Text="{Binding Meta.Comment, Mode=TwoWay}" />
+          </StackPanel>
+        </Grid>
+
+        <!-- Lyrics -->
+        <Border Margin="0,12,0,0" Padding="14" CornerRadius="10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <TextBlock FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Text="Liedtext" />
+              <Button Margin="16,0,0,0" Command="{Binding GenerateLyricsCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <ic:SymbolIcon Symbol="Wand" />
+                  <TextBlock Text="Aus Mix erzeugen (Whisper)" />
+                </StackPanel>
+              </Button>
+              <Button Margin="8,0,0,0" Command="{Binding GenerateLyricsCommand}" CommandParameter="eleven"
+                      IsVisible="{Binding ElevenLabsAvailable}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <ic:SymbolIcon Symbol="Cloud" />
+                  <TextBlock Text="via ElevenLabs" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+            <TextBox Margin="0,8,0,0" MinHeight="160" MaxHeight="340" AcceptsReturn="True" TextWrapping="Wrap"
+                     Watermark="Liedtext — LRC mit Zeitstempeln [mm:ss.xx] wird unterstützt und beim Export sowohl als Tag als auch als .lrc-Datei geschrieben."
+                     Text="{Binding Meta.Lyrics, Mode=TwoWay}" />
+          </StackPanel>
+        </Border>
+
+        <TextBlock Margin="0,12,0,0" Foreground="{DynamicResource TextFillColorTertiaryBrush}" FontSize="12"
+                   TextWrapping="Wrap" Text="{Binding Status}" />
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

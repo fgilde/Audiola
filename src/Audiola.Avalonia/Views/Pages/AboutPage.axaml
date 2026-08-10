@@ -1,0 +1,91 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             x:Class="Audiola.Avalonia.Views.Pages.AboutPage">
+
+  <!-- Port von Audiola/Views/Pages/AboutPage.xaml (ui:Card → Border mit dawPanel-Klasse). -->
+
+  <Grid Margin="42,24,42,24" RowDefinitions="Auto,*">
+
+    <!-- Kopf -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal">
+      <Image Source="avares://Audiola/Assets/audiola.png" Width="64" Height="64" VerticalAlignment="Center" />
+      <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
+        <TextBlock Classes="dawPageTitle" FontSize="30" Text="Audiola" />
+        <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                   Text="{Binding VersionText}" />
+      </StackPanel>
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="1" Margin="0,18,0,0" VerticalScrollBarVisibility="Auto">
+      <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+
+        <!-- Beschreibung -->
+        <Border Classes="dawPanel" Padding="18">
+          <StackPanel>
+            <TextBlock FontSize="16" FontWeight="SemiBold" Text="Modernes Audio-Studio" />
+            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Mehrspur-Timeline, Stem-Trennung (Demucs &amp; audio-separator), Mixer, Mastering, Equalizer, räumliches Audio (Dolby-Atmos-/Binaural-Export), Stimmtausch &amp; Text-zu-Sprache (ElevenLabs sowie lokale Modelle) und Effekt-Bearbeitung." />
+          </StackPanel>
+        </Border>
+
+        <!-- Links -->
+        <Border Classes="dawPanel" Margin="0,12,0,0" Padding="18">
+          <StackPanel>
+            <TextBlock FontSize="16" FontWeight="SemiBold" Text="Projekt &amp; Quellcode" />
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+              <ic:SymbolIcon Symbol="Code" VerticalAlignment="Center" Margin="0,0,10,0"
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+              <Button Classes="link" VerticalAlignment="Center" Tag="https://github.com/fgilde/Audiola"
+                      Click="OnOpenLink" Content="https://github.com/fgilde/Audiola" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+              <ic:SymbolIcon Symbol="DocumentBulletList" VerticalAlignment="Center" Margin="0,0,10,0"
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+              <Button Classes="link" VerticalAlignment="Center" Tag="https://github.com/fgilde/Audiola/issues"
+                      Click="OnOpenLink" Content="Fehler melden / Feature vorschlagen" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Technik -->
+        <Border Classes="dawPanel" Margin="0,12,0,0" Padding="18">
+          <StackPanel>
+            <TextBlock FontSize="16" FontWeight="SemiBold" Text="Technik" />
+            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="{Binding TechText}" />
+          </StackPanel>
+        </Border>
+
+        <!-- Copyright -->
+        <Border Classes="dawPanel" Margin="0,12,0,0" Padding="18">
+          <StackPanel>
+            <TextBlock FontSize="16" FontWeight="SemiBold" Text="Copyright" />
+            <TextBlock Margin="0,8,0,0" FontWeight="SemiBold" Text="{Binding CopyrightText}" />
+            <TextBlock Margin="0,4,0,0" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="Alle Rechte vorbehalten." />
+          </StackPanel>
+        </Border>
+
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+
+  <UserControl.Styles>
+    <!-- Hyperlink-Ersatz: Avalonia hat kein Hyperlink-Inline. -->
+    <Style Selector="Button.link">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Foreground" Value="{DynamicResource DawAccentLightBrush}" />
+    </Style>
+    <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="TextBlock.TextDecorations" Value="Underline" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>

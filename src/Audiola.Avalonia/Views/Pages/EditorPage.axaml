@@ -1,0 +1,182 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:controls="using:Audiola.Controls"
+             xmlns:vm="using:Audiola.ViewModels"
+             x:Class="Audiola.Avalonia.Views.Pages.EditorPage"
+             x:DataType="vm:EditorViewModel">
+
+  <!-- Port von Audiola/Views/Pages/EditorPage.xaml. -->
+
+  <Grid Margin="42,24,42,24" RowDefinitions="Auto,Auto,*,Auto">
+
+    <!-- Kopf: Zurück-Button oben links + Spur-Titel -->
+    <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+      <Button Grid.Column="0" VerticalAlignment="Top" Margin="0,2,14,0"
+              Command="{Binding CloseEditorCommand}" ToolTip.Tip="Zurück ins Studio (ohne zu übernehmen)">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <ic:SymbolIcon Symbol="ArrowLeft" />
+          <TextBlock Text="Zurück" />
+        </StackPanel>
+      </Button>
+      <StackPanel Grid.Column="1">
+        <TextBlock Classes="dawPageTitle" Text="Spur bearbeiten" />
+        <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                   Text="{Binding DisplayName}" />
+      </StackPanel>
+    </Grid>
+
+    <!-- Werkzeugleiste + Effekt-Einstellungen -->
+    <StackPanel Grid.Row="1" IsVisible="{Binding HasTrack}">
+      <Border Margin="0,14,0,0" Padding="10,8" CornerRadius="10"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <WrapPanel Orientation="Horizontal">
+          <Button Margin="0,0,10,6" Classes="accent" Command="{Binding BakeToStudioCommand}"
+                  IsVisible="{Binding HasClipTarget}" ToolTip.Tip="Bearbeitung in den Clip übernehmen">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="Timeline" />
+              <TextBlock Text="Zurück ins Studio" />
+            </StackPanel>
+          </Button>
+          <Button Margin="0,0,6,6" Command="{Binding TrimCommand}" ToolTip.Tip="Nur die Auswahl behalten">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="Crop" /><TextBlock Text="Trimmen" />
+            </StackPanel>
+          </Button>
+          <Button Margin="0,0,6,6" Command="{Binding DeleteCommand}" ToolTip.Tip="Auswahl entfernen und zusammenfügen">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="Cut" /><TextBlock Text="Löschen" />
+            </StackPanel>
+          </Button>
+          <Button Margin="0,0,6,6" Command="{Binding SilenceCommand}" ToolTip.Tip="Auswahl stummschalten">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="SpeakerMute" /><TextBlock Text="Stille" />
+            </StackPanel>
+          </Button>
+          <Button Margin="0,0,6,6" Command="{Binding FadeInCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="ArrowTrending" /><TextBlock Text="Fade-In" />
+            </StackPanel>
+          </Button>
+          <Button Margin="0,0,6,6" Command="{Binding FadeOutCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="ArrowTrendingDown" /><TextBlock Text="Fade-Out" />
+            </StackPanel>
+          </Button>
+
+          <Border Width="1" Margin="6,2,10,6" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
+
+          <Button Margin="0,0,6,6" Command="{Binding NormalizeCommand}" ToolTip.Tip="Auf −1 dBFS anheben">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="Gauge" /><TextBlock Text="Normalisieren" />
+            </StackPanel>
+          </Button>
+          <Button Margin="0,0,6,6" Command="{Binding EchoCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="SoundWaveCircle" /><TextBlock Text="Echo" />
+            </StackPanel>
+          </Button>
+          <Button Margin="0,0,6,6" Command="{Binding ReverbCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="Sparkle" /><TextBlock Text="Hall" />
+            </StackPanel>
+          </Button>
+          <Button Margin="0,0,6,6" Command="{Binding WidenCommand}" ToolTip.Tip="Stereo-Breite erhöhen">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="ArrowExpand" /><TextBlock Text="Stereo +" />
+            </StackPanel>
+          </Button>
+          <Button Margin="0,0,6,6" Command="{Binding ReverseCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="ArrowSync" /><TextBlock Text="Umkehren" />
+            </StackPanel>
+          </Button>
+
+          <Border Width="1" Margin="6,2,10,6" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
+
+          <Button Margin="0,0,6,6" Command="{Binding UndoCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="ArrowUndo" /><TextBlock Text="Undo" />
+            </StackPanel>
+          </Button>
+          <Button Margin="0,0,6,6" Command="{Binding ClearSelectionCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="SelectObjectSkew" /><TextBlock Text="Auswahl löschen" />
+            </StackPanel>
+          </Button>
+          <Button Margin="0,0,6,6" Classes="accent" Command="{Binding ExportCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="Save" /><TextBlock Text="Exportieren" />
+            </StackPanel>
+          </Button>
+        </WrapPanel>
+      </Border>
+
+      <Expander Margin="0,8,0,0" Header="Effekt-Einstellungen" HorizontalAlignment="Stretch">
+        <StackPanel>
+          <!-- Live-Vorschau -->
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <ToggleSwitch Content="Live-Vorschau (beim Abspielen)" IsChecked="{Binding LivePreview, Mode=TwoWay}" />
+            <CheckBox Margin="20,0,0,0" VerticalAlignment="Center" Content="Echo" IsChecked="{Binding PreviewEcho, Mode=TwoWay}" />
+            <CheckBox Margin="12,0,0,0" VerticalAlignment="Center" Content="Hall" IsChecked="{Binding PreviewReverb, Mode=TwoWay}" />
+            <CheckBox Margin="12,0,0,0" VerticalAlignment="Center" Content="Stereo" IsChecked="{Binding PreviewWiden, Mode=TwoWay}" />
+          </StackPanel>
+          <UniformGrid Columns="2">
+            <StackPanel Margin="0,4,16,4">
+              <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                         Text="{Binding EchoDelayMs, StringFormat='Echo · Verzögerung: {0:F0} ms'}" />
+              <Slider Minimum="50" Maximum="1000" Value="{Binding EchoDelayMs, Mode=TwoWay}" />
+              <TextBlock FontSize="11" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                         Text="{Binding EchoFeedback, StringFormat='Echo · Feedback: {0:P0}'}" />
+              <Slider Minimum="0" Maximum="0.9" Value="{Binding EchoFeedback, Mode=TwoWay}" />
+              <TextBlock FontSize="11" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                         Text="{Binding EchoMix, StringFormat='Echo · Mix: {0:P0}'}" />
+              <Slider Minimum="0" Maximum="1" Value="{Binding EchoMix, Mode=TwoWay}" />
+            </StackPanel>
+            <StackPanel Margin="0,4,0,4">
+              <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                         Text="{Binding ReverbMix, StringFormat='Hall · Menge: {0:P0}'}" />
+              <Slider Minimum="0" Maximum="1" Value="{Binding ReverbMix, Mode=TwoWay}" />
+              <TextBlock FontSize="11" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                         Text="{Binding WidenAmount, StringFormat='Stereo · Breite: {0:F2}×'}" />
+              <Slider Minimum="0" Maximum="2" Value="{Binding WidenAmount, Mode=TwoWay}" />
+            </StackPanel>
+          </UniformGrid>
+        </StackPanel>
+      </Expander>
+    </StackPanel>
+
+    <!-- Große Wellenform -->
+    <Border Grid.Row="2" Margin="0,14,0,14" Padding="12" CornerRadius="10"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+      <Panel>
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                   Text="Keine Datei geladen — über „Start“ öffnen oder per Drag &amp; Drop ziehen."
+                   IsVisible="{Binding !HasTrack}" />
+
+        <controls:WaveformControl Name="Waveform" Cursor="Ibeam"
+                                  PointerPressed="Waveform_PointerPressed"
+                                  PointerMoved="Waveform_PointerMoved"
+                                  PointerReleased="Waveform_PointerReleased"
+                                  Peaks="{Binding Peaks}"
+                                  Progress="{Binding Transport.Progress}"
+                                  SelectionStart="{Binding SelectionStart}"
+                                  SelectionEnd="{Binding SelectionEnd}"
+                                  IsVisible="{Binding HasTrack}" />
+      </Panel>
+    </Border>
+
+    <!-- Auswahl-Info + Metadaten -->
+    <StackPanel Grid.Row="3" IsVisible="{Binding HasTrack}">
+      <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding SelectionInfo}" />
+      <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+        <ic:SymbolIcon Symbol="Info" VerticalAlignment="Center" Margin="0,0,10,0" />
+        <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding FormatInfo}" />
+        <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="12"
+                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                   Text="{Binding PathInfo}" TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+    </StackPanel>
+  </Grid>
+</UserControl>

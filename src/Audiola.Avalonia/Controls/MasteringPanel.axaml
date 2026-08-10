@@ -1,0 +1,183 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:controls="using:Audiola.Controls"
+             xmlns:vm="using:Audiola.ViewModels"
+             x:Class="Audiola.Controls.MasteringPanel"
+             x:DataType="vm:MasteringViewModel">
+
+  <!-- Gemeinsames Mastering-Panel: identisch auf der Mastering-Seite (Studio-Mix) und im
+       „Spur mastern"-Dialog (Einzelspur). DataContext = MasteringViewModel.
+       Port von Audiola/Controls/MasteringPanel.xaml. -->
+
+  <StackPanel>
+    <!-- Vorschau & A/B -->
+    <TextBlock Margin="0,0,0,8" FontWeight="SemiBold" Text="Vorschau" />
+    <Border Classes="dawPanel" Padding="14">
+      <StackPanel>
+        <controls:WaveformControl Name="Waveform" Height="70" Cursor="Hand"
+                                  PointerPressed="Waveform_PointerPressed"
+                                  Peaks="{Binding MixPeaks}"
+                                  Progress="{Binding Transport.Progress}"
+                                  ToolTip.Tip="Klicken zum Springen" />
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center" Spacing="6">
+          <Button Width="44" Command="{Binding Transport.PlayPauseCommand}">
+            <ic:SymbolIcon Symbol="Play" />
+          </Button>
+          <Button Width="44" Command="{Binding Transport.StopCommand}">
+            <ic:SymbolIcon Symbol="Stop" />
+          </Button>
+          <ToggleSwitch Margin="10,0,0,0" VerticalAlignment="Center" Content="Master (A/B)"
+                        IsChecked="{Binding PreviewMaster, Mode=TwoWay}"
+                        ToolTip.Tip="Mastering live an/aus schalten und vergleichen" />
+          <TextBlock Margin="10,0,0,0" VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding StatusText}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Profile -->
+    <TextBlock Margin="0,20,0,8" FontWeight="SemiBold" Text="Preset" />
+    <Border Classes="dawPanel" Padding="16">
+      <StackPanel>
+        <StackPanel Orientation="Horizontal">
+          <ic:SymbolIcon Symbol="Wand" VerticalAlignment="Center" Margin="0,0,12,0" />
+          <ComboBox Width="240" VerticalAlignment="Center"
+                    ItemsSource="{Binding ProfileNames}"
+                    SelectedItem="{Binding SelectedProfile, Mode=TwoWay}" />
+          <Button Margin="8,0,0,0" Command="{Binding DeleteProfileCommand}" ToolTip.Tip="Eigenes Profil löschen">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="Delete" />
+              <TextBlock Text="Löschen" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="36,10,0,0">
+          <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                     Text="Eigenes Profil:" />
+          <TextBox Width="200" Margin="8,0,0,0" Watermark="Name…" Text="{Binding NewProfileName, Mode=TwoWay}" />
+          <Button Margin="8,0,0,0" Command="{Binding SaveProfileCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="Save" />
+              <TextBlock Text="Speichern" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Bearbeitung (Karten nebeneinander) -->
+    <WrapPanel Margin="0,18,0,0">
+      <Border Classes="dawPanel" Width="352" Margin="0,0,12,12" Padding="16">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Text="Equalizer" Margin="0,0,0,8" />
+          <!-- Live-Frequenzgang -->
+          <Border Height="118" Margin="0,0,0,10" CornerRadius="8" ClipToBounds="True">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Color="#1E2230" Offset="0" />
+                <GradientStop Color="#14161E" Offset="1" />
+              </LinearGradientBrush>
+            </Border.Background>
+            <Viewbox Stretch="Fill">
+              <Canvas Width="1000" Height="200">
+                <Line StartPoint="0,100" EndPoint="1000,100" Stroke="#3A3F4C" StrokeThickness="1.5" />
+                <Line StartPoint="0,55" EndPoint="1000,55" Stroke="#262A34" StrokeThickness="1" />
+                <Line StartPoint="0,145" EndPoint="1000,145" Stroke="#262A34" StrokeThickness="1" />
+                <Polyline Points="{Binding EqCurve}" StrokeThickness="3.5"
+                          StrokeLineCap="Round" StrokeJoin="Round" Stroke="#6FA0FF">
+                  <Polyline.Effect>
+                    <DropShadowEffect Color="#5B8CFF" BlurRadius="12" OffsetX="0" OffsetY="0" Opacity="0.7" />
+                  </Polyline.Effect>
+                </Polyline>
+              </Canvas>
+            </Viewbox>
+          </Border>
+          <CheckBox Content="High-Pass aktiv" IsChecked="{Binding HighPassEnabled, Mode=TwoWay}" />
+          <TextBlock Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="{Binding HighPassHz, StringFormat='High-Pass: {0:F0} Hz'}" />
+          <Slider Minimum="20" Maximum="200" Value="{Binding HighPassHz, Mode=TwoWay}" />
+          <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="{Binding LowShelfGainDb, StringFormat='Bass: {0:+0.0;-0.0;0} dB'}" />
+          <Slider Minimum="-12" Maximum="12" Value="{Binding LowShelfGainDb, Mode=TwoWay}" />
+          <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="{Binding MidGainDb, StringFormat='Mitten: {0:+0.0;-0.0;0} dB'}" />
+          <Slider Minimum="-12" Maximum="12" Value="{Binding MidGainDb, Mode=TwoWay}" />
+          <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="{Binding HighShelfGainDb, StringFormat='Höhen: {0:+0.0;-0.0;0} dB'}" />
+          <Slider Minimum="-12" Maximum="12" Value="{Binding HighShelfGainDb, Mode=TwoWay}" />
+        </StackPanel>
+      </Border>
+
+      <Border Classes="dawPanel" Width="352" Margin="0,0,12,12" Padding="16">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Text="Kompressor" Margin="0,0,0,8" />
+          <CheckBox Content="Kompressor aktiv" IsChecked="{Binding CompressorEnabled, Mode=TwoWay}" />
+          <TextBlock Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="{Binding ThresholdDb, StringFormat='Threshold: {0:F0} dB'}" />
+          <Slider Minimum="-48" Maximum="0" Value="{Binding ThresholdDb, Mode=TwoWay}" />
+          <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="{Binding Ratio, StringFormat='Ratio: {0:F1}:1'}" />
+          <Slider Minimum="1" Maximum="20" Value="{Binding Ratio, Mode=TwoWay}" />
+          <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="{Binding MakeupGainDb, StringFormat='Makeup: {0:+0.0;-0.0;0} dB'}" />
+          <Slider Minimum="0" Maximum="24" Value="{Binding MakeupGainDb, Mode=TwoWay}" />
+        </StackPanel>
+      </Border>
+
+      <Border Classes="dawPanel" Width="352" Margin="0,0,12,12" Padding="16">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Text="Loudness (LUFS)" Margin="0,0,0,8" />
+          <!-- LUFS-Lehre: Eingangslautheit auf der Skala −24 … −6 -->
+          <Grid Height="14" Margin="0,0,0,10">
+            <Border CornerRadius="7" Background="#20242E" />
+            <ProgressBar Minimum="0" Maximum="1" Value="{Binding InputLufsPercent}"
+                         Background="Transparent" BorderThickness="0">
+              <ProgressBar.Foreground>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                  <GradientStop Color="#2E7D32" Offset="0.0" />
+                  <GradientStop Color="#C0CA33" Offset="0.6" />
+                  <GradientStop Color="#E53935" Offset="1.0" />
+                </LinearGradientBrush>
+              </ProgressBar.Foreground>
+            </ProgressBar>
+          </Grid>
+          <TextBlock Margin="0,0,0,2" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="{Binding InputLufsLabel, StringFormat='Eingang: {0}'}" />
+          <CheckBox Content="Auf Ziel-Lautheit normalisieren" IsChecked="{Binding NormalizeLoudness, Mode=TwoWay}" />
+          <TextBlock Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="{Binding TargetLufs, StringFormat='Ziel: {0:F0} LUFS (Streaming ≈ -14)'}" />
+          <Slider Minimum="-24" Maximum="-6" Value="{Binding TargetLufs, Mode=TwoWay}" />
+          <Button Margin="0,12,0,0" Command="{Binding AnalyzeCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="Pulse" />
+              <TextBlock Text="LUFS messen" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </Border>
+    </WrapPanel>
+
+    <!-- Aktionen (im „Spur mastern"-Dialog ausgeblendet — dort liegen sie im Dialog-Footer) -->
+    <StackPanel Orientation="Horizontal" Margin="0,4,0,0" Spacing="8"
+                IsVisible="{Binding $parent[controls:MasteringPanel].ShowActions}">
+      <Button Classes="accent" Command="{Binding ApplyToTrackCommand}"
+              IsVisible="{Binding IsTrackSource}"
+              ToolTip.Tip="Spur mastern und im Studio ersetzen (Strg+Z macht es rückgängig)">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <ic:SymbolIcon Symbol="CheckmarkCircle" />
+          <TextBlock Text="Auf Spur anwenden" />
+        </StackPanel>
+      </Button>
+      <!-- Ohne Spur-Quelle ist der Export die Hauptaktion, mit Spur-Quelle die zweite. -->
+      <Button Command="{Binding ExportCommand}" Classes.accent="{Binding !IsTrackSource}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <ic:SymbolIcon Symbol="Save" />
+          <TextBlock Text="Mastern &amp; exportieren" />
+        </StackPanel>
+      </Button>
+      <ProgressBar Width="80" Margin="8,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
+                   IsVisible="{Binding IsBusy}" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>
