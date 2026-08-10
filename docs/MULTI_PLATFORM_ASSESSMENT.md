@@ -94,3 +94,31 @@ updates. Windows remains a supported target throughout the staged rollout.
   the incompatible styling, property, template, and event areas.
 - Velopack distribution documentation: release feeds, macOS `.pkg`, Linux
   `.AppImage`, and hosted update assets.
+
+## Stand der Umsetzung
+
+Die Migration ist durchgeführt. Beide Oberflächen teilen dieselbe Logik; die
+Avalonia-Fassung wird auf Windows, macOS und Linux ausgeliefert.
+
+| Bereich | Umsetzung |
+| --- | --- |
+| Geteilte Schicht | `Audiola.App` — alle ViewModels und Dienste, host-neutral über `INotifier`, `IFileDialogs`, `IAppDialogs`, `IShellNavigation`, `IAppTheme`, `DispatcherHelper`, `UiTimer` |
+| Oberfläche | Alle 13 Seiten, 11 Steuerelemente und 9 Dialoge portiert; Theme über Avalonias `ThemeDictionaries` (Hell/Dunkel ohne Brush-Ersetzung) |
+| Wiedergabe / Aufnahme | `PortableWaveOut` / `PortableWaveIn`: unter Windows NAudio, sonst miniaudio (CoreAudio, ALSA/PulseAudio) |
+| Decode | `PortableAudioFile`: unter Windows `AudioFileReader`, sonst FFmpeg-Vorstufe nach WAV mit Zwischenspeicher |
+| Encode | MP3/AAC unter Windows über Media Foundation, sonst FFmpeg; FLAC durchgängig über FLAKE |
+| Geräte | `AudioDevices.InputNames` statt `WaveInEvent.DeviceCount`; die Mikrofonauswahl fragt `IAudioPlatform` |
+| Releases | Ein Produkt für alle Plattformen aus `src/Audiola.Avalonia` |
+
+### Offene Punkte
+
+- Die Abnahmematrix ist unter Windows durchgelaufen (Projekt-Roundtrip, Timeline,
+  Wiedergabe, Export, Seitenwechsel). Auf macOS und Linux fehlt der Durchlauf auf
+  echter Hardware — insbesondere Mikrofon-Auswahl, Aufnahme-Latenz und die
+  FFmpeg-Decode-Strecke.
+- `src/Audiola` (WPF) bleibt als Windows-Rückfallebene im Repo und baut weiter,
+  wird aber nicht mehr veröffentlicht. Nach bestätigtem Durchlauf auf macOS und
+  Linux kann es entfernt werden.
+- Die Dateiverknüpfung für `.audiola` ist weiter Windows-spezifisch
+  (`FileAssociation`, Registry). macOS/Linux brauchen `Info.plist` bzw. eine
+  `.desktop`-Datei mit MIME-Typ.
