@@ -43,6 +43,12 @@ public interface ILocalVoiceService
     /// <summary>Lädt ein Modell herunter / installiert es lokal.</summary>
     Task DownloadModelAsync(string modelId, IProgress<string>? progress = null, CancellationToken ct = default);
 
+    /// <summary>
+    /// Entfernt ein Modell wieder: Gewichte, Marker und — wo es nicht geteilt wird — das
+    /// Python-Paket. Gibt frei gewordenen Platz als Text zurück, falls ermittelbar.
+    /// </summary>
+    Task RemoveModelAsync(string modelId, IProgress<string>? progress = null, CancellationToken ct = default);
+
     /// <summary>Prüft torch/CUDA in der verwalteten Umgebung.</summary>
     Task<GpuStatus> CheckGpuAsync(CancellationToken ct = default);
 

@@ -21,4 +21,7 @@ public interface IPythonEnvironment
 
     /// <summary>Installiert aus einer requirements.txt (für repo-basierte Modelle wie seed-vc).</summary>
     Task InstallRequirementsAsync(string requirementsFile, IProgress<string>? progress = null, CancellationToken ct = default);
+
+    /// <summary>Deinstalliert Pakete wieder (für das Entfernen eines Modells).</summary>
+    Task UninstallAsync(IReadOnlyList<string> packages, IProgress<string>? progress = null, CancellationToken ct = default);
 }

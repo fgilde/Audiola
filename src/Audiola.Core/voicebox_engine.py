@@ -82,18 +82,117 @@ def seedvc_repo(models_dir):
     return os.path.join(models_dir, "seed-vc")
 
 
+# Python-Paket je Modell — für die Erkennung ohne Marker-Datei.
+MODEL_PACKAGE = {
+    "kokoro": "kokoro",
+    "qwen3-tts": "qwen_tts",
+    "xtts-v2": "TTS",
+    "chatterbox": "chatterbox",
+}
+
+
+def package_present(model_id):
+    """Ist das Paket des Modells importierbar? find_spec laedt es nicht (torch bleibt aussen vor)."""
+    name = "faster_whisper" if model_id.startswith("whisper-") else MODEL_PACKAGE.get(model_id)
+    if not name:
+        return False
+    try:
+        import importlib.util
+        return importlib.util.find_spec(name) is not None
+    except Exception:
+        return False
+
+
+def hf_cache_dir():
+    return (os.environ.get("HF_HUB_CACHE") or os.environ.get("HUGGINGFACE_HUB_CACHE")
+            or os.path.join(os.path.expanduser("~"), ".cache", "huggingface", "hub"))
+
+
+def weights_present(model_id):
+    """Liegen die Gewichte im Hugging-Face-Cache? Reiner Pfadtest, damit die Liste schnell bleibt."""
+    for repo_id in weight_repos(model_id):
+        if os.path.isdir(os.path.join(hf_cache_dir(), "models--" + repo_id.replace("/", "--"))):
+            return True
+    return False
+
+
 def is_installed(models_dir, model_id):
     if not models_dir:
         return False
     if model_id == "seed-vc":
         return os.path.isfile(os.path.join(seedvc_repo(models_dir), "inference.py"))
-    return os.path.exists(marker(models_dir, model_id))
+    if os.path.exists(marker(models_dir, model_id)):
+        return True
+
+    # Ohne Marker galt ein Modell als fehlend, obwohl es längst da war — dann wurde es immer
+    # wieder neu geladen. Deshalb zusätzlich am Bestand erkennen und den Marker nachtragen.
+    # Whisper-Groessen teilen sich ein pip-Paket, dort entscheiden allein die Gewichte.
+    present = (package_present(model_id) and weights_present(model_id)
+               if model_id.startswith("whisper-") else package_present(model_id))
+    if present:
+        try:
+            os.makedirs(models_dir, exist_ok=True)
+            open(marker(models_dir, model_id), "w").close()
+        except Exception:
+            pass
+        return True
+    return False
 
 
 def cmd_list_models(args):
     models = [{**m, "installed": is_installed(args.models_dir, m["id"])} for m in CATALOG]
     whisper = [{**w, "installed": is_installed(args.models_dir, w["id"])} for w in WHISPER_CATALOG]
     print(json.dumps({"models": models, "whisper": whisper, "device": resolve_device(args.device)}))
+
+
+# Hugging-Face-Repos der Gewichte — fuer "remove", damit auch die Gigabytes verschwinden.
+MODEL_WEIGHTS = {
+    "qwen3-tts": ["Qwen/Qwen3-TTS-12Hz-1.7B-Base"],
+    "kokoro": ["hexgrad/Kokoro-82M"],
+    "chatterbox": ["ResembleAI/chatterbox"],
+}
+
+
+def weight_repos(model_id):
+    if model_id.startswith("whisper-"):
+        return [f"Systran/faster-whisper-{whisper_size(model_id)}"]
+    return MODEL_WEIGHTS.get(model_id, [])
+
+
+def cmd_remove(args):
+    """Entfernt Marker und Gewichte eines Modells. Die pip-Pakete deinstalliert Audiola selbst,
+    weil sie sich Abhaengigkeiten mit anderen Modellen teilen."""
+    removed = []
+
+    if args.model == "seed-vc":
+        import shutil
+        repo = seedvc_repo(args.models_dir)
+        if os.path.isdir(repo):
+            shutil.rmtree(repo, ignore_errors=True)
+            removed.append(repo)
+    else:
+        m = marker(args.models_dir, args.model)
+        if os.path.exists(m):
+            try:
+                os.remove(m)
+                removed.append(m)
+            except OSError as e:
+                log(f"Marker liess sich nicht loeschen: {e}")
+
+        for repo_id in weight_repos(args.model):
+            try:
+                from huggingface_hub import scan_cache_dir
+                cache = scan_cache_dir()
+                hits = [r for r in cache.repos if r.repo_id == repo_id]
+                for r in hits:
+                    strategy = cache.delete_revisions(*[rev.commit_hash for rev in r.revisions])
+                    strategy.execute()
+                    removed.append(f"{repo_id} ({strategy.expected_freed_size_str})")
+            except Exception as e:
+                log(f"Gewichte von {repo_id} blieben liegen: {e}")
+
+    print(json.dumps({"removed": removed}))
+    log("Entfernt." if removed else "Nichts zu entfernen.")
 
 
 def cmd_download(args):
@@ -411,10 +510,13 @@ def main():
     sp = sub.add_parser("separate"); sp.add_argument("--input", required=True); sp.add_argument("--out-dir", required=True); sp.add_argument("--model", required=True)
     at = sub.add_parser("autotune"); at.add_argument("--input", required=True); at.add_argument("--reference", required=True); at.add_argument("--out", required=True); at.add_argument("--strength", default="1.0")
 
+    rm = sub.add_parser("remove"); rm.add_argument("--model", required=True); rm.add_argument("--models-dir", default="")
+
     args = p.parse_args()
     {
         "list-models": cmd_list_models,
         "download": cmd_download,
+        "remove": cmd_remove,
         "tts": cmd_tts,
         "transcribe": cmd_transcribe,
         "vc": cmd_vc,

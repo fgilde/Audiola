@@ -56,6 +56,15 @@ public sealed class PythonEnvironmentService : IPythonEnvironment
             throw new InvalidOperationException($"pip install fehlgeschlagen ({string.Join(", ", packages)}): {Short(err)}");
     }
 
+    public async Task UninstallAsync(IReadOnlyList<string> packages, IProgress<string>? progress = null, CancellationToken ct = default)
+    {
+        if (packages.Count == 0 || !Exists) return;
+        progress?.Report($"Entferne: {string.Join(", ", packages)} …");
+        var (code, err) = await RunAsync(PythonExe, ["-m", "pip", "uninstall", "-y", .. packages], progress, ct);
+        // Ein nicht installiertes Paket ist kein Fehler — pip meldet das nur.
+        if (code != 0) progress?.Report($"pip uninstall meldete: {Short(err)}");
+    }
+
     public async Task InstallRequirementsAsync(string requirementsFile, IProgress<string>? progress = null, CancellationToken ct = default)
     {
         if (!File.Exists(requirementsFile)) return;

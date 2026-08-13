@@ -201,11 +201,19 @@
                                  Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                  Text="{Binding SizeText, StringFormat='≈ {0}'}" />
                     </StackPanel>
-                    <Button Grid.Column="1" VerticalAlignment="Center" ToolTip.Tip="Modell herunterladen"
-                            Command="{ReflectionBinding $parent[UserControl].DataContext.DownloadModelCommand}"
-                            CommandParameter="{Binding}">
-                      <ic:SymbolIcon Symbol="ArrowDownload" />
-                    </Button>
+                    <!-- Laden nur, solange es fehlt; ist es da, kann es wieder weg (Gigabytes). -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                      <Button ToolTip.Tip="Modell herunterladen" IsVisible="{Binding !Installed}"
+                              Command="{ReflectionBinding $parent[UserControl].DataContext.DownloadModelCommand}"
+                              CommandParameter="{Binding}">
+                        <ic:SymbolIcon Symbol="ArrowDownload" />
+                      </Button>
+                      <Button ToolTip.Tip="Modell entfernen (Gewichte löschen)" IsVisible="{Binding Installed}"
+                              Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveModelCommand}"
+                              CommandParameter="{Binding}">
+                        <ic:SymbolIcon Symbol="Delete" />
+                      </Button>
+                    </StackPanel>
                   </Grid>
                 </Border>
               </DataTemplate>
@@ -234,11 +242,18 @@
                                  Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                  Text="{Binding SizeText, StringFormat='≈ {0}'}" />
                     </StackPanel>
-                    <Button Grid.Column="1" VerticalAlignment="Center" ToolTip.Tip="Modell herunterladen"
-                            Command="{ReflectionBinding $parent[UserControl].DataContext.DownloadModelCommand}"
-                            CommandParameter="{Binding}">
-                      <ic:SymbolIcon Symbol="ArrowDownload" />
-                    </Button>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                      <Button ToolTip.Tip="Modell herunterladen" IsVisible="{Binding !Installed}"
+                              Command="{ReflectionBinding $parent[UserControl].DataContext.DownloadModelCommand}"
+                              CommandParameter="{Binding}">
+                        <ic:SymbolIcon Symbol="ArrowDownload" />
+                      </Button>
+                      <Button ToolTip.Tip="Gewichte löschen" IsVisible="{Binding Installed}"
+                              Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveModelCommand}"
+                              CommandParameter="{Binding}">
+                        <ic:SymbolIcon Symbol="Delete" />
+                      </Button>
+                    </StackPanel>
                   </Grid>
                 </Border>
               </DataTemplate>

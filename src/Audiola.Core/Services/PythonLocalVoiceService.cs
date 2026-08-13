@@ -118,6 +118,37 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
             throw new InvalidOperationException($"Download fehlgeschlagen: {Short(err)}");
     }
 
+    public async Task RemoveModelAsync(string modelId, IProgress<string>? progress = null, CancellationToken ct = default)
+    {
+        RequireScript();
+        progress?.Report($"Entferne {modelId} …");
+
+        // 1) Gewichte, Marker und (bei seed-vc) das ganze Repo inklusive eigener Umgebung.
+        var (code, stdout, err) = await RunAsync(["remove", "--model", modelId, "--models-dir", ModelsDir], progress, ct);
+        if (code != 0)
+            throw new InvalidOperationException($"Entfernen fehlgeschlagen: {Short(err)}");
+
+        // 2) Das Python-Paket nur, wenn es kein anderes Modell braucht. Whisper-Größen teilen
+        //    faster-whisper, deshalb bleibt es stehen — dort zählen ohnehin nur die Gewichte.
+        var pkg = ExclusivePackageFor(modelId);
+        if (pkg is not null) await _env.UninstallAsync([pkg], progress, ct);
+
+        var freed = ExtractJson(stdout);
+        progress?.Report(freed.Contains("removed\":[]", StringComparison.Ordinal)
+            ? "Es war nichts (mehr) installiert."
+            : "Entfernt.");
+    }
+
+    /// <summary>Das Paket, das nur zu diesem Modell gehört — <c>null</c>, wenn es geteilt wird.</summary>
+    private static string? ExclusivePackageFor(string modelId) => modelId switch
+    {
+        "qwen3-tts" => "qwen-tts",
+        "xtts-v2" => "TTS",
+        "kokoro" => "kokoro",
+        "chatterbox" => "chatterbox-tts",
+        _ => null,   // Whisper (geteiltes faster-whisper) und seed-vc (eigene Umgebung, schon gelöscht)
+    };
+
     /// <summary>Stellt seed-vc bereit: Repo als ZIP laden + entpacken (kein Git nötig) + torch + requirements ins venv.</summary>
     private async Task ProvisionSeedVcAsync(IProgress<string>? progress, CancellationToken ct)
     {
@@ -168,17 +199,26 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         {
             // 1) seed-vcs requirements.txt installieren. ACHTUNG: sie pinnt torch==2.4.0, das von PyPI
             //    als reiner CPU-Build kommt — deshalb wird torch danach ggf. durch CUDA ersetzt.
-            await RunPipAsync(venvPy, ["-m", "pip", "install", "-r", Path.Combine(repo, "requirements.txt")], progress, ct);
+            //    Der Rückgabewert MUSS geprüft werden: sonst wird unten der Fertig-Marker gesetzt,
+            //    die Einrichtung gilt als erledigt und scheitert später beim Tausch ohne Erklärung.
+            var (reqCode, reqErr) = await RunPipAsync(
+                venvPy, ["-m", "pip", "install", "-r", Path.Combine(repo, "requirements.txt")], progress, ct);
+            if (reqCode != 0)
+                throw new InvalidOperationException($"Abhängigkeiten von seed-vc ließen sich nicht installieren: {Short(reqErr)}");
 
             // 2) Bei NVIDIA-GPU das CPU-torch durch den passenden CUDA-Build (gleiche Version) ersetzen,
             //    sonst läuft die Diffusion auf der CPU und der Tausch dauert ewig.
             if (ShouldUseCuda())
             {
                 progress?.Report("Installiere CUDA-Torch für seed-vc (GPU-Beschleunigung) …");
-                await RunPipAsync(venvPy, ["-m", "pip", "install", "--force-reinstall", "--no-deps",
+                var (cudaCode, cudaErr) = await RunPipAsync(venvPy, ["-m", "pip", "install", "--force-reinstall", "--no-deps",
                     "torch==2.4.0", "torchvision==0.19.0", "torchaudio==2.4.0", "--index-url", GpuDetect.CudaIndexUrl], progress, ct);
+                if (cudaCode != 0)
+                    throw new InvalidOperationException($"CUDA-Torch für seed-vc ließ sich nicht installieren: {Short(cudaErr)}");
             }
-            await RunPipAsync(venvPy, ["-m", "pip", "install", "hf_xet"], progress, ct); // schnellerer HF-Download
+
+            // hf_xet beschleunigt nur den Download der Gewichte — ein Fehlschlag ist verschmerzbar.
+            await RunPipAsync(venvPy, ["-m", "pip", "install", "hf_xet"], progress, ct);
             try { File.WriteAllText(depsMarker, "ok"); } catch { }
         }
     }

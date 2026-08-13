@@ -154,6 +154,26 @@ public sealed partial class VoicesViewModel : ObservableObject
         finally { IsBusy = false; }
     }
 
+    /// <summary>Entfernt ein Modell wieder — Gewichte sind mehrere Gigabyte.</summary>
+    [RelayCommand]
+    private async Task RemoveModel(LocalVoiceModel? model)
+    {
+        if (model is null) return;
+        IsBusy = true; Status = $"Entferne {model.Name} …";
+        try
+        {
+            await _local.RemoveModelAsync(model.Id, new Progress<string>(s => Status = s));
+            _snackbar.Success("Modell entfernt", model.Name);
+            await LoadModelsAsync();
+        }
+        catch (Exception ex)
+        {
+            Status = "Fehler beim Entfernen.";
+            UiError.Show("Entfernen fehlgeschlagen", ex.Message);
+        }
+        finally { IsBusy = false; }
+    }
+
     [RelayCommand]
     private async Task BrowseSampleAsync()
     {
