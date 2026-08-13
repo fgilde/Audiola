@@ -21,8 +21,11 @@
 
   <Grid RowDefinitions="Auto,Auto,*,Auto">
 
-    <!-- ============ TITELZEILE (überlagert die Fensterdekoration) ============ -->
-    <Grid Grid.Row="0" Height="38" Background="{DynamicResource DawBgBrush}">
+    <!-- ============ TITELZEILE (überlagert die Fensterdekoration) ============
+         Die Zeile deckt den erweiterten Titelbereich ab und fängt damit die Maus, deshalb
+         übernimmt sie das Verschieben und das Maximieren per Doppelklick selbst. -->
+    <Grid Grid.Row="0" Height="38" Background="{DynamicResource DawBgBrush}"
+          PointerPressed="TitleBar_PointerPressed">
       <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="8">
         <Image Source="avares://Audiola/Assets/audiola.png" Width="16" Height="16" />
         <TextBlock Text="{Binding ApplicationTitle}" FontSize="12"

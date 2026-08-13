@@ -68,6 +68,24 @@ public partial class MainWindow : Window
         AddHandler(DragDrop.DropEvent, OnFileDrop);
     }
 
+    /// <summary>
+    /// Fenster an der eigenen Titelzeile verschieben und per Doppelklick maximieren. Nötig, weil
+    /// <c>ExtendClientAreaToDecorationsHint</c> die Systemdekoration ersetzt und die darüber
+    /// liegende Titelzeile die Maus abfängt.
+    /// </summary>
+    private void TitleBar_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+
+        if (e.ClickCount == 2)
+        {
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+            return;
+        }
+
+        BeginMoveDrag(e);
+    }
+
     private void Transport_WaveformPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (sender is Controls.WaveformControl wf && wf.Bounds.Width > 0)
