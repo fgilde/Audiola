@@ -17,4 +17,14 @@
     <PackageReference Include="NAudio" Version="2.3.0" />
   </ItemGroup>
 
+  <!-- Die Python-Sidecars gehören zu den Diensten hier (PythonLocalVoiceService,
+       PythonAudioDetectorProbeProvider) und werden neben der Anwendung erwartet
+       (AppContext.BaseDirectory). Als Content landen sie über die Projektverweise
+       in jeder Ausgabe — vorher lagen sie nur im WPF-Projekt und fehlten der
+       Avalonia-Fassung komplett. -->
+  <ItemGroup>
+    <Content Include="voicebox_engine.py" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="audio_detector_probe.py" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

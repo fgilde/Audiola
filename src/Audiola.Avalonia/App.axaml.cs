@@ -61,6 +61,11 @@ public partial class App : Application
             {
                 splash?.Close();
                 window.Activate();
+
+                // Beim ersten Start durch die Einrichtung führen: Python-Umgebung, lokale Modelle,
+                // CUDA-Prüfung. Ohne das bleibt „Stimme tauschen“ ohne Engine (wie in der WPF-Fassung).
+                if (!_services!.GetRequiredService<ISettingsService>().Current.SetupCompleted)
+                    _services.GetRequiredService<IAppDialogs>().ShowSetupWizard();
             };
             desktop.Exit += (_, _) =>
             {

@@ -46,13 +46,6 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3179.45" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="audio_detector_probe.py">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="voicebox_engine.py">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+  <!-- Die Python-Sidecars liegen in Audiola.Core und kommen über den Projektverweis mit. -->
 
 </Project>

@@ -375,8 +375,9 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
     {
         if (!ScriptAvailable)
             throw new InvalidOperationException(
-                "Lokale Voice-Engine nicht gefunden (voicebox_engine.py fehlt). Bitte das Skript bereitstellen " +
-                "und die Python-Abhängigkeiten installieren.");
+                $"Lokale Voice-Engine nicht gefunden — voicebox_engine.py fehlt neben dem Programm ({ScriptPath}). " +
+                "Das deutet auf eine unvollständige Installation hin: Audiola neu installieren und danach " +
+                "„Hilfe → Einrichtungs-Assistent“ durchlaufen.");
     }
 
     private static string TempWav(string tag)
