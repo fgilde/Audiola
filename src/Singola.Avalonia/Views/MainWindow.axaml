@@ -49,8 +49,12 @@
                          Text="{Binding SongTitle}" IsVisible="{Binding HasSong}" />
               <TextBlock Classes="hint" Text="{Binding SongStatus}" />
             </StackPanel>
-            <Button Grid.Column="2" VerticalAlignment="Center" Classes="stage-primary"
-                    FontSize="15" Content="♫  Song öffnen" Click="ChooseSong_Click" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+              <!-- Songtext-Erkennung und Notenband dauern; ohne Anzeige wirkt die App eingefroren. -->
+              <ProgressBar Width="90" Height="6" CornerRadius="3" IsIndeterminate="True"
+                           IsVisible="{Binding IsLoading}" Foreground="#FF4FA3" Background="#241B3D" />
+              <Button Classes="stage-primary" FontSize="15" Content="♫  Song öffnen" Click="ChooseSong_Click" />
+            </StackPanel>
           </Grid>
         </Border>
 
@@ -268,6 +272,8 @@
 
         <StackPanel HorizontalAlignment="Center" Margin="0,6,0,0" Orientation="Horizontal" Spacing="10">
           <Button Classes="stage-primary" Content="Nächster Song" Command="{Binding NextSongCommand}" IsVisible="{Binding HasNextSong}" />
+          <ProgressBar Width="90" Height="6" CornerRadius="3" VerticalAlignment="Center" IsIndeterminate="True"
+                       IsVisible="{Binding IsLoadingNext}" Foreground="#FF4FA3" Background="#241B3D" />
           <Button Classes="stage-primary" Content="Nochmal" Command="{Binding StartRoundCommand}" />
           <Button Classes="stage-secondary" Content="Neuer Song / Spieler" Command="{Binding BackToSetupCommand}" />
         </StackPanel>

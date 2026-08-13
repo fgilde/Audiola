@@ -41,6 +41,10 @@ public partial class App : Application
             _services!.GetRequiredService<INotifier>().Error(title, message, 8));
         AppServices.Configure(_services);
 
+        // Eine UI-Exception darf die Sitzung nicht töten (Pendant zu WPFs
+        // DispatcherUnhandledException) — protokollieren, melden, weiterlaufen.
+        Dispatcher.UIThread.UnhandledException += OnUnhandledException;
+
         // Gespeichertes Theme (Light/Dark) anwenden.
         _services.GetRequiredService<IAppTheme>().Apply(
             _services.GetRequiredService<ISettingsService>().Current.Theme);
@@ -77,6 +81,22 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private void OnUnhandledException(object? sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        try
+        {
+            File.AppendAllText(
+                Path.Combine(AppContext.BaseDirectory, "audiola.log"),
+                $"[{DateTimeOffset.UtcNow:O}] [Dispatcher] {e.Exception}\n\n");
+        }
+        catch { /* Wenn schon das Protokoll klemmt, hilft nur Weiterlaufen. */ }
+
+        try { _services?.GetService<INotifier>()?.Error("Da ging etwas schief", e.Exception.Message, 8); }
+        catch { /* ignore */ }
+
+        e.Handled = true;
     }
 
     /// <summary>Dieselbe Dienst-Landschaft wie die WPF-App — nur die UI-Verträge sind Avalonia-eigen.</summary>
@@ -126,6 +146,19 @@ public partial class App : Application
         services.AddSingleton<IAudioVariationProvider, StudioEffectsVariationProvider>();
         services.AddSingleton<IAudioVariationProvider, ComplexManipulationVariationProvider>();
         services.AddSingleton<IAudioVariationProvider, AudioHumanizationProvider>();
+
+        // Python-gestützte Variationen (audio_detector_probe.py) — fehlten der Avalonia-Fassung.
+        // Anders als in der WPF-Fassung nicht hart „python“: bevorzugt die verwaltete Umgebung,
+        // denn auf macOS und Linux gibt es oft nur „python3“ im PATH.
+        var probeScript = Path.Combine(AppContext.BaseDirectory, "audio_detector_probe.py");
+        if (File.Exists(probeScript))
+            services.AddSingleton<IAudioVariationProvider>(sp =>
+            {
+                var env = sp.GetRequiredService<IPythonEnvironment>();
+                var settings = sp.GetRequiredService<ISettingsService>();
+                return new PythonAudioDetectorProbeProvider(
+                    env.Exists ? env.PythonExe : settings.Current.PythonPath, probeScript);
+            });
 
         services.AddSingleton<IStemMixService, StemMixService>();
         services.AddSingleton<StemMixerEngine>();
