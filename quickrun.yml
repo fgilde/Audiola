@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://fgilde.github.io/QuickRun/quickrun.schema.json
+name: Audiola
+description: "The Avalonia desktop player, which is the cross-platform build of the app."
+
+requires:
+  - tool: dotnet
+    version: ">=10.0"
+    install: https://dotnet.microsoft.com/download
+
+setup:
+  - run: dotnet restore
+
+tasks:
+  - name: app
+    run: dotnet run --project src/Audiola.Avalonia
