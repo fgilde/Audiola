@@ -11,6 +11,7 @@ A full audio-production studio for Windows, macOS, and Linux built on **.NET 10 
 <br/>
 
 [![Download](https://img.shields.io/badge/Download-Latest%20Release-5B8CFF?style=for-the-badge&logo=download&logoColor=white)](https://github.com/fgilde/Audiola/releases/latest)
+[![QuickRun](https://quickrun.org/badge.svg)](https://quickrun.org/run?repo=fgilde/Audiola)
 &nbsp;
 [![Documentation](https://img.shields.io/badge/Docs-GitHub%20Pages-6BD6FF?style=for-the-badge&logo=readthedocs&logoColor=white)](https://fgilde.github.io/Audiola/)
 
