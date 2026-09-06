@@ -1,6 +1,5 @@
-using Audiola.ViewModels;
+﻿using Audiola.ViewModels;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 
 namespace Audiola.Avalonia.Views.Dialogs;
 
@@ -23,7 +22,4 @@ public partial class SetupWizardWindow : Window
     {
         try { Close(); } catch { /* bereits geschlossen */ }
     }
-
-    // „Später": Assistent schließen, ohne ihn als abgeschlossen zu markieren (startet beim nächsten Mal erneut).
-    private void Later_Click(object? sender, RoutedEventArgs e) => Close();
 }

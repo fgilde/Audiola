@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using Audiola.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -99,7 +99,17 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     private void Next() => StepIndex++;
 
     [RelayCommand]
-    private void Finish()
+    private void Finish() => CloseAndRemember();
+
+    /// <summary>
+    /// „Später“: schließen und beim Start nicht wieder von selbst aufgehen. Vorher merkte sich das
+    /// nichts, der Assistent kam bei jedem Start erneut. Über „Hilfe → Einrichtungs-Assistent“
+    /// lässt er sich jederzeit wieder öffnen.
+    /// </summary>
+    [RelayCommand]
+    private void Skip() => CloseAndRemember();
+
+    private void CloseAndRemember()
     {
         _settings.Current.SetupCompleted = true;
         _settings.Save();

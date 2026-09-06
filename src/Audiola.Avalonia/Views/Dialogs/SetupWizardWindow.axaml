@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ic="using:FluentIcons.Avalonia"
         xmlns:conv="using:Audiola.Avalonia.Converters"
@@ -183,7 +183,7 @@
       <!-- Footer -->
       <Border Grid.Row="2" Padding="24,12" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
         <Grid>
-          <Button HorizontalAlignment="Left" Content="Später" Click="Later_Click" />
+          <Button HorizontalAlignment="Left" Content="Später" Command="{Binding SkipCommand}" />
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
             <Button Command="{Binding BackCommand}">
               <StackPanel Orientation="Horizontal" Spacing="6">

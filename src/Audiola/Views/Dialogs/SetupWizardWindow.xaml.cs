@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using Audiola.ViewModels;
 using Wpf.Ui.Controls;
 
@@ -19,7 +19,4 @@ public partial class SetupWizardWindow : FluentWindow
     {
         try { Close(); } catch { /* bereits geschlossen */ }
     }
-
-    // „Später“: Assistent schließen, ohne ihn als abgeschlossen zu markieren (startet beim nächsten Mal erneut).
-    private void Later_Click(object sender, RoutedEventArgs e) => Close();
 }

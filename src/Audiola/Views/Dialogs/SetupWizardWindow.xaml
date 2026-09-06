@@ -1,4 +1,4 @@
-<ui:FluentWindow
+﻿<ui:FluentWindow
     x:Class="Audiola.Views.Dialogs.SetupWizardWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -185,7 +185,7 @@
         <!-- Footer -->
         <Border Grid.Row="3" Padding="24,12" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
             <Grid>
-                <ui:Button HorizontalAlignment="Left" Content="Später" Appearance="Secondary" Click="Later_Click" />
+                <ui:Button HorizontalAlignment="Left" Content="Später" Appearance="Secondary" Command="{Binding SkipCommand}" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <ui:Button Icon="{ui:SymbolIcon ArrowLeft24}" Content="Zurück" Command="{Binding BackCommand}" Margin="0,0,8,0" />
                     <ui:Button Appearance="Primary" Content="Weiter" Command="{Binding NextCommand}"
