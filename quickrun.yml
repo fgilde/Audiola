@@ -1,6 +1,9 @@
-# yaml-language-server: $schema=https://fgilde.github.io/QuickRun/quickrun.schema.json
+# yaml-language-server: $schema=https://quickrun.org/quickrun.schema.json
+version: 1
 name: Audiola
-description: "The Avalonia desktop player, which is the cross-platform build of the app."
+description: "Audio-Studio: Stems trennen, arrangieren, einsingen, mastern — die plattformübergreifende Avalonia-Fassung."
+icon: docs/assets/logo.png
+docs: https://audiola.de
 
 requires:
   - tool: dotnet
@@ -8,8 +11,11 @@ requires:
     install: https://dotnet.microsoft.com/download
 
 setup:
-  - run: dotnet restore
+  # Nur die Desktop-App wiederherstellen. Ein "dotnet restore" ohne Ziel nimmt Audiola.sln,
+  # und die enthält zwei WPF-Projekte (net10.0-windows) sowie einen Aspire-AppHost mit eigenem
+  # SDK — beides braucht diese App nicht, beides kann auf einem fremden Rechner scheitern.
+  - run: dotnet restore src/Audiola.Avalonia
 
 tasks:
-  - name: app
-    run: dotnet run --project src/Audiola.Avalonia
+  - name: audiola
+    run: dotnet run --project src/Audiola.Avalonia --configuration Release
