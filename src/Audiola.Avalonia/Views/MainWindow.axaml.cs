@@ -1,7 +1,8 @@
-using Audiola.Avalonia.Platform;
+﻿using Audiola.Avalonia.Platform;
 using Audiola.Services;
 using Audiola.ViewModels;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
@@ -92,11 +93,19 @@ public partial class MainWindow : Window
             _viewModel.Transport.Seek(e.GetPosition(wf).X / wf.Bounds.Width);
     }
 
-    /// <summary>Leertaste = Play/Pause, Pos1 = Anfang — außer der Fokus liegt in einem Eingabefeld.</summary>
+    /// <summary>
+    /// Leertaste = Play/Pause, Pos1 = Anfang — wie in jeder DAW.
+    ///
+    /// Ausgenommen sind Steuerelemente, welche die Leertaste selbst brauchen: Eingabefelder und
+    /// alles Anklickbare (Schalter, Kästchen, Auswahlfelder, Regler). Sonst löst ein Druck zwei
+    /// Aktionen aus — den globalen Transport und den Schalter mit dem Fokus, was sich anfühlt,
+    /// als würde die Wiedergabe stottern.
+    /// </summary>
     private void OnGlobalKeyDown(object? sender, KeyEventArgs e)
     {
-        if (FocusManager?.GetFocusedElement() is TextBox or AutoCompleteBox
-            || (FocusManager?.GetFocusedElement() is ComboBox { IsEditable: true }))
+        var focused = FocusManager?.GetFocusedElement();
+        if (focused is TextBox or AutoCompleteBox or ComboBox
+            or Button or ToggleButton or CheckBox or RadioButton or Slider or ListBox)
             return;
 
         var transport = _viewModel.Transport;

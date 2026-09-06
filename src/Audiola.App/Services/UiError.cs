@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 
 namespace Audiola.Services;
 
@@ -25,6 +25,13 @@ public static class UiError
 
     /// <summary>Pfad des Protokolls — für den Hinweis „Details stehen in …“.</summary>
     public static string LogPath => Path.Combine(AppContext.BaseDirectory, "audiola.log");
+
+    /// <summary>Notiz ins Protokoll, ohne den Nutzer zu behelligen — für Diagnose-Spuren.</summary>
+    public static void Trace(string message)
+    {
+        try { File.AppendAllText(LogPath, $"[{DateTimeOffset.Now:O}] [trace] {message}{Environment.NewLine}"); }
+        catch { /* ignore */ }
+    }
 
     private static void Log(string title, string message)
     {

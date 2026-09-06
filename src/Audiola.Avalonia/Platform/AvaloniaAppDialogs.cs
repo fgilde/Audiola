@@ -1,4 +1,4 @@
-using Audiola.Services;
+﻿using Audiola.Services;
 using Avalonia;
 using Avalonia.Threading;
 using Avalonia.Controls;
@@ -125,12 +125,20 @@ public sealed class AvaloniaAppDialogs(INotifier notifier) : IAppDialogs
             Spacing = 8,
             Margin = new Thickness(0, 18, 0, 0)
         };
+        // Der letzte Eintrag ist die harmlose Wahl (Abbrechen/Nein) und gilt auch, wenn jemand
+        // das Fenster über das Kreuz schließt — sonst bliebe der Aufruf für immer hängen.
+        var chosen = choices[^1].Result;
         foreach (var (label, result) in choices)
         {
             var button = new Button { Content = label, MinWidth = 92 };
-            button.Click += (_, _) => { completion.TrySetResult(result); dialog.Close(); };
+            button.Click += (_, _) => { chosen = result; dialog.Close(); };
             buttons.Children.Add(button);
         }
+
+        // Erst melden, wenn das Fenster wirklich zu ist. Vorher lief der Aufrufer weiter, während
+        // der Dialog noch schloss — ein danach geöffneter Datei-Dialog hing dann an einem
+        // sterbenden Fenster und erschien nie.
+        dialog.Closed += (_, _) => completion.TrySetResult(chosen);
 
         dialog.Content = new StackPanel
         {

@@ -265,11 +265,24 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private async Task<bool> TrySaveAsync(bool forceDialog = false)
     {
         var path = _workspace.CurrentPath;
-        if (forceDialog || string.IsNullOrEmpty(path))
+        if (forceDialog || string.IsNullOrWhiteSpace(path))
         {
-            path = await _files.SaveFileAsync("Projekt speichern",
-                Path.GetFileName(path ?? "projekt.audiola"), FileFilter.Project, FileFilter.Any);
-            if (path is null) return false;
+            // Ohne Projektpfad braucht der Dialog trotzdem einen Namen: ein leerer lässt den
+            // Windows-Speichern-Dialog mit „Falscher Parameter“ (E_INVALIDARG) scheitern.
+            var suggested = string.IsNullOrWhiteSpace(path) ? "projekt.audiola" : Path.GetFileName(path);
+            if (string.IsNullOrWhiteSpace(suggested)) suggested = "projekt.audiola";
+
+            try
+            {
+                path = await _files.SaveFileAsync("Projekt speichern", suggested, FileFilter.Project, FileFilter.Any);
+            }
+            catch (Exception ex)
+            {
+                _snackbar.Error("Speichern fehlgeschlagen", ex.Message, 5);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(path)) return false;
             if (!path.EndsWith(".audiola", StringComparison.OrdinalIgnoreCase)) path += ".audiola";
         }
 

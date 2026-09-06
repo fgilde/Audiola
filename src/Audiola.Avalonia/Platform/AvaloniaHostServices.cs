@@ -1,4 +1,4 @@
-using Audiola.Controls;
+﻿using Audiola.Controls;
 using Audiola.Services;
 using Avalonia;
 using Avalonia.Controls;
@@ -21,7 +21,11 @@ internal static class HostWindow
         {
             if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime life)
                 return null;
-            return life.Windows.LastOrDefault(w => w.IsActive) ?? life.MainWindow;
+            // Nur sichtbare Fenster: ein gerade schließender Dialog taugt nicht als Elternteil
+            // für einen Datei-Dialog.
+            return life.Windows.LastOrDefault(w => w.IsActive && w.IsVisible)
+                ?? life.MainWindow
+                ?? life.Windows.LastOrDefault(w => w.IsVisible);
         }
     }
 }
@@ -77,7 +81,8 @@ public sealed class AvaloniaFileDialogs : IFileDialogs
         var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = title,
-            SuggestedFileName = suggestedFileName,
+            // Ein leerer Name ist für den Windows-Dialog ein ungültiger Parameter; dann lieber keinen.
+            SuggestedFileName = string.IsNullOrWhiteSpace(suggestedFileName) ? null : suggestedFileName,
             DefaultExtension = filters.FirstOrDefault(f => f.Extensions.Length > 0)?.Extensions[0],
             FileTypeChoices = ToFileTypes(filters)
         });

@@ -1,12 +1,33 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:controls="using:Audiola.Controls"
              xmlns:vm="using:Audiola.ViewModels"
              x:Class="Audiola.Avalonia.Views.Pages.EditorPage"
-             x:DataType="vm:EditorViewModel">
+             x:DataType="vm:EditorViewModel"
+             Focusable="True" KeyDown="Page_KeyDown">
 
   <!-- Port von Audiola/Views/Pages/EditorPage.xaml. -->
+
+  <UserControl.Resources>
+    <!-- Kontextmenü der Wellenform. Die Einträge rufen die Befehle über Click-Handler auf:
+         ein Menü ist ein eigenes Fenster, Bindungen auf den Seiten-DataContext greifen dort nicht. -->
+    <ContextMenu x:Key="WaveformMenu">
+      <MenuItem Header="Nur Auswahl behalten" Click="Trim_Click" />
+      <MenuItem Header="Auswahl löschen" InputGesture="Delete" Click="Delete_Click" />
+      <MenuItem Header="Auswahl stummschalten" Click="Silence_Click" />
+      <Separator />
+      <MenuItem Header="Einblenden" Click="FadeIn_Click" />
+      <MenuItem Header="Ausblenden" Click="FadeOut_Click" />
+      <MenuItem Header="Normalisieren" Click="Normalize_Click" />
+      <MenuItem Header="Rückwärts" Click="Reverse_Click" />
+      <Separator />
+      <MenuItem Header="Alles auswählen" InputGesture="Ctrl+A" Click="SelectAll_Click" />
+      <MenuItem Header="Auswahl aufheben" InputGesture="Esc" Click="ClearSelection_Click" />
+      <MenuItem Header="Rückgängig" InputGesture="Ctrl+Z" Click="Undo_Click" />
+    </ContextMenu>
+  </UserControl.Resources>
+
 
   <Grid Margin="42,24,42,24" RowDefinitions="Auto,Auto,*,Auto">
 
@@ -30,7 +51,7 @@
     <StackPanel Grid.Row="1" IsVisible="{Binding HasTrack}">
       <Border Margin="0,14,0,0" Padding="10,8" CornerRadius="10"
               Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
-        <WrapPanel Orientation="Horizontal">
+        <WrapPanel Name="Toolbar" Orientation="Horizontal">
           <Button Margin="0,0,10,6" Classes="accent" Command="{Binding BakeToStudioCommand}"
                   IsVisible="{Binding HasClipTarget}" ToolTip.Tip="Bearbeitung in den Clip übernehmen">
             <StackPanel Orientation="Horizontal" Spacing="6">
@@ -157,6 +178,7 @@
 
         <controls:WaveformControl Name="Waveform" Cursor="Ibeam"
                                   PointerPressed="Waveform_PointerPressed"
+                                  ContextMenu="{StaticResource WaveformMenu}"
                                   PointerMoved="Waveform_PointerMoved"
                                   PointerReleased="Waveform_PointerReleased"
                                   Peaks="{Binding Peaks}"
@@ -170,6 +192,9 @@
     <!-- Auswahl-Info + Metadaten -->
     <StackPanel Grid.Row="3" IsVisible="{Binding HasTrack}">
       <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding SelectionInfo}" />
+      <TextBlock Margin="0,4,0,0" FontSize="11.5" TextWrapping="Wrap"
+                 Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                 Text="Ziehen wählt aus · Klick setzt die Abspielmarke · Doppelklick wählt alles · Rechtsklick öffnet das Menü · Leertaste spielt · Entf löscht · Strg+A alles · Strg+Z zurück · Esc hebt auf" />
       <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
         <ic:SymbolIcon Symbol="Info" VerticalAlignment="Center" Margin="0,0,10,0" />
         <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding FormatInfo}" />
@@ -179,4 +204,12 @@
       </StackPanel>
     </StackPanel>
   </Grid>
+
+  <UserControl.Styles>
+    <!-- Werkzeug-Schalter nehmen den Fokus nicht an: sonst löst die Leertaste danach den zuletzt
+         geklickten Schalter aus statt die Wiedergabe, was sich wie ein Stottern anfühlt. -->
+    <Style Selector="WrapPanel#Toolbar > Button">
+      <Setter Property="Focusable" Value="False" />
+    </Style>
+  </UserControl.Styles>
 </UserControl>

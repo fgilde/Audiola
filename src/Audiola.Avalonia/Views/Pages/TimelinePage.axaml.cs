@@ -1,4 +1,4 @@
-using Audiola.Avalonia.Platform;
+﻿using Audiola.Avalonia.Platform;
 using Audiola.Services;
 using Audiola.ViewModels;
 using Avalonia.Controls;
@@ -59,8 +59,16 @@ public partial class TimelinePage : UserControl, INavigationAware
     // ---- Playhead ziehen (Scrubbing) ----
     private bool _scrubbing;
 
+    /// <summary>
+    /// Zieht/verschiebt nur die linke Maustaste. Die rechte gehört dem Kontextmenü — fängt ein
+    /// Handler sie ab, erscheint das Menü nicht mehr.
+    /// </summary>
+    private static bool IsLeftButton(object? sender, PointerPressedEventArgs e)
+        => e.GetCurrentPoint(sender as Control).Properties.IsLeftButtonPressed;
+
     private void Playhead_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (!IsLeftButton(sender, e)) return;
         _scrubbing = true;
         if (sender is Control control) e.Pointer.Capture(control);
         _vm.SeekToPixel(e.GetPosition(Ruler).X);
@@ -180,7 +188,9 @@ public partial class TimelinePage : UserControl, INavigationAware
 
     private void Lanes_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (sender is not Control control) return;
+        // Nur die linke Taste zieht eine Auswahl auf. Vorher fing auch die rechte den Zeiger ein,
+        // wodurch das Kontextmenü der Spur nie erschien.
+        if (sender is not Control control || !IsLeftButton(sender, e)) return;
         var pps = _vm.PixelsPerSecond;
         if (pps <= 0) return;
         var pos = e.GetPosition(control);
@@ -220,7 +230,7 @@ public partial class TimelinePage : UserControl, INavigationAware
     // ZIEHEN zieht wie bisher eine Auswahl (Loop-/Export-Bereich) auf.
     private void Ruler_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (sender is not Control control) return;
+        if (sender is not Control control || !IsLeftButton(sender, e)) return;
         var pps = _vm.PixelsPerSecond;
         if (pps <= 0) return;
         _selecting = true;
@@ -363,7 +373,7 @@ public partial class TimelinePage : UserControl, INavigationAware
 
     private void StartFade(object? sender, PointerPressedEventArgs e, bool isIn)
     {
-        if (sender is not Control { DataContext: ClipViewModel clip } control) return;
+        if (sender is not Control { DataContext: ClipViewModel clip } control || !IsLeftButton(sender, e)) return;
         _fadeClip = clip;
         _fadeIsIn = isIn;
         _fadeStartY = e.GetPosition(LanesArea).Y;
