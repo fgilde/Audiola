@@ -1,5 +1,5 @@
-using System.Diagnostics;
-using System.Reflection;
+﻿using System.Diagnostics;
+using Audiola.Services;
 using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -14,23 +14,19 @@ public partial class AboutPage : UserControl
         InitializeComponent();
     }
 
-    /// <summary>Versionsanzeige aus der Assembly (Fallback 0.1.0).</summary>
-    public string VersionText
-    {
-        get
-        {
-            var v = Assembly.GetExecutingAssembly().GetName().Version;
-            var s = v is null ? "0.1.0" : $"{v.Major}.{v.Minor}.{v.Build}";
-            return $"Version {s}";
-        }
-    }
+    /// <summary>Version wie im Fenstertitel — eine gemeinsame Quelle (siehe AppVersion).</summary>
+    public string VersionText => AppVersion.Display;
 
-    public string CopyrightText => $"© {DateTime.Now.Year} Florian Gilde";
+    public string CopyrightText => $"© {DateTime.Now.Year} gilde.org";
+
+    /// <summary>Laufende Plattform als kurzer Zusatz neben der Version.</summary>
+    public string PlatformText =>
+        $"{(OperatingSystem.IsWindows() ? "Windows" : OperatingSystem.IsMacOS() ? "macOS" : "Linux")} · {RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()}";
 
     /// <summary>Nennt die tatsächlich laufende Plattform (die App läuft auf Windows, macOS und Linux).</summary>
     public string TechText =>
         $".NET 10 · Avalonia (Fluent) · NAudio · CommunityToolkit.Mvvm · TagLibSharp · Velopack. " +
-        $"Läuft auf {RuntimeInformation.OSDescription.Trim()} ({RuntimeInformation.ProcessArchitecture}). " +
+        $"Läuft auf {RuntimeInformation.OSDescription.Trim()}. " +
         "Lokale KI-Komponenten laufen über eine verwaltete Python-Umgebung (Demucs, faster-whisper, seed-vc u. a.).";
 
     private void OnOpenLink(object? sender, RoutedEventArgs e)

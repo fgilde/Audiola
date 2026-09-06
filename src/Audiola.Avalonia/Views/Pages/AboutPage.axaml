@@ -3,89 +3,202 @@
              xmlns:ic="using:FluentIcons.Avalonia"
              x:Class="Audiola.Avalonia.Views.Pages.AboutPage">
 
-  <!-- Port von Audiola/Views/Pages/AboutPage.xaml (ui:Card → Border mit dawPanel-Klasse). -->
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel MaxWidth="1080" Margin="42,26,42,32" HorizontalAlignment="Left" Spacing="14">
 
-  <Grid Margin="42,24,42,24" RowDefinitions="Auto,*">
+      <!-- ============ Kopf ============ -->
+      <Border Classes="dawPanel" Padding="26,22">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#243F8CFF" Offset="0" />
+            <GradientStop Color="#1AB56BFF" Offset="0.55" />
+            <GradientStop Color="#00000000" Offset="1" />
+          </LinearGradientBrush>
+        </Border.Background>
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
+          <Image Grid.Column="0" Source="avares://Audiola/Assets/audiola.png"
+                 Width="76" Height="76" VerticalAlignment="Center" />
+          <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+            <TextBlock FontSize="38" FontWeight="Bold" Text="Audiola">
+              <TextBlock.Foreground>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                  <GradientStop Color="#6BD6FF" Offset="0" />
+                  <GradientStop Color="#B56BFF" Offset="1" />
+                </LinearGradientBrush>
+              </TextBlock.Foreground>
+            </TextBlock>
+            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Trennen · Mischen · Einsingen · Mastern — dein Studio für alles." />
+          </StackPanel>
+          <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="6">
+            <Border Classes="aboutChip">
+              <TextBlock Text="{Binding VersionText}" />
+            </Border>
+            <TextBlock HorizontalAlignment="Right" FontSize="11.5"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="{Binding PlatformText}" />
+          </StackPanel>
+        </Grid>
+      </Border>
 
-    <!-- Kopf -->
-    <StackPanel Grid.Row="0" Orientation="Horizontal">
-      <Image Source="avares://Audiola/Assets/audiola.png" Width="64" Height="64" VerticalAlignment="Center" />
-      <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
-        <TextBlock Classes="dawPageTitle" FontSize="30" Text="Audiola" />
-        <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                   Text="{Binding VersionText}" />
-      </StackPanel>
-    </StackPanel>
+      <!-- ============ Zwei Spalten ============ -->
+      <Grid ColumnDefinitions="*,*" ColumnSpacing="14" RowDefinitions="Auto,Auto" RowSpacing="14">
 
-    <ScrollViewer Grid.Row="1" Margin="0,18,0,0" VerticalScrollBarVisibility="Auto">
-      <StackPanel MaxWidth="720" HorizontalAlignment="Left">
-
-        <!-- Beschreibung -->
-        <Border Classes="dawPanel" Padding="18">
-          <StackPanel>
-            <TextBlock FontSize="16" FontWeight="SemiBold" Text="Modernes Audio-Studio" />
-            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        <!-- Was es ist -->
+        <Border Grid.Row="0" Grid.Column="0" Classes="dawPanel" Padding="20">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="aboutHead" Text="Modernes Audio-Studio" />
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                        Text="Mehrspur-Timeline, Stem-Trennung (Demucs &amp; audio-separator), Mixer, Mastering, Equalizer, räumliches Audio (Dolby-Atmos-/Binaural-Export), Stimmtausch &amp; Text-zu-Sprache (ElevenLabs sowie lokale Modelle) und Effekt-Bearbeitung." />
+            <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" FontSize="12.5"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="Dazu Singola — die Karaoke-Bühne für Partys, mit denselben Einstellungen." />
           </StackPanel>
         </Border>
 
-        <!-- Links -->
-        <Border Classes="dawPanel" Margin="0,12,0,0" Padding="18">
-          <StackPanel>
-            <TextBlock FontSize="16" FontWeight="SemiBold" Text="Projekt &amp; Quellcode" />
-            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-              <ic:SymbolIcon Symbol="Code" VerticalAlignment="Center" Margin="0,0,10,0"
-                             Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-              <Button Classes="link" VerticalAlignment="Center" Tag="https://github.com/fgilde/Audiola"
-                      Click="OnOpenLink" Content="https://github.com/fgilde/Audiola" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-              <ic:SymbolIcon Symbol="DocumentBulletList" VerticalAlignment="Center" Margin="0,0,10,0"
-                             Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-              <Button Classes="link" VerticalAlignment="Center" Tag="https://github.com/fgilde/Audiola/issues"
-                      Click="OnOpenLink" Content="Fehler melden / Feature vorschlagen" />
-            </StackPanel>
+        <!-- Herausgeber: gilde.org -->
+        <Border Grid.Row="0" Grid.Column="1" Classes="dawPanel" Padding="20">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="aboutHead" Text="Von gilde.org" />
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+              <!-- gilde.org-Logo, aus dem SVG nachgezeichnet: zwei Pfade mit Goldverlauf -->
+              <Viewbox Grid.Column="0" Width="58" Height="58" VerticalAlignment="Top">
+                <Canvas Width="512" Height="512">
+                  <Canvas.Resources>
+                    <LinearGradientBrush x:Key="GildeGold" StartPoint="0%,0%" EndPoint="100%,100%">
+                      <GradientStop Color="#FFE6A8" Offset="0" />
+                      <GradientStop Color="#E0A24E" Offset="0.45" />
+                      <GradientStop Color="#A9761F" Offset="1" />
+                    </LinearGradientBrush>
+                  </Canvas.Resources>
+                  <Path Data="M376 88H112v264l144 112 144-112v-96H280"
+                        Stroke="{StaticResource GildeGold}" StrokeThickness="56"
+                        StrokeLineCap="Square" StrokeJoin="Miter" />
+                  <Path Data="M280 216h120"
+                        Stroke="{StaticResource GildeGold}" StrokeThickness="56"
+                        StrokeLineCap="Square" StrokeJoin="Miter" />
+                </Canvas>
+              </Viewbox>
+              <StackPanel Grid.Column="1" Spacing="8">
+                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="Audiola und Singola entstehen bei gilde.org." />
+                <Button Classes="linkRow" Tag="https://audiola.de" Click="OnOpenLink">
+                  <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                    <ic:SymbolIcon Grid.Column="0" Symbol="Globe" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <TextBlock FontWeight="SemiBold" Text="audiola.de" />
+                      <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                 Text="Webseite, Downloads, Neuigkeiten" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="↗"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                  </Grid>
+                </Button>
+                <Button Classes="linkRow" Tag="https://www.gilde.org" Click="OnOpenLink">
+                  <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                    <ic:SymbolIcon Grid.Column="0" Symbol="Building" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <TextBlock FontWeight="SemiBold" Text="gilde.org" />
+                      <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                 Text="Herausgeber — weitere Projekte" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="↗"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                  </Grid>
+                </Button>
+              </StackPanel>
+            </Grid>
           </StackPanel>
         </Border>
 
         <!-- Technik -->
-        <Border Classes="dawPanel" Margin="0,12,0,0" Padding="18">
-          <StackPanel>
-            <TextBlock FontSize="16" FontWeight="SemiBold" Text="Technik" />
-            <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        <Border Grid.Row="1" Grid.Column="0" Classes="dawPanel" Padding="20">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="aboutHead" Text="Technik" />
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                        Text="{Binding TechText}" />
           </StackPanel>
         </Border>
 
-        <!-- Copyright -->
-        <Border Classes="dawPanel" Margin="0,12,0,0" Padding="18">
-          <StackPanel>
-            <TextBlock FontSize="16" FontWeight="SemiBold" Text="Copyright" />
-            <TextBlock Margin="0,8,0,0" FontWeight="SemiBold" Text="{Binding CopyrightText}" />
-            <TextBlock Margin="0,4,0,0" FontSize="12"
-                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                       Text="Alle Rechte vorbehalten." />
+        <!-- Quellcode -->
+        <Border Grid.Row="1" Grid.Column="1" Classes="dawPanel" Padding="20">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="aboutHead" Text="Projekt &amp; Quellcode" />
+            <Button Classes="linkRow" Tag="https://github.com/fgilde/Audiola" Click="OnOpenLink">
+              <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                <ic:SymbolIcon Grid.Column="0" Symbol="Code" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                  <TextBlock FontWeight="SemiBold" Text="github.com/fgilde/Audiola" />
+                  <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                             Text="Quellcode, Releases, Verlauf" />
+                </StackPanel>
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="↗"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+              </Grid>
+            </Button>
+            <Button Classes="linkRow" Tag="https://github.com/fgilde/Audiola/issues" Click="OnOpenLink">
+              <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                <ic:SymbolIcon Grid.Column="0" Symbol="DocumentBulletList" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                  <TextBlock FontWeight="SemiBold" Text="Fehler melden / Feature vorschlagen" />
+                  <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                             Text="Issues auf GitHub" />
+                </StackPanel>
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="↗"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+              </Grid>
+            </Button>
           </StackPanel>
         </Border>
+      </Grid>
 
-      </StackPanel>
-    </ScrollViewer>
-  </Grid>
+      <!-- ============ Fußzeile ============ -->
+      <Border Classes="dawPanel" Padding="18,14">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Grid.Column="0" Spacing="2">
+            <TextBlock FontWeight="SemiBold" Text="{Binding CopyrightText}" />
+            <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                       Text="Alle Rechte vorbehalten." />
+          </StackPanel>
+          <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="11.5"
+                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                     Text="Windows · macOS · Linux" />
+        </Grid>
+      </Border>
+
+    </StackPanel>
+  </ScrollViewer>
 
   <UserControl.Styles>
-    <!-- Hyperlink-Ersatz: Avalonia hat kein Hyperlink-Inline. -->
-    <Style Selector="Button.link">
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Cursor" Value="Hand" />
-      <Setter Property="Foreground" Value="{DynamicResource DawAccentLightBrush}" />
+    <Style Selector="TextBlock.aboutHead">
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
-    <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="TextBlock.TextDecorations" Value="Underline" />
+    <Style Selector="Border.aboutChip">
+      <Setter Property="Background" Value="{DynamicResource DawAccentLightBrush}" />
+      <Setter Property="CornerRadius" Value="999" />
+      <Setter Property="Padding" Value="12,4" />
+      <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
+    <Style Selector="Border.aboutChip > TextBlock">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="#0B0D14" />
+    </Style>
+    <!-- Klickbare Link-Zeile: die ganze Fläche reagiert, nicht nur der Text -->
+    <Style Selector="Button.linkRow">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Padding" Value="12,9" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+    </Style>
+    <Style Selector="Button.linkRow:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource DawAccentLightBrush}" />
     </Style>
   </UserControl.Styles>
 </UserControl>

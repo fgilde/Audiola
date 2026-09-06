@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.IO.Compression;
 using Audiola.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -32,7 +32,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private bool _autoSaving;
 
     [ObservableProperty]
-    private string _applicationTitle = "Audiola";
+    private string _applicationTitle = $"Audiola {AppVersion.Short}";
 
     /// <summary>Text der Statusleiste — zeigt laufende Hintergrund-Arbeit (Stems, Stimmtausch …).</summary>
     [ObservableProperty]
@@ -406,8 +406,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         var name = string.IsNullOrEmpty(_timeline.CurrentProjectPath)
             ? null : Path.GetFileNameWithoutExtension(_timeline.CurrentProjectPath);
+        // Die Version steht im Titel, damit man sie ohne Umweg über „Über Audiola“ sieht.
+        var head = $"Audiola {AppVersion.Short}";
         ApplicationTitle = name is null
-            ? "Audiola"
-            : $"Audiola — {name}{(_timeline.IsDirty ? " •" : "")}";
+            ? head
+            : $"{head} — {name}{(_timeline.IsDirty ? " •" : "")}";
     }
 }
