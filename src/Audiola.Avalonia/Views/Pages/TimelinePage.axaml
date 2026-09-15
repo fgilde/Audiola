@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:controls="using:Audiola.Controls"
@@ -23,22 +23,6 @@
   </UserControl.KeyBindings>
 
   <UserControl.Styles>
-    <Style Selector="Border.toolGroup">
-      <Setter Property="CornerRadius" Value="8" />
-      <Setter Property="Padding" Value="8,3,8,5" />
-      <Setter Property="Margin" Value="0,0,8,6" />
-      <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
-    </Style>
-    <Style Selector="TextBlock.toolGroupCaption">
-      <Setter Property="FontSize" Value="9" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Margin" Value="2,0,0,3" />
-      <Setter Property="Opacity" Value="0.6" />
-      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
-    </Style>
-    <Style Selector="Button.toolBtn">
-      <Setter Property="Margin" Value="0,0,4,0" />
-    </Style>
     <!-- Ausgewählte Spur / ausgewählter Clip -->
     <Style Selector="Border.trackHeader.selected">
       <Setter Property="BorderBrush" Value="#5B8CFF" />

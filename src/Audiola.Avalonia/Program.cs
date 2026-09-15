@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using System.IO;
 using Velopack;
 
@@ -11,6 +11,9 @@ internal static class Program
     {
         VelopackApp.Build().Run();
         App.StartupFile = args.FirstOrDefault(File.Exists);
+        // Entwicklungs-Hilfe: "--page Voices" öffnet direkt eine Seite (für Screenshots und Tests).
+        var pageIndex = Array.IndexOf(args, "--page");
+        if (pageIndex >= 0 && pageIndex + 1 < args.Length) App.StartupPage = args[pageIndex + 1];
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 

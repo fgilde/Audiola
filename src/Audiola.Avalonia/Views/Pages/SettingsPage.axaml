@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:controls="using:Audiola.Controls"
@@ -22,7 +22,7 @@
   </UserControl.Styles>
 
   <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto">
-    <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+    <StackPanel MaxWidth="960" HorizontalAlignment="Left">
       <TextBlock Classes="dawPageTitle" Text="Einstellungen" />
 
       <!-- Demucs -->
@@ -55,7 +55,7 @@
           <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="Ausgabeordner" FontWeight="Medium" />
           <StackPanel Grid.Column="2" Orientation="Horizontal">
             <TextBox Width="280" VerticalAlignment="Center" Text="{Binding OutputDirectory, Mode=TwoWay}" />
-            <Button Margin="8,0,0,0" Content="…" Command="{Binding BrowseOutputCommand}" />
+            <Button Margin="8,0,0,0" Content="…" Command="{Binding BrowseOutputCommand}" ToolTip.Tip="Ausgabeordner wählen" />
           </StackPanel>
         </Grid>
       </Border>

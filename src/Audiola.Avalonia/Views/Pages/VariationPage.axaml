@@ -5,83 +5,169 @@
              x:Class="Audiola.Avalonia.Views.Pages.VariationPage"
              x:DataType="vm:VariationViewModel">
 
-  <!-- Port von Audiola/Views/Pages/VariationPage.xaml. -->
+  <!-- Klangvariation: eine songnahe Variante ohne Tempo- oder Tonhöhen-Eingriff.
+       Aufbau wie im Studio: Kopfzeile mit der primären Aktion rechts, darunter Presets als
+       erklärte Karten, dann die Regler in zwei Spalten mit Wertanzeige. -->
+
+  <UserControl.Styles>
+    <!-- Preset-Karte: Icon, Name, ein Satz — statt dreier nackter Textknöpfe. -->
+    <Style Selector="Button.presetCard">
+      <Setter Property="Padding" Value="14,12" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Button.presetCard:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BorderBrush" Value="{DynamicResource DawAccentLightBrush}" />
+    </Style>
+  </UserControl.Styles>
 
   <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto">
-    <StackPanel MaxWidth="820" HorizontalAlignment="Left">
-      <TextBlock Classes="dawPageTitle" Text="Klangvariation" />
-      <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                 Text="{Binding Session.CurrentTrack.FileName, FallbackValue='Keine Datei geladen', TargetNullValue='Keine Datei geladen'}" />
-      <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                 Text="Diese Seite erzeugt eine songnahe Variante: kleine Klang-, Stereo- und Textur-Aenderungen ohne Tempo- oder Pitch-Eingriff. Die Originaldatei bleibt unveraendert." />
+    <StackPanel MaxWidth="1120" HorizontalAlignment="Left">
 
-      <TextBlock Margin="0,24,0,8" FontWeight="SemiBold" Text="Presets" />
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button Content="Subtil" Command="{Binding ApplySubtlePresetCommand}" />
-        <Button Content="Ausgewogen" Command="{Binding ApplyBalancedPresetCommand}" />
-        <Button Content="Etwas staerker" Command="{Binding ApplyStrongerPresetCommand}" />
-      </StackPanel>
-
-      <TextBlock Margin="0,20,0,8" FontWeight="SemiBold" Text="Gesamtwirkung" />
-      <Border Classes="dawPanel" Padding="16">
-        <StackPanel>
-          <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                     Text="{Binding OverallStrength, StringFormat='Stärke: {0:F0} %'}" />
-          <Slider Minimum="0" Maximum="100" Value="{Binding OverallStrength, Mode=TwoWay}" />
-          <CheckBox Margin="0,12,0,0" Content="Ausgangslautheit an den Originaltrack angleichen"
-                    IsChecked="{Binding MatchInputLoudness, Mode=TwoWay}" />
+      <!-- ═══ Kopfzeile ═══ -->
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Grid.Column="0">
+          <TextBlock Classes="dawPageTitle" Text="Klangvariation" />
+          <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="{Binding Session.CurrentTrack.FileName, FallbackValue='Keine Datei geladen', TargetNullValue='Keine Datei geladen'}" />
         </StackPanel>
-      </Border>
-
-      <TextBlock Margin="0,20,0,8" FontWeight="SemiBold" Text="Klangformung" />
-      <Border Classes="dawPanel" Padding="16">
-        <StackPanel>
-          <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                     Text="{Binding TimbreShift, StringFormat='Klangneigung: {0:+0;-0;0} (wärmer ↔ heller)'}" />
-          <Slider Minimum="-100" Maximum="100" Value="{Binding TimbreShift, Mode=TwoWay}" />
-
-          <TextBlock Margin="0,10,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                     Text="{Binding PresenceShift, StringFormat='Praesenz: {0:+0;-0;0} (weicher ↔ direkter)'}" />
-          <Slider Minimum="-100" Maximum="100" Value="{Binding PresenceShift, Mode=TwoWay}" />
-
-          <TextBlock Margin="0,10,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                     Text="{Binding Saturation, StringFormat='Sättigung: {0:F0} %'}" />
-          <Slider Minimum="0" Maximum="100" Value="{Binding Saturation, Mode=TwoWay}" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Top">
+          <ProgressBar Width="60" VerticalAlignment="Center" IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+          <Button Classes="accent" Command="{Binding ExportCommand}"
+                  ToolTip.Tip="Die Variante mit den aktuellen Einstellungen als Audiodatei speichern — das Original bleibt unverändert">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="Save" /><TextBlock Text="Variante exportieren" />
+            </StackPanel>
+          </Button>
         </StackPanel>
-      </Border>
+      </Grid>
 
-      <TextBlock Margin="0,20,0,8" FontWeight="SemiBold" Text="Stereo &amp; Textur" />
-      <Border Classes="dawPanel" Padding="16">
-        <StackPanel>
-          <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                     Text="{Binding StereoWidth, StringFormat='Stereo-Breite: {0:+0;-0;0} (enger ↔ weiter)'}" />
-          <Slider Minimum="-100" Maximum="100" Value="{Binding StereoWidth, Mode=TwoWay}" />
+      <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" MaxWidth="820" HorizontalAlignment="Left"
+                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                 Text="Erzeugt eine songnahe Variante: kleine Änderungen an Klang, Stereobild und Textur — ohne Eingriff in Tempo oder Tonhöhe. Die Originaldatei bleibt unverändert." />
 
-          <TextBlock Margin="0,10,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                     Text="{Binding Texture, StringFormat='Feinkorn: {0:F0} %'}" />
-          <Slider Minimum="0" Maximum="100" Value="{Binding Texture, Mode=TwoWay}" />
-
-          <Grid Margin="0,12,0,0" ColumnDefinitions="*,Auto">
-            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Text="{Binding VariantSeed, StringFormat='Seed: {0}'}" />
-            <Button Grid.Column="1" Margin="12,0,0,0" Content="Seed neu würfeln"
-                    Command="{Binding RandomizeSeedCommand}" />
-          </Grid>
-        </StackPanel>
-      </Border>
-
-      <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
-        <Button Classes="accent" Command="{Binding ExportCommand}">
-          <StackPanel Orientation="Horizontal" Spacing="6">
-            <ic:SymbolIcon Symbol="Save" />
-            <TextBlock Text="Variante exportieren" />
+      <!-- ═══ Presets: ein Klick setzt alle Regler ═══ -->
+      <TextBlock Classes="sectionCaption" Margin="2,24,0,8" Text="PRESETS — setzen alle Regler auf einen Schlag" />
+      <UniformGrid Columns="3">
+        <Button Classes="presetCard" Margin="0,0,10,0" Command="{Binding ApplySubtlePresetCommand}"
+                ToolTip.Tip="Kaum hörbar — für Varianten, die dem Original sehr nahe bleiben sollen">
+          <StackPanel Spacing="4">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <ic:SymbolIcon Symbol="WeatherMoon" Foreground="{DynamicResource DawAccentLightBrush}" />
+              <TextBlock FontWeight="SemiBold" Text="Subtil" />
+            </StackPanel>
+            <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Kaum hörbar. Bleibt dem Original sehr nah." />
           </StackPanel>
         </Button>
-        <ProgressBar Width="80" Margin="16,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
-                     IsVisible="{Binding IsBusy}" />
-      </StackPanel>
+        <Button Classes="presetCard" Margin="0,0,10,0" Command="{Binding ApplyBalancedPresetCommand}"
+                ToolTip.Tip="Der Mittelweg — spürbar anders, aber unverkennbar derselbe Song">
+          <StackPanel Spacing="4">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <ic:SymbolIcon Symbol="WeatherPartlyCloudyDay" Foreground="{DynamicResource DawAccentLightBrush}" />
+              <TextBlock FontWeight="SemiBold" Text="Ausgewogen" />
+            </StackPanel>
+            <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Spürbar anders, unverkennbar derselbe Song." />
+          </StackPanel>
+        </Button>
+        <Button Classes="presetCard" Command="{Binding ApplyStrongerPresetCommand}"
+                ToolTip.Tip="Deutlicher Eingriff — eigener Charakter, ohne Tempo und Tonhöhe anzutasten">
+          <StackPanel Spacing="4">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <ic:SymbolIcon Symbol="WeatherSunny" Foreground="{DynamicResource DawAccentLightBrush}" />
+              <TextBlock FontWeight="SemiBold" Text="Kräftiger" />
+            </StackPanel>
+            <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Deutlicher Eingriff mit eigenem Charakter." />
+          </StackPanel>
+        </Button>
+      </UniformGrid>
 
-      <TextBlock Margin="0,12,0,0" TextWrapping="Wrap"
+      <!-- ═══ Regler in zwei Spalten, Wert rechts neben dem Namen ═══ -->
+      <Grid Margin="0,24,0,0" ColumnDefinitions="*,20,*">
+
+        <StackPanel Grid.Column="0" Spacing="14">
+          <TextBlock Classes="sectionCaption" Text="GESAMTWIRKUNG" />
+          <Border Classes="dawPanel" Padding="16">
+            <StackPanel Spacing="6">
+              <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
+                <TextBlock Text="Stärke" />
+                <TextBlock Grid.Column="1" Classes="value" Text="{Binding OverallStrength, StringFormat='{}{0:F0} %'}" />
+              </Grid>
+              <Slider Minimum="0" Maximum="100" Value="{Binding OverallStrength, Mode=TwoWay}"
+                      ToolTip.Tip="Skaliert alle Eingriffe gemeinsam — 0 % ist das Original" />
+              <CheckBox Margin="0,8,0,0" Content="Lautheit an das Original angleichen"
+                        IsChecked="{Binding MatchInputLoudness, Mode=TwoWay}"
+                        ToolTip.Tip="Die Variante wird so laut wie der Ausgangstrack, damit sich nur der Klang unterscheidet" />
+            </StackPanel>
+          </Border>
+
+          <TextBlock Classes="sectionCaption" Margin="2,8,0,8" Text="KLANGFORMUNG" />
+          <Border Classes="dawPanel" Padding="16">
+            <StackPanel Spacing="6">
+              <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
+                <TextBlock Text="Klangneigung  ·  wärmer ↔ heller" />
+                <TextBlock Grid.Column="1" Classes="value" Text="{Binding TimbreShift, StringFormat='{}{0:+0;-0;0}'}" />
+              </Grid>
+              <Slider Minimum="-100" Maximum="100" Value="{Binding TimbreShift, Mode=TwoWay}" />
+              <Grid Classes="sliderRow" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                <TextBlock Text="Präsenz  ·  weicher ↔ direkter" />
+                <TextBlock Grid.Column="1" Classes="value" Text="{Binding PresenceShift, StringFormat='{}{0:+0;-0;0}'}" />
+              </Grid>
+              <Slider Minimum="-100" Maximum="100" Value="{Binding PresenceShift, Mode=TwoWay}" />
+              <Grid Classes="sliderRow" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                <TextBlock Text="Sättigung" />
+                <TextBlock Grid.Column="1" Classes="value" Text="{Binding Saturation, StringFormat='{}{0:F0} %'}" />
+              </Grid>
+              <Slider Minimum="0" Maximum="100" Value="{Binding Saturation, Mode=TwoWay}" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <StackPanel Grid.Column="2" Spacing="14">
+          <TextBlock Classes="sectionCaption" Text="STEREO &amp; TEXTUR" />
+          <Border Classes="dawPanel" Padding="16">
+            <StackPanel Spacing="6">
+              <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
+                <TextBlock Text="Stereo-Breite  ·  enger ↔ weiter" />
+                <TextBlock Grid.Column="1" Classes="value" Text="{Binding StereoWidth, StringFormat='{}{0:+0;-0;0}'}" />
+              </Grid>
+              <Slider Minimum="-100" Maximum="100" Value="{Binding StereoWidth, Mode=TwoWay}" />
+              <Grid Classes="sliderRow" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                <TextBlock Text="Feinkorn" />
+                <TextBlock Grid.Column="1" Classes="value" Text="{Binding Texture, StringFormat='{}{0:F0} %'}" />
+              </Grid>
+              <Slider Minimum="0" Maximum="100" Value="{Binding Texture, Mode=TwoWay}"
+                      ToolTip.Tip="Sehr feine Textur, die digitale Glätte aufbricht" />
+            </StackPanel>
+          </Border>
+
+          <TextBlock Classes="sectionCaption" Margin="2,8,0,8" Text="ZUFALL" />
+          <Border Classes="dawPanel" Padding="16">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                <TextBlock Text="{Binding VariantSeed, StringFormat='Seed {0}'}"
+                           FontFamily="Cascadia Mono, Consolas, monospace" />
+                <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="Derselbe Seed liefert bei gleichen Reglern dieselbe Variante." />
+              </StackPanel>
+              <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding RandomizeSeedCommand}"
+                      ToolTip.Tip="Neue Zufallsgrundlage — ergibt eine andere Variante mit denselben Reglern">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <ic:SymbolIcon Symbol="ArrowShuffle" /><TextBlock Text="Neu würfeln" />
+                </StackPanel>
+              </Button>
+            </Grid>
+          </Border>
+        </StackPanel>
+      </Grid>
+
+      <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" FontSize="12.5"
                  Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding StatusText}" />
     </StackPanel>
   </ScrollViewer>

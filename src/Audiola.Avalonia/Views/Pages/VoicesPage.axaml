@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:controls="using:Audiola.Controls"
@@ -18,12 +18,6 @@
       <Setter Property="CornerRadius" Value="9" />
       <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="Background" Value="{DynamicResource DawGreenBrush}" />
-    </Style>
-    <Style Selector="TextBlock.sectionCaption">
-      <Setter Property="FontSize" Value="11" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
-      <Setter Property="Margin" Value="2,0,0,8" />
     </Style>
     <!-- GPU-Status wird grün, sobald CUDA aktiv ist. -->
     <Style Selector="TextBlock.gpuStatus">

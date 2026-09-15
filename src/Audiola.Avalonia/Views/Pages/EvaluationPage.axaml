@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:vm="using:Audiola.ViewModels"
@@ -8,7 +8,7 @@
   <!-- Port von Audiola/Views/Pages/EvaluationPage.xaml. -->
 
   <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto">
-    <StackPanel MaxWidth="860" HorizontalAlignment="Left">
+    <StackPanel MaxWidth="1120" HorizontalAlignment="Left">
       <TextBlock Classes="dawPageTitle" Text="Mess-Harness — Detektor-Zuverlässigkeit" />
       <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"
                  Text="Lädt eine gelabelte CSV (Wahrheit vs. Detektor-Urteil/Score) und berechnet Konfusionsmatrix und Kennzahlen. Positivklasse = „KI“. Reine Auswertung — es wird kein Detektor aufgerufen." />
@@ -25,6 +25,17 @@
                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                    TextWrapping="Wrap" Text="{Binding StatusText}" />
       </StackPanel>
+
+      <!-- Leerzustand: was die Seite braucht und woher es kommt -->
+      <Border Margin="0,16,0,0" Padding="28" CornerRadius="10" MinHeight="220"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" IsVisible="{Binding !HasResult}">
+        <StackPanel Classes="emptyState">
+          <ic:SymbolIcon Symbol="DocumentTable" />
+          <TextBlock Classes="title" Text="Noch keine Auswertung" />
+          <TextBlock Classes="hint"
+                     Text="Lade eine CSV mit den Spalten truth (oder label) und predicted (oder verdict/score). Daraus entstehen Konfusionsmatrix, Genauigkeit, F1 und — bei einer Score-Spalte — ein verschiebbarer Schwellwert." />
+        </StackPanel>
+      </Border>
 
       <!-- Schwellwert (nur bei Score-Spalte) -->
       <Border Margin="0,16,0,0" Padding="16" CornerRadius="8"

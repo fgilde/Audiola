@@ -8,7 +8,8 @@
              x:Class="Audiola.Avalonia.Views.Pages.EqualizerPage"
              x:DataType="vm:EqualizerViewModel">
 
-  <!-- Port von Audiola/Views/Pages/EqualizerPage.xaml. -->
+  <!-- 4-Band-EQ. Aufbau wie im Studio: Kopfzeile mit der primären Aktion rechts, darunter die
+       Werkzeugleiste in beschrifteten Gruppen, dann die Kurve als Hauptfläche. -->
 
   <UserControl.Resources>
     <conv:StringToBrushConverter x:Key="StringToBrush" />
@@ -16,42 +17,61 @@
 
   <Grid Margin="42,24,42,24" RowDefinitions="Auto,Auto,*,Auto">
 
-    <!-- Kopf -->
-    <StackPanel Grid.Row="0">
-      <TextBlock Classes="dawPageTitle" Text="Equalizer" />
-      <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                 Text="Interaktiver 4-Band-EQ — Punkte ziehen, dann auf den Track anwenden." />
-    </StackPanel>
+    <!-- ═══ Kopfzeile ═══ -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+      <StackPanel Grid.Column="0">
+        <TextBlock Classes="dawPageTitle" Text="Equalizer" />
+        <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                   Text="Vier Bänder, direkt in der Kurve: Punkte ziehen ändert Frequenz und Pegel. Live im Studio-Mix hörbar oder als Datei exportieren." />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Top">
+        <ProgressBar Width="60" VerticalAlignment="Center" IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+        <Button Classes="accent" Command="{Binding ExportCommand}"
+                ToolTip.Tip="Den Studio-Mix mit dieser EQ-Kurve als Audiodatei speichern (WAV/MP3/…)">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:SymbolIcon Symbol="Save" /><TextBlock Text="Mix exportieren" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </Grid>
 
-    <!-- Werkzeugleiste -->
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,14,0,0">
-      <ToggleSwitch VerticalAlignment="Center" Content="Master-EQ (live)"
-                    IsChecked="{Binding IsLivePreview, Mode=TwoWay}" />
-      <Button Margin="16,0,0,0" Command="{Binding ResetCommand}">
-        <StackPanel Orientation="Horizontal" Spacing="6">
-          <ic:SymbolIcon Symbol="ArrowReset" />
-          <TextBlock Text="Zurücksetzen" />
-        </StackPanel>
-      </Button>
-      <Button Margin="8,0,0,0" Command="{Binding ExportCommand}">
-        <StackPanel Orientation="Horizontal" Spacing="6">
-          <ic:SymbolIcon Symbol="Save" />
-          <TextBlock Text="Mix exportieren" />
-        </StackPanel>
-      </Button>
-      <ProgressBar Width="80" Margin="16,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
-                   IsVisible="{Binding IsBusy}" />
-      <TextBlock Margin="12,0,0,0" VerticalAlignment="Center"
-                 Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding StatusText}" />
-    </StackPanel>
+    <!-- ═══ Werkzeugleiste ═══ -->
+    <Border Grid.Row="1" Classes="toolbar">
+      <WrapPanel Orientation="Horizontal">
+        <Border Classes="toolGroup">
+          <StackPanel>
+            <TextBlock Classes="toolGroupCaption" Text="LIVE" />
+            <StackPanel Orientation="Horizontal" Height="34" Spacing="8">
+              <ToggleSwitch VerticalAlignment="Center" Margin="4,0,0,0" OnContent="" OffContent=""
+                            IsChecked="{Binding IsLivePreview, Mode=TwoWay}"
+                            ToolTip.Tip="Master-EQ: die Kurve wirkt sofort auf die Wiedergabe im Studio — zum Einstellen nach Gehör" />
+              <TextBlock VerticalAlignment="Center" FontSize="12" Text="Master-EQ auf die Wiedergabe" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+        <Border Classes="toolGroup">
+          <StackPanel>
+            <TextBlock Classes="toolGroupCaption" Text="KURVE" />
+            <StackPanel Orientation="Horizontal">
+              <Button Classes="toolBtn" Command="{Binding ResetCommand}"
+                      ToolTip.Tip="Alle vier Bänder auf 0 dB zurücksetzen">
+                <ic:SymbolIcon Symbol="ArrowReset" />
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+        <TextBlock Margin="8,0,0,6" VerticalAlignment="Center" FontSize="12"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding StatusText}" />
+      </WrapPanel>
+    </Border>
 
-    <!-- EQ-Kurve -->
+    <!-- ═══ EQ-Kurve ═══ -->
     <Border Grid.Row="2" Margin="0,14,0,0" Padding="12" CornerRadius="10" MinHeight="280"
             Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
       <controls:EqCurveControl Bands="{Binding Bands}" SampleRate="{Binding SampleRate}" />
     </Border>
 
-    <!-- Band-Legende -->
+    <!-- ═══ Band-Legende ═══ -->
     <ItemsControl Grid.Row="3" Margin="0,12,0,0" ItemsSource="{Binding Bands}">
       <ItemsControl.ItemsPanel>
         <ItemsPanelTemplate>
@@ -61,13 +81,16 @@
       <ItemsControl.ItemTemplate>
         <DataTemplate DataType="models:EqBand">
           <Border Margin="4" Padding="10,8" CornerRadius="8"
-                  Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                  Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                  ToolTip.Tip="Band in der Kurve ziehen: waagerecht ändert die Frequenz, senkrecht den Pegel">
             <StackPanel Orientation="Horizontal">
               <Border Width="12" Height="12" CornerRadius="6" VerticalAlignment="Center"
                       Background="{Binding ColorHex, Converter={StaticResource StringToBrush}}" />
               <StackPanel Margin="8,0,0,0">
-                <TextBlock FontSize="12" Text="{Binding Frequency, StringFormat='{}{0:F0} Hz'}" />
-                <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                <TextBlock FontSize="12" FontFamily="Cascadia Mono, Consolas, monospace"
+                           Text="{Binding Frequency, StringFormat='{}{0:F0} Hz'}" />
+                <TextBlock FontSize="11" FontFamily="Cascadia Mono, Consolas, monospace"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                            Text="{Binding GainDb, StringFormat='{}{0:+0.0;-0.0;0} dB'}" />
               </StackPanel>
             </StackPanel>

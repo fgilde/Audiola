@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:controls="using:Audiola.Controls"
@@ -7,180 +7,238 @@
              x:DataType="vm:EditorViewModel"
              Focusable="True" KeyDown="Page_KeyDown">
 
-  <!-- Port von Audiola/Views/Pages/EditorPage.xaml. -->
+  <!-- Wellenform-Editor. Aufbau wie im Studio: Kopfzeile mit den primären Aktionen rechts,
+       darunter die Werkzeugleiste in beschrifteten Gruppen, dann die Wellenform als Hauptfläche.
+       Die Maus- und Tastaturkonventionen stehen im Code-Behind und unten in der Hinweiszeile. -->
 
   <UserControl.Resources>
-    <!-- Kontextmenü der Wellenform. Die Einträge rufen die Befehle über Click-Handler auf:
-         ein Menü ist ein eigenes Fenster, Bindungen auf den Seiten-DataContext greifen dort nicht. -->
+    <!-- Kontextmenü der Wellenform: Click-Handler statt Bindungen — ein Menü ist ein eigenes
+         Fenster, Bindungen auf den Seiten-DataContext greifen dort nicht zuverlässig. -->
     <ContextMenu x:Key="WaveformMenu">
-      <MenuItem Header="Nur Auswahl behalten" Click="Trim_Click" />
-      <MenuItem Header="Auswahl löschen" InputGesture="Delete" Click="Delete_Click" />
-      <MenuItem Header="Auswahl stummschalten" Click="Silence_Click" />
+      <MenuItem Header="Nur Auswahl behalten" Click="Trim_Click">
+        <MenuItem.Icon><ic:SymbolIcon Symbol="Crop" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem Header="Auswahl löschen" InputGesture="Delete" Click="Delete_Click">
+        <MenuItem.Icon><ic:SymbolIcon Symbol="Cut" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem Header="Auswahl stummschalten" Click="Silence_Click">
+        <MenuItem.Icon><ic:SymbolIcon Symbol="SpeakerMute" /></MenuItem.Icon>
+      </MenuItem>
       <Separator />
-      <MenuItem Header="Einblenden" Click="FadeIn_Click" />
-      <MenuItem Header="Ausblenden" Click="FadeOut_Click" />
-      <MenuItem Header="Normalisieren" Click="Normalize_Click" />
-      <MenuItem Header="Rückwärts" Click="Reverse_Click" />
+      <MenuItem Header="Einblenden" Click="FadeIn_Click">
+        <MenuItem.Icon><ic:SymbolIcon Symbol="ArrowTrending" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem Header="Ausblenden" Click="FadeOut_Click">
+        <MenuItem.Icon><ic:SymbolIcon Symbol="ArrowTrendingDown" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem Header="Normalisieren" Click="Normalize_Click">
+        <MenuItem.Icon><ic:SymbolIcon Symbol="Gauge" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem Header="Rückwärts" Click="Reverse_Click">
+        <MenuItem.Icon><ic:SymbolIcon Symbol="ArrowSync" /></MenuItem.Icon>
+      </MenuItem>
       <Separator />
       <MenuItem Header="Alles auswählen" InputGesture="Ctrl+A" Click="SelectAll_Click" />
-      <MenuItem Header="Auswahl aufheben" InputGesture="Esc" Click="ClearSelection_Click" />
-      <MenuItem Header="Rückgängig" InputGesture="Ctrl+Z" Click="Undo_Click" />
+      <MenuItem Header="Auswahl aufheben" InputGesture="Escape" Click="ClearSelection_Click" />
+      <MenuItem Header="Rückgängig" InputGesture="Ctrl+Z" Click="Undo_Click">
+        <MenuItem.Icon><ic:SymbolIcon Symbol="ArrowUndo" /></MenuItem.Icon>
+      </MenuItem>
     </ContextMenu>
   </UserControl.Resources>
 
+  <Grid Margin="42,24,42,24" RowDefinitions="Auto,Auto,Auto,*,Auto">
 
-  <Grid Margin="42,24,42,24" RowDefinitions="Auto,Auto,*,Auto">
-
-    <!-- Kopf: Zurück-Button oben links + Spur-Titel -->
-    <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
-      <Button Grid.Column="0" VerticalAlignment="Top" Margin="0,2,14,0"
-              Command="{Binding CloseEditorCommand}" ToolTip.Tip="Zurück ins Studio (ohne zu übernehmen)">
-        <StackPanel Orientation="Horizontal" Spacing="6">
-          <ic:SymbolIcon Symbol="ArrowLeft" />
-          <TextBlock Text="Zurück" />
-        </StackPanel>
+    <!-- ═══ Kopfzeile: Titel links, primäre Aktionen rechts (wie im Studio) ═══ -->
+    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
+      <Button Grid.Column="0" Classes="dawIcon" Margin="-8,0,10,0" VerticalAlignment="Top"
+              Command="{Binding CloseEditorCommand}" ToolTip.Tip="Zurück zum Studio, ohne zu übernehmen">
+        <ic:SymbolIcon Symbol="ArrowLeft" />
       </Button>
       <StackPanel Grid.Column="1">
         <TextBlock Classes="dawPageTitle" Text="Spur bearbeiten" />
         <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                   Text="{Binding DisplayName}" />
+                   Text="Bereich markieren, schneiden, blenden, Effekte — Änderungen landen erst mit „Ins Studio übernehmen“ auf der Spur." />
+      </StackPanel>
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top"
+                  IsVisible="{Binding HasTrack}">
+        <Button Command="{Binding ExportCommand}"
+                ToolTip.Tip="Die bearbeitete Fassung als eigene Audiodatei speichern (WAV/MP3/…)">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:SymbolIcon Symbol="Save" /><TextBlock Text="Exportieren" />
+          </StackPanel>
+        </Button>
+        <Button Classes="accent" Command="{Binding BakeToStudioCommand}"
+                ToolTip.Tip="Bearbeitung auf die Spur im Studio übernehmen (Strg+Z im Studio macht es rückgängig)">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <ic:SymbolIcon Symbol="Timeline" /><TextBlock Text="Ins Studio übernehmen" />
+          </StackPanel>
+        </Button>
       </StackPanel>
     </Grid>
 
-    <!-- Werkzeugleiste + Effekt-Einstellungen -->
-    <StackPanel Grid.Row="1" IsVisible="{Binding HasTrack}">
-      <Border Margin="0,14,0,0" Padding="10,8" CornerRadius="10"
-              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
-        <WrapPanel Name="Toolbar" Orientation="Horizontal">
-          <Button Margin="0,0,10,6" Classes="accent" Command="{Binding BakeToStudioCommand}"
-                  IsVisible="{Binding HasClipTarget}" ToolTip.Tip="Bearbeitung in den Clip übernehmen">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="Timeline" />
-              <TextBlock Text="Zurück ins Studio" />
-            </StackPanel>
-          </Button>
-          <Button Margin="0,0,6,6" Command="{Binding TrimCommand}" ToolTip.Tip="Nur die Auswahl behalten">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="Crop" /><TextBlock Text="Trimmen" />
-            </StackPanel>
-          </Button>
-          <Button Margin="0,0,6,6" Command="{Binding DeleteCommand}" ToolTip.Tip="Auswahl entfernen und zusammenfügen">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="Cut" /><TextBlock Text="Löschen" />
-            </StackPanel>
-          </Button>
-          <Button Margin="0,0,6,6" Command="{Binding SilenceCommand}" ToolTip.Tip="Auswahl stummschalten">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="SpeakerMute" /><TextBlock Text="Stille" />
-            </StackPanel>
-          </Button>
-          <Button Margin="0,0,6,6" Command="{Binding FadeInCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="ArrowTrending" /><TextBlock Text="Fade-In" />
-            </StackPanel>
-          </Button>
-          <Button Margin="0,0,6,6" Command="{Binding FadeOutCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="ArrowTrendingDown" /><TextBlock Text="Fade-Out" />
-            </StackPanel>
-          </Button>
+    <!-- ═══ Werkzeugleiste: Gruppen mit Icon-Knöpfen, Tooltip nennt Wirkung und Kürzel ═══ -->
+    <Border Grid.Row="1" Classes="toolbar" IsVisible="{Binding HasTrack}">
+      <WrapPanel Name="Toolbar" Orientation="Horizontal">
 
-          <Border Width="1" Margin="6,2,10,6" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
-
-          <Button Margin="0,0,6,6" Command="{Binding NormalizeCommand}" ToolTip.Tip="Auf −1 dBFS anheben">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="Gauge" /><TextBlock Text="Normalisieren" />
+        <Border Classes="toolGroup">
+          <StackPanel>
+            <TextBlock Classes="toolGroupCaption" Text="AUSWAHL" />
+            <StackPanel Orientation="Horizontal">
+              <Button Classes="toolBtn" Command="{Binding TrimCommand}"
+                      ToolTip.Tip="Nur die Auswahl behalten — alles außerhalb wird entfernt">
+                <ic:SymbolIcon Symbol="Crop" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding DeleteCommand}"
+                      ToolTip.Tip="Auswahl entfernen und die Enden zusammenfügen (Entf)">
+                <ic:SymbolIcon Symbol="Cut" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding SilenceCommand}"
+                      ToolTip.Tip="Auswahl stummschalten — die Länge bleibt">
+                <ic:SymbolIcon Symbol="SpeakerMute" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding ClearSelectionCommand}"
+                      ToolTip.Tip="Auswahl aufheben (Esc)">
+                <ic:SymbolIcon Symbol="SelectObjectSkew" />
+              </Button>
             </StackPanel>
-          </Button>
-          <Button Margin="0,0,6,6" Command="{Binding EchoCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="SoundWaveCircle" /><TextBlock Text="Echo" />
-            </StackPanel>
-          </Button>
-          <Button Margin="0,0,6,6" Command="{Binding ReverbCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="Sparkle" /><TextBlock Text="Hall" />
-            </StackPanel>
-          </Button>
-          <Button Margin="0,0,6,6" Command="{Binding WidenCommand}" ToolTip.Tip="Stereo-Breite erhöhen">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="ArrowExpand" /><TextBlock Text="Stereo +" />
-            </StackPanel>
-          </Button>
-          <Button Margin="0,0,6,6" Command="{Binding ReverseCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="ArrowSync" /><TextBlock Text="Umkehren" />
-            </StackPanel>
-          </Button>
-
-          <Border Width="1" Margin="6,2,10,6" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
-
-          <Button Margin="0,0,6,6" Command="{Binding UndoCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="ArrowUndo" /><TextBlock Text="Undo" />
-            </StackPanel>
-          </Button>
-          <Button Margin="0,0,6,6" Command="{Binding ClearSelectionCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="SelectObjectSkew" /><TextBlock Text="Auswahl löschen" />
-            </StackPanel>
-          </Button>
-          <Button Margin="0,0,6,6" Classes="accent" Command="{Binding ExportCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="Save" /><TextBlock Text="Exportieren" />
-            </StackPanel>
-          </Button>
-        </WrapPanel>
-      </Border>
-
-      <Expander Margin="0,8,0,0" Header="Effekt-Einstellungen" HorizontalAlignment="Stretch">
-        <StackPanel>
-          <!-- Live-Vorschau -->
-          <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-            <ToggleSwitch Content="Live-Vorschau (beim Abspielen)" IsChecked="{Binding LivePreview, Mode=TwoWay}" />
-            <CheckBox Margin="20,0,0,0" VerticalAlignment="Center" Content="Echo" IsChecked="{Binding PreviewEcho, Mode=TwoWay}" />
-            <CheckBox Margin="12,0,0,0" VerticalAlignment="Center" Content="Hall" IsChecked="{Binding PreviewReverb, Mode=TwoWay}" />
-            <CheckBox Margin="12,0,0,0" VerticalAlignment="Center" Content="Stereo" IsChecked="{Binding PreviewWiden, Mode=TwoWay}" />
           </StackPanel>
-          <UniformGrid Columns="2">
-            <StackPanel Margin="0,4,16,4">
-              <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                         Text="{Binding EchoDelayMs, StringFormat='Echo · Verzögerung: {0:F0} ms'}" />
-              <Slider Minimum="50" Maximum="1000" Value="{Binding EchoDelayMs, Mode=TwoWay}" />
-              <TextBlock FontSize="11" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                         Text="{Binding EchoFeedback, StringFormat='Echo · Feedback: {0:P0}'}" />
-              <Slider Minimum="0" Maximum="0.9" Value="{Binding EchoFeedback, Mode=TwoWay}" />
-              <TextBlock FontSize="11" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                         Text="{Binding EchoMix, StringFormat='Echo · Mix: {0:P0}'}" />
-              <Slider Minimum="0" Maximum="1" Value="{Binding EchoMix, Mode=TwoWay}" />
-            </StackPanel>
-            <StackPanel Margin="0,4,0,4">
-              <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                         Text="{Binding ReverbMix, StringFormat='Hall · Menge: {0:P0}'}" />
-              <Slider Minimum="0" Maximum="1" Value="{Binding ReverbMix, Mode=TwoWay}" />
-              <TextBlock FontSize="11" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                         Text="{Binding WidenAmount, StringFormat='Stereo · Breite: {0:F2}×'}" />
-              <Slider Minimum="0" Maximum="2" Value="{Binding WidenAmount, Mode=TwoWay}" />
-            </StackPanel>
-          </UniformGrid>
-        </StackPanel>
-      </Expander>
-    </StackPanel>
+        </Border>
 
-    <!-- Große Wellenform -->
-    <Border Grid.Row="2" Margin="0,14,0,14" Padding="12" CornerRadius="10"
+        <Border Classes="toolGroup">
+          <StackPanel>
+            <TextBlock Classes="toolGroupCaption" Text="ÜBERGÄNGE" />
+            <StackPanel Orientation="Horizontal">
+              <Button Classes="toolBtn" Command="{Binding FadeInCommand}"
+                      ToolTip.Tip="Einblenden — die Auswahl von Stille auf volle Lautstärke">
+                <ic:SymbolIcon Symbol="ArrowTrending" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding FadeOutCommand}"
+                      ToolTip.Tip="Ausblenden — die Auswahl von voller Lautstärke auf Stille">
+                <ic:SymbolIcon Symbol="ArrowTrendingDown" />
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="toolGroup">
+          <StackPanel>
+            <TextBlock Classes="toolGroupCaption" Text="KLANG" />
+            <StackPanel Orientation="Horizontal">
+              <Button Classes="toolBtn" Command="{Binding NormalizeCommand}"
+                      ToolTip.Tip="Normalisieren — Pegel auf −1 dBFS anheben (Auswahl oder ganze Spur)">
+                <ic:SymbolIcon Symbol="Gauge" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding EchoCommand}"
+                      ToolTip.Tip="Echo hinzufügen — Verzögerung, Feedback und Mix unten unter „Effekt-Einstellungen“">
+                <ic:SymbolIcon Symbol="SoundWaveCircle" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding ReverbCommand}"
+                      ToolTip.Tip="Hall hinzufügen — Menge unter „Effekt-Einstellungen“">
+                <ic:SymbolIcon Symbol="Sparkle" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding WidenCommand}"
+                      ToolTip.Tip="Stereo-Breite erhöhen — Stärke unter „Effekt-Einstellungen“">
+                <ic:SymbolIcon Symbol="ArrowExpand" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding ReverseCommand}"
+                      ToolTip.Tip="Rückwärts abspielen (Auswahl oder ganze Spur)">
+                <ic:SymbolIcon Symbol="ArrowSync" />
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="toolGroup">
+          <StackPanel>
+            <TextBlock Classes="toolGroupCaption" Text="VERLAUF" />
+            <StackPanel Orientation="Horizontal">
+              <Button Classes="toolBtn" Command="{Binding UndoCommand}"
+                      ToolTip.Tip="Letzten Schritt rückgängig machen (Strg+Z)">
+                <ic:SymbolIcon Symbol="ArrowUndo" />
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Effekt-Parameter: kompakt aufklappbar, Regler im Zeilen-Muster (Name links, Wert rechts) -->
+        <Border Classes="toolGroup">
+          <StackPanel>
+            <TextBlock Classes="toolGroupCaption" Text="VORSCHAU" />
+            <StackPanel Orientation="Horizontal" Spacing="10" Height="34">
+              <ToggleSwitch VerticalAlignment="Center" OnContent="" OffContent="" Margin="4,0,0,0"
+                            IsChecked="{Binding LivePreview, Mode=TwoWay}"
+                            ToolTip.Tip="Effekte beim Abspielen live hören, bevor sie angewendet werden" />
+              <CheckBox VerticalAlignment="Center" Content="Echo" IsChecked="{Binding PreviewEcho, Mode=TwoWay}" />
+              <CheckBox VerticalAlignment="Center" Content="Hall" IsChecked="{Binding PreviewReverb, Mode=TwoWay}" />
+              <CheckBox VerticalAlignment="Center" Content="Stereo" IsChecked="{Binding PreviewWiden, Mode=TwoWay}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </WrapPanel>
+    </Border>
+
+    <Expander Grid.Row="2" Margin="0,8,0,0" HorizontalAlignment="Stretch" IsVisible="{Binding HasTrack}">
+      <Expander.Header>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <ic:SymbolIcon Symbol="Options" FontSize="14" />
+          <TextBlock Text="Effekt-Einstellungen" />
+        </StackPanel>
+      </Expander.Header>
+      <UniformGrid Columns="2" Margin="0,4,0,4">
+        <StackPanel Margin="0,0,20,0" Spacing="6">
+          <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
+            <TextBlock FontSize="12" Text="Echo · Verzögerung" />
+            <TextBlock Grid.Column="1" Classes="value" Text="{Binding EchoDelayMs, StringFormat='{}{0:F0} ms'}" />
+          </Grid>
+          <Slider Minimum="50" Maximum="1000" Value="{Binding EchoDelayMs, Mode=TwoWay}" />
+          <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
+            <TextBlock FontSize="12" Text="Echo · Feedback" />
+            <TextBlock Grid.Column="1" Classes="value" Text="{Binding EchoFeedback, StringFormat='{}{0:P0}'}" />
+          </Grid>
+          <Slider Minimum="0" Maximum="0.9" Value="{Binding EchoFeedback, Mode=TwoWay}" />
+          <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
+            <TextBlock FontSize="12" Text="Echo · Mix" />
+            <TextBlock Grid.Column="1" Classes="value" Text="{Binding EchoMix, StringFormat='{}{0:P0}'}" />
+          </Grid>
+          <Slider Minimum="0" Maximum="1" Value="{Binding EchoMix, Mode=TwoWay}" />
+        </StackPanel>
+        <StackPanel Spacing="6">
+          <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
+            <TextBlock FontSize="12" Text="Hall · Menge" />
+            <TextBlock Grid.Column="1" Classes="value" Text="{Binding ReverbMix, StringFormat='{}{0:P0}'}" />
+          </Grid>
+          <Slider Minimum="0" Maximum="1" Value="{Binding ReverbMix, Mode=TwoWay}" />
+          <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
+            <TextBlock FontSize="12" Text="Stereo · Breite" />
+            <TextBlock Grid.Column="1" Classes="value" Text="{Binding WidenAmount, StringFormat='{}{0:F2}×'}" />
+          </Grid>
+          <Slider Minimum="0" Maximum="2" Value="{Binding WidenAmount, Mode=TwoWay}" />
+        </StackPanel>
+      </UniformGrid>
+    </Expander>
+
+    <!-- ═══ Wellenform: die Hauptfläche ═══ -->
+    <Border Grid.Row="3" Margin="0,14,0,10" Padding="12" CornerRadius="10"
             Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
       <Panel>
-        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                   Text="Keine Datei geladen — über „Start“ öffnen oder per Drag &amp; Drop ziehen."
-                   IsVisible="{Binding !HasTrack}" />
+        <!-- Leerzustand: sagt, wie man hierher kommt, statt eine leere Fläche zu zeigen -->
+        <StackPanel Classes="emptyState" IsVisible="{Binding !HasTrack}">
+          <ic:SymbolIcon Symbol="SoundWaveCircle" />
+          <TextBlock Classes="title" Text="Keine Spur geöffnet" />
+          <TextBlock Classes="hint"
+                     Text="Im Studio einen Clip doppelt anklicken oder eine Audiodatei über „Start“ öffnen — dann erscheint sie hier zum Schneiden und Bearbeiten." />
+          <Button HorizontalAlignment="Center" Command="{Binding CloseEditorCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ic:SymbolIcon Symbol="Timeline" /><TextBlock Text="Zum Studio" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
 
         <controls:WaveformControl Name="Waveform" Cursor="Ibeam"
                                   PointerPressed="Waveform_PointerPressed"
-                                  ContextMenu="{StaticResource WaveformMenu}"
                                   PointerMoved="Waveform_PointerMoved"
                                   PointerReleased="Waveform_PointerReleased"
+                                  ContextMenu="{StaticResource WaveformMenu}"
                                   Peaks="{Binding Peaks}"
                                   Progress="{Binding Transport.Progress}"
                                   SelectionStart="{Binding SelectionStart}"
@@ -189,27 +247,21 @@
       </Panel>
     </Border>
 
-    <!-- Auswahl-Info + Metadaten -->
-    <StackPanel Grid.Row="3" IsVisible="{Binding HasTrack}">
-      <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding SelectionInfo}" />
-      <TextBlock Margin="0,4,0,0" FontSize="11.5" TextWrapping="Wrap"
-                 Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                 Text="Ziehen wählt aus · Klick setzt die Abspielmarke · Doppelklick wählt alles · Rechtsklick öffnet das Menü · Leertaste spielt · Entf löscht · Strg+A alles · Strg+Z zurück · Esc hebt auf" />
-      <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-        <ic:SymbolIcon Symbol="Info" VerticalAlignment="Center" Margin="0,0,10,0" />
-        <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding FormatInfo}" />
-        <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="12"
+    <!-- ═══ Fußzeile: Auswahl, Format, Bedienhinweis ═══ -->
+    <Grid Grid.Row="4" ColumnDefinitions="*,Auto" IsVisible="{Binding HasTrack}">
+      <StackPanel Grid.Column="0" Spacing="4">
+        <TextBlock FontFamily="Cascadia Mono, Consolas, monospace" FontSize="12.5"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding SelectionInfo}" />
+        <TextBlock FontSize="11.5" TextWrapping="Wrap"
                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                   Text="{Binding PathInfo}" TextTrimming="CharacterEllipsis" />
+                   Text="Ziehen wählt aus · Klick setzt die Abspielmarke · Doppelklick wählt alles · Umschalt+Klick erweitert · Rechtsklick öffnet das Menü · Leertaste spielt" />
       </StackPanel>
-    </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+        <ic:SymbolIcon Symbol="Info" FontSize="14" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+        <TextBlock FontSize="12" VerticalAlignment="Center"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding FormatInfo}" />
+      </StackPanel>
+    </Grid>
   </Grid>
-
-  <UserControl.Styles>
-    <!-- Werkzeug-Schalter nehmen den Fokus nicht an: sonst löst die Leertaste danach den zuletzt
-         geklickten Schalter aus statt die Wiedergabe, was sich wie ein Stottern anfühlt. -->
-    <Style Selector="WrapPanel#Toolbar > Button">
-      <Setter Property="Focusable" Value="False" />
-    </Style>
-  </UserControl.Styles>
 </UserControl>

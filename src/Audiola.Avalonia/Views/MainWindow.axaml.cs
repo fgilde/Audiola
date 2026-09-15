@@ -23,6 +23,9 @@ public partial class MainWindow : Window
     /// <summary>Von der App gesetzt: beim ersten Anzeigen zu öffnende Datei (Doppelklick/CLI).</summary>
     public string? PendingStartupFile { get; set; }
 
+    /// <summary>Von der App gesetzt: Seite, die nach dem Start angezeigt wird (Startargument --page).</summary>
+    public string? PendingStartupPage { get; set; }
+
     public MainWindow(
         MainWindowViewModel viewModel,
         IShellNavigation navigation,
@@ -56,6 +59,14 @@ public partial class MainWindow : Window
         {
             _navigation.Navigate(ShellPage.Home);
             if (PendingStartupFile is { } f) { PendingStartupFile = null; await _viewModel.OpenPathAsync(f); }
+            if (PendingStartupPage is { } p && Enum.TryParse<ShellPage>(p, true, out var page))
+            {
+                PendingStartupPage = null;
+                // Nach dem Laden springt das Studio (verzögert) selbst auf die Timeline — die
+                // gewünschte Seite deshalb erst danach, sonst wird sie sofort wieder überdeckt.
+                await Task.Delay(5000);
+                _navigation.Navigate(page);
+            }
             await _viewModel.AutoUpdateAsync();
         };
         Closing += OnWindowClosing;

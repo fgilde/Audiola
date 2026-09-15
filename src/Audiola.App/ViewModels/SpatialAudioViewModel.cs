@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using Audiola.Models;
 using Audiola.Services;
@@ -26,6 +26,9 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
     private ProjectSpatialDto? _pendingSpatial;
 
     public ObservableCollection<SpatialSourceViewModel> Sources { get; } = [];
+
+    /// <summary>Für den Leerzustand: ohne Spuren im Studio gibt es nichts zu positionieren.</summary>
+    public bool HasSources => Sources.Count > 0;
 
     public IReadOnlyList<string> Layouts { get; } = ["5.1 (Surround)", "7.1 (Surround)", "7.1.4 (Atmos-Bett)"];
 
@@ -71,6 +74,7 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
         if (_timeline.Tracks.Count == 0 || dur <= 0.01)
         {
             Sources.Clear();
+            OnPropertyChanged(nameof(HasSources));
             StatusText = "Keine Spuren — im Studio Stems laden oder trennen.";
             UpdateCommands();
             return;
@@ -133,7 +137,9 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
             }
 
             Sources.Clear();
+            OnPropertyChanged(nameof(HasSources));
             foreach (var s in newSources) Sources.Add(s);
+            OnPropertyChanged(nameof(HasSources));
             _pendingSpatial = null;
             StatusText = Sources.Count == 0
                 ? "Keine abspielbaren Spuren."

@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using Audiola.Models;
 using Audiola.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -22,6 +22,9 @@ public sealed partial class ProvenanceViewModel : ObservableObject
     [ObservableProperty] private string _analyzedFile = "";
 
     public ObservableCollection<Finding> Findings { get; } = [];
+
+    /// <summary>Für den Leerzustand der Seite: erst nach einer Analyse gibt es etwas zu zeigen.</summary>
+    public bool HasFindings => Findings.Count > 0;
 
     public ProvenanceViewModel(SessionState session, IProvenanceService provenance, TimelineViewModel timeline,
         IFileDialogs files)
@@ -91,6 +94,7 @@ public sealed partial class ProvenanceViewModel : ObservableObject
         IsBusy = true;
         AnalyzeTrackCommand.NotifyCanExecuteChanged();
         Findings.Clear();
+        OnPropertyChanged(nameof(HasFindings));
         Assessment = "";
         C2paRaw = null;
         HasC2paRaw = false;
@@ -102,6 +106,7 @@ public sealed partial class ProvenanceViewModel : ObservableObject
 
             foreach (var f in report.Findings)
                 Findings.Add(f);
+            OnPropertyChanged(nameof(HasFindings));
 
             Assessment = report.Assessment;
             C2paRaw = report.C2paRaw;

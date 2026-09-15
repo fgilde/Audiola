@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:controls="using:Audiola.Controls"
@@ -22,10 +22,12 @@
                                   Progress="{Binding Transport.Progress}"
                                   ToolTip.Tip="Klicken zum Springen" />
         <StackPanel Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center" Spacing="6">
-          <Button Width="44" Command="{Binding Transport.PlayPauseCommand}">
+          <Button Width="44" Command="{Binding Transport.PlayPauseCommand}" Focusable="False"
+                  ToolTip.Tip="Vorschau abspielen / pausieren (Leertaste)">
             <ic:SymbolIcon Symbol="Play" />
           </Button>
-          <Button Width="44" Command="{Binding Transport.StopCommand}">
+          <Button Width="44" Command="{Binding Transport.StopCommand}" Focusable="False"
+                  ToolTip.Tip="Vorschau stoppen und an den Anfang">
             <ic:SymbolIcon Symbol="Stop" />
           </Button>
           <ToggleSwitch Margin="10,0,0,0" VerticalAlignment="Center" Content="Master (A/B)"

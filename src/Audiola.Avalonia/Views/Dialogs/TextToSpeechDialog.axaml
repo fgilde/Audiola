@@ -1,6 +1,7 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:dialogs="using:Audiola.Avalonia.Views.Dialogs"
+        xmlns:ic="using:FluentIcons.Avalonia"
         xmlns:vm="using:Audiola.ViewModels"
         x:Class="Audiola.Avalonia.Views.Dialogs.TextToSpeechDialog"
         x:DataType="vm:VoiceSourceViewModel"
@@ -46,8 +47,12 @@
       <ProgressBar Width="50" Margin="0,0,4,0" VerticalAlignment="Center" IsIndeterminate="True"
                    IsVisible="{Binding IsResolving}" />
       <Button Content="Abbrechen" Click="Cancel_Click" IsEnabled="{Binding !IsResolving}" />
-      <Button Content="Erzeugen &amp; als Spur einfügen" Classes="accent" Click="Ok_Click"
-              IsEnabled="{Binding !IsResolving}" />
+      <Button Classes="accent" Click="Ok_Click" IsEnabled="{Binding !IsResolving}"
+              ToolTip.Tip="Text mit der gewählten Stimme sprechen lassen und als neue Spur ins Studio legen">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <ic:SymbolIcon Symbol="Add" /><TextBlock Text="Als Spur einfügen" />
+        </StackPanel>
+      </Button>
     </StackPanel>
   </Grid>
 </Window>

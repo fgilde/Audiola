@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ic="using:FluentIcons.Avalonia"
         xmlns:controls="using:Audiola.Controls"
@@ -260,9 +260,13 @@
           </StackPanel>
           <!-- „Perfekt machen": Auto-Tune auf die Original-Melodie + optionale Stimm-Veredelung -->
           <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-            <Button Classes="accent" Content="✨ Perfekt machen" Command="{Binding MakePerfectCommand}"
+            <Button Classes="accent" Command="{Binding MakePerfectCommand}"
                     IsEnabled="{Binding HasRecording}"
-                    ToolTip.Tip="Zieht deine Aufnahme auf die Original-Melodie (deine Stimme bleibt) und übernimmt sie als neue Spur." />
+                    ToolTip.Tip="Zieht deine Aufnahme auf die Original-Melodie (deine Stimme bleibt) und übernimmt sie als neue Spur.">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ic:SymbolIcon Symbol="Sparkle" /><TextBlock Text="Perfekt machen" />
+              </StackPanel>
+            </Button>
             <TextBlock Margin="16,0,6,0" VerticalAlignment="Center" FontSize="12"
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Stärke" />
             <Slider Width="120" VerticalAlignment="Center" Minimum="0" Maximum="1"

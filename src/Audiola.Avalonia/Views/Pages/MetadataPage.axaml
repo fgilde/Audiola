@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:conv="using:Audiola.Avalonia.Converters"
@@ -40,7 +40,7 @@
     </StackPanel>
 
     <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
-      <StackPanel MaxWidth="820" HorizontalAlignment="Left">
+      <StackPanel MaxWidth="1000" HorizontalAlignment="Left">
 
         <Grid ColumnDefinitions="Auto,*">
 

@@ -1,5 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ic="using:FluentIcons.Avalonia">
 
   <!-- ============================================================
        Shell-Styles der DAW-Oberfläche — Gegenstück zu den benannten
@@ -189,4 +190,76 @@
     <Setter Property="Background" Value="{DynamicResource DawScrollThumbBrush}" />
   </Style>
 
+  <!-- ═══════════ Werkzeugleisten: gruppierte Blöcke mit kleiner Überschrift ═══════════
+       Ein Block je Aufgabe (SPUREN, WIEDERGABE, …), darin quadratische Icon-Knöpfe. Das Muster
+       stammt aus dem Studio und gilt für alle Seiten, damit sich Werkzeugleisten überall gleich
+       lesen. Jeder Knopf braucht einen Tooltip — das Icon allein erklärt sich nicht. -->
+  <Style Selector="Border.toolGroup">
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="8,3,8,5" />
+    <Setter Property="Margin" Value="0,0,8,6" />
+    <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+  </Style>
+  <Style Selector="TextBlock.toolGroupCaption">
+    <Setter Property="FontSize" Value="9" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="2,0,0,3" />
+    <Setter Property="Opacity" Value="0.6" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+  </Style>
+  <Style Selector="Button.toolBtn">
+    <Setter Property="Margin" Value="0,0,4,0" />
+    <Setter Property="MinWidth" Value="36" />
+    <Setter Property="Height" Value="34" />
+    <Setter Property="Padding" Value="8,0" />
+    <!-- Werkzeug-Knöpfe nehmen den Fokus nicht an: sonst löst die Leertaste den zuletzt
+         geklickten Knopf aus statt die Wiedergabe. -->
+    <Setter Property="Focusable" Value="False" />
+  </Style>
+  <Style Selector="Border.toolbar">
+    <Setter Property="Margin" Value="0,14,0,0" />
+    <Setter Property="Padding" Value="8,6,8,0" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+  </Style>
+
+  <!-- Abschnitts-Überschrift in Versalien (RECHEN-GERÄT, DEINE STIMMEN, …). -->
+  <Style Selector="TextBlock.sectionCaption">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="2,0,0,8" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+  </Style>
+
+  <!-- ═══════════ Leerzustand: Icon, Satz, nächster Schritt ═══════════
+       Statt einer leeren Fläche sagt die Seite, was sie braucht und wo man es bekommt. -->
+  <Style Selector="StackPanel.emptyState">
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Spacing" Value="10" />
+    <Setter Property="MaxWidth" Value="460" />
+  </Style>
+  <Style Selector="StackPanel.emptyState > ic|SymbolIcon">
+    <Setter Property="FontSize" Value="44" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
+  </Style>
+  <Style Selector="StackPanel.emptyState > TextBlock.title">
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="TextAlignment" Value="Center" />
+  </Style>
+  <Style Selector="StackPanel.emptyState > TextBlock.hint">
+    <Setter Property="TextAlignment" Value="Center" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+  </Style>
+
+  <!-- Regler-Zeile: Bezeichnung links, aktueller Wert rechts, Regler darunter. -->
+  <Style Selector="Grid.sliderRow > TextBlock.value">
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, monospace" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+  </Style>
 </Styles>

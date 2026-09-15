@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ic="using:FluentIcons.Avalonia"
         xmlns:vm="using:Audiola.ViewModels"
@@ -43,7 +43,11 @@
 
     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="18,8,18,16" Spacing="8">
       <Button Content="Abbrechen" Click="Cancel_Click" />
-      <Button Content="Anwenden" Classes="accent" Click="Apply_Click" />
+      <Button Classes="accent" Click="Apply_Click" ToolTip.Tip="Die angehakten Variationen nacheinander auf das Ziel anwenden">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <ic:SymbolIcon Symbol="Wand" /><TextBlock Text="Anwenden" />
+        </StackPanel>
+      </Button>
     </StackPanel>
   </Grid>
 </Window>

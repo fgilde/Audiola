@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:conv="using:Audiola.Avalonia.Converters"
@@ -127,12 +127,14 @@
                        Text="Während die Live-Vorschau läuft, wirken Azimut/Höhe/Distanz/Pegel sofort. (Raum/Hall wird nur beim Export hinzugefügt.)" />
 
             <StackPanel Orientation="Horizontal" Margin="0,12,0,0" Spacing="8">
-              <Button Classes="accent" Command="{Binding ExportBinauralCommand}">
+              <Button Classes="accent" Command="{Binding ExportBinauralCommand}"
+                    ToolTip.Tip="Stereo-WAV für Kopfhörer: der Raum wird per HRTF in zwei Kanäle gerechnet">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <ic:SymbolIcon Symbol="Headphones" /><TextBlock Text="Binaural exportieren" />
                 </StackPanel>
               </Button>
-              <Button Classes="accent" Command="{Binding ExportMultichannelCommand}">
+              <Button Classes="accent" Command="{Binding ExportMultichannelCommand}"
+                    ToolTip.Tip="Mehrkanal-WAV im gewählten Layout (5.1 / 7.1 / 7.1.4) — für Atmos-Renderer und DAWs">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <ic:SymbolIcon Symbol="Speaker2" /><TextBlock Text="Mehrkanal-WAV exportieren" />
                 </StackPanel>
@@ -147,6 +149,14 @@
 
       <!-- Quellen / Positionen -->
       <TextBlock Margin="0,22,0,8" FontWeight="SemiBold" Text="Spuren positionieren" />
+      <Border Classes="dawPanel" Padding="24" IsVisible="{Binding !HasSources}">
+        <StackPanel Classes="emptyState">
+          <ic:SymbolIcon Symbol="Headphones" />
+          <TextBlock Classes="title" Text="Keine Spuren zum Positionieren" />
+          <TextBlock Classes="hint"
+                     Text="Lade im Studio einen Song und trenne ihn in Stems — jede Spur erscheint dann hier und auf der Bühne oben, wo du sie im Raum verschieben kannst." />
+        </StackPanel>
+      </Border>
       <ItemsControl ItemsSource="{Binding Sources}">
         <ItemsControl.ItemTemplate>
           <DataTemplate DataType="vm:SpatialSourceViewModel">

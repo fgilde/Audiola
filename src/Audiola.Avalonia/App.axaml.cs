@@ -1,4 +1,4 @@
-using Audiola.Avalonia.Platform;
+﻿using Audiola.Avalonia.Platform;
 using Audiola.Avalonia.Views;
 using Audiola.Avalonia.Views.Pages;
 using Audiola.Services;
@@ -19,6 +19,9 @@ public partial class App : Application
 
     /// <summary>Per Doppelklick/Kommandozeile übergebene Datei (von Program.Main gesetzt).</summary>
     public static string? StartupFile { get; set; }
+
+    /// <summary>Seite, die nach dem Start geöffnet wird (Startargument <c>--page</c>).</summary>
+    public static string? StartupPage { get; set; }
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -59,6 +62,7 @@ public partial class App : Application
         {
             var window = _services.GetRequiredService<MainWindow>();
             window.PendingStartupFile = StartupFile;
+            window.PendingStartupPage = StartupPage;
             desktop.MainWindow = window;
             splash?.SetProgress(1);
             window.Opened += (_, _) =>

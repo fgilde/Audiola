@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:models="using:Audiola.Models"
@@ -47,6 +47,17 @@
     <!-- Ergebnis -->
     <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
       <StackPanel>
+        <!-- Leerzustand -->
+        <Border Padding="28" CornerRadius="10" MinHeight="220" Margin="0,0,0,8"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" IsVisible="{Binding !HasFindings}">
+          <StackPanel Classes="emptyState">
+            <ic:SymbolIcon Symbol="DocumentSearch" />
+            <TextBlock Classes="title" Text="Noch nichts analysiert" />
+            <TextBlock Classes="hint"
+                       Text="„Track / Studio-Mix analysieren“ prüft die geladene Musik auf Herkunftsdaten, Wasserzeichen und KI-Hinweise — oder wähle eine beliebige Datei. Es wird nur gelesen, nichts verändert." />
+          </StackPanel>
+        </Border>
+
         <!-- Befundliste -->
         <ItemsControl ItemsSource="{Binding Findings}">
           <ItemsControl.ItemTemplate>

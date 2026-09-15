@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Audiola.Avalonia.Views.SplashWindow"
         Width="460" Height="260"
@@ -19,7 +19,7 @@
       <!-- Marken-Glow hinter dem Logo -->
       <Border>
         <Border.Background>
-          <RadialGradientBrush Center="50%,38%" GradientOrigin="50%,38%" Radius="0.8">
+          <RadialGradientBrush Center="50%,38%" GradientOrigin="50%,38%" RadiusX="80%" RadiusY="80%">
             <GradientStop Color="#403F8CFF" Offset="0" />
             <GradientStop Color="#20B56BFF" Offset="0.6" />
             <GradientStop Color="#00000000" Offset="1" />

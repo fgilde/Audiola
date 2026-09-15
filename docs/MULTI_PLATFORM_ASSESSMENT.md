@@ -132,6 +132,25 @@ Clipping) und schreibt WAV, MP3, M4A oder FLAC über den vorhandenen
 `AudioExporter`. Im Ergebnis gibt es dafür je Spieler „Aufnahme“ und, sobald
 mehrere Mitschnitte vorliegen, „Alle zusammen als Duett“.
 
+## Bedienoberfläche nach dem Umbau (Durchgang September 2026)
+
+Alle Seiten und Dialoge wurden mit Bild aufgenommen und gegen das Studio als Vorbild
+sowie gegen die Konventionen gängiger Audio-Programme abgeglichen. Ergebnis:
+
+| Bereich | Befund | Behandlung |
+| --- | --- | --- |
+| Theme | Werkzeugleisten-Gruppen, Abschnitts-Überschriften und Leerzustände waren nur lokal (Studio, Stimmen) definiert | ins Theme gehoben: `toolbar`, `toolGroup`, `toolBtn` (nimmt keinen Fokus an), `sectionCaption`, `emptyState`, `sliderRow` |
+| Editor | Seite ließ sich seit v1.2.9 nicht öffnen (`InputGesture="Esc"` — Avalonia kennt nur `Escape`; die Ausnahme fing der globale Fehlerfang still ab) | behoben; Kopfzeile mit primären Aktionen rechts, Werkzeugleiste in Gruppen mit Kürzel-Tooltips, Regler mit Wertanzeige, Kontextmenü mit Icons, Leerzustand |
+| Klangvariation | ASCII-Umlaute im Text, Presets als nackte Textknöpfe, Regler ohne Wertanzeige | Umlaute, Presets als erklärte Karten, zwei Spalten, Export in der Kopfzeile |
+| Equalizer | lose Werkzeugzeile | Gruppenmuster, Export in der Kopfzeile, Legende mit Bedienhinweis |
+| Evaluation, Provenienz, Spatial | ohne Daten große leere Flächen | Leerzustände mit Erklärung und nächstem Schritt |
+| Dialoge | Primärknöpfe ohne Icon/Tooltip, Emoji im Knopftext | Icons und Tooltips (Stimmtausch, Text-zu-Sprache, Variationen, Einsingen) |
+| Einstellungen, Metadaten | nutzten nur ~600 px Breite | Breite angehoben |
+| Mastering | Transport ohne Tooltips | ergänzt, Fokus abgeschaltet |
+
+Entwicklungs-Hilfe: `Audiola.exe <datei> --page <Seite>` öffnet direkt eine Seite — für
+Screenshots und Tests, ohne sich durch die Oberfläche zu klicken.
+
 ### Offene Punkte
 
 - Die Abnahmematrix ist unter Windows durchgelaufen (Projekt-Roundtrip, Timeline,
