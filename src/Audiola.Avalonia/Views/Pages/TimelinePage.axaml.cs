@@ -1,9 +1,11 @@
 ﻿using Audiola.Avalonia.Platform;
 using Audiola.Services;
 using Audiola.ViewModels;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 
 namespace Audiola.Avalonia.Views.Pages;
 
@@ -106,6 +108,17 @@ public partial class TimelinePage : UserControl, INavigationAware
     {
         if (sender is Control { DataContext: StemTrackViewModel track })
             _vm.SelectTrack(track);
+    }
+
+    /// <summary>Der „…"-Knopf am Spurkopf öffnet dasselbe Menü wie der Rechtsklick — per
+    /// Rechtsklick allein findet es niemand.</summary>
+    private void TrackMenu_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Visual v) return;
+        var header = v.GetVisualAncestors().OfType<Border>().FirstOrDefault(b => b.ContextMenu is not null);
+        if (header is null) return;
+        if (header.DataContext is StemTrackViewModel track) _vm.SelectTrack(track);
+        header.ContextMenu!.Open(header);
     }
 
     // ---- Drag & Drop von Audiodateien ----

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO;
 using Avalonia;
 using Avalonia.Data.Converters;
@@ -87,6 +87,20 @@ public sealed class PixelsToLeftMarginConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         => new Thickness(value is double x ? Math.Max(0, x) : 0, 0, 0, 0);
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Panorama −1..1 → „L 40" / „Mitte" / „R 25" für die Anzeige im Spurkopf.</summary>
+public sealed class PanToTextConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var pan = value is double d ? d : 0;
+        var amount = (int)Math.Round(Math.Abs(pan) * 100);
+        return amount < 2 ? "Mitte" : (pan < 0 ? $"L {amount}" : $"R {amount}");
+    }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => throw new NotSupportedException();

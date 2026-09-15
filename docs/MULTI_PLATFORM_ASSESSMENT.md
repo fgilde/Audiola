@@ -151,6 +151,23 @@ sowie gegen die Konventionen gängiger Audio-Programme abgeglichen. Ergebnis:
 Entwicklungs-Hilfe: `Audiola.exe <datei> --page <Seite>` öffnet direkt eine Seite — für
 Screenshots und Tests, ohne sich durch die Oberfläche zu klicken.
 
+### Studio-Arbeitsfläche (zweiter Durchgang)
+
+Rückmeldung nach dem ersten Durchgang: die Leiste zerfiel in sieben Kästen
+unterschiedlicher Höhe, der Clip-Inspektor sprang als zweite breite Zeile auf,
+der Spurkopf war gedrängt, und bei kleinem Zoom stand die Timeline zentriert
+statt am Spurkopf.
+
+| Stelle | vorher | jetzt |
+| --- | --- | --- |
+| Werkzeugleiste | sieben Kästen mit Überschriften, Kippschalter und Combos dazwischen, zwei Zeilen hoch | eine Zeile: gleich große, flache Icon-Knöpfe, Sinngruppen durch dünne Striche getrennt, Schalter als ToggleButton mit Akzent im An-Zustand (Muster jetzt auch im Editor und Equalizer) |
+| Clip-Regler | eigene Karte, sprang beim Auswählen auf und verschob das Layout | Zeile in derselben Karte, Regler mit Wert daneben, Aktionen rechts |
+| Spurkopf | Checkbox, zwei Icon-Knöpfe, zwei unbeschriftete Regler, M/S | Farbstreifen, Name mit „…"-Menü (öffnet dasselbe Menü wie der Rechtsklick), M/S/Aktiv in Bedeutungsfarben, Fader und Panorama mit Wert, Pegelbalken am Rand |
+| Zoom | passte der Song in die Breite, zentrierte der ScrollViewer den Inhalt — Zeitachse und Spurkopf standen versetzt | Inhalt linksbündig; das Raster endet unter der letzten Spur |
+| Clip | nur Wellenform, große weiße Fade-Griffe | Name im Clip, Griffe treten erst beim Überfahren hervor |
+| Mixer | Kanalzüge wuchsen mit der freien Fläche mit | feste, kompakte Streifen mit Fader, Pegel, Wert und M/S |
+| Spurköpfe/Lineal | „Hidden" zeichnete weiter eine Laufspur — ein Strich neben den Spurköpfen | Balken ausgeblendet |
+
 ### Offene Punkte
 
 - Die Abnahmematrix ist unter Windows durchgelaufen (Projekt-Roundtrip, Timeline,

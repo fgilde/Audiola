@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:controls="using:Audiola.Controls"
@@ -40,7 +40,6 @@
       <WrapPanel Orientation="Horizontal">
         <Border Classes="toolGroup">
           <StackPanel>
-            <TextBlock Classes="toolGroupCaption" Text="LIVE" />
             <StackPanel Orientation="Horizontal" Height="34" Spacing="8">
               <ToggleSwitch VerticalAlignment="Center" Margin="4,0,0,0" OnContent="" OffContent=""
                             IsChecked="{Binding IsLivePreview, Mode=TwoWay}"
@@ -49,9 +48,8 @@
             </StackPanel>
           </StackPanel>
         </Border>
-        <Border Classes="toolGroup">
+        <Border Classes="toolGroup last">
           <StackPanel>
-            <TextBlock Classes="toolGroupCaption" Text="KURVE" />
             <StackPanel Orientation="Horizontal">
               <Button Classes="toolBtn" Command="{Binding ResetCommand}"
                       ToolTip.Tip="Alle vier Bänder auf 0 dB zurücksetzen">

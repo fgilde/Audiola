@@ -15,6 +15,7 @@
     <conv:SecondsToWidthConverter x:Key="SecondsToWidth" />
     <conv:SecondsToMarginConverter x:Key="SecondsToMargin" />
     <conv:PixelsToLeftMarginConverter x:Key="PixelsToLeftMargin" />
+    <conv:PanToTextConverter x:Key="PanToText" />
   </UserControl.Resources>
 
   <UserControl.KeyBindings>
@@ -23,14 +24,109 @@
   </UserControl.KeyBindings>
 
   <UserControl.Styles>
+    <!-- Lineal und Spurköpfe scrollen nur mit; ihre Balken sind ausgeblendet („Hidden" malt
+         sonst weiter die Laufspur und hinterlässt einen Strich neben den Spurköpfen). -->
+    <Style Selector="ScrollViewer#HeaderScroll ScrollBar">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="ScrollViewer#RulerScroll ScrollBar">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+
     <!-- Ausgewählte Spur / ausgewählter Clip -->
     <Style Selector="Border.trackHeader.selected">
-      <Setter Property="BorderBrush" Value="#5B8CFF" />
+      <Setter Property="BorderBrush" Value="{DynamicResource DawAccentBrush}" />
       <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
     </Style>
     <Style Selector="Border.clipBox.selected">
       <Setter Property="BorderBrush" Value="White" />
       <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+    </Style>
+
+    <!-- Spurname: sieht aus wie Text, ist aber ein Eingabefeld (Klick = umbenennen). -->
+    <Style Selector="TextBox.trackName">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Height" Value="21" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBox.trackName:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource DawHoverBrush}" />
+    </Style>
+
+    <!-- „…" öffnet dasselbe Menü wie der Rechtsklick — sonst findet es niemand. -->
+    <Style Selector="Button.trackMenu">
+      <Setter Property="Width" Value="22" />
+      <Setter Property="Height" Value="21" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="4,0,0,0" />
+      <Setter Property="CornerRadius" Value="5" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
+    </Style>
+    <Style Selector="Button.trackMenu:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource DawHoverBrush}" />
+    </Style>
+
+    <!-- Mute/Solo/Aktiv: kleine Quadrate, eingeschaltet in der Farbe ihrer Bedeutung. -->
+    <Style Selector="ToggleButton.msBtn">
+      <Setter Property="Width" Value="24" />
+      <Setter Property="Height" Value="22" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,0,4,0" />
+      <Setter Property="CornerRadius" Value="5" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource DawTextDimBrush}" />
+    </Style>
+    <Style Selector="ToggleButton.msBtn:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource DawAccentSoftBrush}" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="ToggleButton.msBtn:checked">
+      <Setter Property="Foreground" Value="{DynamicResource DawAccentBrush}" />
+    </Style>
+    <Style Selector="ToggleButton.msBtn.mute:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#33FF6B6B" />
+    </Style>
+    <Style Selector="ToggleButton.msBtn.mute:checked">
+      <Setter Property="Foreground" Value="#FF8A8A" />
+    </Style>
+    <Style Selector="ToggleButton.msBtn.solo:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#33FFB454" />
+    </Style>
+    <Style Selector="ToggleButton.msBtn.solo:checked">
+      <Setter Property="Foreground" Value="#FFC978" />
+    </Style>
+
+    <!-- Fade-Griffe halten sich zurück, bis der Zeiger über dem Clip steht. -->
+    <Style Selector="Border.clipBox Border.fadeGrip">
+      <Setter Property="Width" Value="11" />
+      <Setter Property="Height" Value="11" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Margin" Value="3" />
+      <Setter Property="Background" Value="#66FFFFFF" />
+      <Setter Property="Cursor" Value="SizeNorthSouth" />
+    </Style>
+    <Style Selector="Border.clipBox:pointerover Border.fadeGrip">
+      <Setter Property="Background" Value="#F2FFFFFF" />
+    </Style>
+    <!-- Clipname sitzt wie in jeder DAW oben links im Clip. -->
+    <Style Selector="TextBlock.clipName">
+      <Setter Property="Margin" Value="18,3,18,0" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+      <Setter Property="Foreground" Value="#B3FFFFFF" />
+      <Setter Property="IsHitTestVisible" Value="False" />
     </Style>
     <!-- Verlaufs-Einträge -->
     <Style Selector="Button.historyEntry.current">
@@ -48,7 +144,8 @@
     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
       <StackPanel Grid.Column="0">
         <TextBlock Classes="dawPageTitle" Text="Studio" />
-        <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        <TextBlock Margin="0,2,0,0" IsVisible="{Binding !HasTracks}"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                    Text="Mehrspur-Arbeitsfläche — Audiodateien hierher ziehen, Stems übernehmen, Clips schneiden &amp; mischen." />
       </StackPanel>
       <StackPanel Grid.Column="1" VerticalAlignment="Top" Orientation="Horizontal" Spacing="8">
@@ -67,247 +164,243 @@
       </StackPanel>
     </Grid>
 
-    <!-- Werkzeugleiste + Clip-Inspektor -->
-    <StackPanel Grid.Row="1">
-      <Border Margin="0,14,0,0" Padding="8,6" CornerRadius="10"
-              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+    <!-- ═══ Werkzeugleiste ═══
+         Eine Zeile, alle Knöpfe gleich groß, Sinngruppen durch Striche getrennt. Schalter
+         (Loop, Bereich, Raster, Mixer) sind ToggleButtons statt Kippschalter, damit die Zeile
+         nicht auseinanderfällt. Darunter erscheint bei Auswahl die Clip-Zeile — in derselben
+         Karte, damit das Layout beim Anklicken eines Clips nicht springt. -->
+    <Border Grid.Row="1" Classes="toolbar">
+      <StackPanel>
         <WrapPanel Orientation="Horizontal">
 
-          <!-- Spuren -->
+          <!-- Spuren anlegen -->
           <Border Classes="toolGroup">
-            <StackPanel>
-              <TextBlock Classes="toolGroupCaption" Text="SPUREN" />
-              <StackPanel Orientation="Horizontal">
-                <Button Classes="toolBtn accent" Command="{Binding AddAudioCommand}"
-                        ToolTip.Tip="Audiodatei als Spur hinzufügen">
-                  <ic:SymbolIcon Symbol="Add" />
-                </Button>
-                <Button Classes="toolBtn" Command="{Binding AddEmptyTrackCommand}"
-                        ToolTip.Tip="Leere Spur anlegen (Parts dorthin verschieben)">
-                  <ic:SymbolIcon Symbol="AddSquare" />
-                </Button>
-                <Button Classes="toolBtn" Command="{Binding ImportStemsCommand}"
-                        ToolTip.Tip="Aktuelle Stems als Spuren übernehmen">
-                  <ic:SymbolIcon Symbol="Layer" />
-                </Button>
-                <Button Click="AddTts_Click"
-                        ToolTip.Tip="Spur aus Text erzeugen (Sprache – Stimme im Dialog wählen: lokal oder ElevenLabs)">
-                  <ic:SymbolIcon Symbol="TextField" />
-                </Button>
-              </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <Button Classes="toolBtn accent" Command="{Binding AddAudioCommand}"
+                      ToolTip.Tip="Audiodatei als Spur hinzufügen">
+                <ic:SymbolIcon Symbol="Add" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding AddEmptyTrackCommand}"
+                      ToolTip.Tip="Leere Spur anlegen (Clips dorthin verschieben)">
+                <ic:SymbolIcon Symbol="AddSquare" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding ImportStemsCommand}"
+                      ToolTip.Tip="Aktuelle Stems als Spuren übernehmen">
+                <ic:SymbolIcon Symbol="Layer" />
+              </Button>
+              <Button Classes="toolBtn" Click="AddTts_Click"
+                      ToolTip.Tip="Spur aus Text erzeugen (Sprache — Stimme im Dialog wählen: lokal oder ElevenLabs)">
+                <ic:SymbolIcon Symbol="TextField" />
+              </Button>
             </StackPanel>
           </Border>
 
           <!-- Verlauf -->
           <Border Classes="toolGroup">
-            <StackPanel>
-              <TextBlock Classes="toolGroupCaption" Text="VERLAUF" />
-              <StackPanel Orientation="Horizontal">
-                <Button Classes="toolBtn" Command="{Binding UndoCommand}" ToolTip.Tip="Rückgängig (Strg+Z)">
-                  <ic:SymbolIcon Symbol="ArrowUndo" />
-                </Button>
-                <Button Classes="toolBtn" Command="{Binding RedoCommand}" ToolTip.Tip="Wiederholen (Strg+Y)">
-                  <ic:SymbolIcon Symbol="ArrowRedo" />
-                </Button>
-                <ToggleButton Name="HistoryToggle" Padding="8,0" VerticalAlignment="Center"
-                              IsChecked="{Binding ShowHistory, Mode=TwoWay}" ToolTip.Tip="Verlauf anzeigen">
-                  <ic:SymbolIcon Symbol="History" />
-                  <ToggleButton.Flyout>
-                    <Flyout Placement="Bottom">
-                      <Border Width="320" MaxHeight="360" Padding="6">
-                        <DockPanel>
-                          <TextBlock DockPanel.Dock="Top" Margin="6,4,6,6" FontWeight="SemiBold"
-                                     Text="Verlauf — Klick springt zum Stand" />
-                          <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl ItemsSource="{Binding History}">
-                              <ItemsControl.ItemTemplate>
-                                <DataTemplate DataType="vm:HistoryEntryViewModel">
-                                  <Button Classes="historyEntry" HorizontalAlignment="Stretch"
-                                          HorizontalContentAlignment="Left" Margin="0,1" Padding="8,5"
-                                          BorderThickness="0" Background="Transparent"
-                                          Classes.current="{Binding IsCurrent}" Classes.undone="{Binding IsUndone}"
-                                          Command="{ReflectionBinding $parent[UserControl].DataContext.JumpToHistoryCommand}"
-                                          CommandParameter="{Binding}">
-                                    <StackPanel Orientation="Horizontal">
-                                      <ic:SymbolIcon Symbol="Circle" FontSize="10" VerticalAlignment="Center"
-                                                     IsVisible="{Binding IsCurrent}"
-                                                     Foreground="{DynamicResource DawAccentBrush}" Margin="0,0,8,0" />
-                                      <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                  </Button>
-                                </DataTemplate>
-                              </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                          </ScrollViewer>
-                        </DockPanel>
-                      </Border>
-                    </Flyout>
-                  </ToggleButton.Flyout>
-                </ToggleButton>
-              </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <Button Classes="toolBtn" Command="{Binding UndoCommand}" ToolTip.Tip="Rückgängig (Strg+Z)">
+                <ic:SymbolIcon Symbol="ArrowUndo" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding RedoCommand}" ToolTip.Tip="Wiederholen (Strg+Y)">
+                <ic:SymbolIcon Symbol="ArrowRedo" />
+              </Button>
+              <ToggleButton Name="HistoryToggle" Classes="toolBtn"
+                            IsChecked="{Binding ShowHistory, Mode=TwoWay}"
+                            ToolTip.Tip="Verlauf: jeder Schritt ist anklickbar">
+                <ic:SymbolIcon Symbol="History" />
+                <ToggleButton.Flyout>
+                  <Flyout Placement="Bottom">
+                    <Border Width="320" MaxHeight="360" Padding="6">
+                      <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Margin="6,4,6,6" FontWeight="SemiBold"
+                                   Text="Verlauf — Klick springt zum Stand" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                          <ItemsControl ItemsSource="{Binding History}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate DataType="vm:HistoryEntryViewModel">
+                                <Button Classes="historyEntry" HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left" Margin="0,1" Padding="8,5"
+                                        BorderThickness="0" Background="Transparent"
+                                        Classes.current="{Binding IsCurrent}" Classes.undone="{Binding IsUndone}"
+                                        Command="{ReflectionBinding $parent[UserControl].DataContext.JumpToHistoryCommand}"
+                                        CommandParameter="{Binding}">
+                                  <StackPanel Orientation="Horizontal">
+                                    <ic:SymbolIcon Symbol="Circle" FontSize="10" VerticalAlignment="Center"
+                                                   IsVisible="{Binding IsCurrent}"
+                                                   Foreground="{DynamicResource DawAccentBrush}" Margin="0,0,8,0" />
+                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                                  </StackPanel>
+                                </Button>
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                        </ScrollViewer>
+                      </DockPanel>
+                    </Border>
+                  </Flyout>
+                </ToggleButton.Flyout>
+              </ToggleButton>
             </StackPanel>
           </Border>
 
           <!-- Wiedergabe -->
           <Border Classes="toolGroup">
-            <StackPanel>
-              <TextBlock Classes="toolGroupCaption" Text="WIEDERGABE" />
-              <StackPanel Orientation="Horizontal">
-                <Button Classes="toolBtn" Command="{Binding PlayPauseCommand}" ToolTip.Tip="Abspielen / Pause">
-                  <ic:SymbolIcon Symbol="Play" />
-                </Button>
-                <Button Classes="toolBtn" Command="{Binding StopCommand}" ToolTip.Tip="Stopp">
-                  <ic:SymbolIcon Symbol="Stop" />
-                </Button>
-                <ToggleSwitch VerticalAlignment="Center" IsChecked="{Binding LoopEnabled, Mode=TwoWay}"
-                              ToolTip.Tip="Auswahl loopen" />
-              </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <Button Classes="toolBtn" Command="{Binding PlayPauseCommand}"
+                      ToolTip.Tip="Abspielen / Pause (Leertaste)">
+                <ic:SymbolIcon Symbol="Play" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding StopCommand}" ToolTip.Tip="Stopp">
+                <ic:SymbolIcon Symbol="Stop" />
+              </Button>
+              <ToggleButton Classes="toolBtn" IsChecked="{Binding LoopEnabled, Mode=TwoWay}"
+                            ToolTip.Tip="Markierten Bereich in Schleife abspielen">
+                <ic:SymbolIcon Symbol="ArrowRepeatAll" />
+              </ToggleButton>
             </StackPanel>
           </Border>
 
           <!-- Bearbeiten -->
           <Border Classes="toolGroup">
-            <StackPanel>
-              <TextBlock Classes="toolGroupCaption" Text="BEARBEITEN" />
-              <StackPanel Orientation="Horizontal">
-                <Button Classes="toolBtn" Command="{Binding SplitAtPlayheadCommand}" ToolTip.Tip="Clip am Playhead teilen">
-                  <ic:SymbolIcon Symbol="Cut" />
-                </Button>
-                <Button Classes="toolBtn" Command="{Binding CutRegionCommand}"
-                        ToolTip.Tip="Markierten Bereich aus dem Clip herausschneiden">
-                  <ic:SymbolIcon Symbol="EraserSegment" />
-                </Button>
-                <Button Classes="toolBtn" Command="{Binding DeleteSelectedCommand}" ToolTip.Tip="Clip löschen">
-                  <ic:SymbolIcon Symbol="Delete" />
-                </Button>
-                <ToggleSwitch VerticalAlignment="Center" Content="Bereich"
-                              IsChecked="{Binding RangeSelectMode, Mode=TwoWay}"
-                              ToolTip.Tip="Auswahl-Werkzeug: in den Spuren ziehen, um einen Bereich zu markieren (Effekte/Cleanup wirken dann nur darauf)" />
-              </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <ToggleButton Classes="toolBtn" IsChecked="{Binding RangeSelectMode, Mode=TwoWay}"
+                            ToolTip.Tip="Auswahl-Werkzeug: in einer Spur ziehen markiert einen Bereich — Effekte und Schnitte wirken dann nur darauf">
+                <ic:SymbolIcon Symbol="SelectObjectSkew" />
+              </ToggleButton>
+              <Button Classes="toolBtn" Command="{Binding SplitAtPlayheadCommand}"
+                      ToolTip.Tip="Clip an der Abspielposition teilen">
+                <ic:SymbolIcon Symbol="Cut" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding CutRegionCommand}"
+                      ToolTip.Tip="Markierten Bereich aus dem Clip herausschneiden">
+                <ic:SymbolIcon Symbol="EraserSegment" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding DeleteSelectedCommand}" ToolTip.Tip="Clip löschen">
+                <ic:SymbolIcon Symbol="Delete" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding ClearSelectionCommand}"
+                      ToolTip.Tip="Markierung aufheben">
+                <ic:SymbolIcon Symbol="Dismiss" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding ExportRangeCommand}"
+                      ToolTip.Tip="Nur den markierten Bereich als Audiodatei speichern">
+                <ic:SymbolIcon Symbol="Save" />
+              </Button>
             </StackPanel>
           </Border>
 
           <!-- Ansicht -->
           <Border Classes="toolGroup">
-            <StackPanel>
-              <TextBlock Classes="toolGroupCaption" Text="ANSICHT" />
-              <StackPanel Orientation="Horizontal">
-                <Button Classes="toolBtn" Command="{Binding ZoomOutCommand}" ToolTip.Tip="Auszoomen">
-                  <ic:SymbolIcon Symbol="ZoomOut" />
-                </Button>
-                <Button Classes="toolBtn" Command="{Binding ZoomInCommand}" ToolTip.Tip="Einzoomen">
-                  <ic:SymbolIcon Symbol="ZoomIn" />
-                </Button>
-                <Button Classes="toolBtn" Click="Fit_Click" ToolTip.Tip="Auf Song einpassen (ganzer Song sichtbar)">
-                  <ic:SymbolIcon Symbol="ZoomFit" />
-                </Button>
-                <ic:SymbolIcon Symbol="AutoFitHeight" VerticalAlignment="Center" Margin="2,0,0,0"
-                               Foreground="{DynamicResource DawTextDimBrush}" />
-                <Slider Width="80" Margin="4,0,0,0" VerticalAlignment="Center" Minimum="80" Maximum="320"
-                        Value="{Binding LaneHeight, Mode=TwoWay}" ToolTip.Tip="Spurhöhe (Wellenform größer)" />
-                <ToggleSwitch Margin="6,0,0,0" VerticalAlignment="Center" IsChecked="{Binding SnapEnabled, Mode=TwoWay}"
-                              ToolTip.Tip="Einrasten" />
-                <ComboBox Width="72" Margin="6,0,0,0" VerticalAlignment="Center"
-                          ItemsSource="{Binding GridOptions}" SelectedItem="{Binding GridSeconds, Mode=TwoWay}"
-                          ToolTip.Tip="Rasterweite (s)" />
-              </StackPanel>
-            </StackPanel>
-          </Border>
-
-          <!-- Auswahl -->
-          <Border Classes="toolGroup">
-            <StackPanel>
-              <TextBlock Classes="toolGroupCaption" Text="AUSWAHL" />
-              <StackPanel Orientation="Horizontal">
-                <Button Classes="toolBtn" Command="{Binding ClearSelectionCommand}" ToolTip.Tip="Auswahl löschen">
-                  <ic:SymbolIcon Symbol="SelectObjectSkew" />
-                </Button>
-                <Button Command="{Binding ExportRangeCommand}" ToolTip.Tip="Auswahlbereich exportieren">
-                  <ic:SymbolIcon Symbol="Save" />
-                </Button>
-              </StackPanel>
-            </StackPanel>
-          </Border>
-
-          <!-- Effekte & Ansicht -->
-          <Border Classes="toolGroup">
-            <StackPanel>
-              <TextBlock Classes="toolGroupCaption" Text="EFFEKTE" />
-              <StackPanel Orientation="Horizontal">
-                <Button Classes="toolBtn" Click="Variations_All_Click"
-                        ToolTip.Tip="Variationen-Provider auf das gesamte Audio (alle Spuren) anwenden">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <ic:SymbolIcon Symbol="Wand" /><TextBlock Text="Variationen" />
-                  </StackPanel>
-                </Button>
-                <ToggleSwitch VerticalAlignment="Center" Content="Mixer" IsChecked="{Binding ShowMixer, Mode=TwoWay}"
-                              ToolTip.Tip="Mixer-Panel ein-/ausblenden" />
-              </StackPanel>
-            </StackPanel>
-          </Border>
-
-          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-            <ProgressBar Width="60" Margin="6,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
-                         IsVisible="{Binding IsSeparating}" />
-            <TextBlock VerticalAlignment="Center" Margin="6,0,0,0"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Text="{Binding SeparationStatus}" IsVisible="{Binding IsSeparating}" />
-          </StackPanel>
-        </WrapPanel>
-      </Border>
-
-      <!-- Clip-Inspektor (bei Auswahl) -->
-      <Border Margin="0,8,0,0" Padding="12,8" CornerRadius="10"
-              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-              IsVisible="{Binding HasSelectedClip}">
-        <StackPanel Orientation="Horizontal">
-          <ic:SymbolIcon Symbol="Options" VerticalAlignment="Center" Margin="0,0,10,0" />
-          <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="Clip" />
-          <StackPanel Margin="20,0,0,0" Width="160">
-            <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                       Text="{Binding SelectedClip.GainDb, StringFormat='Lautstärke: {0:+0.0;-0.0;0} dB'}" />
-            <Slider Minimum="-24" Maximum="6" Value="{Binding SelectedClip.GainDb, Mode=TwoWay}" />
-          </StackPanel>
-          <StackPanel Margin="16,0,0,0" Width="150">
-            <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                       Text="{Binding SelectedClip.FadeInSeconds, StringFormat='Fade-In: {0:F2} s'}" />
-            <Slider Minimum="0" Maximum="5" Value="{Binding SelectedClip.FadeInSeconds, Mode=TwoWay}" />
-          </StackPanel>
-          <StackPanel Margin="16,0,0,0" Width="150">
-            <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                       Text="{Binding SelectedClip.FadeOutSeconds, StringFormat='Fade-Out: {0:F2} s'}" />
-            <Slider Minimum="0" Maximum="5" Value="{Binding SelectedClip.FadeOutSeconds, Mode=TwoWay}" />
-          </StackPanel>
-
-          <Border Width="1" Margin="16,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
-          <StackPanel VerticalAlignment="Center">
-            <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                       Text="{Binding ClipEffectScope}" Margin="0,0,0,4" />
-            <Button Click="ClipVariations_Click"
-                    ToolTip.Tip="Provider + Variationen wählen (Hall, Echo, Cleanup … – auf den markierten Bereich oder den ganzen Clip)">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <ic:SymbolIcon Symbol="Wand" /><TextBlock Text="Variationen / Effekte…" />
-              </StackPanel>
-            </Button>
-          </StackPanel>
-
-          <Border Width="1" Margin="16,2" Background="{DynamicResource CardStrokeColorDefaultBrush}" />
-          <StackPanel VerticalAlignment="Center">
-            <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Stimme" Margin="0,0,0,4" />
             <StackPanel Orientation="Horizontal">
-              <Button Click="ClipVoiceChange_Click" IsEnabled="{Binding !IsVoiceChanging}"
-                      ToolTip.Tip="Speech-to-Speech – Zielstimme im Dialog wählen (lokal oder ElevenLabs), aufnehmen oder hochladen. Performance/Timing/Betonung (auch Gesang) bleiben erhalten, die Klangfarbe wird ersetzt. Am besten auf einer isolierten Vocal-Spur. Mit Auswahl wirkt es nur auf den markierten Bereich.">
+              <Button Classes="toolBtn" Command="{Binding ZoomOutCommand}" ToolTip.Tip="Auszoomen (Strg+Mausrad)">
+                <ic:SymbolIcon Symbol="ZoomOut" />
+              </Button>
+              <Button Classes="toolBtn" Command="{Binding ZoomInCommand}" ToolTip.Tip="Einzoomen (Strg+Mausrad)">
+                <ic:SymbolIcon Symbol="ZoomIn" />
+              </Button>
+              <Button Classes="toolBtn" Click="Fit_Click" ToolTip.Tip="Auf Song einpassen — ganzer Song sichtbar">
+                <ic:SymbolIcon Symbol="ZoomFit" />
+              </Button>
+              <ic:SymbolIcon Symbol="AutoFitHeight" VerticalAlignment="Center" Margin="6,0,4,0"
+                             Foreground="{DynamicResource DawTextFaintBrush}" />
+              <Slider Width="72" VerticalAlignment="Center" Minimum="80" Maximum="320"
+                      Value="{Binding LaneHeight, Mode=TwoWay}" ToolTip.Tip="Spurhöhe — größere Wellenform" />
+              <ToggleButton Classes="toolBtn" Margin="6,0,2,0" IsChecked="{Binding SnapEnabled, Mode=TwoWay}"
+                            ToolTip.Tip="Am Raster einrasten (das Raster wird dann auch angezeigt)">
+                <ic:SymbolIcon Symbol="Grid" />
+              </ToggleButton>
+              <ComboBox Width="76" Height="32" VerticalAlignment="Center" VerticalContentAlignment="Center"
+                        ItemsSource="{Binding GridOptions}" SelectedItem="{Binding GridSeconds, Mode=TwoWay}"
+                        ToolTip.Tip="Rasterweite in Sekunden" />
+            </StackPanel>
+          </Border>
+
+          <!-- Klang & Mixer -->
+          <Border Classes="toolGroup last">
+            <StackPanel Orientation="Horizontal">
+              <Button Classes="toolBtn wide" Click="Variations_All_Click"
+                      ToolTip.Tip="Variationen und Effekte auf das gesamte Projekt (alle Spuren) anwenden">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                  <ic:SymbolIcon Symbol="PersonVoice" /><TextBlock Text="Stimme tauschen" />
+                  <ic:SymbolIcon Symbol="Wand" /><TextBlock Text="Variationen" VerticalAlignment="Center" />
                 </StackPanel>
               </Button>
-              <ProgressBar Width="50" Margin="8,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
+              <ToggleButton Classes="toolBtn wide" IsChecked="{Binding ShowMixer, Mode=TwoWay}"
+                            ToolTip.Tip="Mixer mit Fadern und Pegeln unten ein-/ausblenden">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <ic:SymbolIcon Symbol="Options" /><TextBlock Text="Mixer" VerticalAlignment="Center" />
+                </StackPanel>
+              </ToggleButton>
+            </StackPanel>
+          </Border>
+
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Center" IsVisible="{Binding IsSeparating}">
+            <ProgressBar Width="60" Margin="8,0,0,0" VerticalAlignment="Center" IsIndeterminate="True" />
+            <TextBlock Classes="toolValue" Margin="8,0,0,0" Text="{Binding SeparationStatus}" />
+          </StackPanel>
+        </WrapPanel>
+
+        <!-- ═══ Clip-Zeile: nur bei Auswahl, in derselben Karte ═══ -->
+        <Border Margin="0,6,0,0" Padding="0,7,0,1" BorderThickness="0,1,0,0"
+                BorderBrush="{DynamicResource DawStrokeBrush}" IsVisible="{Binding HasSelectedClip}">
+          <WrapPanel Orientation="Horizontal">
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
+              <Border Width="4" Height="18" CornerRadius="2" VerticalAlignment="Center"
+                      Background="{Binding SelectedClip.Track.AccentColor, Converter={StaticResource StringToBrush}}" />
+              <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" MaxWidth="180"
+                         TextTrimming="CharacterEllipsis" Text="{Binding SelectedClip.DisplayName}"
+                         ToolTip.Tip="Ausgewählter Clip — die folgenden Regler wirken nur auf ihn" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <TextBlock Classes="toolLabel" Text="Pegel" />
+              <Slider Width="96" VerticalAlignment="Center" Minimum="-24" Maximum="6"
+                      Value="{Binding SelectedClip.GainDb, Mode=TwoWay}"
+                      ToolTip.Tip="Lautstärke dieses Clips (−24 bis +6 dB)" />
+              <TextBlock Classes="toolValue" Width="58" Margin="6,0,14,0"
+                         Text="{Binding SelectedClip.GainDb, StringFormat='{}{0:+0.0;-0.0;0.0} dB'}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <TextBlock Classes="toolLabel" Text="Fade-In" />
+              <Slider Width="76" VerticalAlignment="Center" Minimum="0" Maximum="5"
+                      Value="{Binding SelectedClip.FadeInSeconds, Mode=TwoWay}"
+                      ToolTip.Tip="Einblenden — geht auch direkt am weißen Griff oben links im Clip" />
+              <TextBlock Classes="toolValue" Width="46" Margin="6,0,14,0"
+                         Text="{Binding SelectedClip.FadeInSeconds, StringFormat='{}{0:F2} s'}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <TextBlock Classes="toolLabel" Text="Fade-Out" />
+              <Slider Width="76" VerticalAlignment="Center" Minimum="0" Maximum="5"
+                      Value="{Binding SelectedClip.FadeOutSeconds, Mode=TwoWay}"
+                      ToolTip.Tip="Ausblenden — geht auch direkt am weißen Griff oben rechts im Clip" />
+              <TextBlock Classes="toolValue" Width="46" Margin="6,0,14,0"
+                         Text="{Binding SelectedClip.FadeOutSeconds, StringFormat='{}{0:F2} s'}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <Button Classes="toolBtn wide" Click="ClipVariations_Click"
+                      ToolTip.Tip="Provider und Variationen wählen (Hall, Echo, Cleanup …) — wirkt auf den markierten Bereich, sonst auf den ganzen Clip">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <ic:SymbolIcon Symbol="Wand" />
+                  <TextBlock VerticalAlignment="Center" Text="{Binding ClipEffectScope}" />
+                </StackPanel>
+              </Button>
+              <Button Classes="toolBtn wide" Click="ClipVoiceChange_Click" IsEnabled="{Binding !IsVoiceChanging}"
+                      ToolTip.Tip="Speech-to-Speech — Zielstimme im Dialog wählen (lokal oder ElevenLabs), aufnehmen oder hochladen. Timing und Betonung bleiben erhalten, nur die Klangfarbe wird ersetzt. Am besten auf einer isolierten Vocal-Spur.">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <ic:SymbolIcon Symbol="PersonVoice" />
+                  <TextBlock VerticalAlignment="Center" Text="Stimme tauschen" />
+                </StackPanel>
+              </Button>
+              <ProgressBar Width="50" Margin="6,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
                            IsVisible="{Binding IsVoiceChanging}" />
             </StackPanel>
-          </StackPanel>
-        </StackPanel>
-      </Border>
-    </StackPanel>
+          </WrapPanel>
+        </Border>
+      </StackPanel>
+    </Border>
 
     <!-- Hinweis ohne Spuren (vollflächiges Drop-Ziel) -->
     <Border Grid.Row="2" Background="Transparent" IsVisible="{Binding !HasTracks}"
@@ -336,17 +429,20 @@
 
     <!-- Timeline (4-Quadranten: Ruler oben fixiert, Spurköpfe links fixiert) -->
     <Grid Grid.Row="2" Margin="0,14,0,0" IsVisible="{Binding HasTracks}"
-          DragDrop.AllowDrop="True" ColumnDefinitions="200,*" RowDefinitions="28,*">
+          DragDrop.AllowDrop="True" ColumnDefinitions="222,*" RowDefinitions="26,*">
 
       <!-- Ecke oben links -->
-      <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Bottom" Margin="2,0,0,4" FontSize="11"
-                 Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Spuren" />
+      <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Bottom" Margin="2,0,0,5" FontSize="10"
+                 FontWeight="SemiBold" Opacity="0.55"
+                 Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="SPUREN" />
 
       <!-- Zeit-Lineal: oben fixiert, scrollt horizontal mit den Lanes -->
       <ScrollViewer Name="RulerScroll" Grid.Row="0" Grid.Column="1"
                     Background="{DynamicResource DawTimelineBrush}"
                     HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
-        <Panel>
+        <!-- HorizontalAlignment=Left: passt der ganze Song in die Breite, zentriert der
+             ScrollViewer den Inhalt sonst — die Zeitachse stünde dann versetzt zum Spurkopf. -->
+        <Panel HorizontalAlignment="Left">
           <controls:TimelineRulerControl Name="Ruler" Cursor="Ibeam"
                                          PointerPressed="Ruler_PointerPressed" PointerMoved="Ruler_PointerMoved"
                                          PointerReleased="Ruler_PointerReleased"
@@ -368,7 +464,10 @@
         </Panel>
       </ScrollViewer>
 
-      <!-- Spurköpfe: links fixiert, scrollen vertikal mit den Lanes -->
+      <!-- ═══ Spurköpfe: links fixiert, scrollen vertikal mit den Lanes ═══
+           Aufbau wie am Mischpult: Farbstreifen, Name mit Menüknopf, darunter Mute/Solo und
+           der Fader, ganz rechts ein dünner Pegelbalken. Export/Löschen sind ins Menü gewandert,
+           damit der Kopf auch bei kleiner Spurhöhe ruhig bleibt. -->
       <ScrollViewer Name="HeaderScroll" Grid.Row="1" Grid.Column="0"
                     VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
         <ItemsControl ItemsSource="{Binding Tracks}">
@@ -376,8 +475,9 @@
             <DataTemplate DataType="vm:StemTrackViewModel">
               <Border Classes="trackHeader" Classes.selected="{Binding IsSelectedTrack}"
                       Height="{ReflectionBinding $parent[UserControl].DataContext.LaneHeight}"
-                      Margin="0,0,6,0" CornerRadius="8" BorderThickness="2" BorderBrush="Transparent"
-                      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                      Margin="0,0,8,0" CornerRadius="8" BorderThickness="1"
+                      BorderBrush="{DynamicResource DawStrokeBrush}"
+                      Background="{DynamicResource DawPanelBrush}"
                       PointerPressed="TrackHeader_PointerPressed">
                 <Border.ContextMenu>
                   <!-- Kontextmenüs sind Popups außerhalb des visuellen Baums; Bindungen auf
@@ -385,7 +485,9 @@
                        den DataContext bzw. die Auswahl bestimmen. -->
                   <ContextMenu>
                     <MenuItem Header="Stems trennen → automatisch (erkennen + beste Qualität)"
-                              Click="TrackSeparateAuto_Click" />
+                              Click="TrackSeparateAuto_Click">
+                      <MenuItem.Icon><ic:SymbolIcon Symbol="Layer" /></MenuItem.Icon>
+                    </MenuItem>
                     <MenuItem Header="Stems trennen → 4 (schnell)" Click="TrackSeparate_Click" />
                     <MenuItem Header="Trennen (HQ · audio-separator)">
                       <MenuItem Header="RoFormer (Vocals / Instrumental)" Tag="roformer" Click="SeparateHq_Click" />
@@ -393,10 +495,19 @@
                       <MenuItem Header="Karaoke (Lead / Background)" Tag="karaoke" Click="SeparateHq_Click" />
                     </MenuItem>
                     <Separator />
-                    <MenuItem Header="Variationen / Effekte…" Click="TrackVariations_Click" />
-                    <MenuItem Header="Stimme tauschen…" Click="TrackVoiceChange_Click" />
+                    <MenuItem Header="Variationen / Effekte…" Click="TrackVariations_Click">
+                      <MenuItem.Icon><ic:SymbolIcon Symbol="Wand" /></MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Stimme tauschen…" Click="TrackVoiceChange_Click">
+                      <MenuItem.Icon><ic:SymbolIcon Symbol="PersonVoice" /></MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Spur mastern…" Click="TrackMaster_Click">
+                      <MenuItem.Icon><ic:SymbolIcon Symbol="Options" /></MenuItem.Icon>
+                    </MenuItem>
                     <Separator />
-                    <MenuItem Header="Spur duplizieren" Click="TrackDuplicate_Click" />
+                    <MenuItem Header="Spur duplizieren" Click="TrackDuplicate_Click">
+                      <MenuItem.Icon><ic:SymbolIcon Symbol="Copy" /></MenuItem.Icon>
+                    </MenuItem>
                     <MenuItem Header="Farbe">
                       <MenuItem Header="Blau" Tag="#5B8CFF" Click="TrackColor_Click" />
                       <MenuItem Header="Rot" Tag="#FF6B6B" Click="TrackColor_Click" />
@@ -407,52 +518,71 @@
                       <MenuItem Header="Cyan" Tag="#6BD6FF" Click="TrackColor_Click" />
                       <MenuItem Header="Gelb" Tag="#D6C054" Click="TrackColor_Click" />
                     </MenuItem>
-                    <MenuItem Header="Spur mastern…" Click="TrackMaster_Click" />
-                    <MenuItem Header="Spur exportieren…" Click="TrackExport_Click" />
-                    <MenuItem Header="Spur löschen" Click="TrackDelete_Click" />
+                    <Separator />
+                    <MenuItem Header="Spur exportieren…" Click="TrackExport_Click">
+                      <MenuItem.Icon><ic:SymbolIcon Symbol="Save" /></MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Spur löschen" Click="TrackDelete_Click">
+                      <MenuItem.Icon><ic:SymbolIcon Symbol="Delete" /></MenuItem.Icon>
+                    </MenuItem>
                   </ContextMenu>
                 </Border.ContextMenu>
-                <Grid ColumnDefinitions="6,*">
+
+                <Grid ColumnDefinitions="4,*,4">
+                  <!-- Farbstreifen = Spurfarbe, wie am Clip -->
                   <Border Grid.Column="0" CornerRadius="8,0,0,8"
                           Background="{Binding AccentColor, Converter={StaticResource StringToBrush}}" />
-                  <Grid Grid.Column="1" Margin="8,6" RowDefinitions="Auto,Auto,Auto">
 
-                    <!-- Name (editierbar) + Aktiv + Löschen -->
+                  <Grid Grid.Column="1" Margin="9,5,6,5" RowDefinitions="Auto,*,Auto">
+
+                    <!-- Name + Menüknopf (öffnet dasselbe Menü wie der Rechtsklick) -->
                     <DockPanel Grid.Row="0" LastChildFill="True">
-                      <CheckBox DockPanel.Dock="Left" Margin="0,0,4,0" VerticalAlignment="Center"
-                                IsChecked="{Binding IsEnabled, Mode=TwoWay}" ToolTip.Tip="Spur aktiv" />
-                      <Button DockPanel.Dock="Right" Width="24" Height="24" Padding="0" Margin="4,0,0,0"
-                              Background="Transparent" BorderThickness="0" ToolTip.Tip="Spur löschen"
-                              Command="{ReflectionBinding $parent[UserControl].DataContext.DeleteTrackCommand}"
-                              CommandParameter="{Binding}">
-                        <ic:SymbolIcon Symbol="Delete" FontSize="14" />
+                      <Button DockPanel.Dock="Right" Classes="trackMenu" Click="TrackMenu_Click"
+                              ToolTip.Tip="Alle Aktionen dieser Spur: Stems trennen, Effekte, Stimme, Farbe, exportieren, löschen">
+                        <ic:SymbolIcon Symbol="MoreHorizontal" FontSize="16" />
                       </Button>
-                      <Button DockPanel.Dock="Right" Width="24" Height="24" Padding="0" Margin="4,0,0,0"
-                              Background="Transparent" BorderThickness="0" ToolTip.Tip="Spur exportieren (WAV/MP3/…)"
-                              Command="{ReflectionBinding $parent[UserControl].DataContext.ExportTrackCommand}"
-                              CommandParameter="{Binding}">
-                        <ic:SymbolIcon Symbol="Save" FontSize="14" />
-                      </Button>
-                      <TextBox VerticalAlignment="Center" FontWeight="SemiBold" FontSize="13"
-                               Background="Transparent" BorderThickness="0" Padding="0"
-                               Text="{Binding Name, Mode=TwoWay}" ToolTip.Tip="Spur umbenennen" />
+                      <TextBox Classes="trackName" Text="{Binding Name, Mode=TwoWay}"
+                               ToolTip.Tip="Spurname — zum Umbenennen hineinklicken" />
                     </DockPanel>
 
-                    <Slider Grid.Row="1" Margin="0,2,0,0" Minimum="0" Maximum="1.5"
-                            Value="{Binding Volume, Mode=TwoWay}" IsEnabled="{Binding IsEnabled}"
-                            ToolTip.Tip="Lautstärke" />
+                    <!-- Mute / Solo / aktiv + Fader mit Wert -->
+                    <DockPanel Grid.Row="1" VerticalAlignment="Center" LastChildFill="True">
+                      <ToggleButton DockPanel.Dock="Left" Classes="msBtn mute" Content="M"
+                                    IsChecked="{Binding IsMuted, Mode=TwoWay}"
+                                    ToolTip.Tip="Stumm schalten" />
+                      <ToggleButton DockPanel.Dock="Left" Classes="msBtn solo" Content="S"
+                                    IsChecked="{Binding IsSolo, Mode=TwoWay}"
+                                    ToolTip.Tip="Solo — nur diese Spur hören" />
+                      <ToggleButton DockPanel.Dock="Left" Classes="msBtn" Margin="0,0,8,0"
+                                    IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                    ToolTip.Tip="Spur aktiv — ausgeschaltete Spuren bleiben im Projekt, klingen aber nicht und werden nicht exportiert">
+                        <ic:SymbolIcon Symbol="Power" FontSize="13" />
+                      </ToggleButton>
+                      <TextBlock DockPanel.Dock="Right" Classes="toolValue" Width="36"
+                                 TextAlignment="Right" VerticalAlignment="Center"
+                                 Text="{Binding Volume, StringFormat='{}{0:P0}'}" />
+                      <Slider VerticalAlignment="Center" Minimum="0" Maximum="1.5"
+                              Value="{Binding Volume, Mode=TwoWay}" IsEnabled="{Binding IsEnabled}"
+                              ToolTip.Tip="Lautstärke dieser Spur" />
+                    </DockPanel>
 
-                    <!-- Panorama + Mute/Solo in einer Zeile -->
-                    <DockPanel Grid.Row="2" Margin="0,2,0,0" LastChildFill="True">
-                      <ToggleButton DockPanel.Dock="Right" Width="30" Height="24" Padding="0" Margin="6,0,0,0"
-                                    Content="S" IsChecked="{Binding IsSolo, Mode=TwoWay}" ToolTip.Tip="Solo" />
-                      <ToggleButton DockPanel.Dock="Right" Width="30" Height="24" Padding="0" Margin="8,0,0,0"
-                                    Content="M" IsChecked="{Binding IsMuted, Mode=TwoWay}" ToolTip.Tip="Mute" />
+                    <!-- Panorama -->
+                    <DockPanel Grid.Row="2" LastChildFill="True">
+                      <TextBlock DockPanel.Dock="Left" Classes="toolLabel" Margin="0,0,6,0" Text="PAN" />
+                      <TextBlock DockPanel.Dock="Right" Classes="toolValue" Width="36"
+                                 TextAlignment="Right" VerticalAlignment="Center"
+                                 Text="{Binding Pan, Converter={StaticResource PanToText}}" />
                       <Slider VerticalAlignment="Center" Minimum="-1" Maximum="1"
                               Value="{Binding Pan, Mode=TwoWay}" IsEnabled="{Binding IsEnabled}"
-                              ToolTip.Tip="Panorama" />
+                              ToolTip.Tip="Panorama — links / Mitte / rechts" />
                     </DockPanel>
                   </Grid>
+
+                  <!-- Pegel der laufenden Wiedergabe: zeigt ohne Mixer, welche Spur gerade klingt -->
+                  <ProgressBar Grid.Column="2" Orientation="Vertical" Width="4" Margin="0,8"
+                               Minimum="0" Maximum="1" Value="{Binding Level}"
+                               Foreground="#54D6A0" Background="#0CFFFFFF"
+                               ToolTip.Tip="Pegel dieser Spur" />
                 </Grid>
               </Border>
             </DataTemplate>
@@ -464,7 +594,10 @@
       <ScrollViewer Name="LaneScroll" Grid.Row="1" Grid.Column="1"
                     Background="{DynamicResource DawTimelineBrush}"
                     HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-        <Panel Name="LanesArea" Background="Transparent" Width="{Binding ContentWidth}"
+        <!-- VerticalAlignment=Top: das Raster endet unter der letzten Spur, statt die ganze
+             leere Fläche zu streifen. -->
+        <Panel Name="LanesArea" Background="Transparent" HorizontalAlignment="Left" VerticalAlignment="Top"
+               Width="{Binding ContentWidth}"
                PointerPressed="Lanes_PointerPressed" PointerMoved="Lanes_PointerMoved"
                PointerReleased="Lanes_PointerReleased">
           <controls:TimelineGridControl PixelsPerSecond="{Binding PixelsPerSecond}"
@@ -524,20 +657,20 @@
                             </MultiBinding>
                           </Border.Width>
                           <Panel>
-                            <controls:WaveformControl Margin="0,2" Peaks="{Binding Peaks}"
+                            <controls:WaveformControl Margin="0,14,0,2" Peaks="{Binding Peaks}"
                                                       WaveBrush="{Binding AccentColor, Converter={StaticResource StringToBrush}}" />
                             <controls:ClipFadeOverlay IsHitTestVisible="False"
                                                       FadeInSeconds="{Binding FadeInSeconds}"
                                                       FadeOutSeconds="{Binding FadeOutSeconds}"
                                                       PixelsPerSecond="{ReflectionBinding $parent[UserControl].DataContext.PixelsPerSecond}" />
+                            <!-- Clipname oben, darunter erst die Wellenform -->
+                            <TextBlock Classes="clipName" VerticalAlignment="Top" Text="{Binding DisplayName}" />
                             <!-- Fade-Griffe: an der Kante nach unten ziehen = Ein-/Ausblenden -->
-                            <Border Width="13" Height="13" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2"
-                                    CornerRadius="7" Background="#E6FFFFFF" Cursor="SizeNorthSouth"
+                            <Border Classes="fadeGrip" HorizontalAlignment="Left" VerticalAlignment="Top"
                                     ToolTip.Tip="Fade-In: nach unten ziehen"
                                     PointerPressed="FadeIn_PointerPressed" PointerMoved="Fade_PointerMoved"
                                     PointerReleased="Fade_PointerReleased" />
-                            <Border Width="13" Height="13" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="2"
-                                    CornerRadius="7" Background="#E6FFFFFF" Cursor="SizeNorthSouth"
+                            <Border Classes="fadeGrip" HorizontalAlignment="Right" VerticalAlignment="Top"
                                     ToolTip.Tip="Fade-Out: nach unten ziehen"
                                     PointerPressed="FadeOut_PointerPressed" PointerMoved="Fade_PointerMoved"
                                     PointerReleased="Fade_PointerReleased" />
@@ -593,6 +726,7 @@
                      IsHitTestVisible="False" />
         </Panel>
       </ScrollViewer>
+
     </Grid>
 
     <!-- Mixer-Panel (einblendbar) -->
@@ -607,25 +741,32 @@
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="vm:StemTrackViewModel">
-              <Border Width="80" Margin="0,0,6,0" CornerRadius="6"
-                      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
-                <Grid Margin="6,6" RowDefinitions="5,Auto,Auto,Auto">
-                  <Border Grid.Row="0" CornerRadius="3" Margin="0,0,0,4"
+              <!-- Kanalzug: Farbe, Name, Fader mit Pegel daneben, Wert, Mute/Solo. Feste Höhe,
+                   damit die Streifen nicht mit der freien Fläche mitwachsen. -->
+              <Border Width="86" Height="196" Margin="0,0,8,0" CornerRadius="8"
+                      BorderThickness="1" BorderBrush="{DynamicResource DawStrokeBrush}"
+                      Background="{DynamicResource DawPanelBrush}">
+                <Grid Margin="8,7" RowDefinitions="4,Auto,*,Auto,Auto">
+                  <Border Grid.Row="0" CornerRadius="2" Margin="0,0,0,5"
                           Background="{Binding AccentColor, Converter={StaticResource StringToBrush}}" />
                   <TextBlock Grid.Row="1" HorizontalAlignment="Center" FontSize="11" FontWeight="SemiBold"
-                             TextTrimming="CharacterEllipsis" Text="{Binding Name}" />
-                  <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4">
-                    <Slider Orientation="Vertical" Minimum="0" Maximum="1.5" Height="130"
+                             TextTrimming="CharacterEllipsis" Text="{Binding Name}"
+                             ToolTip.Tip="{Binding Name}" />
+                  <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6">
+                    <Slider Orientation="Vertical" Minimum="0" Maximum="1.5" MinHeight="0"
                             Value="{Binding Volume, Mode=TwoWay}" IsEnabled="{Binding IsEnabled}"
-                            ToolTip.Tip="Lautstärke" />
-                    <ProgressBar Orientation="Vertical" Minimum="0" Maximum="1" Width="7" Height="130" Margin="5,0,0,0"
-                                 Value="{Binding Level}" Foreground="#54D6A0" Background="#22FFFFFF" />
+                            ToolTip.Tip="Lautstärke dieser Spur" />
+                    <ProgressBar Orientation="Vertical" Minimum="0" Maximum="1" Width="6" Margin="6,0,0,0"
+                                 Value="{Binding Level}" Foreground="#54D6A0" Background="#14FFFFFF"
+                                 ToolTip.Tip="Pegel dieser Spur" />
                   </StackPanel>
-                  <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
-                    <ToggleButton Width="28" Height="22" Padding="0" FontSize="10" Content="M"
-                                  IsChecked="{Binding IsMuted, Mode=TwoWay}" ToolTip.Tip="Mute" />
-                    <ToggleButton Width="28" Height="22" Padding="0" FontSize="10" Margin="4,0,0,0" Content="S"
-                                  IsChecked="{Binding IsSolo, Mode=TwoWay}" ToolTip.Tip="Solo" />
+                  <TextBlock Grid.Row="3" Classes="toolValue" HorizontalAlignment="Center" Margin="0,0,0,5"
+                             Text="{Binding Volume, StringFormat='{}{0:P0}'}" />
+                  <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <ToggleButton Classes="msBtn mute" Content="M" IsChecked="{Binding IsMuted, Mode=TwoWay}"
+                                  ToolTip.Tip="Stumm schalten" />
+                    <ToggleButton Classes="msBtn solo" Content="S" Margin="0" IsChecked="{Binding IsSolo, Mode=TwoWay}"
+                                  ToolTip.Tip="Solo — nur diese Spur hören" />
                   </StackPanel>
                 </Grid>
               </Border>

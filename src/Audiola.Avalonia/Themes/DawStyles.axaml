@@ -1,4 +1,4 @@
-<Styles xmlns="https://github.com/avaloniaui"
+﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ic="using:FluentIcons.Avalonia">
 
@@ -190,37 +190,103 @@
     <Setter Property="Background" Value="{DynamicResource DawScrollThumbBrush}" />
   </Style>
 
-  <!-- ═══════════ Werkzeugleisten: gruppierte Blöcke mit kleiner Überschrift ═══════════
-       Ein Block je Aufgabe (SPUREN, WIEDERGABE, …), darin quadratische Icon-Knöpfe. Das Muster
-       stammt aus dem Studio und gilt für alle Seiten, damit sich Werkzeugleisten überall gleich
-       lesen. Jeder Knopf braucht einen Tooltip — das Icon allein erklärt sich nicht. -->
-  <Style Selector="Border.toolGroup">
-    <Setter Property="CornerRadius" Value="8" />
-    <Setter Property="Padding" Value="8,3,8,5" />
-    <Setter Property="Margin" Value="0,0,8,6" />
-    <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+  <!-- ═══════════ Werkzeugleiste: eine Zeile, flache Icon-Knöpfe, Trenner ═══════════
+       Vorbild sind die Leisten in Reaper/Audition: dicht gesetzte Icons gleicher Größe,
+       durch dünne Striche in Sinngruppen geteilt. Keine Kästen, keine Überschriften — die
+       Erklärung steckt im Tooltip, den jeder Knopf zwingend hat. -->
+  <Style Selector="Border.toolbar">
+    <Setter Property="Margin" Value="0,14,0,0" />
+    <Setter Property="Padding" Value="8,5" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Background" Value="{DynamicResource DawPanelBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DawStrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
   </Style>
+
+  <!-- Gruppe: Knöpfe einer Aufgabe, rechts durch einen Strich abgesetzt. -->
+  <Style Selector="Border.toolGroup">
+    <Setter Property="Padding" Value="0,0,9,0" />
+    <Setter Property="Margin" Value="0,0,9,0" />
+    <Setter Property="BorderThickness" Value="0,0,1,0" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DawStrokeStrongBrush}" />
+  </Style>
+  <Style Selector="Border.toolGroup.last">
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <!-- Überschrift nur noch, wo eine Leiste sie wirklich braucht. -->
   <Style Selector="TextBlock.toolGroupCaption">
     <Setter Property="FontSize" Value="9" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Margin" Value="2,0,0,3" />
-    <Setter Property="Opacity" Value="0.6" />
+    <Setter Property="Opacity" Value="0.55" />
     <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
   </Style>
-  <Style Selector="Button.toolBtn">
-    <Setter Property="Margin" Value="0,0,4,0" />
-    <Setter Property="MinWidth" Value="36" />
-    <Setter Property="Height" Value="34" />
-    <Setter Property="Padding" Value="8,0" />
+
+  <!-- Werkzeug-Knopf: quadratisch, flach, Hover als Fläche. Gilt auch für ToggleButton,
+       damit Schalter (Loop, Raster, Mixer) nicht aus der Zeile fallen. -->
+  <Style Selector=":is(Button).toolBtn">
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Margin" Value="0,0,2,0" />
+    <Setter Property="CornerRadius" Value="7" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Foreground" Value="{DynamicResource DawTextDimBrush}" />
     <!-- Werkzeug-Knöpfe nehmen den Fokus nicht an: sonst löst die Leertaste den zuletzt
          geklickten Knopf aus statt die Wiedergabe. -->
     <Setter Property="Focusable" Value="False" />
   </Style>
-  <Style Selector="Border.toolbar">
-    <Setter Property="Margin" Value="0,14,0,0" />
-    <Setter Property="Padding" Value="8,6,8,0" />
-    <Setter Property="CornerRadius" Value="10" />
-    <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+  <!-- Knopf mit Beschriftung (z. B. „Variationen"): gleiche Höhe, nur breiter. -->
+  <Style Selector=":is(Button).toolBtn.wide">
+    <Setter Property="Width" Value="NaN" />
+    <Setter Property="Padding" Value="10,0" />
+  </Style>
+  <Style Selector=":is(Button).toolBtn /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="7" />
+  </Style>
+  <Style Selector=":is(Button).toolBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DawHoverBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector=":is(Button).toolBtn:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DawAccentSoftBrush}" />
+  </Style>
+  <!-- Eingeschalteter Schalter trägt den Akzent — der Zustand ist so ohne Text ablesbar. -->
+  <Style Selector="ToggleButton.toolBtn:checked /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DawAccentSoftBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="ToggleButton.toolBtn:checked">
+    <Setter Property="Foreground" Value="{DynamicResource DawAccentBrush}" />
+  </Style>
+  <Style Selector=":is(Button).toolBtn.accent /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DawAccentSoftBrush}" />
+  </Style>
+  <Style Selector=":is(Button).toolBtn.accent">
+    <Setter Property="Foreground" Value="{DynamicResource DawAccentBrush}" />
+  </Style>
+  <Style Selector=":is(Button).toolBtn:disabled">
+    <Setter Property="Opacity" Value="0.35" />
+  </Style>
+
+  <!-- Beschriftung eines Reglers in der Leiste (klein, gedimmt, vor dem Regler). -->
+  <Style Selector="TextBlock.toolLabel">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="4,0,6,0" />
+    <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
+  </Style>
+  <!-- Zahlenwert in Leisten und Spurköpfen: Monospace, damit nichts springt. -->
+  <Style Selector="TextBlock.toolValue">
+    <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, monospace" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Foreground" Value="{DynamicResource DawTextDimBrush}" />
   </Style>
 
   <!-- Abschnitts-Überschrift in Versalien (RECHEN-GERÄT, DEINE STIMMEN, …). -->
