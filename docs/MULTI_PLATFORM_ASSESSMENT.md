@@ -165,7 +165,7 @@ statt am Spurkopf.
 | Spurkopf | Checkbox, zwei Icon-Knöpfe, zwei unbeschriftete Regler, M/S | Farbstreifen, Name mit „…"-Menü (öffnet dasselbe Menü wie der Rechtsklick), M/S/Aktiv in Bedeutungsfarben, Fader und Panorama mit Wert, Pegelbalken am Rand |
 | Zoom | passte der Song in die Breite, zentrierte der ScrollViewer den Inhalt — Zeitachse und Spurkopf standen versetzt | Inhalt linksbündig; das Raster endet unter der letzten Spur |
 | Clip | nur Wellenform, große weiße Fade-Griffe | Name im Clip, Griffe treten erst beim Überfahren hervor |
-| Mixer | Kanalzüge wuchsen mit der freien Fläche mit | feste, kompakte Streifen mit Fader, Pegel, Wert und M/S |
+| Mixer | eigenes Panel unten mit Kanalzügen | entfernt — Fader, Pegel, Mute und Solo stehen im Spurkopf, das Panel war die zweite Bedienstelle für dasselbe |
 | Spurköpfe/Lineal | „Hidden" zeichnete weiter eine Laufspur — ein Strich neben den Spurköpfen | Balken ausgeblendet |
 
 ### Offene Punkte

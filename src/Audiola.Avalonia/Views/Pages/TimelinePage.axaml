@@ -138,7 +138,7 @@
     </Style>
   </UserControl.Styles>
 
-  <Grid Margin="42,24,42,24" RowDefinitions="Auto,Auto,*,Auto">
+  <Grid Margin="42,24,42,24" RowDefinitions="Auto,Auto,*">
 
     <!-- Kopf + Mix-Export (oben rechts, auf Höhe des Titels) -->
     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
@@ -315,7 +315,7 @@
             </StackPanel>
           </Border>
 
-          <!-- Klang & Mixer -->
+          <!-- Klang -->
           <Border Classes="toolGroup last">
             <StackPanel Orientation="Horizontal">
               <Button Classes="toolBtn wide" Click="Variations_All_Click"
@@ -324,12 +324,6 @@
                   <ic:SymbolIcon Symbol="Wand" /><TextBlock Text="Variationen" VerticalAlignment="Center" />
                 </StackPanel>
               </Button>
-              <ToggleButton Classes="toolBtn wide" IsChecked="{Binding ShowMixer, Mode=TwoWay}"
-                            ToolTip.Tip="Mixer mit Fadern und Pegeln unten ein-/ausblenden">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <ic:SymbolIcon Symbol="Options" /><TextBlock Text="Mixer" VerticalAlignment="Center" />
-                </StackPanel>
-              </ToggleButton>
             </StackPanel>
           </Border>
 
@@ -729,51 +723,5 @@
 
     </Grid>
 
-    <!-- Mixer-Panel (einblendbar) -->
-    <Border Grid.Row="3" Margin="0,10,0,0" Padding="10,8" CornerRadius="10"
-            Background="{DynamicResource DawTimelineBrush}" IsVisible="{Binding ShowMixer}">
-      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-        <ItemsControl ItemsSource="{Binding Tracks}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <StackPanel Orientation="Horizontal" />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="vm:StemTrackViewModel">
-              <!-- Kanalzug: Farbe, Name, Fader mit Pegel daneben, Wert, Mute/Solo. Feste Höhe,
-                   damit die Streifen nicht mit der freien Fläche mitwachsen. -->
-              <Border Width="86" Height="196" Margin="0,0,8,0" CornerRadius="8"
-                      BorderThickness="1" BorderBrush="{DynamicResource DawStrokeBrush}"
-                      Background="{DynamicResource DawPanelBrush}">
-                <Grid Margin="8,7" RowDefinitions="4,Auto,*,Auto,Auto">
-                  <Border Grid.Row="0" CornerRadius="2" Margin="0,0,0,5"
-                          Background="{Binding AccentColor, Converter={StaticResource StringToBrush}}" />
-                  <TextBlock Grid.Row="1" HorizontalAlignment="Center" FontSize="11" FontWeight="SemiBold"
-                             TextTrimming="CharacterEllipsis" Text="{Binding Name}"
-                             ToolTip.Tip="{Binding Name}" />
-                  <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6">
-                    <Slider Orientation="Vertical" Minimum="0" Maximum="1.5" MinHeight="0"
-                            Value="{Binding Volume, Mode=TwoWay}" IsEnabled="{Binding IsEnabled}"
-                            ToolTip.Tip="Lautstärke dieser Spur" />
-                    <ProgressBar Orientation="Vertical" Minimum="0" Maximum="1" Width="6" Margin="6,0,0,0"
-                                 Value="{Binding Level}" Foreground="#54D6A0" Background="#14FFFFFF"
-                                 ToolTip.Tip="Pegel dieser Spur" />
-                  </StackPanel>
-                  <TextBlock Grid.Row="3" Classes="toolValue" HorizontalAlignment="Center" Margin="0,0,0,5"
-                             Text="{Binding Volume, StringFormat='{}{0:P0}'}" />
-                  <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center">
-                    <ToggleButton Classes="msBtn mute" Content="M" IsChecked="{Binding IsMuted, Mode=TwoWay}"
-                                  ToolTip.Tip="Stumm schalten" />
-                    <ToggleButton Classes="msBtn solo" Content="S" Margin="0" IsChecked="{Binding IsSolo, Mode=TwoWay}"
-                                  ToolTip.Tip="Solo — nur diese Spur hören" />
-                  </StackPanel>
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
-    </Border>
   </Grid>
 </UserControl>
