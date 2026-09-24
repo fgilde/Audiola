@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audiola — Kontakt &amp; Unterstützen</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script type="module" src="https://connect.gilde.org/widgets/v1.js"></script>
+  <style>
+    /* Diese Seite öffnet die App aus „Über Audiola" heraus im Browser. Sie übernimmt
+       Theme, Akzentfarbe und Sprache der App per Query-Parameter, damit sich das
+       Widget wie ein Teil des Programms anfühlt. Ohne Parameter zeigt sie beides. */
+    :root { color-scheme: dark; --bg: #0c0d12; --panel: #1a1c23; --stroke: #2c303b; --text: #e9ebf2; --dim: #a7adc0; }
+    html[data-theme="light"] { color-scheme: light; --bg: #f4f5f9; --panel: #ffffff; --stroke: #dcdfe8; --text: #15171d; --dim: #5a6070; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100dvh; background: var(--bg); color: var(--text);
+      font-family: "Inter", system-ui, sans-serif; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 26px; padding: 40px 18px;
+    }
+    header { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+    header img { width: 54px; height: 54px; border-radius: 14px; }
+    h1 { font-family: "Space Grotesk", "Inter", sans-serif; font-size: 25px; letter-spacing: -.01em; }
+    header p { color: var(--dim); font-size: 14.5px; max-width: 520px; }
+    main { display: flex; flex-wrap: wrap; gap: 22px; justify-content: center; width: 100%; }
+    gilde-contact, gilde-support { display: block; }
+    footer a { color: var(--dim); font-size: 13px; text-decoration: none; }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="assets/logo.png" alt="" />
+    <h1 id="head">Audiola</h1>
+    <p id="sub"></p>
+  </header>
+
+  <main id="host"></main>
+
+  <footer><a href="index.html" id="back">audiola.de</a></footer>
+
+  <script>
+    const PROJECT = "fgilde/Audiola";
+    const q = new URLSearchParams(location.search);
+
+    const kind = q.get("w") === "support" ? "support" : q.get("w") === "contact" ? "contact" : "both";
+    const theme = q.get("theme") === "light" ? "light" : "dark";
+    const raw = (q.get("lang") || "").toLowerCase();
+    const lang = raw.startsWith("de") ? "de" : raw.startsWith("en") ? "en" : (navigator.language || "en").startsWith("de") ? "de" : "en";
+    // Akzent nur als Farb-Literal übernehmen — der Wert kommt aus der URL.
+    const accent = /^#[0-9a-f]{3,8}$/i.test(q.get("accent") || "") ? q.get("accent") : null;
+
+    document.documentElement.lang = lang;
+    document.documentElement.dataset.theme = theme;
+
+    const T = {
+      de: {
+        head: "Audiola", back: "Zur Webseite",
+        contact: { title: "Kontakt", label: "Kontakt Audiola", sub: "Fragen, Fehlerberichte, Wünsche — direkt an die Entwicklung." },
+        support: { title: "Audiola unterstützen", label: "Audiola unterstützen", sub: "Audiola ist kostenlos und bleibt es. Wer mag, gibt etwas zurück." },
+        both: "Schreib uns oder unterstütze die Entwicklung."
+      },
+      en: {
+        head: "Audiola", back: "Back to the website",
+        contact: { title: "Contact", label: "Contact Audiola", sub: "Questions, bug reports, wishes — straight to the developers." },
+        support: { title: "Support Audiola", label: "Support Audiola", sub: "Audiola is free and stays free. Give something back if you like." },
+        both: "Write to us, or support the development."
+      }
+    }[lang];
+
+    document.getElementById("head").textContent = T.head;
+    document.getElementById("sub").textContent = kind === "both" ? T.both : T[kind].sub;
+    document.getElementById("back").textContent = T.back;
+    document.getElementById("back").href = lang === "en" ? "en.html" : "index.html";
+    document.title = (kind === "support" ? T.support.title : T.contact.title) + " · Audiola";
+
+    function widget(name) {
+      const el = document.createElement("gilde-" + name);
+      const fallback = name === "support" ? "#3DDC84" : "#3F8CFF";
+      el.setAttribute("project", PROJECT);
+      el.setAttribute("widget", name);
+      el.setAttribute("inline", "");
+      el.setAttribute("theme", theme);
+      el.setAttribute("accent", accent || fallback);
+      el.setAttribute("language", lang);
+      el.setAttribute("title", T[name].title);
+      el.setAttribute("width", "560");
+      el.setAttribute("radius", "16");
+      el.setAttribute("padding", "24");
+      // Das Logo steht schon im Seitenkopf — im Widget wäre es doppelt.
+      el.setAttribute("show-logo", "false");
+      el.setAttribute("show-homepage", "true");
+      el.setAttribute("show-preview-notice", "false");
+      // Inline heißt: keine Fußzeile, keine Beschreibung — die stehen schon auf der Seite.
+      el.setAttribute("show-description", "false");
+      el.setAttribute("show-footer", "false");
+      if (name === "support") {
+        el.setAttribute("show-support-hint", "false");
+        el.setAttribute("support-layout", "rows");
+        el.setAttribute("show-support-icons", "true");
+        el.setAttribute("show-support-qr", "true");
+      }
+      el.textContent = T[name].label;
+      return el;
+    }
+
+    const host = document.getElementById("host");
+    for (const name of kind === "both" ? ["contact", "support"] : [kind]) host.append(widget(name));
+  </script>
+</body>
+</html>

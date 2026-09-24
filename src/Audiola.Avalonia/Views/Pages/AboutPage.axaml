@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ic="using:FluentIcons.Avalonia"
              x:Class="Audiola.Avalonia.Views.Pages.AboutPage">
@@ -42,7 +42,7 @@
       </Border>
 
       <!-- ============ Zwei Spalten ============ -->
-      <Grid ColumnDefinitions="*,*" ColumnSpacing="14" RowDefinitions="Auto,Auto" RowSpacing="14">
+      <Grid ColumnDefinitions="*,*" ColumnSpacing="14" RowDefinitions="Auto,Auto,Auto" RowSpacing="14">
 
         <!-- Was es ist -->
         <Border Grid.Row="0" Grid.Column="0" Classes="dawPanel" Padding="20">
@@ -148,6 +148,48 @@
                            Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
               </Grid>
             </Button>
+          </StackPanel>
+        </Border>
+
+        <!-- ============ Kontakt & Unterstützen (Connect-Widgets von gilde.org) ============
+             Die Widgets laufen im Browser; die Knöpfe öffnen audiola.de/connect.html und
+             geben Theme, Akzentfarbe und Sprache der App mit, damit die Seite wie eine
+             Fortsetzung des Fensters aussieht. -->
+        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Classes="dawPanel" Padding="20">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="aboutHead" Text="Kontakt &amp; Unterstützen" />
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       Text="Schreib uns direkt — ohne Konto, ohne Umweg. Und wenn dir Audiola etwas wert ist: Entwicklung, Modelle und GPU-Stunden kosten Zeit und Strom." />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+              <Button Grid.Column="0" Classes="linkRow" Tag="contact" Click="OnOpenConnect"
+                      ToolTip.Tip="Öffnet das Kontaktformular im Browser — in den Farben der App">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                  <ic:SymbolIcon Grid.Column="0" Symbol="Mail" VerticalAlignment="Center"
+                                 Foreground="{DynamicResource DawAccentBrush}" />
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock FontWeight="SemiBold" Text="Kontakt aufnehmen" />
+                    <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               Text="Fragen, Fehlerberichte, Wünsche" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="↗"
+                             Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                </Grid>
+              </Button>
+              <Button Grid.Column="1" Classes="linkRow" Tag="support" Click="OnOpenConnect"
+                      ToolTip.Tip="Öffnet die Unterstützen-Seite im Browser — in den Farben der App">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                  <ic:SymbolIcon Grid.Column="0" Symbol="Heart" VerticalAlignment="Center"
+                                 Foreground="{DynamicResource DawAccentBrush}" />
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock FontWeight="SemiBold" Text="Audiola unterstützen" />
+                    <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               Text="Audiola ist kostenlos und bleibt es" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="↗"
+                             Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                </Grid>
+              </Button>
+            </Grid>
           </StackPanel>
         </Border>
       </Grid>

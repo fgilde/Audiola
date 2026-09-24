@@ -398,3 +398,21 @@ a { color: var(--cyan); text-decoration: none; }
   .platform-recommendation { border-radius: 12px; text-align: center; }
   .platform-download { align-items: flex-start; flex-direction: column; gap: 2px; }
 }
+
+
+/* ————— Kontakt & Unterstützen: die Connect-Widgets von gilde.org —————
+   Zwei Karten im Stil der Download-Karten; die Widgets stehen inline darin
+   (kein Dialog), damit man ohne Klick sieht, dass es sie gibt. */
+.connect { border-top: 1px solid var(--stroke); background: var(--bg2); }
+.connect-inner { max-width: var(--maxw); margin: 0 auto; padding: 64px 24px 72px; }
+.connect-head { text-align: center; margin-bottom: 36px; }
+.connect-head h2 { font-size: clamp(28px, 3.4vw, 40px); margin-bottom: 12px; letter-spacing: -.01em; }
+.connect-head p { color: var(--dim); max-width: 660px; margin: 0 auto; }
+.connect-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.connect-card {
+  background: var(--panel); border: 1px solid var(--stroke); border-radius: 20px;
+  padding: 26px; display: flex; flex-direction: column; gap: 18px;
+}
+.connect-card > header p:not(.dive-kicker) { color: var(--dim); font-size: 14.5px; }
+.connect-card gilde-contact, .connect-card gilde-support { display: block; width: 100%; }
+@media (max-width: 860px) { .connect-grid { grid-template-columns: 1fr; } }

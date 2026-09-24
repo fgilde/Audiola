@@ -14,6 +14,7 @@ A full audio-production studio for Windows, macOS, and Linux built on **.NET 10 
 [![QuickRun](https://quickrun.org/badge.svg)](https://quickrun.org/run?repo=fgilde/Audiola)
 &nbsp;
 [![Documentation](https://img.shields.io/badge/Docs-GitHub%20Pages-6BD6FF?style=for-the-badge&logo=readthedocs&logoColor=white)](https://fgilde.github.io/Audiola/)
+[![Support](https://img.shields.io/badge/Support-Audiola-3DDC84?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://audiola.de/connect.html?w=support&lang=en)
 
 <br/>
 
@@ -310,6 +311,16 @@ git push origin v0.1.0
 The full marketing & documentation site lives in [`docs/`](docs/) and is published with **GitHub Pages**:
 
 ➡️ **https://fgilde.github.io/Audiola/**
+
+---
+
+## Contact & support
+
+Questions, bug reports and wishes reach the developers directly through the contact form — no account, no issue tracker required. Audiola is free and stays free; if it is worth something to you, the support page collects GitHub Sponsors, PayPal and Buy me a coffee.
+
+➡️ **[Contact](https://audiola.de/connect.html?w=contact&lang=en)** · **[Support Audiola](https://audiola.de/connect.html?w=support&lang=en)**
+
+Both pages are also part of the website ([audiola.de](https://audiola.de/#kontakt)) and of the app under **About**.
 
 ---
 

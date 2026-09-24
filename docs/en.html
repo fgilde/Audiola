@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <script type="module" src="https://connect.gilde.org/widgets/v1.js"></script>
   <meta property="og:title" content="Audiola — Your audio studio for Windows, macOS and Linux" />
   <meta property="og:description" content="Separate · Mix · Sing · Master — one studio for everything. Plus Singola, the karaoke stage." />
   <meta property="og:type" content="website" />
@@ -31,6 +32,7 @@
         <a href="#themes">Light &amp; Dark</a>
         <a href="#gallery">Gallery</a>
         <a href="#singola" class="nav-singola">Singola</a>
+        <a href="#contact">Contact</a>
         <a href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">GitHub</a>
         <span class="lang-switch"><a href="index.html">DE</a><em>/</em><a class="active" href="en.html">EN</a></span>
         <a class="nav-cta" href="#download">Download</a>
@@ -262,6 +264,40 @@
             <strong>MudBlazor.Extensions</strong><em>UI &amp; preview components</em>
           </a>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT & SUPPORT ============ -->
+  <section class="connect" id="contact">
+    <div class="connect-inner">
+      <div class="connect-head">
+        <h2>Say hello — or keep the <span class="grad">studio running.</span></h2>
+        <p>Found a bug, missing a feature, or built a track we should hear? Write to us right here, no account needed. And if Audiola is worth something to you: development, models and GPU hours cost time and power.</p>
+      </div>
+      <div class="connect-grid">
+        <article class="connect-card">
+          <header>
+            <p class="dive-kicker" style="--fc:#3F8CFF">CONTACT</p>
+            <p>Questions, bug reports, wishes — they reach us directly.</p>
+          </header>
+          <gilde-contact project="fgilde/Audiola" widget="contact" inline theme="dark" accent="#3F8CFF"
+                         language="en" title="Contact" width="560" radius="16" padding="24"
+                         show-logo="true" show-description="false" show-homepage="true"
+                         show-preview-notice="false" show-footer="false">Contact Audiola</gilde-contact>
+        </article>
+        <article class="connect-card">
+          <header>
+            <p class="dive-kicker" style="--fc:#3DDC84">SUPPORT</p>
+            <p>Audiola is free and stays free. Give something back if you like.</p>
+          </header>
+          <gilde-support project="fgilde/Audiola" widget="support" inline theme="dark" accent="#3DDC84"
+                         language="en" title="Support Audiola" width="560" radius="16" padding="24"
+                         show-logo="true" show-description="false" show-homepage="true"
+                         show-preview-notice="false" show-footer="false" show-support-hint="false"
+                         support-layout="rows" show-support-icons="true"
+                         show-support-qr="true">Support Audiola</gilde-support>
+        </article>
       </div>
     </div>
   </section>

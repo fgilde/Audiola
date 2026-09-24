@@ -1,6 +1,10 @@
 ﻿using System.Diagnostics;
 using Audiola.Services;
 using System.Runtime.InteropServices;
+using System.Globalization;
+using Avalonia;
+using Avalonia.Media;
+using Avalonia.Styling;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
@@ -38,4 +42,34 @@ public partial class AboutPage : UserControl
         }
         catch { /* kein Standardbrowser verfügbar — ignorieren */ }
     }
+
+    /// <summary>Öffnet die Connect-Seite (Kontakt bzw. Unterstützen) im Standardbrowser und
+    /// gibt Theme, Akzentfarbe und Sprache der App mit — die Widgets von gilde.org laufen im
+    /// Web, ein eingebetteter Browser wäre auf allen drei Plattformen eine eigene Baustelle.</summary>
+    private void OnOpenConnect(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Control { Tag: string kind }) return;
+        var theme = Application.Current?.ActualThemeVariant == ThemeVariant.Light ? "light" : "dark";
+        var lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        var url = $"https://audiola.de/connect.html?w={kind}&theme={theme}&lang={lang}" +
+                  $"&accent={Uri.EscapeDataString(AccentHex())}";
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch { /* kein Standardbrowser verfügbar — ignorieren */ }
+    }
+
+    /// <summary>Aktuelle Akzentfarbe der Oberfläche als #RRGGBB.</summary>
+    private static string AccentHex()
+    {
+        var app = Application.Current;
+        if (app is not null && app.TryGetResource("DawAccent", app.ActualThemeVariant, out var value)
+            && value is Color c)
+        {
+            return $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+        }
+        return "#3F8CFF";
+    }
 }
+
