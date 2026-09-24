@@ -416,3 +416,24 @@ a { color: var(--cyan); text-decoration: none; }
 .connect-card > header p:not(.dive-kicker) { color: var(--dim); font-size: 14.5px; }
 .connect-card gilde-contact, .connect-card gilde-support { display: block; width: 100%; }
 @media (max-width: 860px) { .connect-grid { grid-template-columns: 1fr; } }
+
+
+/* gilde.org im Footer: das Wappen zeichnet sich einmal selbst und glimmt danach ruhig weiter. */
+.gilde-mark { display: inline-flex; align-items: center; gap: 7px; }
+.gilde-mark svg { overflow: visible; }
+.gilde-mark path {
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: gilde-draw 1.5s cubic-bezier(.65, .05, .36, 1) .4s forwards;
+}
+.gilde-mark path:nth-child(2) { animation-delay: 1.5s; animation-duration: .5s; }
+.gilde-mark svg { animation: gilde-glow 5s ease-in-out 2.4s infinite; }
+.gilde-mark:hover svg { animation: gilde-glow 1.6s ease-in-out infinite; }
+@keyframes gilde-draw { to { stroke-dashoffset: 0; } }
+@keyframes gilde-glow {
+  0%, 100% { filter: drop-shadow(0 0 1px rgba(224, 162, 78, .25)); }
+  50%      { filter: drop-shadow(0 0 6px rgba(255, 230, 168, .55)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gilde-mark path { animation: none; stroke-dashoffset: 0; }
+  .gilde-mark svg, .gilde-mark:hover svg { animation: none; }
+}
