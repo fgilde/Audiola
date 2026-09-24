@@ -522,7 +522,7 @@
                   </ContextMenu>
                 </Border.ContextMenu>
 
-                <Grid ColumnDefinitions="4,*,4">
+                <Grid ColumnDefinitions="4,*,7">
                   <!-- Farbstreifen = Spurfarbe, wie am Clip -->
                   <Border Grid.Column="0" CornerRadius="8,0,0,8"
                           Background="{Binding AccentColor, Converter={StaticResource StringToBrush}}" />
@@ -572,11 +572,21 @@
                     </DockPanel>
                   </Grid>
 
-                  <!-- Pegel der laufenden Wiedergabe: zeigt ohne Mixer, welche Spur gerade klingt -->
-                  <ProgressBar Grid.Column="2" Orientation="Vertical" Width="4" Margin="0,8"
-                               Minimum="0" Maximum="1" Value="{Binding Level}"
-                               Foreground="#54D6A0" Background="#0CFFFFFF"
-                               ToolTip.Tip="Pegel dieser Spur" />
+                  <!-- Pegel der laufenden Wiedergabe: zeigt ohne Mixer, welche Spur gerade klingt.
+                       Kein ProgressBar: die vertikale Fassung rechnet ihren Indikator ohne feste
+                       Höhe falsch und zeichnet ihn unter den Spurkopf. Hier steckt die Füllung in
+                       einer beschnittenen Spur, ihre Höhe ist Pegel × Spurhöhe. -->
+                  <Border Grid.Column="2" Width="4" Margin="0,7,3,7" CornerRadius="2" ClipToBounds="True"
+                          Background="#0CFFFFFF" ToolTip.Tip="Pegel dieser Spur">
+                    <Border VerticalAlignment="Bottom" CornerRadius="2" Background="#54D6A0">
+                      <Border.Height>
+                        <MultiBinding Converter="{StaticResource SecondsToWidth}">
+                          <Binding Path="Level" />
+                          <ReflectionBinding Path="$parent[UserControl].DataContext.LaneHeight" />
+                        </MultiBinding>
+                      </Border.Height>
+                    </Border>
+                  </Border>
                 </Grid>
               </Border>
             </DataTemplate>
