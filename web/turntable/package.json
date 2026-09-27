@@ -1,0 +1,20 @@
+{
+  "name": "audiola-turntable",
+  "private": true,
+  "version": "1.0.0",
+  "description": "<audiola-turntable> – freie Web-Component: Plattenspieler & DJ-Mischpult im Browser",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "check": "node src/id3.check.ts"
+  },
+  "dependencies": {
+    "audiomotion-analyzer": "^4.5.4",
+    "preact": "^10.29.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21"
+  }
+}

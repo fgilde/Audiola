@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>audiola-turntable: Plattenspieler &amp; DJ-Mischpult für jede Webseite</title>
+  <meta name="description" content="Freie Web-Component von Audiola: Plattenspieler mit Scratchen und Tonarm, zwei Decks, EQ, Crossfader, Hot-Cues und Visuals. Ein Script-Tag, ein Element, kostenlos." />
+  <meta name="theme-color" content="#0C0D12" />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&family=Anton&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="module" src="widgets/turntable/v1.js"></script>
+  <meta property="og:title" content="audiola-turntable: Plattenspieler &amp; DJ-Mischpult für jede Webseite" />
+  <meta property="og:description" content="Scratchen, zwei Decks, EQ, Crossfader und Visuals, direkt im Browser. Eine freie Web-Component von Audiola." />
+  <meta property="og:type" content="website" />
+  <style>
+    audiola-turntable {
+      --at-accent: var(--cyan);
+      --at-text: var(--text);
+      --at-muted: var(--faint);
+      --at-font-display: "Anton", "Space Grotesk", sans-serif;
+      --at-font-mono: "JetBrains Mono", monospace;
+    }
+    .tt-hero {
+      position: relative;
+      background: radial-gradient(ellipse at 20% 0%, rgba(63, 140, 255, .18), transparent 55%),
+        radial-gradient(ellipse at 90% 80%, rgba(181, 107, 255, .14), transparent 55%);
+      border-bottom: 1px solid var(--stroke);
+    }
+    .tt-hero audiola-turntable { --at-padding: 110px 6vw 70px; --at-min-height: 100vh; }
+    .tt-hero-text { max-width: 560px; }
+    .tt-hero-text h1 { font-size: clamp(38px, 5.4vw, 72px); letter-spacing: -.02em; margin: 14px 0 20px; }
+    .tt-hero-text p { color: var(--dim); font-size: 18px; max-width: 480px; }
+    .tt-hero-text code { font-family: "JetBrains Mono"; color: var(--cyan); }
+    .tt-kicker { font-family: "JetBrains Mono"; font-size: 12.5px; letter-spacing: .22em; color: var(--cyan); }
+    .tt-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+    .tt-hint { margin-top: 22px; font-size: 14px; color: var(--faint) !important; }
+
+    .tt-section { max-width: var(--maxw); margin: 0 auto; padding: 84px 24px 20px; }
+    .tt-section h2 { font-size: clamp(28px, 3.4vw, 40px); margin-bottom: 14px; letter-spacing: -.01em; }
+    .tt-section > p { color: var(--dim); max-width: 720px; }
+    .tt-section h3 { font-size: 19px; margin: 34px 0 12px; }
+
+    .tt-bands { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 30px; }
+    .tt-band {
+      display: flex; gap: 14px; align-items: center; padding: 16px; border-radius: var(--radius);
+      background: var(--panel); border: 1px solid var(--stroke); color: var(--text);
+      transition: transform .2s, border-color .2s;
+    }
+    .tt-band:hover { transform: translateY(-3px); border-color: var(--bc); }
+    .tt-band img { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; flex: none; }
+    .tt-band strong { display: block; font-family: "Space Grotesk"; font-size: 17px; }
+    .tt-band span { color: var(--dim); font-size: 13.5px; }
+    .tt-band em { display: block; font-style: normal; font-family: "JetBrains Mono"; font-size: 12px; color: var(--bc); margin-top: 4px; }
+
+    pre.tt-code {
+      margin: 12px 0; padding: 18px 20px; overflow-x: auto; border-radius: 12px;
+      background: var(--bg2); border: 1px solid var(--stroke);
+      font-family: "JetBrains Mono"; font-size: 13.5px; line-height: 1.6; color: var(--text);
+    }
+    .tt-code .c { color: var(--faint); }
+    .tt-code .k { color: var(--violet); }
+    .tt-code .s { color: var(--green); }
+    .tt-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14.5px; }
+    .tt-table th, .tt-table td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--stroke); vertical-align: top; }
+    .tt-table th { font-family: "JetBrains Mono"; font-size: 12px; letter-spacing: .12em; color: var(--faint); font-weight: 500; }
+    .tt-table td:first-child { font-family: "JetBrains Mono"; color: var(--cyan); white-space: nowrap; }
+    .tt-table td { color: var(--dim); }
+    .tt-table-wrap { overflow-x: auto; }
+
+    .tt-play { display: flex; flex-direction: column; gap: 16px; margin-top: 30px; }
+    .tt-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px 20px; padding: 18px 22px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--stroke); }
+    .tt-controls label, .tt-controls legend { font-family: "JetBrains Mono"; font-size: 11.5px; letter-spacing: .14em; color: var(--faint); text-transform: uppercase; }
+    .tt-controls fieldset { border: 0; display: flex; flex-direction: column; gap: 8px; }
+    .tt-seg { display: flex; gap: 6px; }
+    .tt-seg button {
+      flex: 1; padding: 8px 0; border-radius: 8px; border: 1px solid var(--stroke); background: var(--card);
+      color: var(--dim); font: 600 14px "Inter"; cursor: pointer;
+    }
+    .tt-seg button[aria-pressed="true"] { border-color: var(--cyan); color: var(--text); background: rgba(107, 214, 255, .1); }
+    .tt-controls input[type="color"] { width: 100%; height: 38px; border: 1px solid var(--stroke); border-radius: 8px; background: var(--card); cursor: pointer; }
+    .tt-stage { border-radius: var(--radius); border: 1px solid var(--stroke); background: #0a0a0d; overflow: hidden; min-width: 0; }
+    .tt-stage audiola-turntable { --at-min-height: 720px; --at-padding: 40px 4%; }
+  </style>
+</head>
+<body id="top">
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="index.html"><img src="assets/logo.png" alt="" />Audiola</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Menü">☰</button>
+      <nav class="nav-links" id="navLinks">
+        <a href="#platten">Die Platten</a>
+        <a href="#funktionen">Funktionen</a>
+        <a href="#einbinden">Einbinden</a>
+        <a href="#playground">Playground</a>
+        <a href="index.html">Audiola</a>
+        <a href="https://github.com/fgilde/Audiola/tree/master/web/turntable" target="_blank" rel="noopener">GitHub</a>
+        <a class="nav-cta" href="#einbinden">Einbinden</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ============ LIVE-DEMO (Hero-Text steckt als Slot in der Komponente) ============ -->
+  <section class="tt-hero">
+    <audiola-turntable records="https://drunkenrecords.de/albums/albums.json" logo="assets/logo-480.webp" uploads lang="de">
+      <div class="tt-hero-text">
+        <p class="tt-kicker">FREIE WEB-COMPONENT · AUS DEM HAUSE AUDIOLA</p>
+        <h1>Plattenspieler &amp; Mischpult. <span class="grad">Für jede Webseite.</span></h1>
+        <p>
+          Ein Script-Tag, ein Element: <code>&lt;audiola-turntable&gt;</code>. Scratchen, Tonarm, zwei Decks,
+          EQ, Crossfader, Hot-Cues und Visuals, direkt im Browser. Kostenlos für alle.
+        </p>
+        <div class="tt-cta">
+          <a class="btn btn-primary" href="#einbinden">&lt;/&gt;&nbsp; Einbinden</a>
+          <a class="btn btn-ghost" href="#playground">Playground</a>
+        </div>
+        <p class="tt-hint">Tipp: Zieh eigene MP3s auf die Platte. Cover und Titel kommen aus den Tags, nichts wird hochgeladen.</p>
+      </div>
+    </audiola-turntable>
+  </section>
+
+  <!-- ============ DIE PLATTEN ============ -->
+  <section class="tt-section" id="platten">
+    <p class="dive-kicker" style="--fc:#FFB454">DIE PLATTEN IN DIESER DEMO</p>
+    <h2>Echte Musik, <span class="grad">echte Bands.</span></h2>
+    <p>
+      Die Demo spielt die neuesten Alben der Bands von <a href="https://drunkenrecords.de" target="_blank" rel="noopener">Drunken Records</a>.
+      Dort läuft dieselbe Komponente direkt im Header. Hör rein, und schau bei den Bands vorbei.
+    </p>
+    <div class="tt-bands">
+      <a class="tt-band" style="--bc:#3de0ff" href="https://papibaras.de" target="_blank" rel="noopener">
+        <img src="https://drunkenrecords.de/albums/papibaras/cover.webp" alt="" loading="lazy" />
+        <div><strong>Die PapiBaras</strong><span>Wir haben Ferien</span><em>papibaras.de ↗</em></div>
+      </a>
+      <a class="tt-band" style="--bc:#b8ff2e" href="https://www.eyirish.de" target="_blank" rel="noopener">
+        <img src="https://drunkenrecords.de/albums/eyirish/cover.webp" alt="" loading="lazy" />
+        <div><strong>Eyirish</strong><span>The Celtic Reworks</span><em>eyirish.de ↗</em></div>
+      </a>
+      <a class="tt-band" style="--bc:#ff7a3d" href="https://www.null5er.de" target="_blank" rel="noopener">
+        <img src="https://drunkenrecords.de/albums/null5er/cover.webp" alt="" loading="lazy" />
+        <div><strong>0,5er</strong><span>Politisch korrekt</span><em>null5er.de ↗</em></div>
+      </a>
+      <a class="tt-band" style="--bc:#c2ff3a" href="https://drunkenrecords.de" target="_blank" rel="noopener">
+        <img src="https://drunkenrecords.de/logo-160.webp" alt="" loading="lazy" />
+        <div><strong>Drunken Records</strong><span>Das Label hinter allen dreien</span><em>drunkenrecords.de ↗</em></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ FUNKTIONEN ============ -->
+  <section class="grid-section" id="funktionen">
+    <h2 class="sr-only">Funktionen</h2>
+    <div class="feature-grid">
+      <article style="--fc:#3F8CFF"><h3>Echtes Vinyl-Gefühl</h3><p>Platte mit der Maus drehen = Scratchen, vorwärts und rückwärts. Pause bremst hörbar ab, Backspin reißt die Platte zurück.</p></article>
+      <article style="--fc:#FFB454"><h3>Tonarm als Suchlauf</h3><p>Außen Track 1, innen der letzte: wo du die Nadel absetzt, geht es genau dort weiter. Während des Songs wandert der Arm nach innen.</p></article>
+      <article style="--fc:#3DDC84"><h3>Zwei Decks + Mixer</h3><p>Ein Klick öffnet das Mischpult: EQ Hi/Mid/Low bis Kill, Filter, Kanal-Fader, VU-Meter, Crossfader, Echo und Airhorn.</p></article>
+      <article style="--fc:#FF6B6B"><h3>Pitch &amp; Hot-Cues</h3><p>±8 % Tempo pro Deck, drei Hot-Cues zum Setzen und Anspringen. Beats per Hand angleichen, wie am echten Pult.</p></article>
+      <article style="--fc:#B56BFF"><h3>Visuals</h3><p>Spektrum hinter der ganzen Bühne, Ring um jede Platte. Die Farben kommen von den Platten und mischen sich nach Crossfader.</p></article>
+      <article style="--fc:#6BD6FF"><h3>Eigene Songs</h3><p>Dateien auf die Platte ziehen: Cover, Titel, Album und Reihenfolge kommen aus den ID3-Tags. Alles bleibt lokal im Browser.</p></article>
+    </div>
+  </section>
+
+  <!-- ============ EINBINDEN ============ -->
+  <section class="tt-section" id="einbinden">
+    <p class="dive-kicker" style="--fc:#3DDC84">EINBINDEN</p>
+    <h2>Zwei Zeilen. <span class="grad">Fertig.</span></h2>
+    <p>Script laden, Element setzen. Kein Build-Schritt, kein Framework, keine Abhängigkeiten. Frei nutzbar, auch kommerziell.</p>
+<pre class="tt-code"><span class="c">&lt;!-- einmal auf der Seite --&gt;</span>
+&lt;<span class="k">script</span> type=<span class="s">"module"</span> src=<span class="s">"https://audiola.de/widgets/turntable/v1.js"</span>&gt;&lt;/<span class="k">script</span>&gt;
+
+<span class="c">&lt;!-- wo der Plattenspieler stehen soll --&gt;</span>
+&lt;<span class="k">audiola-turntable</span> records=<span class="s">"/musik/records.json"</span> uploads&gt;&lt;/<span class="k">audiola-turntable</span>&gt;</pre>
+
+    <h3>Plattenliste (records.json)</h3>
+    <p style="color:var(--dim)">Relative Pfade gelten relativ zur JSON-Datei. <code>duration</code>, <code>cover</code>, <code>link</code> und <code>gradient</code> sind optional. Liegen die Dateien auf einer anderen Domain, muss diese CORS erlauben (<code>Access-Control-Allow-Origin</code>).</p>
+<pre class="tt-code">{
+  <span class="s">"records"</span>: [
+    {
+      <span class="s">"title"</span>: <span class="s">"Wir haben Ferien"</span>,
+      <span class="s">"artist"</span>: <span class="s">"Die PapiBaras"</span>,
+      <span class="s">"cover"</span>: <span class="s">"papibaras/cover.webp"</span>,
+      <span class="s">"link"</span>: <span class="s">"https://papibaras.de"</span>,
+      <span class="s">"accent"</span>: <span class="s">"#3de0ff"</span>,
+      <span class="s">"gradient"</span>: [<span class="s">"#3de0ff"</span>, <span class="s">"#6a7bff"</span>, <span class="s">"#c93dff"</span>],
+      <span class="s">"tracks"</span>: [
+        { <span class="s">"title"</span>: <span class="s">"Mach die Bahn frei"</span>, <span class="s">"src"</span>: <span class="s">"papibaras/01.mp3"</span>, <span class="s">"duration"</span>: 202.2 }
+      ]
+    }
+  ]
+}</pre>
+
+    <h3>Attribute</h3>
+    <div class="tt-table-wrap"><table class="tt-table">
+      <tr><th>ATTRIBUT</th><th>WERTE</th><th>WIRKUNG</th></tr>
+      <tr><td>records</td><td>URL</td><td>JSON-Datei mit den Platten (Format oben). Alternativ per JavaScript: <code>el.records = [...]</code></td></tr>
+      <tr><td>decks</td><td>1 · 2 (Standard)</td><td>Bei 2 gibt es den Button „Mischpult öffnen“ mit zweitem Deck und Mixer.</td></tr>
+      <tr><td>mode</td><td>single (Standard) · dj</td><td>Startet direkt mit geöffnetem Mischpult. Lässt sich live umschalten.</td></tr>
+      <tr><td>uploads</td><td>an/aus</td><td>Eigene Songs per Button und Drag &amp; Drop. Cover, Titel und Trackliste kommen aus den ID3-Tags.</td></tr>
+      <tr><td>logo</td><td>URL</td><td>Bild auf der leeren Platte, bevor eine Platte gewählt ist.</td></tr>
+      <tr><td>lang</td><td>de · en</td><td>Sprache der Beschriftungen. Ohne Angabe: Browsersprache.</td></tr>
+    </table></div>
+
+    <h3>Eigener Inhalt links daneben</h3>
+    <p style="color:var(--dim)">Alles, was zwischen die Tags kommt, steht links neben dem Plattenspieler und fährt beim Öffnen des Mischpults heraus. So bauen Drunken Records und diese Seite ihren Header.</p>
+<pre class="tt-code">&lt;<span class="k">audiola-turntable</span> records=<span class="s">"records.json"</span>&gt;
+  &lt;<span class="k">h1</span>&gt;Mein Label&lt;/<span class="k">h1</span>&gt;
+  &lt;<span class="k">p</span>&gt;Hör rein.&lt;/<span class="k">p</span>&gt;
+&lt;/<span class="k">audiola-turntable</span>&gt;</pre>
+
+    <h3>Aussehen &amp; Events</h3>
+<pre class="tt-code"><span class="k">audiola-turntable</span> {
+  --at-accent: #c2ff3a;          <span class="c">/* Akzentfarbe (Buttons, Regler) */</span>
+  --at-text: #f4f2ec;            <span class="c">/* Textfarbe */</span>
+  --at-muted: #8c8a82;           <span class="c">/* Nebentexte */</span>
+  --at-font: inherit;            <span class="c">/* Grundschrift */</span>
+  --at-font-display: 'Anton';    <span class="c">/* Kanalbuchstaben A/B */</span>
+  --at-font-mono: 'Space Mono';  <span class="c">/* Labels */</span>
+  --at-padding: 48px 5%;         <span class="c">/* Innenabstand */</span>
+  --at-min-height: 780px;        <span class="c">/* z. B. 100vh als Seitenkopf */</span>
+}
+
+el.<span class="k">addEventListener</span>(<span class="s">'modechange'</span>, (e) =&gt; console.log(e.detail.mode)) <span class="c">// 'single' | 'dj'</span></pre>
+  </section>
+
+  <!-- ============ PLAYGROUND ============ -->
+  <section class="tt-section" id="playground">
+    <p class="dive-kicker" style="--fc:#B56BFF">PLAYGROUND</p>
+    <h2>Probier die Optionen <span class="grad">live aus.</span></h2>
+    <p>Jede Einstellung ändert die Komponente sofort. Darunter steht der passende Code zum Kopieren.</p>
+    <div class="tt-play">
+      <div class="tt-controls">
+        <fieldset><legend>Decks</legend><div class="tt-seg" data-attr="decks"><button data-v="1">1</button><button data-v="2" aria-pressed="true">2</button></div></fieldset>
+        <fieldset><legend>Start</legend><div class="tt-seg" data-attr="mode"><button data-v="single" aria-pressed="true">Single</button><button data-v="dj">DJ</button></div></fieldset>
+        <fieldset><legend>Uploads</legend><div class="tt-seg" data-attr="uploads"><button data-v="on" aria-pressed="true">An</button><button data-v="off">Aus</button></div></fieldset>
+        <fieldset><legend>Platten</legend><div class="tt-seg" data-attr="records"><button data-v="demo" aria-pressed="true">Demo</button><button data-v="none">Nur eigene</button></div></fieldset>
+        <fieldset><legend>Sprache</legend><div class="tt-seg" data-attr="lang"><button data-v="de" aria-pressed="true">DE</button><button data-v="en">EN</button></div></fieldset>
+        <fieldset><label for="ttAccent">Akzentfarbe</label><input id="ttAccent" type="color" value="#c2ff3a" /></fieldset>
+      </div>
+      <div class="tt-stage">
+        <audiola-turntable id="ttPlay" records="https://drunkenrecords.de/albums/albums.json" uploads lang="de" style="--at-accent:#c2ff3a"></audiola-turntable>
+      </div>
+    </div>
+    <pre class="tt-code" id="ttSnippet"></pre>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>© <span id="year"></span> <a href="https://florian.gilde.org" target="_blank" rel="noopener">Florian Gilde</a> · Audiola &amp; Singola</span>
+      <span class="foot-links"><a class="gilde-mark" href="https://www.gilde.org" target="_blank" rel="noopener"><svg viewBox="0 0 512 512" width="21" height="21" aria-hidden="true"><defs><linearGradient id="gildeGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe6a8" /><stop offset=".45" stop-color="#e0a24e" /><stop offset="1" stop-color="#a9761f" /></linearGradient></defs><g fill="none" stroke="url(#gildeGold)" stroke-width="56" stroke-linecap="square" stroke-linejoin="miter"><path pathLength="1" d="M376 88H112v264l144 112 144-112v-96H280" /><path pathLength="1" d="M280 216h120" /></g></svg>gilde.org</a> · <a href="https://github.com/fgilde/Audiola" target="_blank" rel="noopener">GitHub</a> · <a href="#top">Nach oben ↑</a></span>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById('navToggle').onclick = () => document.getElementById('navLinks').classList.toggle('open');
+
+    // Playground: Buttons → Attribute der Komponente, dazu der passende Code
+    const DEMO = 'https://drunkenrecords.de/albums/albums.json';
+    const el = document.getElementById('ttPlay');
+    const accent = document.getElementById('ttAccent');
+    const state = { decks: '2', mode: 'single', uploads: 'on', records: 'demo', lang: 'de' };
+    const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const apply = () => {
+      el.setAttribute('decks', state.decks);
+      el.setAttribute('mode', state.mode);
+      el.toggleAttribute('uploads', state.uploads === 'on');
+      el.setAttribute('lang', state.lang);
+      if (state.records === 'demo') el.setAttribute('records', DEMO);
+      else { el.removeAttribute('records'); el.records = []; }
+      el.style.setProperty('--at-accent', accent.value);
+      const attrs = [
+        state.records === 'demo' ? `records="${DEMO}"` : '',
+        state.decks === '1' ? 'decks="1"' : '',
+        state.mode === 'dj' ? 'mode="dj"' : '',
+        state.uploads === 'on' ? 'uploads' : '',
+        `lang="${state.lang}"`,
+        `style="--at-accent: ${accent.value}"`,
+      ].filter(Boolean).join(' ');
+      document.getElementById('ttSnippet').innerHTML =
+        esc('<script type="module" src="https://audiola.de/widgets/turntable/v1.js"></scr' + 'ipt>\n') +
+        esc(`<audiola-turntable ${attrs}></audiola-turntable>`);
+    };
+    document.querySelectorAll('.tt-seg').forEach((seg) => seg.addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      seg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+      state[seg.dataset.attr] = b.dataset.v;
+      apply();
+    }));
+    accent.addEventListener('input', apply);
+    apply();
+  </script>
+</body>
+</html>
