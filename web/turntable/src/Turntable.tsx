@@ -188,9 +188,10 @@ export default function Turntable(p: Props) {
 
   useEffect(() => {
     const playing = s.needle && !s.loading
-    if (s.rec && vizRec.current !== s.rec.id) {
+    const key = s.rec && `${s.rec.id}:${s.rec.gradient.join()}` // Farben können nachträglich aus dem Cover kommen
+    if (s.rec && key && vizRec.current !== key) {
       viz.current?.setRecord(s.rec)
-      if (viz.current) vizRec.current = s.rec.id
+      if (viz.current) vizRec.current = key
     }
     viz.current?.setActive(playing)
     props.current.onStatus(side, { playing: playing && !s.braking, rec: s.rec })

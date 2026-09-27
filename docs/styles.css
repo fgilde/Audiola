@@ -58,6 +58,49 @@ a { color: var(--cyan); text-decoration: none; }
 .nav-links a { color: var(--dim); transition: color .15s; }
 .nav-links a:hover { color: var(--text); }
 .nav-links .nav-singola { background: var(--stage); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 600; }
+.nav-links .nav-turntable {
+  display: inline-flex; align-items: center; gap: 8px; padding: 5px 7px 5px 9px; border-radius: 999px;
+  border: 1px solid transparent; color: var(--text); font-weight: 600;
+  background: linear-gradient(var(--bg2), var(--bg2)) padding-box, var(--grad) border-box;
+  box-shadow: 0 0 18px rgba(107, 214, 255, .22); transition: box-shadow .2s, transform .2s;
+}
+.nav-links .nav-turntable:hover { color: var(--text); box-shadow: 0 0 26px rgba(107, 214, 255, .45); transform: translateY(-1px); }
+.nav-turntable::before {
+  content: ""; width: 15px; height: 15px; border-radius: 50%; flex: none;
+  background: radial-gradient(circle, var(--cyan) 0 2px, #0c0d12 2.5px 3.2px, transparent 3.5px),
+    repeating-radial-gradient(circle, #0c0d12 0 1px, #3a3f4d 1.5px 2px);
+  box-shadow: 0 0 0 1px #3a3f4d; animation: nav-spin 2.2s linear infinite;
+}
+.nav-new {
+  font-family: "JetBrains Mono"; font-size: 9.5px; letter-spacing: .12em; padding: 2px 6px; border-radius: 999px;
+  background: var(--grad); color: #fff;
+}
+@keyframes nav-spin { to { transform: rotate(360deg); } }
+
+/* Teaser für <audiola-turntable> */
+.tt-teaser { max-width: var(--maxw); margin: 0 auto; padding: 70px 24px 10px; }
+.tt-teaser-card {
+  display: grid; grid-template-columns: 260px 1fr; gap: 48px; align-items: center; padding: 38px 44px;
+  border-radius: var(--radius); border: 1px solid var(--stroke); color: var(--text);
+  background: radial-gradient(ellipse at 0% 50%, rgba(63, 140, 255, .16), transparent 60%), var(--panel);
+  transition: border-color .2s, transform .2s;
+}
+.tt-teaser-card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+.tt-teaser-card h2 { font-size: clamp(26px, 3vw, 36px); margin-bottom: 12px; }
+.tt-teaser-card p { color: var(--dim); }
+.tt-teaser-card code { font-family: "JetBrains Mono"; font-size: 13.5px; color: var(--cyan); }
+.tt-teaser-card .btn { margin-top: 22px; }
+.tt-teaser-vinyl {
+  position: relative; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center;
+  background: repeating-radial-gradient(circle, #111 0 2px, #1b1b1d 3px 4px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .06), 0 24px 60px rgba(0, 0, 0, .6), 0 0 60px rgba(107, 214, 255, .18);
+  animation: nav-spin 6s linear infinite;
+}
+.tt-teaser-vinyl img { width: 58%; filter: drop-shadow(0 6px 16px rgba(0, 0, 0, .7)); }
+@media (max-width: 760px) {
+  .tt-teaser-card { grid-template-columns: 1fr; padding: 28px; gap: 26px; }
+  .tt-teaser-vinyl { width: 180px; margin: 0 auto; }
+}
 .nav-cta {
   background: var(--grad); color: #fff !important;
   padding: 8px 18px; border-radius: 999px; font-weight: 600;
@@ -436,4 +479,5 @@ a { color: var(--cyan); text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   .gilde-mark path { animation: none; stroke-dashoffset: 0; }
   .gilde-mark svg, .gilde-mark:hover svg { animation: none; }
+  .nav-turntable::before, .tt-teaser-vinyl { animation: none; }
 }

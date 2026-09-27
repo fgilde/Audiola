@@ -1,6 +1,7 @@
 import { render } from 'preact'
 import App from './App'
-import { normalize, type Rec } from './records'
+import { palette } from './palette'
+import { fillColors, normalize, type Rec } from './records'
 import css from './styles.css?inline'
 
 // <audiola-turntable> – freie Web-Component: Plattenspieler & DJ-Mischpult im Browser.
@@ -31,6 +32,7 @@ class AudiolaTurntable extends HTMLElement {
     this.loadId++ // späteres Laden per Attribut soll die Property nicht überschreiben
     this.list = normalize(v, document.baseURI)
     this.update()
+    void this.colorize()
   }
 
   connectedCallback() {
@@ -61,8 +63,18 @@ class AudiolaTurntable extends HTMLElement {
       if (id !== this.loadId) return
       this.list = normalize(data, url)
       this.update()
+      void this.colorize()
     } catch (e) {
       console.error('[audiola-turntable] records konnten nicht geladen werden:', e)
+    }
+  }
+
+  /** Fehlende Plattenfarben aus den Covern berechnen und neu zeichnen. */
+  private async colorize() {
+    const list = this.list
+    if ((await fillColors(list, palette)) && list === this.list) {
+      this.list = [...list]
+      this.update()
     }
   }
 

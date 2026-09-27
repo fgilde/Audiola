@@ -7,7 +7,8 @@
 //     "accent": "#3de0ff", "gradient": ["#3de0ff", "#6a7bff", "#c93dff"],
 //     "tracks": [ { "title": "Mach die Bahn frei", "src": "papibaras/01.mp3", "duration": 202.2 } ]
 // } ] }
-// Relative URLs gelten relativ zur JSON-Datei. `gradient`, `duration`, `cover`, `link` sind optional.
+// Relative URLs gelten relativ zur JSON-Datei. `accent`, `gradient`, `duration`, `cover`, `link` sind optional;
+// fehlen `accent`/`gradient`, werden sie aus dem Cover berechnet (siehe palette.ts).
 
 export interface Track {
   title: string
@@ -25,6 +26,8 @@ export interface Rec {
   accent: string
   gradient: [string, string, string]
   tracks: Track[]
+  /** Welche Farben noch aus dem Cover berechnet werden sollen. */
+  auto?: { accent: boolean; gradient: boolean }
 }
 
 export const DEFAULT_ACCENT = '#c2ff3a'
@@ -74,7 +77,22 @@ export function normalize(input: unknown, base: string): Rec[] {
         accent,
         gradient: g ? r.gradient : gradientFor(accent),
         tracks,
+        auto: { accent: !HEX.test(str(r.accent)), gradient: !g },
       },
     ]
   })
+}
+
+/** Trägt fehlende Farben aus den Covern nach; liefert true, wenn sich etwas geändert hat. */
+export async function fillColors(records: Rec[], palette: (url: string) => Promise<{ accent: string; gradient: [string, string, string] } | null>) {
+  const todo = records.filter((r) => r.cover && r.auto && (r.auto.accent || r.auto.gradient))
+  const results = await Promise.all(todo.map((r) => palette(r.cover!)))
+  todo.forEach((r, i) => {
+    const p = results[i]
+    if (!p) return
+    if (r.auto!.accent) r.accent = p.accent
+    if (r.auto!.gradient) r.gradient = r.auto!.accent ? p.gradient : [p.gradient[0], r.accent, p.gradient[2]]
+    r.auto = undefined
+  })
+  return results.some(Boolean)
 }

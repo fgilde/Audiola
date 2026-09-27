@@ -97,7 +97,6 @@
         <a href="#einbinden">Einbinden</a>
         <a href="#playground">Playground</a>
         <a href="index.html">Audiola</a>
-        <a href="https://github.com/fgilde/Audiola/tree/master/web/turntable" target="_blank" rel="noopener">GitHub</a>
         <a class="nav-cta" href="#einbinden">Einbinden</a>
       </nav>
     </div>
@@ -125,10 +124,10 @@
   <!-- ============ DIE PLATTEN ============ -->
   <section class="tt-section" id="platten">
     <p class="dive-kicker" style="--fc:#FFB454">DIE PLATTEN IN DIESER DEMO</p>
-    <h2>Echte Musik, <span class="grad">echte Bands.</span></h2>
+    <h2>Danke, <span class="grad">Drunken Records!</span></h2>
     <p>
-      Die Demo spielt die neuesten Alben der Bands von <a href="https://drunkenrecords.de" target="_blank" rel="noopener">Drunken Records</a>.
-      Dort läuft dieselbe Komponente direkt im Header. Hör rein, und schau bei den Bands vorbei.
+      Die Musik in dieser Demo stellt uns <a href="https://drunkenrecords.de" target="_blank" rel="noopener">Drunken Records</a>
+      zur Verfügung: die neuesten Alben von Die PapiBaras, Eyirish und 0,5er. Vielen Dank für die Unterstützung!
     </p>
     <div class="tt-bands">
       <a class="tt-band" style="--bc:#3de0ff" href="https://papibaras.de" target="_blank" rel="noopener">
@@ -167,7 +166,7 @@
   <section class="tt-section" id="einbinden">
     <p class="dive-kicker" style="--fc:#3DDC84">EINBINDEN</p>
     <h2>Zwei Zeilen. <span class="grad">Fertig.</span></h2>
-    <p>Script laden, Element setzen. Kein Build-Schritt, kein Framework, keine Abhängigkeiten. Frei nutzbar, auch kommerziell.</p>
+    <p>Script laden, Element setzen. Kein Build-Schritt, kein Framework, keine Abhängigkeiten. Frei nutzbar, auch kommerziell. Quellcode auf <a href="https://github.com/fgilde/Audiola/tree/master/web/turntable" target="_blank" rel="noopener">GitHub</a>.</p>
 <pre class="tt-code"><span class="c">&lt;!-- einmal auf der Seite --&gt;</span>
 &lt;<span class="k">script</span> type=<span class="s">"module"</span> src=<span class="s">"https://audiola.de/widgets/turntable/v1.js"</span>&gt;&lt;/<span class="k">script</span>&gt;
 
@@ -175,7 +174,7 @@
 &lt;<span class="k">audiola-turntable</span> records=<span class="s">"/musik/records.json"</span> uploads&gt;&lt;/<span class="k">audiola-turntable</span>&gt;</pre>
 
     <h3>Plattenliste (records.json)</h3>
-    <p style="color:var(--dim)">Relative Pfade gelten relativ zur JSON-Datei. <code>duration</code>, <code>cover</code>, <code>link</code> und <code>gradient</code> sind optional. Liegen die Dateien auf einer anderen Domain, muss diese CORS erlauben (<code>Access-Control-Allow-Origin</code>).</p>
+    <p style="color:var(--dim)">Relative Pfade gelten relativ zur JSON-Datei. <code>duration</code>, <code>cover</code>, <code>link</code>, <code>accent</code> und <code>gradient</code> sind optional. Fehlen die Farben, berechnet die Komponente sie aus dem Cover. Liegen die Dateien auf einer anderen Domain, muss diese CORS erlauben (<code>Access-Control-Allow-Origin</code>).</p>
 <pre class="tt-code">{
   <span class="s">"records"</span>: [
     {
