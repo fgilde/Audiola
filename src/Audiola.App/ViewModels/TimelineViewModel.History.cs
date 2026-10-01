@@ -11,7 +11,7 @@ public sealed partial class TimelineViewModel
     private StudioSnapshot Capture() => new(
         Tracks.Select(t => new TrackSnap(
             t.Name, t.AccentColor, t.Model.FilePath, t.Volume, t.Pan,
-            t.IsEnabled, t.IsMuted, t.IsSolo, t.StartOffsetSeconds, t.LengthSeconds, t.Peaks,
+            t.IsEnabled, t.IsMuted, t.IsSolo, t.IsHidden, t.IsLocked, t.StartOffsetSeconds, t.LengthSeconds, t.Peaks,
             t.Clips.Select(c => new ClipSnap(c.SourcePath, c.SourceTotalSeconds, c.SourcePeaks,
                 c.TimelineOffsetSeconds, c.SourceStartSeconds, c.LengthSeconds, c.Peaks,
                 c.GainDb, c.FadeInSeconds, c.FadeOutSeconds)).ToList())).ToList(),
@@ -90,6 +90,7 @@ public sealed partial class TimelineViewModel
             var t = StemTrackViewModel.ForFile(ts.FilePath, ts.Name, ts.AccentColor);
             t.Volume = ts.Volume; t.Pan = ts.Pan;
             t.IsEnabled = ts.IsEnabled; t.IsMuted = ts.IsMuted; t.IsSolo = ts.IsSolo;
+            t.IsHidden = ts.IsHidden; t.IsLocked = ts.IsLocked;
             t.StartOffsetSeconds = ts.StartOffsetSeconds; t.LengthSeconds = ts.LengthSeconds; t.Peaks = ts.Peaks;
             foreach (var cs in ts.Clips)
                 t.Clips.Add(new ClipViewModel

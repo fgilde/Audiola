@@ -33,14 +33,74 @@
       <Setter Property="IsVisible" Value="False" />
     </Style>
 
-    <!-- Ausgewählte Spur / ausgewählter Clip -->
+    <!-- Grundfarben des Spurkopfs als Style, nicht als Attribut — ein lokaler Wert schlägt
+         jeden Style, und die Hervorhebung unten käme nie zum Zug. -->
+    <Style Selector="Border.trackHeader">
+      <Setter Property="BorderBrush" Value="{DynamicResource DawStrokeBrush}" />
+      <Setter Property="Background" Value="{DynamicResource DawPanelBrush}" />
+    </Style>
+    <!-- Ausgewählte Spur / ausgewählter Clip: Kopf und Lane leuchten gemeinsam auf -->
     <Style Selector="Border.trackHeader.selected">
       <Setter Property="BorderBrush" Value="{DynamicResource DawAccentBrush}" />
-      <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+      <Setter Property="Background" Value="{DynamicResource DawAccentSoftBrush}" />
     </Style>
-    <Style Selector="Border.clipBox.selected">
-      <Setter Property="BorderBrush" Value="White" />
-      <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+    <Style Selector="Border.trackHeader:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource DawStrokeStrongBrush}" />
+    </Style>
+    <Style Selector="Border.trackHeader.selected:pointerover">
+      <Setter Property="BorderBrush" Value="{DynamicResource DawAccentBrush}" />
+    </Style>
+    <Style Selector="Panel.lane">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Panel.lane:pointerover">
+      <Setter Property="Background" Value="#0AFFFFFF" />
+    </Style>
+
+    <!-- Stumm / aus / von Solo verdrängt: Spur ausgegraut, M/S/Aktiv bleiben voll sichtbar -->
+    <Style Selector="Border.trackHeader.silent TextBox.trackName">
+      <Setter Property="Opacity" Value="0.45" />
+    </Style>
+    <Style Selector="Border.trackHeader.silent Slider">
+      <Setter Property="Opacity" Value="0.4" />
+    </Style>
+    <Style Selector="Border.trackHeader.silent Border.stripe">
+      <Setter Property="Opacity" Value="0.25" />
+    </Style>
+    <Style Selector="Panel.lane.silent ItemsControl.clips">
+      <Setter Property="Opacity" Value="0.3" />
+    </Style>
+
+    <!-- Gesperrte Spur: Clips bleiben, wo sie sind -->
+    <Style Selector="Border.clipBox.locked">
+      <Setter Property="Cursor" Value="Arrow" />
+    </Style>
+    <Style Selector="ToggleButton.hdrIcon">
+      <Setter Property="Width" Value="22" />
+      <Setter Property="Height" Value="21" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="2,0,0,0" />
+      <Setter Property="CornerRadius" Value="5" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="Foreground" Value="{DynamicResource DawTextFaintBrush}" />
+    </Style>
+    <Style Selector="ToggleButton.hdrIcon:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#33FFB454" />
+    </Style>
+    <Style Selector="ToggleButton.hdrIcon:checked">
+      <Setter Property="Foreground" Value="#FFC978" />
+    </Style>
+
+    <!-- Clip-Ziehen: Vorschau auf der Zielspur bzw. Marke „neue Spur" -->
+    <Style Selector="Border#DragGhost">
+      <Setter Property="Background" Value="#335B8CFF" />
+      <Setter Property="BorderBrush" Value="#5B8CFF" />
+    </Style>
+    <Style Selector="Border#DragGhost.locked">
+      <Setter Property="Background" Value="#33FF6B6B" />
+      <Setter Property="BorderBrush" Value="#FF6B6B" />
     </Style>
 
     <!-- Spurname: sieht aus wie Text, ist aber ein Eingabefeld (Klick = umbenennen). -->
@@ -138,7 +198,7 @@
     </Style>
   </UserControl.Styles>
 
-  <Grid Margin="42,24,42,24" RowDefinitions="Auto,Auto,*">
+  <Grid Margin="42,24,42,24" RowDefinitions="Auto,Auto,Auto,*">
 
     <!-- Kopf + Mix-Export (oben rechts, auf Höhe des Titels) -->
     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
@@ -344,9 +404,15 @@
               <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" MaxWidth="180"
                          TextTrimming="CharacterEllipsis" Text="{Binding SelectedClip.DisplayName}"
                          ToolTip.Tip="Ausgewählter Clip — die folgenden Regler wirken nur auf ihn" />
+              <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0,0,0" VerticalAlignment="Center"
+                          IsVisible="{Binding SelectedClip.Track.IsLocked}">
+                <ic:SymbolIcon Symbol="LockClosed" FontSize="13" Foreground="#FFC978" />
+                <TextBlock Text="Spur gesperrt" FontSize="12" Foreground="#FFC978" VerticalAlignment="Center" />
+              </StackPanel>
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                        IsEnabled="{Binding !SelectedClip.Track.IsLocked}">
               <TextBlock Classes="toolLabel" Text="Pegel" />
               <Slider Width="96" VerticalAlignment="Center" Minimum="-24" Maximum="6"
                       Value="{Binding SelectedClip.GainDb, Mode=TwoWay}"
@@ -355,7 +421,8 @@
                          Text="{Binding SelectedClip.GainDb, StringFormat='{}{0:+0.0;-0.0;0.0} dB'}" />
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                        IsEnabled="{Binding !SelectedClip.Track.IsLocked}">
               <TextBlock Classes="toolLabel" Text="Fade-In" />
               <Slider Width="76" VerticalAlignment="Center" Minimum="0" Maximum="5"
                       Value="{Binding SelectedClip.FadeInSeconds, Mode=TwoWay}"
@@ -364,7 +431,8 @@
                          Text="{Binding SelectedClip.FadeInSeconds, StringFormat='{}{0:F2} s'}" />
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                        IsEnabled="{Binding !SelectedClip.Track.IsLocked}">
               <TextBlock Classes="toolLabel" Text="Fade-Out" />
               <Slider Width="76" VerticalAlignment="Center" Minimum="0" Maximum="5"
                       Value="{Binding SelectedClip.FadeOutSeconds, Mode=TwoWay}"
@@ -373,7 +441,8 @@
                          Text="{Binding SelectedClip.FadeOutSeconds, StringFormat='{}{0:F2} s'}" />
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                        IsEnabled="{Binding !SelectedClip.Track.IsLocked}">
               <Button Classes="toolBtn wide" Click="ClipVariations_Click"
                       ToolTip.Tip="Provider und Variationen wählen (Hall, Echo, Cleanup …) — wirkt auf den markierten Bereich, sonst auf den ganzen Clip">
                 <StackPanel Orientation="Horizontal" Spacing="6">
@@ -396,8 +465,62 @@
       </StackPanel>
     </Border>
 
+    <!-- ═══ Ausgeblendete Spuren: immer sagen, dass es sie gibt — und laut, wenn sie klingen ═══ -->
+    <StackPanel Grid.Row="2" Margin="0,10,0,0" Spacing="6" IsVisible="{Binding HasHiddenTracks}">
+      <Border Padding="12,8" CornerRadius="8" BorderThickness="1" BorderBrush="#FFB454" Background="#26FFB454"
+              IsVisible="{Binding HasAudibleHiddenTracks}">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0">
+            <Button Command="{Binding MuteHiddenTracksCommand}"
+                    ToolTip.Tip="Alle ausgeblendeten Spuren stumm schalten — sie bleiben ausgeblendet">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ic:SymbolIcon Symbol="SpeakerMute" /><TextBlock Text="Stumm schalten" />
+              </StackPanel>
+            </Button>
+            <Button Command="{Binding ShowAllTracksCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ic:SymbolIcon Symbol="Eye" /><TextBlock Text="Einblenden" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+          <ic:SymbolIcon Symbol="Speaker2" FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"
+                         Foreground="#FFC978" />
+          <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" FontWeight="SemiBold"
+                     Text="{Binding AudibleHiddenTracksText}" />
+        </DockPanel>
+      </Border>
+      <WrapPanel Orientation="Horizontal">
+        <ic:SymbolIcon Symbol="EyeOff" VerticalAlignment="Center" Margin="2,0,6,0"
+                       Foreground="{DynamicResource DawTextDimBrush}" />
+        <TextBlock VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource DawTextDimBrush}"
+                   Text="{Binding HiddenTracksText}" />
+        <ItemsControl ItemsSource="{Binding HiddenTracks}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:StemTrackViewModel">
+              <Button Margin="0,0,6,0" Padding="8,3" FontSize="12"
+                      Command="{ReflectionBinding $parent[UserControl].DataContext.ShowTrackCommand}"
+                      CommandParameter="{Binding}" ToolTip.Tip="Diese Spur wieder einblenden">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Border Width="3" Height="12" CornerRadius="1.5" VerticalAlignment="Center"
+                          Background="{Binding AccentColor, Converter={StaticResource StringToBrush}}" />
+                  <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                  <ic:SymbolIcon Symbol="SpeakerMute" FontSize="12" VerticalAlignment="Center"
+                                 IsVisible="{Binding !IsAudible}" />
+                  <ic:SymbolIcon Symbol="Eye" FontSize="12" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button Padding="8,3" FontSize="12" Command="{Binding ShowAllTracksCommand}" Content="Alle einblenden" />
+      </WrapPanel>
+    </StackPanel>
+
     <!-- Hinweis ohne Spuren (vollflächiges Drop-Ziel) -->
-    <Border Grid.Row="2" Background="Transparent" IsVisible="{Binding !HasTracks}"
+    <Border Grid.Row="3" Background="Transparent" IsVisible="{Binding !HasTracks}"
             DragDrop.AllowDrop="True">
       <Border MaxWidth="520" Padding="44,36" VerticalAlignment="Center" HorizontalAlignment="Center"
               CornerRadius="14" BorderThickness="2" BorderBrush="{DynamicResource DawStrokeStrongBrush}"
@@ -422,7 +545,7 @@
     </Border>
 
     <!-- Timeline (4-Quadranten: Ruler oben fixiert, Spurköpfe links fixiert) -->
-    <Grid Grid.Row="2" Margin="0,14,0,0" IsVisible="{Binding HasTracks}"
+    <Grid Grid.Row="3" Margin="0,14,0,0" IsVisible="{Binding HasTracks}"
           DragDrop.AllowDrop="True" ColumnDefinitions="222,*" RowDefinitions="26,*">
 
       <!-- Ecke oben links -->
@@ -464,14 +587,14 @@
            damit der Kopf auch bei kleiner Spurhöhe ruhig bleibt. -->
       <ScrollViewer Name="HeaderScroll" Grid.Row="1" Grid.Column="0"
                     VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
-        <ItemsControl ItemsSource="{Binding Tracks}">
+        <!-- Unterer Rand = Platz für „neue Spur am Ende" beim Clip-Ziehen (gleich wie bei den Lanes). -->
+        <ItemsControl ItemsSource="{Binding Tracks}" Margin="0,0,0,40">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="vm:StemTrackViewModel">
               <Border Classes="trackHeader" Classes.selected="{Binding IsSelectedTrack}"
+                      Classes.silent="{Binding !IsAudible}" IsVisible="{Binding !IsHidden}"
                       Height="{ReflectionBinding $parent[UserControl].DataContext.LaneHeight}"
                       Margin="0,0,8,0" CornerRadius="8" BorderThickness="1"
-                      BorderBrush="{DynamicResource DawStrokeBrush}"
-                      Background="{DynamicResource DawPanelBrush}"
                       PointerPressed="TrackHeader_PointerPressed">
                 <Border.ContextMenu>
                   <!-- Kontextmenüs sind Popups außerhalb des visuellen Baums; Bindungen auf
@@ -524,7 +647,7 @@
 
                 <Grid ColumnDefinitions="4,*,7">
                   <!-- Farbstreifen = Spurfarbe, wie am Clip -->
-                  <Border Grid.Column="0" CornerRadius="8,0,0,8"
+                  <Border Grid.Column="0" Classes="stripe" CornerRadius="8,0,0,8"
                           Background="{Binding AccentColor, Converter={StaticResource StringToBrush}}" />
 
                   <Grid Grid.Column="1" Margin="9,5,6,5" RowDefinitions="Auto,*,Auto">
@@ -535,6 +658,19 @@
                               ToolTip.Tip="Alle Aktionen dieser Spur: Stems trennen, Effekte, Stimme, Farbe, exportieren, löschen">
                         <ic:SymbolIcon Symbol="MoreHorizontal" FontSize="16" />
                       </Button>
+                      <Button DockPanel.Dock="Right" Classes="trackMenu" Margin="2,0,0,0"
+                              Command="{ReflectionBinding $parent[UserControl].DataContext.HideTrackCommand}"
+                              CommandParameter="{Binding}"
+                              ToolTip.Tip="Spur ausblenden — verschwindet aus dem Editor, klingt aber weiter, solange sie nicht stumm ist">
+                        <ic:SymbolIcon Symbol="EyeOff" FontSize="14" />
+                      </Button>
+                      <ToggleButton DockPanel.Dock="Right" Classes="hdrIcon" IsChecked="{Binding IsLocked, Mode=TwoWay}"
+                                    ToolTip.Tip="Spur sperren — Clips lassen sich dann weder verschieben, schneiden, bearbeiten noch hinzufügen">
+                        <Panel>
+                          <ic:SymbolIcon Symbol="LockClosed" FontSize="14" IsVisible="{Binding IsLocked}" />
+                          <ic:SymbolIcon Symbol="LockOpen" FontSize="14" IsVisible="{Binding !IsLocked}" />
+                        </Panel>
+                      </ToggleButton>
                       <TextBox Classes="trackName" Text="{Binding Name, Mode=TwoWay}"
                                ToolTip.Tip="Spurname — zum Umbenennen hineinklicken" />
                     </DockPanel>
@@ -607,17 +743,21 @@
           <controls:TimelineGridControl PixelsPerSecond="{Binding PixelsPerSecond}"
                                         GridSeconds="{Binding GridSeconds}"
                                         IsHitTestVisible="False" IsVisible="{Binding SnapEnabled}" />
-          <ItemsControl ItemsSource="{Binding Tracks}">
+          <ItemsControl ItemsSource="{Binding Tracks}" Margin="0,0,0,40">
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="vm:StemTrackViewModel">
                 <!-- Spurzeile in voller Timeline-Breite; Clips werden per Margin positioniert -->
-                <Panel Height="{ReflectionBinding $parent[UserControl].DataContext.LaneHeight}"
+                <Panel Classes="lane" Classes.silent="{Binding !IsAudible}"
+                       IsVisible="{Binding !IsHidden}"
+                       Height="{ReflectionBinding $parent[UserControl].DataContext.LaneHeight}"
                        Width="{ReflectionBinding $parent[UserControl].DataContext.ContentWidth}">
-                  <!-- Hervorhebung der ausgewählten Spur -->
-                  <Border IsHitTestVisible="False" Background="#142A6CFF"
-                          BorderBrush="#5B8CFF" BorderThickness="3,0,0,0"
+                  <!-- Hervorhebung der ausgewählten Spur (wie der Spurkopf links) -->
+                  <Border IsHitTestVisible="False" Background="#265B8CFF"
+                          BorderBrush="#5B8CFF" BorderThickness="3,1,0,1"
                           IsVisible="{Binding IsSelectedTrack}" />
-                  <ItemsControl ItemsSource="{Binding Clips}">
+                  <!-- Trennlinie zwischen den Spuren -->
+                  <Border IsHitTestVisible="False" VerticalAlignment="Bottom" Height="1" Background="#14FFFFFF" />
+                  <ItemsControl Classes="clips" ItemsSource="{Binding Clips}">
                     <ItemsControl.ItemsPanel>
                       <ItemsPanelTemplate>
                         <Panel />
@@ -626,6 +766,7 @@
                     <ItemsControl.ItemTemplate>
                       <DataTemplate DataType="vm:ClipViewModel">
                         <Border Classes="clipBox" Classes.selected="{Binding IsSelected}"
+                                Classes.locked="{Binding Track.IsLocked}"
                                 VerticalAlignment="Stretch" HorizontalAlignment="Left"
                                 CornerRadius="8" ClipToBounds="True" Cursor="SizeWestEast"
                                 Background="{DynamicResource ControlFillColorDefaultBrush}"
@@ -661,6 +802,9 @@
                             </MultiBinding>
                           </Border.Width>
                           <Panel>
+                            <!-- Auswahlrahmen als Overlay: der Clip-Rahmen selbst ist an die Spurfarbe gebunden -->
+                            <Border IsHitTestVisible="False" CornerRadius="6" BorderThickness="2" BorderBrush="White"
+                                    Background="#14FFFFFF" IsVisible="{Binding IsSelected}" />
                             <controls:WaveformControl Margin="0,14,0,2" Peaks="{Binding Peaks}"
                                                       WaveBrush="{Binding AccentColor, Converter={StaticResource StringToBrush}}" />
                             <controls:ClipFadeOverlay IsHitTestVisible="False"
@@ -669,6 +813,9 @@
                                                       PixelsPerSecond="{ReflectionBinding $parent[UserControl].DataContext.PixelsPerSecond}" />
                             <!-- Clipname oben, darunter erst die Wellenform -->
                             <TextBlock Classes="clipName" VerticalAlignment="Top" Text="{Binding DisplayName}" />
+                            <ic:SymbolIcon Symbol="LockClosed" FontSize="12" Margin="0,3,18,0" IsHitTestVisible="False"
+                                           HorizontalAlignment="Right" VerticalAlignment="Top" Foreground="#FFC978"
+                                           IsVisible="{Binding Track.IsLocked}" />
                             <!-- Fade-Griffe: an der Kante nach unten ziehen = Ein-/Ausblenden -->
                             <Border Classes="fadeGrip" HorizontalAlignment="Left" VerticalAlignment="Top"
                                     ToolTip.Tip="Fade-In: nach unten ziehen"
@@ -723,6 +870,25 @@
               </MultiBinding>
             </Rectangle.Width>
           </Rectangle>
+
+          <!-- Clip-Ziehen: Vorschau, wo der Clip auf einer anderen Spur landet (vom Code-behind positioniert) -->
+          <Border Name="DragGhost" IsVisible="False" IsHitTestVisible="False" HorizontalAlignment="Left"
+                  VerticalAlignment="Top" CornerRadius="8" BorderThickness="2">
+            <TextBlock Name="DragGhostText" Margin="8,4" FontSize="11" FontWeight="SemiBold" Foreground="White"
+                       TextTrimming="CharacterEllipsis" />
+          </Border>
+          <!-- … bzw. die Marke „neue Spur hier einfügen" zwischen, vor oder nach den Spuren -->
+          <Panel Name="InsertMarker" IsVisible="False" IsHitTestVisible="False" Height="26"
+                 VerticalAlignment="Top">
+            <Border Height="3" VerticalAlignment="Center" CornerRadius="1.5" Background="{DynamicResource DawAccentBrush}" />
+            <Border Name="InsertLabel" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="10,3"
+                    CornerRadius="11" Background="{DynamicResource DawAccentBrush}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ic:SymbolIcon Symbol="Add" FontSize="12" Foreground="White" />
+                <TextBlock Text="Neue Spur hier einfügen" FontSize="11" FontWeight="SemiBold" Foreground="White" />
+              </StackPanel>
+            </Border>
+          </Panel>
 
           <!-- Playhead -->
           <Rectangle Width="2" Fill="#FFFF5B5B" HorizontalAlignment="Left" VerticalAlignment="Stretch"

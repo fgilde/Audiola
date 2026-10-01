@@ -113,6 +113,18 @@ public sealed partial class StemTrackViewModel : ObservableObject
     [ObservableProperty]
     private bool _isSolo;
 
+    /// <summary>Ausgeblendet: nicht im Editor sichtbar, klingt aber weiter, solange sie aktiv ist.</summary>
+    [ObservableProperty]
+    private bool _isHidden;
+
+    /// <summary>Gesperrt: Clips lassen sich weder ändern, verschieben noch hinzufügen.</summary>
+    [ObservableProperty]
+    private bool _isLocked;
+
+    /// <summary>Klingt im Mix (aktiv, nicht stumm, nicht von einem Solo verdrängt). Setzt das Timeline-VM.</summary>
+    [ObservableProperty]
+    private bool _isAudible = true;
+
     partial void OnVolumeChanged(double value) => _stem.Volume = (float)value;
     partial void OnPanChanged(double value) => _stem.Pan = (float)value;
     partial void OnIsEnabledChanged(bool value) => _stem.IsEnabled = value;

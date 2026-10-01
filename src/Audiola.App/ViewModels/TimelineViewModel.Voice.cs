@@ -21,7 +21,7 @@ public sealed partial class TimelineViewModel
     /// </summary>
     public async Task ChangeTrackVoiceAsync(StemTrackViewModel track, VoiceChoice choice)
     {
-        if (track is null || choice is null || IsVoiceChanging) return;
+        if (track is null || choice is null || IsVoiceChanging || BlockedByLock(track)) return;
 
         var clips = track.Clips.ToList();
         if (clips.Count == 0) return;
@@ -37,7 +37,7 @@ public sealed partial class TimelineViewModel
     public async Task ChangeSelectedClipVoiceAsync(VoiceChoice choice)
     {
         var clip = SelectedClip;
-        if (clip is null || IsVoiceChanging || choice is null) return;
+        if (clip is null || IsVoiceChanging || choice is null || BlockedByLock(clip.Track)) return;
 
         var voiceId = choice.ElevenVoiceId ?? "";
         var deleteAfter = choice.TemporaryEleven;

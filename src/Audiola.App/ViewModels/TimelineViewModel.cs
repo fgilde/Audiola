@@ -191,6 +191,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         {
             if (e.NewItems is not null)
                 foreach (StemTrackViewModel t in e.NewItems) HookTrack(t);
+            RefreshTrackFlags();
             MarkDirty();
         };
     }
@@ -214,8 +215,12 @@ public sealed partial class TimelineViewModel : ObservableObject
             // Pegel-Updates (Wiedergabe) und Auswahl-Markierungen sind keine Bearbeitung.
             if (e.PropertyName is not (nameof(StemTrackViewModel.Level)
                 or nameof(StemTrackViewModel.IsSelectionTrack)
-                or nameof(StemTrackViewModel.IsSelectedTrack)))
+                or nameof(StemTrackViewModel.IsSelectedTrack)
+                or nameof(StemTrackViewModel.IsAudible)))
                 MarkDirty();
+            if (e.PropertyName is nameof(StemTrackViewModel.IsMuted) or nameof(StemTrackViewModel.IsEnabled)
+                or nameof(StemTrackViewModel.IsSolo) or nameof(StemTrackViewModel.IsHidden))
+                RefreshTrackFlags();
         };
         t.Clips.CollectionChanged += (_, e) =>
         {
@@ -305,7 +310,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         catch { return; }
 
         StemTrackViewModel track;
-        if (trackIndex >= 0 && trackIndex < Tracks.Count)
+        if (trackIndex >= 0 && trackIndex < Tracks.Count && !Tracks[trackIndex].IsLocked)
         {
             track = Tracks[trackIndex];
         }
@@ -379,13 +384,8 @@ public sealed partial class TimelineViewModel : ObservableObject
     {
         double max = 0;
         foreach (var vm in Tracks)
-        {
-            if (vm.Clips.Count == 0)
-                max = Math.Max(max, vm.StartOffsetSeconds + vm.LengthSeconds);
-            else
-                foreach (var clip in vm.Clips)
-                    max = Math.Max(max, clip.EndSeconds);
-        }
+            foreach (var clip in vm.Clips)
+                max = Math.Max(max, clip.EndSeconds);
         if (max > 0) DurationSeconds = max;
     }
 
@@ -427,6 +427,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// <summary>Während des Ziehens: Clip-Offset visuell setzen (ohne Engine-Reload).</summary>
     public void SetClipOffset(ClipViewModel clip, double seconds)
     {
+        if (clip.Track.IsLocked) return;
         clip.TimelineOffsetSeconds = Snap(seconds);
         RecomputeDuration();
     }
@@ -435,10 +436,14 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// Verschiebt einen Clip auf eine andere Spur (und an eine neue Timeline-Position).
     /// Da <see cref="ClipViewModel.Track"/> init-only ist, wird der Clip in der Zielspur neu erzeugt.
     /// </summary>
-    public void MoveClipToTrack(ClipViewModel clip, int targetTrackIndex, double newOffsetSeconds)
+    public bool MoveClipToTrack(ClipViewModel clip, int targetTrackIndex, double newOffsetSeconds)
+        => targetTrackIndex >= 0 && targetTrackIndex < Tracks.Count
+           && MoveClipToTrack(clip, Tracks[targetTrackIndex], newOffsetSeconds);
+
+    /// <summary>Wie oben, mit der Zielspur direkt. False, wenn Quelle oder Ziel gesperrt ist.</summary>
+    public bool MoveClipToTrack(ClipViewModel clip, StemTrackViewModel target, double newOffsetSeconds)
     {
-        if (targetTrackIndex < 0 || targetTrackIndex >= Tracks.Count) return;
-        var target = Tracks[targetTrackIndex];
+        if (BlockedByLock(clip.Track) || BlockedByLock(target)) return false;
         var offset = Snap(Math.Max(0, newOffsetSeconds));
 
         if (clip.Track == target)
@@ -446,7 +451,7 @@ public sealed partial class TimelineViewModel : ObservableObject
             clip.TimelineOffsetSeconds = offset;
             RecomputeDuration();
             CommitClips();
-            return;
+            return true;
         }
 
         var replacement = new ClipViewModel
@@ -467,15 +472,17 @@ public sealed partial class TimelineViewModel : ObservableObject
         target.Clips.Add(replacement);
         SelectedClip = replacement;
         replacement.IsSelected = true;
+        SelectTrack(target);
         RecomputeDuration();
         CommitClips();
+        return true;
     }
 
     [RelayCommand]
     private void SplitAtPlayhead()
     {
         var clip = SelectedClip;
-        if (clip is null) return;
+        if (clip is null || BlockedByLock(clip.Track)) return;
 
         var t = _engine.Position.TotalSeconds;
         if (t <= clip.TimelineOffsetSeconds + 0.02 || t >= clip.EndSeconds - 0.02) return;
@@ -524,7 +531,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     [RelayCommand]
     private void DeleteSelected()
     {
-        if (SelectedClip is null) return;
+        if (SelectedClip is null || BlockedByLock(SelectedClip.Track)) return;
         SelectedClip.Track.Clips.Remove(SelectedClip);
         SelectedClip = null;
         CommitClips();
@@ -539,7 +546,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     private void CutRegion()
     {
         var clip = SelectedClip;
-        if (clip is null || ClipRegionSeconds(clip) is not { } region) return;
+        if (clip is null || ClipRegionSeconds(clip) is not { } region || BlockedByLock(clip.Track)) return;
 
         var track = clip.Track;
         var srcTotal = clip.SourceTotalSeconds <= 0 ? clip.LengthSeconds : clip.SourceTotalSeconds;
@@ -609,7 +616,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     [RelayCommand]
     private void DeleteTrack(StemTrackViewModel? track)
     {
-        if (track is null) return;
+        if (track is null || BlockedByLock(track)) return;
         Tracks.Remove(track);
         OnPropertyChanged(nameof(HasTracks));
         RecomputeDuration();
@@ -682,7 +689,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// <summary>Rendert eine einzelne Spur (mit allen Clips/Pegeln) als interleaved Stereo + Samplerate.</summary>
     public Task<(float[] Samples, int SampleRate)> RenderTrackAsync(StemTrackViewModel track)
     {
-        var end = track.Clips.Count > 0 ? track.Clips.Max(c => c.EndSeconds) : track.LengthSeconds;
+        var end = track.Clips.Count > 0 ? track.Clips.Max(c => c.EndSeconds) : 0;
         var single = new List<StemTrackViewModel> { track };
         return Task.Run(() => _engine.RenderRange(single, TimeSpan.Zero, TimeSpan.FromSeconds(Math.Max(0.1, end))));
     }
@@ -693,6 +700,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// </summary>
     public async Task ApplyProcessedTrackAsync(StemTrackViewModel track, string wavPath)
     {
+        if (BlockedByLock(track)) return;
         var data = await LoadClipDataAsync(wavPath);
         track.Clips.Clear();
         track.Clips.Add(new ClipViewModel
@@ -717,6 +725,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// <summary>Linke Clip-Kante auf eine Timeline-Zeit ziehen (Offset + Quellstart + Länge).</summary>
     public void SetClipLeftEdge(ClipViewModel clip, double timelineSeconds)
     {
+        if (clip.Track.IsLocked) return;
         var total = clip.SourceTotalSeconds <= 0 ? clip.LengthSeconds : clip.SourceTotalSeconds;
         var newStart = Snap(timelineSeconds);
         var delta = newStart - clip.TimelineOffsetSeconds;
@@ -736,6 +745,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// <summary>Rechte Clip-Kante auf eine Timeline-Zeit ziehen (Länge).</summary>
     public void SetClipRightEdge(ClipViewModel clip, double timelineSeconds)
     {
+        if (clip.Track.IsLocked) return;
         var total = clip.SourceTotalSeconds <= 0 ? clip.LengthSeconds : clip.SourceTotalSeconds;
         var newEnd = Snap(timelineSeconds);
         var newLen = Math.Min(newEnd - clip.TimelineOffsetSeconds, total - clip.SourceStartSeconds);
@@ -753,6 +763,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// </summary>
     public void SetClipStretchEdge(ClipViewModel clip, double timelineSeconds, bool fromLeft, double anchorOffset, double anchorLen)
     {
+        if (clip.Track.IsLocked) return;
         if (fromLeft)
         {
             var rightEdge = anchorOffset + anchorLen;
@@ -774,6 +785,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// </summary>
     public async Task StretchClipToLengthAsync(ClipViewModel clip, double newLen, double origSrcStart, double origSrcLen)
     {
+        if (BlockedByLock(clip.Track)) return;
         var stretch = origSrcLen > 0.001 ? newLen / origSrcLen : 1.0;
         // Kaum verändert → kein Re-Encode, nur committen.
         if (origSrcLen < 0.02 || newLen < MinClipSeconds || Math.Abs(stretch - 1.0) < 0.01)
@@ -848,6 +860,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     /// <summary>Ersetzt die Quelle eines Clips durch einen bearbeiteten Puffer (Editor-Bake / Voice-Change).</summary>
     public void ReplaceClipFromBuffer(ClipViewModel clip, float[] samples, int sampleRate)
     {
+        if (BlockedByLock(clip.Track)) return;
         var temp = TempDir.File("clipfx", ".wav", "edit");
         AudioEdits.WriteWav(temp, samples, sampleRate);
         var lenSec = (double)(samples.Length / 2) / sampleRate;
@@ -896,8 +909,12 @@ public sealed partial class TimelineViewModel : ObservableObject
     public async Task ApplyVariationsAsync(IAudioVariationProvider provider, IReadOnlyList<string> variationIds, IReadOnlyList<ClipViewModel> clips)
     {
         if (provider is null || variationIds.Count == 0) return;
-        var targets = clips.Where(c => !string.IsNullOrEmpty(c.SourcePath)).ToList();
-        if (targets.Count == 0) return;
+        var targets = clips.Where(c => !string.IsNullOrEmpty(c.SourcePath) && !c.Track.IsLocked).ToList();
+        if (targets.Count == 0)
+        {
+            BlockedByLock(clips.FirstOrDefault(c => c.Track.IsLocked)?.Track);
+            return;
+        }
 
         try
         {
@@ -1004,35 +1021,24 @@ public sealed partial class TimelineViewModel : ObservableObject
                 IsEnabled = t.IsEnabled,
                 IsMuted = t.IsMuted,
                 IsSolo = t.IsSolo,
+                IsHidden = t.IsHidden,
+                IsLocked = t.IsLocked,
                 Lrc = t.Lrc
             };
 
-            if (t.Clips.Count == 0 && !string.IsNullOrEmpty(t.Model.FilePath))
-            {
+            // Eine Spur ohne Clips bleibt leer — kein impliziter Clip über die ganze Quelle.
+            foreach (var c in t.Clips)
                 td.Clips.Add(new Audiola.Models.ProjectClipDto
                 {
-                    Media = t.Model.FilePath,
-                    TimelineOffsetSeconds = t.StartOffsetSeconds,
-                    SourceStartSeconds = 0,
-                    LengthSeconds = t.LengthSeconds,
-                    SourceTotalSeconds = t.LengthSeconds
+                    Media = string.IsNullOrEmpty(c.SourcePath) ? t.Model.FilePath : c.SourcePath,
+                    SourceTotalSeconds = c.SourceTotalSeconds,
+                    TimelineOffsetSeconds = c.TimelineOffsetSeconds,
+                    SourceStartSeconds = c.SourceStartSeconds,
+                    LengthSeconds = c.LengthSeconds,
+                    GainDb = c.GainDb,
+                    FadeInSeconds = c.FadeInSeconds,
+                    FadeOutSeconds = c.FadeOutSeconds
                 });
-            }
-            else
-            {
-                foreach (var c in t.Clips)
-                    td.Clips.Add(new Audiola.Models.ProjectClipDto
-                    {
-                        Media = string.IsNullOrEmpty(c.SourcePath) ? t.Model.FilePath : c.SourcePath,
-                        SourceTotalSeconds = c.SourceTotalSeconds,
-                        TimelineOffsetSeconds = c.TimelineOffsetSeconds,
-                        SourceStartSeconds = c.SourceStartSeconds,
-                        LengthSeconds = c.LengthSeconds,
-                        GainDb = c.GainDb,
-                        FadeInSeconds = c.FadeInSeconds,
-                        FadeOutSeconds = c.FadeOutSeconds
-                    });
-            }
 
             dto.Tracks.Add(td);
         }
@@ -1056,6 +1062,8 @@ public sealed partial class TimelineViewModel : ObservableObject
             t.IsEnabled = td.IsEnabled;
             t.IsMuted = td.IsMuted;
             t.IsSolo = td.IsSolo;
+            t.IsHidden = td.IsHidden;
+            t.IsLocked = td.IsLocked;
             t.Lrc = td.Lrc;
 
             foreach (var cd in td.Clips)
@@ -1127,7 +1135,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         double GainDb, double FadeInSeconds, double FadeOutSeconds);
 
     private sealed record TrackSnap(string Name, string AccentColor, string FilePath, double Volume, double Pan,
-        bool IsEnabled, bool IsMuted, bool IsSolo, double StartOffsetSeconds, double LengthSeconds,
+        bool IsEnabled, bool IsMuted, bool IsSolo, bool IsHidden, bool IsLocked, double StartOffsetSeconds, double LengthSeconds,
         float[] Peaks, List<ClipSnap> Clips);
 
     private sealed record StudioSnapshot(List<TrackSnap> Tracks, double MasterVolume);

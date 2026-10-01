@@ -152,8 +152,7 @@ public partial class TimelinePage : UserControl, INavigationAware
                 var p = e.GetPosition(LanesArea);
                 var pps = _vm.PixelsPerSecond;
                 if (pps > 0) offset = p.X / pps;
-                var idx = (int)(p.Y / Math.Max(1, _vm.LaneHeight));
-                if (idx >= 0 && idx < _vm.Tracks.Count) trackIndex = idx;
+                if (TrackAtY(p.Y) is { } t) trackIndex = _vm.Tracks.IndexOf(t);
             }
             await _vm.AddAudioFileAsync(file, trackIndex, offset);
         }
@@ -193,10 +192,12 @@ public partial class TimelinePage : UserControl, INavigationAware
     private bool _laneMoved;
     private StemTrackViewModel? _laneTrack;
 
+    /// <summary>Spur unter einer Y-Position der Lanes — ausgeblendete Spuren belegen keine Zeile.</summary>
     private StemTrackViewModel? TrackAtY(double y)
     {
-        var i = (int)(y / Math.Max(1, _vm.LaneHeight));
-        return i >= 0 && i < _vm.Tracks.Count ? _vm.Tracks[i] : null;
+        var visible = _vm.VisibleTracks();
+        var i = (int)Math.Floor(y / Math.Max(1, _vm.LaneHeight));
+        return i >= 0 && i < visible.Count ? visible[i] : null;
     }
 
     private void Lanes_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -387,6 +388,7 @@ public partial class TimelinePage : UserControl, INavigationAware
     private void StartFade(object? sender, PointerPressedEventArgs e, bool isIn)
     {
         if (sender is not Control { DataContext: ClipViewModel clip } control || !IsLeftButton(sender, e)) return;
+        if (clip.Track.IsLocked) return;   // fällt durch auf den Clip: nur auswählen
         _fadeClip = clip;
         _fadeIsIn = isIn;
         _fadeStartY = e.GetPosition(LanesArea).Y;
@@ -420,7 +422,8 @@ public partial class TimelinePage : UserControl, INavigationAware
     private const double EdgeGrip = 8;
     private ClipViewModel? _dragClip;
     private DragMode _dragMode;
-    private double _dragStartX;
+    private Control? _dragControl;
+    private double _dragStartX, _dragStartY;
     private double _dragStartOffset;
     private bool _moved;
 
@@ -467,8 +470,18 @@ public partial class TimelinePage : UserControl, INavigationAware
             return;
         }
 
+        // Gesperrte Spur: nur auswählen, nichts ziehen.
+        if (clip.Track.IsLocked)
+        {
+            _vm.SelectClip(clip);
+            e.Handled = true;
+            return;
+        }
+
         _dragClip = clip;
+        _dragControl = control;
         _dragStartX = e.GetPosition(LanesArea).X;
+        _dragStartY = e.GetPosition(LanesArea).Y;
         _dragStartOffset = clip.TimelineOffsetSeconds;
         _moved = false;
 
@@ -521,8 +534,77 @@ public partial class TimelinePage : UserControl, INavigationAware
                 break;
             default:
                 _vm.SetClipOffset(_dragClip, _dragStartOffset + (x - _dragStartX) / pps);
+                ShowDropPreview(_dragClip, e.GetPosition(LanesArea).Y);
                 break;
         }
+    }
+
+    // ---- Ziel beim Clip-Ziehen: andere Spur oder „neue Spur hier einfügen" ----
+
+    /// <summary>Wie nah (px) an einer Spurgrenze die Einfüge-Marke greift.</summary>
+    private const double InsertZone = 10;
+
+    /// <summary>Ziel unter dem Zeiger: eine Spur oder eine Grenze (0 = vor der ersten sichtbaren …).</summary>
+    private readonly record struct DropTarget(StemTrackViewModel? Track, int Boundary);
+
+    private DropTarget DropTargetAt(double y)
+    {
+        var visible = _vm.VisibleTracks();
+        var lh = Math.Max(1, _vm.LaneHeight);
+
+        // Erst nach echter Senkrecht-Bewegung: wer den Clip nur waagerecht schiebt,
+        // soll nicht versehentlich eine neue Spur anlegen.
+        if (Math.Abs(y - _dragStartY) >= InsertZone)
+        {
+            var k = (int)Math.Round(y / lh);
+            if (y < InsertZone || y > visible.Count * lh - InsertZone || Math.Abs(y - k * lh) <= InsertZone)
+                return new DropTarget(null, Math.Clamp(k, 0, visible.Count));
+        }
+        var i = (int)Math.Floor(y / lh);
+        return i >= 0 && i < visible.Count ? new DropTarget(visible[i], -1) : new DropTarget(null, -1);
+    }
+
+    /// <summary>Index in <see cref="TimelineViewModel.Tracks"/> für eine Grenze zwischen sichtbaren Spuren.</summary>
+    private int InsertIndexFor(int boundary)
+    {
+        var visible = _vm.VisibleTracks();
+        return boundary < visible.Count ? _vm.Tracks.IndexOf(visible[boundary]) : _vm.Tracks.Count;
+    }
+
+    private void ShowDropPreview(ClipViewModel clip, double y)
+    {
+        var target = DropTargetAt(y);
+        var lh = _vm.LaneHeight;
+        var pps = _vm.PixelsPerSecond;
+
+        InsertMarker.IsVisible = target.Boundary >= 0;
+        if (target.Boundary >= 0)
+        {
+            InsertMarker.Margin = new Thickness(0, Math.Max(0, target.Boundary * lh - InsertMarker.Height / 2), 0, 0);
+            InsertLabel.Margin = new Thickness(LaneScroll.Offset.X + 8, 0, 0, 0);   // im sichtbaren Bereich
+        }
+
+        var other = target.Track is { } t && t != clip.Track;
+        DragGhost.IsVisible = other;
+        if (_dragControl is not null) _dragControl.Opacity = other || target.Boundary >= 0 ? 0.35 : 1;
+        if (!other) return;
+
+        var row = _vm.VisibleTracks().ToList().IndexOf(target.Track!);
+        DragGhost.Margin = new Thickness(clip.TimelineOffsetSeconds * pps, row * lh + 2, 0, 0);
+        DragGhost.Width = Math.Max(8, clip.LengthSeconds * pps);
+        DragGhost.Height = Math.Max(8, lh - 4);
+        DragGhost.Classes.Set("locked", target.Track!.IsLocked);
+        DragGhostText.Text = target.Track!.IsLocked
+            ? $"Gesperrt: „{target.Track.Name}“"
+            : $"→ {target.Track.Name}";
+    }
+
+    private void HideDropPreview()
+    {
+        DragGhost.IsVisible = false;
+        InsertMarker.IsVisible = false;
+        if (_dragControl is not null) _dragControl.Opacity = 1;
+        _dragControl = null;
     }
 
     private async void Clip_PointerReleased(object? sender, PointerReleasedEventArgs e)
@@ -540,6 +622,7 @@ public partial class TimelinePage : UserControl, INavigationAware
 
         var clip = _dragClip;
         _dragClip = null;
+        HideDropPreview();
 
         // Kante gedehnt: Audio einmalig per Time-Stretch auf die neue Länge bringen (Tonhöhe bleibt).
         if (_stretchDrag && _moved)
@@ -549,19 +632,21 @@ public partial class TimelinePage : UserControl, INavigationAware
             return;
         }
 
-        // Verschieben auf eine andere Spur (nur im Move-Modus, wenn wirklich gezogen wurde).
+        // Verschieben auf eine andere oder eine neue Spur (nur im Move-Modus, wenn wirklich gezogen wurde).
         if (_dragMode == DragMode.Move && _moved)
         {
-            var pos = e.GetPosition(LanesArea);
-            var targetIdx = (int)(pos.Y / Math.Max(1, _vm.LaneHeight));
-            var currentIdx = _vm.Tracks.IndexOf(clip.Track);
-            var pps = _vm.PixelsPerSecond;
-            var newOffset = pps > 0 ? _dragStartOffset + (pos.X - _dragStartX) / pps : clip.TimelineOffsetSeconds;
+            var target = DropTargetAt(e.GetPosition(LanesArea).Y);
+            var newOffset = clip.TimelineOffsetSeconds;   // beim Ziehen schon gesetzt (mit Raster)
 
-            if (targetIdx >= 0 && targetIdx < _vm.Tracks.Count && targetIdx != currentIdx)
+            if (target.Boundary >= 0 || (target.Track is { } t && t != clip.Track))
             {
-                _vm.MoveClipToTrack(clip, targetIdx, newOffset);
-                _vm.Commit("Clip auf andere Spur");
+                var done = target.Boundary >= 0
+                    ? _vm.MoveClipToNewTrack(clip, InsertIndexFor(target.Boundary), newOffset)
+                    : _vm.MoveClipToTrack(clip, target.Track!, newOffset);
+                if (done)
+                    _vm.Commit(target.Boundary >= 0 ? "Clip auf neue Spur" : "Clip auf andere Spur");
+                else
+                    _vm.MoveClipToTrack(clip, clip.Track, _dragStartOffset);   // Ziel gesperrt → zurück
                 e.Handled = true;
                 return;
             }

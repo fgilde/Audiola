@@ -98,7 +98,7 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
                 var list = new List<(string Path, string Name, string Color)>();
                 foreach (var t in tracks)
                 {
-                    if (t.Clips.Count == 0 && string.IsNullOrEmpty(t.Model.FilePath)) continue;
+                    if (t.Clips.Count == 0) continue;   // leere Spur klingt nicht
                     try
                     {
                         var (samples, sr) = _engine.RenderRange([t], TimeSpan.Zero, TimeSpan.FromSeconds(dur));

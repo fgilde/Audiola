@@ -76,7 +76,12 @@ public sealed partial class TimelineViewModel
     private async Task ExportTrack(StemTrackViewModel? track)
     {
         if (track is null) return;
-        var end = track.Clips.Count > 0 ? track.Clips.Max(c => c.EndSeconds) : track.LengthSeconds;
+        if (track.Clips.Count == 0)
+        {
+            _snackbar.Warning("Nichts zu exportieren", $"„{track.Name}“ enthält keine Clips.");
+            return;
+        }
+        var end = track.Clips.Max(c => c.EndSeconds);
         if (end <= 0.01) return;
 
         var single = new List<StemTrackViewModel> { track };

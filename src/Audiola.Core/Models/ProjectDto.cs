@@ -54,6 +54,8 @@ public sealed class ProjectTrackDto
     public bool IsEnabled { get; set; } = true;
     public bool IsMuted { get; set; }
     public bool IsSolo { get; set; }
+    public bool IsHidden { get; set; }
+    public bool IsLocked { get; set; }
     public List<ProjectClipDto> Clips { get; set; } = [];
 
     /// <summary>Transkript dieser Spur als LRC (zeitgestempelt) — wird beim Export eingebettet.</summary>

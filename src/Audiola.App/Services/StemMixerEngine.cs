@@ -124,7 +124,7 @@ public sealed class StemMixerEngine : IDisposable
         var inputs = BuildInputs(stems, _readers, _clips, out _sampleRate, out _channels, out var dur);
         Duration = dur;
 
-        var mixer = new MixingSampleProvider(inputs) { ReadFully = false };
+        var mixer = Mix(inputs, _sampleRate);
         _master = new VolumeSampleProvider(mixer) { Volume = _masterVolume };
         _liveEq.Configure(_sampleRate);
         _liveMaster.Configure(_sampleRate);
@@ -152,7 +152,7 @@ public sealed class StemMixerEngine : IDisposable
         try
         {
             var inputs = BuildInputs(tracks, readers, clips, out var sr, out var ch, out _);
-            var mixer = new MixingSampleProvider(inputs) { ReadFully = false };
+            var mixer = Mix(inputs, sr);
 
             foreach (var c in clips) c.SeekToOutputSeconds(start.TotalSeconds);
 
@@ -176,6 +176,14 @@ public sealed class StemMixerEngine : IDisposable
         }
     }
 
+    /// <summary>Mixer über alle Clips; ohne Clips (nur leere Spuren) liefert er Stille statt zu werfen.</summary>
+    private static MixingSampleProvider Mix(List<ISampleProvider> inputs, int sampleRate)
+    {
+        var mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, 2)) { ReadFully = false };
+        foreach (var input in inputs) mixer.AddMixerInput(input);
+        return mixer;
+    }
+
     private static List<ISampleProvider> BuildInputs(
         IReadOnlyList<StemTrackViewModel> tracks,
         List<AudioFileReader> readers, List<ClipSampleProvider> clips,
@@ -185,20 +193,15 @@ public sealed class StemMixerEngine : IDisposable
         var maxEnd = TimeSpan.Zero;
         var target = 0; // gemeinsame Projekt-Samplerate (von der ersten Quelle bestimmt)
 
+        // Es klingt nur, was als Clip auf der Spur liegt. Früher spielte eine Spur ohne Clips
+        // ihre ganze Quelldatei — wer den letzten Clip löschte, hatte ihn so wieder im Export.
         foreach (var vm in tracks)
-        {
-            if (vm.Clips.Count == 0)
+            foreach (var clip in vm.Clips)
             {
-                if (string.IsNullOrEmpty(vm.Model.FilePath)) continue; // leere Spur (kein Material)
-                AddClip(vm, null, vm.Model.FilePath, vm.StartOffsetSeconds, 0, -1);
+                var path = string.IsNullOrEmpty(clip.SourcePath) ? vm.Model.FilePath : clip.SourcePath;
+                if (string.IsNullOrEmpty(path)) continue;
+                AddClip(vm, clip, path, clip.TimelineOffsetSeconds, clip.SourceStartSeconds, clip.LengthSeconds);
             }
-            else
-                foreach (var clip in vm.Clips)
-                {
-                    var path = string.IsNullOrEmpty(clip.SourcePath) ? vm.Model.FilePath : clip.SourcePath;
-                    AddClip(vm, clip, path, clip.TimelineOffsetSeconds, clip.SourceStartSeconds, clip.LengthSeconds);
-                }
-        }
 
         sampleRate = target == 0 ? 44100 : target;
         channels = 2;
