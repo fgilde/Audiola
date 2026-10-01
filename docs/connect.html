@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <script type="module" src="https://connect.gilde.org/widgets/v1.js"></script>
+  <script type="module" src="connect-theme.js"></script>
   <style>
     /* Diese Seite öffnet die App aus „Über Audiola" heraus im Browser. Sie übernimmt
        Theme, Akzentfarbe und Sprache der App per Query-Parameter, damit sich das
@@ -93,7 +94,7 @@
       el.setAttribute("padding", "24");
       // Das Logo steht schon im Seitenkopf — im Widget wäre es doppelt.
       el.setAttribute("show-logo", "false");
-      el.setAttribute("show-homepage", "true");
+      el.setAttribute("show-homepage", "false");
       el.setAttribute("show-preview-notice", "false");
       // Inline heißt: keine Fußzeile, keine Beschreibung — die stehen schon auf der Seite.
       el.setAttribute("show-description", "false");
