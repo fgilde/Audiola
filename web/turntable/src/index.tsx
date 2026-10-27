@@ -2,6 +2,7 @@ import { render } from 'preact'
 import App from './App'
 import { palette } from './palette'
 import { fillColors, normalize, type Rec } from './records'
+import type { DeckControl } from './Turntable'
 import css from './styles.css?inline'
 
 // <audiola-turntable> – freie Web-Component: Plattenspieler & DJ-Mischpult im Browser.
@@ -15,7 +16,11 @@ import css from './styles.css?inline'
 // Attribute: records (URL zu JSON), decks ("1" | "2", Standard 2), mode ("single" | "dj"),
 //            uploads (eigene Songs erlauben), logo (Bild auf der leeren Platte), lang ("de" | "en").
 // Property:  el.records = [...]  (gleiches Format wie die JSON-Datei, siehe records.ts)
-// Event:     "modechange" { detail: { mode: "single" | "dj" } }
+// Methoden:  el.play(record?, track?, deck?), el.pause(deck?), el.next(deck?), el.previous(deck?)
+//            record = Index in el.records (eigene Songs folgen dahinter), deck = "a" (Standard) | "b" (nur im DJ-Modus)
+// Events:    "modechange" { detail: { mode: "single" | "dj" } }
+//            "deckchange" { detail: { deck, playing, loading, failed, record: {index, uploaded, title, artist, cover, link, accent} | null,
+//                                     track: {index, title, src, duration} | null } }
 // Styling:   CSS-Variablen --at-accent, --at-text, --at-muted, --at-font, --at-font-display,
 //            --at-font-mono, --at-padding, --at-min-height
 
@@ -24,6 +29,9 @@ class AudiolaTurntable extends HTMLElement {
   private mount?: HTMLDivElement
   private list: Rec[] = []
   private loadId = 0
+  private controls: Partial<Record<'a' | 'b', DeckControl>> = {}
+  /** Platten inkl. eigener Songs, in der Reihenfolge der Plattenauswahl. */
+  private all: Rec[] = []
 
   get records(): Rec[] {
     return this.list
@@ -33,6 +41,22 @@ class AudiolaTurntable extends HTMLElement {
     this.list = normalize(v, document.baseURI)
     this.update()
     void this.colorize()
+  }
+
+  /** Platte `record` (Index) ab Track `track` auflegen; ohne Platte weiterspielen. */
+  play(record?: number, track = 0, deck: 'a' | 'b' = 'a') {
+    const rec = record == null ? undefined : this.all[record]
+    if (record != null && !rec) return
+    this.controls[deck]?.play(rec, track)
+  }
+  pause(deck: 'a' | 'b' = 'a') {
+    this.controls[deck]?.pause()
+  }
+  next(deck: 'a' | 'b' = 'a') {
+    this.controls[deck]?.step(1)
+  }
+  previous(deck: 'a' | 'b' = 'a') {
+    this.controls[deck]?.step(-1)
   }
 
   connectedCallback() {
@@ -84,6 +108,8 @@ class AudiolaTurntable extends HTMLElement {
     render(
       <App
         host={this}
+        controls={this.controls}
+        onRecords={(all: Rec[]) => (this.all = all)}
         records={this.list}
         decks={this.getAttribute('decks') === '1' ? 1 : 2}
         mode={this.getAttribute('mode') === 'dj' ? 'dj' : 'single'}

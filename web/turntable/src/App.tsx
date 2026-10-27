@@ -4,14 +4,20 @@ import { Engine } from './engine'
 import { strings } from './i18n'
 import Mixer from './Mixer'
 import type { Rec } from './records'
-import Turntable, { type DeckStatus } from './Turntable'
+import Turntable, { type DeckControl, type DeckStatus } from './Turntable'
 import { addFiles } from './uploads'
 import { createBars, type Viz } from './viz'
 
 type Side = 'a' | 'b'
 
+const idle: DeckStatus = { playing: false, loading: false, failed: false, rec: null, track: 0 }
+
 export interface AppProps {
   host: HTMLElement
+  /** Wird mit der Steuerung beider Decks befüllt (Methoden play/pause/next/previous des Elements). */
+  controls: Partial<Record<Side, DeckControl>>
+  /** Meldet die Platten inkl. eigener Songs, damit el.play(index) auch diese findet. */
+  onRecords: (all: Rec[]) => void
   records: Rec[]
   decks: 1 | 2
   mode: 'single' | 'dj'
@@ -31,8 +37,10 @@ export default function App(p: AppProps) {
   const bgEl = useRef<HTMLDivElement>(null)
   const djOnly = useRef<HTMLElement[]>([])
   const bars = useRef<Viz | null>(null)
-  const status = useRef<Record<Side, DeckStatus>>({ a: { playing: false, rec: null }, b: { playing: false, rec: null } })
+  const status = useRef<Record<Side, DeckStatus>>({ a: idle, b: idle })
+  const sent = useRef<Record<Side, string>>({ a: '', b: '' })
   const records = [...p.records, ...uploaded]
+  p.onRecords(records)
 
   useEffect(() => () => engine.close(), [engine])
 
@@ -57,6 +65,7 @@ export default function App(p: AppProps) {
   // (Fader + Crossfader): nur rechts hörbar = Farbe von Deck B, beide gleich laut = Mischfarbe.
   const onStatus = (side: Side, st: DeckStatus) => {
     status.current[side] = st
+    emitDeck(side, st)
     const any = status.current.a.playing || status.current.b.playing
     if (!bars.current && any && engine.output && bgEl.current) bars.current = createBars(engine.output, bgEl.current)
     bars.current?.setActive(any)
@@ -77,6 +86,29 @@ export default function App(p: AppProps) {
     return () => window.clearInterval(id)
   }, [engine])
 
+  // "deckchange" nur bei echter Änderung; record.index zählt in el.records, eigene Songs folgen dahinter.
+  const emitDeck = (side: Side, st: DeckStatus) => {
+    const index = st.rec ? records.indexOf(st.rec) : -1
+    const key = `${st.playing}|${st.loading}|${st.failed}|${st.rec?.id}|${st.track}|${index}`
+    if (sent.current[side] === key) return
+    sent.current[side] = key
+    const r = st.rec
+    const tr = r?.tracks[st.track]
+    p.host.dispatchEvent(
+      new CustomEvent('deckchange', {
+        bubbles: true,
+        detail: {
+          deck: side,
+          playing: st.playing,
+          loading: st.loading,
+          failed: st.failed,
+          record: r && { index, uploaded: index >= p.records.length, title: r.title, artist: r.artist, cover: r.cover, link: r.link, accent: r.accent },
+          track: tr && { index: st.track, title: tr.title, src: tr.src, duration: tr.duration },
+        },
+      }),
+    )
+  }
+
   const onFiles = async (files: File[]) => {
     const { records: next, touched } = await addFiles(files, uploaded, t.myMusic)
     setUploaded(next)
@@ -94,6 +126,7 @@ export default function App(p: AppProps) {
       uploads={p.uploads}
       t={t}
       onStatus={onStatus}
+      controls={p.controls}
       onFiles={onFiles}
     >
       {children}

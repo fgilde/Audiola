@@ -24,15 +24,31 @@ function lift(c: number[], minV: number, minS = 0.8) {
   return [f(5), f(3), f(1)]
 }
 
+/** Bild zeichnen; SVG kann createImageBitmap aus einem Blob nicht dekodieren, dann über ein <img>. */
+async function drawCover(blob: Blob, g: OffscreenCanvasRenderingContext2D, size: number) {
+  try {
+    g.drawImage(await createImageBitmap(blob), 0, 0, size, size)
+  } catch {
+    const url = URL.createObjectURL(blob)
+    try {
+      const img = new Image()
+      img.src = url
+      await img.decode()
+      g.drawImage(img, 0, 0, size, size)
+    } finally {
+      URL.revokeObjectURL(url)
+    }
+  }
+}
+
 export async function palette(url: string): Promise<{ accent: string; gradient: [string, string, string] } | null> {
   try {
     const res = await fetch(url)
     if (!res.ok) return null
-    const img = await createImageBitmap(await res.blob())
     const size = 24
     const canvas = new OffscreenCanvas(size, size)
     const g = canvas.getContext('2d')!
-    g.drawImage(img, 0, 0, size, size)
+    await drawCover(await res.blob(), g, size)
     const d = g.getImageData(0, 0, size, size).data
 
     // 12 Farbton-Eimer à 30°. Zuerst zählen nur leuchtende Pixel (Meer, Lichter, Feuer) – große

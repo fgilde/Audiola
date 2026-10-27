@@ -30,7 +30,18 @@ type At = { sec: number } | { frac: number }
 
 export interface DeckStatus {
   playing: boolean
+  loading: boolean
+  failed: boolean
   rec: Rec | null
+  track: number
+}
+
+/** Steuerung eines Decks von außen (Methoden des Elements). */
+export interface DeckControl {
+  /** Platte `rec` ab Track `track` auflegen; ohne Platte: weiterspielen bzw. die erste Platte starten. */
+  play(rec?: Rec, track?: number): void
+  pause(): void
+  step(d: number): void
 }
 
 interface Props {
@@ -43,6 +54,8 @@ interface Props {
   uploads: boolean
   t: Strings
   onStatus: (side: 'a' | 'b', s: DeckStatus) => void
+  /** Wird bei jedem Rendern mit der aktuellen Steuerung des Decks befüllt. */
+  controls: Partial<Record<'a' | 'b', DeckControl>>
   /** Hochgeladene Dateien einsortieren; liefert die Platte, die aufgelegt werden soll. */
   onFiles: (files: File[]) => Promise<Rec | undefined>
   children?: ComponentChildren
@@ -141,6 +154,19 @@ export default function Turntable(p: Props) {
     if (n >= 0 && n < s.rec.tracks.length) play(s.rec, n)
   }
 
+  // Deck B ist nur im DJ-Modus bedienbar, auch von außen.
+  p.controls[side] = {
+    play: (rec, track = 0) => {
+      if (side === 'b' && !dj) return
+      if (rec) return play(rec, Math.max(0, Math.min(track, rec.tracks.length - 1)))
+      if (!(s.needle && !s.braking)) toggle()
+    },
+    pause: () => {
+      if (s.needle && !s.braking) toggle()
+    },
+    step: (d) => (side === 'a' || dj) && step(d),
+  }
+
   useEffect(() => {
     channel.onPosition = (pos, ended) => {
       if (s.loading) return
@@ -194,7 +220,7 @@ export default function Turntable(p: Props) {
       if (viz.current) vizRec.current = key
     }
     viz.current?.setActive(playing)
-    props.current.onStatus(side, { playing: playing && !s.braking, rec: s.rec })
+    props.current.onStatus(side, { playing: playing && !s.braking, loading: s.loading, failed: s.failed, rec: s.rec, track: s.track })
   })
 
   // Mischpult zu: Deck B verstummt, Pitch zurück auf 0.

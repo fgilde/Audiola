@@ -10,6 +10,9 @@ Drag & Drop, Cover und Trackliste aus den ID3-Tags. Demo, Doku und Playground:
 <audiola-turntable records="records.json" uploads></audiola-turntable>
 ```
 
+Steuern und mithören: `el.play(record?, track?, deck?)`, `el.pause(deck?)`, `el.next(deck?)`, `el.previous(deck?)`,
+Events `modechange` und `deckchange` (Deck, spielt/lädt/Fehler, Platte, Track). Details auf der Demo-Seite.
+
 ## Entwickeln
 
 ```sh

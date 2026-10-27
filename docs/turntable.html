@@ -222,6 +222,20 @@
 }
 
 el.<span class="k">addEventListener</span>(<span class="s">'modechange'</span>, (e) =&gt; console.log(e.detail.mode)) <span class="c">// 'single' | 'dj'</span></pre>
+
+    <h3>Steuern per JavaScript</h3>
+    <p style="color:var(--dim)"><code>record</code> ist der Index in <code>el.records</code>, eigene Songs folgen dahinter. <code>deck</code> ist <code>'a'</code> (Standard) oder <code>'b'</code> (nur bei geöffnetem Mischpult).</p>
+<pre class="tt-code">el.<span class="k">play</span>(<span class="s">0</span>, <span class="s">2</span>)    <span class="c">// Platte 1 ab Track 3 auflegen</span>
+el.<span class="k">play</span>()        <span class="c">// weiterspielen</span>
+el.<span class="k">pause</span>()       <span class="c">// Platte läuft aus</span>
+el.<span class="k">next</span>() · el.<span class="k">previous</span>()
+el.<span class="k">play</span>(<span class="s">1</span>, <span class="s">0</span>, <span class="s">'b'</span>) <span class="c">// im DJ-Modus auf Deck B</span>
+
+el.<span class="k">addEventListener</span>(<span class="s">'deckchange'</span>, (e) =&gt; {
+  <span class="k">const</span> { deck, playing, loading, failed, record, track } = e.detail
+  <span class="c">// record: { index, uploaded, title, artist, cover, link, accent } | null</span>
+  <span class="c">// track:  { index, title, src, duration } | null</span>
+})</pre>
   </section>
 
   <!-- ============ PLAYGROUND ============ -->
