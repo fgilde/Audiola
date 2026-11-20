@@ -16,7 +16,7 @@ public sealed partial class EvaluationViewModel : ObservableObject
     private IReadOnlyList<EvalRow> _rows = [];
 
     [ObservableProperty] private string _statusText =
-        "CSV laden mit Spalten: truth/label (KI vs. Mensch) und predicted/verdict oder score.";
+        L.T("CSV laden mit Spalten: truth/label (KI vs. Mensch) und predicted/verdict oder score.");
     [ObservableProperty] private bool _hasResult;
     [ObservableProperty] private bool _hasScores;
     [ObservableProperty] private double _threshold = 0.5;
@@ -48,8 +48,8 @@ public sealed partial class EvaluationViewModel : ObservableObject
     [RelayCommand]
     private async Task LoadCsvAsync()
     {
-        var path = await _files.OpenFileAsync("Detektor-Ergebnisse (CSV) laden",
-            new FileFilter("CSV-Datei", "csv", "tsv", "txt"), FileFilter.Any);
+        var path = await _files.OpenFileAsync(L.T("Detektor-Ergebnisse (CSV) laden"),
+            new FileFilter(L.T("CSV-Datei"), "csv", "tsv", "txt"), FileFilter.Any);
         if (path is null) return;
 
         try
@@ -58,13 +58,13 @@ public sealed partial class EvaluationViewModel : ObservableObject
             HasScores = _eval.HasScores(_rows);
             FileName = System.IO.Path.GetFileName(path);
             Recompute();
-            StatusText = $"{_rows.Count} Zeilen eingelesen aus {FileName}" +
-                         (HasScores ? " — Score-Spalte erkannt, Schwellwert verschiebbar." : "");
+            StatusText = L.F("{0} Zeilen eingelesen aus {1}", _rows.Count, FileName) +
+                         (HasScores ? L.T(" — Score-Spalte erkannt, Schwellwert verschiebbar.") : "");
         }
         catch (Exception ex)
         {
             HasResult = false;
-            StatusText = "Fehler: " + ex.Message;
+            StatusText = L.F("Fehler: {0}", ex.Message);
         }
     }
 

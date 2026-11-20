@@ -19,13 +19,13 @@ public static class MasteringProfiles
 {
     public static IReadOnlyList<MasteringProfile> All { get; } =
     [
-        new("Neutral (aus)", "Keine Bearbeitung – Bypass.", new MasteringSettings
+        new("Neutral (aus)", L.T("Keine Bearbeitung – Bypass."), new MasteringSettings
         {
             HighPassEnabled = false, LowShelfGainDb = 0, MidGainDb = 0, HighShelfGainDb = 0,
             CompressorEnabled = false, NormalizeLoudness = false
         }),
 
-        new("Streaming −14 LUFS", "Sanftes, plattformkonformes Master (Spotify/Apple/YouTube).", new MasteringSettings
+        new("Streaming −14 LUFS", L.T("Sanftes, plattformkonformes Master (Spotify/Apple/YouTube)."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 30,
             LowShelfHz = 100, LowShelfGainDb = 0,
@@ -35,7 +35,7 @@ public static class MasteringProfiles
             NormalizeLoudness = true, TargetLufs = -14
         }),
 
-        new("Pop", "Hell und präsent, kontrollierte Tiefen, modern laut.", new MasteringSettings
+        new("Pop", L.T("Hell und präsent, kontrollierte Tiefen, modern laut."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 35,
             LowShelfHz = 100, LowShelfGainDb = 1.5,
@@ -45,7 +45,7 @@ public static class MasteringProfiles
             NormalizeLoudness = true, TargetLufs = -10
         }),
 
-        new("Rock", "Mitten-Präsenz und Glue-Kompression für Band-Material.", new MasteringSettings
+        new("Rock", L.T("Mitten-Präsenz und Glue-Kompression für Band-Material."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 40,
             LowShelfHz = 90, LowShelfGainDb = 1,
@@ -55,7 +55,7 @@ public static class MasteringProfiles
             NormalizeLoudness = true, TargetLufs = -10
         }),
 
-        new("Radio-Ready", "Dicht, verständlich, durchsetzungsstark.", new MasteringSettings
+        new("Radio-Ready", L.T("Dicht, verständlich, durchsetzungsstark."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 45,
             LowShelfHz = 110, LowShelfGainDb = 0,
@@ -65,7 +65,7 @@ public static class MasteringProfiles
             NormalizeLoudness = true, TargetLufs = -11
         }),
 
-        new("Loud / Club", "Maximal laut mit Sub-Punch für Clubsysteme.", new MasteringSettings
+        new("Loud / Club", L.T("Maximal laut mit Sub-Punch für Clubsysteme."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 30,
             LowShelfHz = 60, LowShelfGainDb = 2,
@@ -75,7 +75,7 @@ public static class MasteringProfiles
             NormalizeLoudness = true, TargetLufs = -8
         }),
 
-        new("Warm / Vintage", "Volle Tiefen, sanft gerollte Höhen, weicher Charakter.", new MasteringSettings
+        new("Warm / Vintage", L.T("Volle Tiefen, sanft gerollte Höhen, weicher Charakter."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 30,
             LowShelfHz = 120, LowShelfGainDb = 2.5,
@@ -85,7 +85,7 @@ public static class MasteringProfiles
             NormalizeLoudness = true, TargetLufs = -13
         }),
 
-        new("Podcast / Sprache", "Tiefpass-Rumpeln raus, Verständlichkeit hoch, dichte Dynamik.", new MasteringSettings
+        new("Podcast / Sprache", L.T("Tiefpass-Rumpeln raus, Verständlichkeit hoch, dichte Dynamik."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 80,
             LowShelfHz = 120, LowShelfGainDb = -1,
@@ -95,7 +95,7 @@ public static class MasteringProfiles
             NormalizeLoudness = true, TargetLufs = -16
         }),
 
-        new("Bass-Boost", "Kräftiges Low-End, leicht Luft oben.", new MasteringSettings
+        new("Bass-Boost", L.T("Kräftiges Low-End, leicht Luft oben."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 25,
             LowShelfHz = 80, LowShelfGainDb = 4,
@@ -105,7 +105,7 @@ public static class MasteringProfiles
             NormalizeLoudness = true, TargetLufs = -12
         }),
 
-        new("HipHop / Trap", "Tiefer Sub-Bass, knackige Transienten, laut.", new MasteringSettings
+        new("HipHop / Trap", L.T("Tiefer Sub-Bass, knackige Transienten, laut."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 28,
             LowShelfHz = 70, LowShelfGainDb = 3,
@@ -115,7 +115,7 @@ public static class MasteringProfiles
             NormalizeLoudness = true, TargetLufs = -9
         }),
 
-        new("EDM / Electronic", "Breit, glänzend, druckvoll für Clubsysteme.", new MasteringSettings
+        new("EDM / Electronic", L.T("Breit, glänzend, druckvoll für Clubsysteme."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 30,
             LowShelfHz = 60, LowShelfGainDb = 2,
@@ -125,7 +125,7 @@ public static class MasteringProfiles
             NormalizeLoudness = true, TargetLufs = -8
         }),
 
-        new("Acoustic / Folk", "Natürlich und offen, dezente Dynamik.", new MasteringSettings
+        new("Acoustic / Folk", L.T("Natürlich und offen, dezente Dynamik."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 35,
             LowShelfHz = 110, LowShelfGainDb = 0.5,
@@ -135,7 +135,7 @@ public static class MasteringProfiles
             NormalizeLoudness = true, TargetLufs = -16
         }),
 
-        new("Lo-Fi", "Weich, gedämpfte Höhen, gemütlich.", new MasteringSettings
+        new("Lo-Fi", L.T("Weich, gedämpfte Höhen, gemütlich."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 40,
             LowShelfHz = 120, LowShelfGainDb = 2,
@@ -145,7 +145,7 @@ public static class MasteringProfiles
             NormalizeLoudness = true, TargetLufs = -14
         }),
 
-        new("Vocal-Boost", "Stimme nach vorn, klare Präsenz.", new MasteringSettings
+        new("Vocal-Boost", L.T("Stimme nach vorn, klare Präsenz."), new MasteringSettings
         {
             HighPassEnabled = true, HighPassHz = 50,
             LowShelfHz = 120, LowShelfGainDb = -1,

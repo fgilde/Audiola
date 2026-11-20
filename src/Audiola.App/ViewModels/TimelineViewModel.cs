@@ -183,7 +183,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         _engine.StateChanged += (_, _) => IsPlaying = _engine.IsPlaying;
         _engine.SpectrumUpdated += (_, bands) => SpectrumUpdated?.Invoke(this, bands);
 
-        _states.Add(new HistoryState(Capture(), "Start"));
+        _states.Add(new HistoryState(Capture(), L.T("Start")));
         RebuildHistory();
 
         // „Geändert"-Erkennung: Struktur- und Eigenschaftsänderungen markieren das Projekt als dirty.
@@ -285,14 +285,14 @@ public sealed partial class TimelineViewModel : ObservableObject
         OnPropertyChanged(nameof(HasTracks));
         _ = LoadPeaksAsync(added);
         if (HasTracks) _transport.SetMode(TransportMode.StemMix);
-        if (added.Count > 0) Commit("Stems übernommen");
+        if (added.Count > 0) Commit(L.T("Stems übernommen"));
     }
 
     /// <summary>Öffnet einen Dialog und fügt gewählte Audiodateien als neue Spuren hinzu.</summary>
     [RelayCommand]
     private async Task AddAudioAsync()
     {
-        var picked = await _files.OpenFilesAsync("Audiodatei(en) als Spur hinzufügen", true,
+        var picked = await _files.OpenFilesAsync(L.T("Audiodatei(en) als Spur hinzufügen"), true,
             FileFilter.Audio, FileFilter.Any);
         if (picked.Count == 0) return;
         foreach (var f in picked)
@@ -338,7 +338,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         RecomputeDuration();
         CommitClips();
         if (HasTracks) _transport.SetMode(TransportMode.StemMix);
-        Commit("Audio hinzugefügt");
+        Commit(L.T("Audio hinzugefügt"));
     }
 
     private readonly record struct AudioTrackData(float[] Peaks, double Seconds);
@@ -525,7 +525,7 @@ public sealed partial class TimelineViewModel : ObservableObject
 
         SelectedClip = null;
         CommitClips();
-        Commit("Clip geteilt");
+        Commit(L.T("Clip geteilt"));
     }
 
     [RelayCommand]
@@ -535,7 +535,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         SelectedClip.Track.Clips.Remove(SelectedClip);
         SelectedClip = null;
         CommitClips();
-        Commit("Clip gelöscht");
+        Commit(L.T("Clip gelöscht"));
     }
 
     /// <summary>True, wenn der markierte Bereich einen Teil des gewählten Clips abdeckt.</summary>
@@ -604,7 +604,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         ClearSelection();
         RecomputeDuration();
         CommitClips();
-        Commit("Bereich ausgeschnitten");
+        Commit(L.T("Bereich ausgeschnitten"));
     }
 
     [ObservableProperty] private bool _isSeparating;
@@ -621,7 +621,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         OnPropertyChanged(nameof(HasTracks));
         RecomputeDuration();
         CommitClips();
-        Commit("Spur gelöscht");
+        Commit(L.T("Spur gelöscht"));
     }
 
     /// <summary>Dupliziert eine Spur samt Clips und Einstellungen (direkt darunter eingefügt).</summary>
@@ -630,7 +630,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     {
         if (track is null) return;
 
-        var copy = StemTrackViewModel.ForFile(track.Model.FilePath, track.Name + " (Kopie)", track.AccentColor);
+        var copy = StemTrackViewModel.ForFile(track.Model.FilePath, L.F("{0} (Kopie)", track.Name), track.AccentColor);
         copy.Volume = track.Volume;
         copy.Pan = track.Pan;
         copy.IsEnabled = track.IsEnabled;
@@ -663,7 +663,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         RecomputeDuration();
         CommitClips();
         if (HasTracks) _transport.SetMode(TransportMode.StemMix);
-        Commit("Spur dupliziert");
+        Commit(L.T("Spur dupliziert"));
     }
 
     /// <summary>Öffnet den „Spur mastern“-Dialog (EQ → Kompressor → LUFS) für die gewählte Spur.</summary>
@@ -680,7 +680,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     {
         if (!HasTracks)
         {
-            _snackbar.Warning("Nichts zum Einsingen", "Lade zuerst einen Song oder Spuren ins Studio.");
+            _snackbar.Warning(L.T("Nichts zum Einsingen"), L.T("Lade zuerst einen Song oder Spuren ins Studio."));
             return;
         }
         _dialogs.OpenSingAlong();   // eigenes Fenster, nicht-modal – kann neben dem Studio liegen
@@ -717,7 +717,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         RecomputeDuration();
         CommitClips();
         if (HasTracks) _transport.SetMode(TransportMode.StemMix);
-        Commit("Spur gemastert");
+        Commit(L.T("Spur gemastert"));
     }
 
     private const double MinClipSeconds = 0.05;
@@ -791,7 +791,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         if (origSrcLen < 0.02 || newLen < MinClipSeconds || Math.Abs(stretch - 1.0) < 0.01)
         {
             CommitClips();
-            Commit("Clip gedehnt");
+            Commit(L.T("Clip gedehnt"));
             return;
         }
 
@@ -813,7 +813,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Audiola.Services.UiError.Show("Dehnen fehlgeschlagen", ex.Message);
+            Audiola.Services.UiError.Show(L.T("Dehnen fehlgeschlagen"), ex.Message);
         }
     }
 
@@ -848,7 +848,7 @@ public sealed partial class TimelineViewModel : ObservableObject
     public bool HasClipRegion => SelectedClip is { } c && ClipRegionSeconds(c) is not null;
 
     /// <summary>Beschriftung für den Effekt-Bereich im Inspektor.</summary>
-    public string ClipEffectScope => HasClipRegion ? "Effekte (auf Auswahl)" : "Effekte (ganzer Clip)";
+    public string ClipEffectScope => HasClipRegion ? L.T("Effekte (auf Auswahl)") : L.T("Effekte (ganzer Clip)");
 
     [ObservableProperty] private bool _isVoiceChanging;
 
@@ -866,7 +866,7 @@ public sealed partial class TimelineViewModel : ObservableObject
         var lenSec = (double)(samples.Length / 2) / sampleRate;
         ReplaceSelectedClipSource(clip, temp, samples, lenSec);
         CommitClips();
-        Commit("Clip ersetzt");
+        Commit(L.T("Clip ersetzt"));
     }
 
     private void ReplaceSelectedClipSource(ClipViewModel clip, string temp, float[] outBuf, double lenSec)
@@ -958,13 +958,13 @@ public sealed partial class TimelineViewModel : ObservableObject
             }
 
             CommitClips();
-            Commit($"Variationen ({provider.Name})");
-            _snackbar.Success("Variationen angewendet",
-                $"{provider.Name}: {variationIds.Count} Variation(en) auf {targets.Count} Clip(s).");
+            Commit(L.F("Variationen ({0})", provider.Name));
+            _snackbar.Success(L.T("Variationen angewendet"),
+                L.F("{0}: {1} Variation(en) auf {2} Clip(s).", provider.Name, variationIds.Count, targets.Count));
         }
         catch (Exception ex)
         {
-            _snackbar.Error("Variation fehlgeschlagen", ex.Message, 6);
+            _snackbar.Error(L.T("Variation fehlgeschlagen"), ex.Message, 6);
         }
     }
 
@@ -1125,7 +1125,7 @@ public sealed partial class TimelineViewModel : ObservableObject
 
         _suppressDirty = false;
         IsDirty = false;
-        ResetHistory("Projekt geladen");
+        ResetHistory(L.T("Projekt geladen"));
     }
 
     // ---- Verlauf (Undo / Redo / Sprung zu Zustand) ----
@@ -1155,11 +1155,11 @@ public sealed partial class TimelineViewModel : ObservableObject
     [RelayCommand]
     private void AddEmptyTrack()
     {
-        var track = StemTrackViewModel.ForFile("", $"Spur {Tracks.Count + 1}", Palette[Tracks.Count % Palette.Length]);
+        var track = StemTrackViewModel.ForFile("", L.F("Spur {0}", Tracks.Count + 1), Palette[Tracks.Count % Palette.Length]);
         Tracks.Add(track);
         OnPropertyChanged(nameof(HasTracks));
         SelectedClip = null;
-        Commit("Leere Spur");
+        Commit(L.T("Leere Spur"));
     }
 
     /// <summary>Nach dem Ziehen: Offsets in die Wiedergabe übernehmen.</summary>

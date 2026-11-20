@@ -1,5 +1,5 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="using:Audiola.Avalonia.Localization"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:controls="using:Audiola.Controls"
              xmlns:vm="using:Audiola.ViewModels"
@@ -10,21 +10,21 @@
 
   <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel MaxWidth="1120" HorizontalAlignment="Left">
-      <TextBlock Classes="dawPageTitle" Text="Mastering" />
+      <TextBlock Classes="dawPageTitle" Text="{l:T 'Mastering'}" />
       <TextBlock Margin="0,2,0,20" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                 Text="EQ → Kompressor → Loudness (LUFS) auf dem aktiven Studio-Mix. Vorschau hörbar, „Master (A/B)“ zum Vergleichen." />
+                 Text="{l:T 'EQ → Kompressor → Loudness (LUFS) auf dem aktiven Studio-Mix. Vorschau hörbar, „Master (A/B)“ zum Vergleichen.'}" />
 
       <!-- Gemeinsames Mastering-Panel (auch vom „Spur mastern“-Dialog genutzt) -->
       <controls:MasteringPanel />
 
       <!-- Stapelverarbeitung (nur auf der Seite sinnvoll) -->
-      <TextBlock Margin="0,24,0,8" FontWeight="SemiBold" Text="Stapelverarbeitung (mehrere Dateien)" />
+      <TextBlock Margin="0,24,0,8" FontWeight="SemiBold" Text="{l:T 'Stapelverarbeitung (mehrere Dateien)'}" />
       <Border Classes="dawPanel" Padding="16">
         <StackPanel>
           <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"
-                     Text="Mehrere Dateien mit den aktuell eingestellten Mastering-Werten verarbeiten. Die Ausgabe wird neben der Quelldatei gespeichert." />
+                     Text="{l:T 'Mehrere Dateien mit den aktuell eingestellten Mastering-Werten verarbeiten. Die Ausgabe wird neben der Quelldatei gespeichert.'}" />
           <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-            <TextBlock VerticalAlignment="Center" Width="150" Text="Ausgabe-Namensmuster:" />
+            <TextBlock VerticalAlignment="Center" Width="150" Text="{l:T 'Ausgabe-Namensmuster:'}" />
             <TextBox Width="220" Watermark="{}{name}_mastered"
                      IsEnabled="{Binding !BulkOverwrite}"
                      Text="{Binding BulkPattern, Mode=TwoWay}"
@@ -33,21 +33,27 @@
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="z. B. {}{name}_mastered" />
           </StackPanel>
           <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-            <TextBlock VerticalAlignment="Center" Width="150" Text="Ausgabeformat:" />
+            <TextBlock VerticalAlignment="Center" Width="150" Text="{l:T 'Ausgabeformat:'}" />
             <ComboBox Width="220" VerticalAlignment="Center"
                       ItemsSource="{Binding BulkFormats}"
                       SelectedItem="{Binding BulkFormat, Mode=TwoWay}"
-                      ToolTip.Tip="Zielformat erzwingen – z. B. MP3 in WAV umwandeln. „Wie Original“ behält die Endung der Quelldatei." />
+                      ToolTip.Tip="{l:T 'Zielformat erzwingen – z. B. MP3 in WAV umwandeln. „Wie Original“ behält die Endung der Quelldatei.'}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="x:String">
+                <TextBlock Text="{Binding Converter={x:Static l:Fmt.Instance}}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
             <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12"
-                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="z. B. MP3 → WAV" />
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{l:T 'z. B. MP3 → WAV'}" />
           </StackPanel>
-          <CheckBox Margin="0,10,0,0" Content="Originale überschreiben (Namensmuster wird ignoriert)"
+          <CheckBox Margin="0,10,0,0" Content="{l:T 'Originale überschreiben (Namensmuster wird ignoriert)'}"
                     IsChecked="{Binding BulkOverwrite, Mode=TwoWay}" />
           <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
             <Button Classes="accent" Command="{Binding BulkMasterCommand}" IsEnabled="{Binding !IsBulkRunning}">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <ic:SymbolIcon Symbol="FolderArrowUp" />
-                <TextBlock Text="Dateien wählen &amp; alle mastern" />
+                <TextBlock Text="{l:T 'Dateien wählen &amp; alle mastern'}" />
               </StackPanel>
             </Button>
             <ProgressBar Width="60" Margin="12,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"

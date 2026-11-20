@@ -21,26 +21,26 @@ public sealed class ProvenanceService : IProvenanceService
     // (z. B. "Udio" in "audio").
     private static readonly (string Pattern, string Category, string Title, string Detail, FindingSeverity Sev, bool WholeWord)[] Markers =
     [
-        ("jumbf", "C2PA", "JUMBF-Box gefunden",
-            "Container für eingebettete C2PA-Manifeste (Content Credentials).", FindingSeverity.AiIndicator, false),
-        ("c2pa.actions", "C2PA", "C2PA-Aktionsliste",
-            "Dokumentierte Bearbeitungsschritte; enthält oft den Hinweis auf KI-Erzeugung.", FindingSeverity.AiIndicator, false),
-        ("c2pa", "C2PA", "C2PA-Kennung gefunden",
-            "Die Datei enthält ein C2PA-Manifest (kryptografisch signierte Herkunftskette).", FindingSeverity.AiIndicator, false),
-        ("compositeWithTrainedAlgorithmicMedia", "Herkunft", "digitalSourceType: composite (KI-Anteil)",
-            "IPTC-Kennung 'teils mit KI erzeugt/bearbeitet'.", FindingSeverity.AiIndicator, false),
-        ("trainedAlgorithmicMedia", "Herkunft", "digitalSourceType: trainedAlgorithmicMedia",
-            "IPTC-Kennung 'mit KI erzeugt'. Wird von Scannern direkt als KI-Signal gewertet.", FindingSeverity.AiIndicator, false),
-        ("digitalSourceType", "Herkunft", "digitalSourceType-Feld",
-            "Feld zur Kennzeichnung der Erzeugungsart (KI/Foto/…).", FindingSeverity.AiIndicator, false),
-        ("http://ns.adobe.com/xap/1.0/", "XMP", "XMP-Metadaten",
-            "Adobe-XMP-Block; kann Urheber-, Tool- und Herkunftsangaben enthalten.", FindingSeverity.Info, false),
-        ("contentauth", "C2PA", "Content-Authenticity-Hinweis",
-            "Verweis auf die Content Authenticity Initiative / Content Credentials.", FindingSeverity.AiIndicator, false),
-        ("Suno", "Herkunft", "Generator-Spur: Suno",
-            "Hinweis auf den KI-Musikgenerator Suno in den Metadaten.", FindingSeverity.AiIndicator, true),
-        ("Udio", "Herkunft", "Generator-Spur: Udio",
-            "Hinweis auf den KI-Musikgenerator Udio in den Metadaten.", FindingSeverity.AiIndicator, true),
+        ("jumbf", "C2PA", L.T("JUMBF-Box gefunden"),
+            L.T("Container für eingebettete C2PA-Manifeste (Content Credentials)."), FindingSeverity.AiIndicator, false),
+        ("c2pa.actions", "C2PA", L.T("C2PA-Aktionsliste"),
+            L.T("Dokumentierte Bearbeitungsschritte; enthält oft den Hinweis auf KI-Erzeugung."), FindingSeverity.AiIndicator, false),
+        ("c2pa", "C2PA", L.T("C2PA-Kennung gefunden"),
+            L.T("Die Datei enthält ein C2PA-Manifest (kryptografisch signierte Herkunftskette)."), FindingSeverity.AiIndicator, false),
+        ("compositeWithTrainedAlgorithmicMedia", L.T("Herkunft"), L.T("digitalSourceType: composite (KI-Anteil)"),
+            L.T("IPTC-Kennung 'teils mit KI erzeugt/bearbeitet'."), FindingSeverity.AiIndicator, false),
+        ("trainedAlgorithmicMedia", L.T("Herkunft"), L.T("digitalSourceType: trainedAlgorithmicMedia"),
+            L.T("IPTC-Kennung 'mit KI erzeugt'. Wird von Scannern direkt als KI-Signal gewertet."), FindingSeverity.AiIndicator, false),
+        ("digitalSourceType", L.T("Herkunft"), L.T("digitalSourceType-Feld"),
+            L.T("Feld zur Kennzeichnung der Erzeugungsart (KI/Foto/…)."), FindingSeverity.AiIndicator, false),
+        ("http://ns.adobe.com/xap/1.0/", "XMP", L.T("XMP-Metadaten"),
+            L.T("Adobe-XMP-Block; kann Urheber-, Tool- und Herkunftsangaben enthalten."), FindingSeverity.Info, false),
+        ("contentauth", "C2PA", L.T("Content-Authenticity-Hinweis"),
+            L.T("Verweis auf die Content Authenticity Initiative / Content Credentials."), FindingSeverity.AiIndicator, false),
+        ("Suno", L.T("Herkunft"), L.T("Generator-Spur: Suno"),
+            L.T("Hinweis auf den KI-Musikgenerator Suno in den Metadaten."), FindingSeverity.AiIndicator, true),
+        ("Udio", L.T("Herkunft"), L.T("Generator-Spur: Udio"),
+            L.T("Hinweis auf den KI-Musikgenerator Udio in den Metadaten."), FindingSeverity.AiIndicator, true),
     ];
 
     public Task<ProvenanceReport> AnalyzeAsync(string filePath, CancellationToken ct = default)
@@ -49,7 +49,7 @@ public sealed class ProvenanceService : IProvenanceService
     private static ProvenanceReport Analyze(string filePath, CancellationToken ct)
     {
         if (!File.Exists(filePath))
-            throw new FileNotFoundException("Datei nicht gefunden.", filePath);
+            throw new FileNotFoundException(L.T("Datei nicht gefunden."), filePath);
 
         var findings = new List<Finding>();
 
@@ -60,14 +60,14 @@ public sealed class ProvenanceService : IProvenanceService
             var wf = reader.WaveFormat;
             findings.Add(new Finding("Format",
                 $"{Path.GetExtension(filePath).TrimStart('.').ToUpperInvariant()}, " +
-                $"{wf.SampleRate} Hz, {wf.Channels} Kanäle, {reader.TotalTime:mm\\:ss}",
-                $"Dateigröße: {new FileInfo(filePath).Length / 1024} KB.",
+                L.F("{0} Hz, {1} Kanäle, {2:mm\\:ss}", wf.SampleRate, wf.Channels, reader.TotalTime),
+                L.F("Dateigröße: {0} KB.", new FileInfo(filePath).Length / 1024),
                 FindingSeverity.Info));
         }
         catch
         {
-            findings.Add(new Finding("Format", "Format nicht lesbar",
-                "Die Datei konnte nicht als Audio dekodiert werden.", FindingSeverity.Notice));
+            findings.Add(new Finding("Format", L.T("Format nicht lesbar"),
+                L.T("Die Datei konnte nicht als Audio dekodiert werden."), FindingSeverity.Notice));
         }
 
         // 2) Nativer Marker-Scan (Kopf + Ende der Datei).
@@ -75,8 +75,8 @@ public sealed class ProvenanceService : IProvenanceService
         var text = Encoding.ASCII.GetString(bytes);
 
         if (bytes.Length >= 3 && bytes[0] == (byte)'I' && bytes[1] == (byte)'D' && bytes[2] == (byte)'3')
-            findings.Add(new Finding("ID3", "ID3-Tag vorhanden",
-                "MP3-Metadatenblock (Titel, Künstler, Kommentar, Encoder).", FindingSeverity.Info));
+            findings.Add(new Finding("ID3", L.T("ID3-Tag vorhanden"),
+                L.T("MP3-Metadatenblock (Titel, Künstler, Kommentar, Encoder)."), FindingSeverity.Info));
 
         var seen = new HashSet<string>();
         foreach (var m in Markers)
@@ -96,10 +96,10 @@ public sealed class ProvenanceService : IProvenanceService
             var hasManifest = !c2paRaw.Contains("No claim", StringComparison.OrdinalIgnoreCase)
                               && c2paRaw.Contains("manifest", StringComparison.OrdinalIgnoreCase);
             findings.Add(new Finding("C2PA",
-                hasManifest ? "c2patool: gültiges Manifest gelesen" : "c2patool: kein Manifest gefunden",
+                hasManifest ? L.T("c2patool: gültiges Manifest gelesen") : L.T("c2patool: kein Manifest gefunden"),
                 hasManifest
-                    ? "Vollständige Herkunftskette unten einsehbar."
-                    : "Keine eingebettete C2PA-Herkunftskette in der Datei.",
+                    ? L.T("Vollständige Herkunftskette unten einsehbar.")
+                    : L.T("Keine eingebettete C2PA-Herkunftskette in der Datei."),
                 hasManifest ? FindingSeverity.AiIndicator : FindingSeverity.Info));
         }
 
@@ -122,39 +122,39 @@ public sealed class ProvenanceService : IProvenanceService
 
         if (aiIndicators.Count > 0)
         {
-            sb.AppendLine("➤ Es wurden explizite Herkunfts-/KI-Kennzeichnungen auf Metadatenebene gefunden:");
+            sb.AppendLine(L.T("➤ Es wurden explizite Herkunfts-/KI-Kennzeichnungen auf Metadatenebene gefunden:"));
             foreach (var f in aiIndicators)
                 sb.AppendLine($"   • {f.Title}");
             sb.AppendLine();
-            sb.AppendLine("Solche Marker (C2PA-Manifeste, digitalSourceType, Generator-Spuren) werden von");
-            sb.AppendLine("Auto-Scannern in der Regel direkt ausgewertet — das erklärt eine KI-Einstufung");
-            sb.AppendLine("bereits auf der Metadaten-Stufe.");
+            sb.AppendLine(L.T("Solche Marker (C2PA-Manifeste, digitalSourceType, Generator-Spuren) werden von"));
+            sb.AppendLine(L.T("Auto-Scannern in der Regel direkt ausgewertet — das erklärt eine KI-Einstufung"));
+            sb.AppendLine(L.T("bereits auf der Metadaten-Stufe."));
         }
         else
         {
-            sb.AppendLine("➤ Auf Metadatenebene wurden keine Provenienz-/Wasserzeichen-Marker gefunden.");
+            sb.AppendLine(L.T("➤ Auf Metadatenebene wurden keine Provenienz-/Wasserzeichen-Marker gefunden."));
             sb.AppendLine();
-            sb.AppendLine("Wichtig: Das ist KEIN Beleg, dass der Track nicht als KI erkannt wird.");
+            sb.AppendLine(L.T("Wichtig: Das ist KEIN Beleg, dass der Track nicht als KI erkannt wird."));
         }
 
         sb.AppendLine();
-        sb.AppendLine("Warum ein Track trotzdem als KI erkannt werden kann (mehrstufige Detektoren):");
-        sb.AppendLine("  1. Metadaten-/Provenienz-Stufe — liest C2PA/XMP/ID3 (hier analysiert).");
-        sb.AppendLine("  2. Audio-Wasserzeichen-Stufe — z. B. SynthID-artige, unhörbare Signale direkt");
-        sb.AppendLine("     im Audiosignal. Diese stehen NICHT in den Metadaten und sind nur mit dem");
-        sb.AppendLine("     Detektor des Anbieters nachweisbar — von außen also nicht sichtbar.");
-        sb.AppendLine("  3. Klassifikator-/Forensik-Stufe — ein ML-Modell bewertet das Audio selbst");
-        sb.AppendLine("     (Artefakte, Spektrum, Phase) und braucht gar keine eingebetteten Marker.");
+        sb.AppendLine(L.T("Warum ein Track trotzdem als KI erkannt werden kann (mehrstufige Detektoren):"));
+        sb.AppendLine(L.T("  1. Metadaten-/Provenienz-Stufe — liest C2PA/XMP/ID3 (hier analysiert)."));
+        sb.AppendLine(L.T("  2. Audio-Wasserzeichen-Stufe — z. B. SynthID-artige, unhörbare Signale direkt"));
+        sb.AppendLine(L.T("     im Audiosignal. Diese stehen NICHT in den Metadaten und sind nur mit dem"));
+        sb.AppendLine(L.T("     Detektor des Anbieters nachweisbar — von außen also nicht sichtbar."));
+        sb.AppendLine(L.T("  3. Klassifikator-/Forensik-Stufe — ein ML-Modell bewertet das Audio selbst"));
+        sb.AppendLine(L.T("     (Artefakte, Spektrum, Phase) und braucht gar keine eingebetteten Marker."));
         sb.AppendLine();
-        sb.AppendLine("Für eine belastbare Aussage, WELCHE Stufe anschlägt, lässt sich das von außen nicht");
-        sb.AppendLine("trennen — sinnvoll ist, beim Anbieter die Einzelstufen-Auswertung bzw. die");
-        sb.AppendLine("Detektor-Scores pro Stufe anzufragen (z. B. Wasserzeichen-Score vs. Klassifikator-Score).");
+        sb.AppendLine(L.T("Für eine belastbare Aussage, WELCHE Stufe anschlägt, lässt sich das von außen nicht"));
+        sb.AppendLine(L.T("trennen — sinnvoll ist, beim Anbieter die Einzelstufen-Auswertung bzw. die"));
+        sb.AppendLine(L.T("Detektor-Scores pro Stufe anzufragen (z. B. Wasserzeichen-Score vs. Klassifikator-Score)."));
 
         if (!c2paAvailable)
         {
             sb.AppendLine();
-            sb.AppendLine("Tipp: Für die vollständige C2PA-Manifest-Auswertung 'c2patool' installieren");
-            sb.AppendLine("(https://github.com/contentauth/c2patool) und im PATH verfügbar machen.");
+            sb.AppendLine(L.T("Tipp: Für die vollständige C2PA-Manifest-Auswertung 'c2patool' installieren"));
+            sb.AppendLine(L.T("(https://github.com/contentauth/c2patool) und im PATH verfügbar machen."));
         }
 
         return sb.ToString().TrimEnd();

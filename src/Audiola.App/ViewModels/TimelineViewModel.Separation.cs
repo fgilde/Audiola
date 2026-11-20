@@ -33,15 +33,15 @@ public sealed partial class TimelineViewModel
         {
             if (!await _separation.IsAvailableAsync())
             {
-                _snackbar.Warning("Demucs fehlt", "Bitte 'pip install demucs soundfile' ausführen.", 5);
+                _snackbar.Warning(L.T("Demucs fehlt"), L.T("Bitte 'pip install demucs soundfile' ausführen."), 5);
                 return;
             }
 
-            SeparationStatus = "Stems trennen … 0 %";
+            SeparationStatus = L.T("Stems trennen … 0 %");
             var progress = new Progress<string>(line =>
             {
                 var m = System.Text.RegularExpressions.Regex.Match(line, @"(\d{1,3})%");
-                if (m.Success) SeparationStatus = $"Stems trennen … {m.Groups[1].Value} %";
+                if (m.Success) SeparationStatus = L.F("Stems trennen … {0} %", m.Groups[1].Value);
             });
 
             var result = await _separation.SeparateAsync(path, progress, modelOverride, shifts);
@@ -50,7 +50,7 @@ public sealed partial class TimelineViewModel
             var stems = result.Stems.AsEnumerable();
             if (detectContent)
             {
-                SeparationStatus = "Inhalt erkennen …";
+                SeparationStatus = L.T("Inhalt erkennen …");
                 var measured = await Task.Run(() => result.Stems
                     .Select(s => (Stem: s, Rms: AudioProcessingHelper.MeasureRmsDb(s.FilePath)))
                     .ToList());
@@ -83,14 +83,14 @@ public sealed partial class TimelineViewModel
             OnPropertyChanged(nameof(HasTracks));
             RecomputeDuration();
             CommitClips();
-            Commit("Stems getrennt");
+            Commit(L.T("Stems getrennt"));
             var detected = string.Join(", ", stemList.Select(s => StemName(s.Kind)));
-            _snackbar.Success("Stems hinzugefügt",
-                detectContent ? $"Erkannt: {detected} ({stemList.Count} Spuren)." : $"{stemList.Count} Spuren aus „{track.Name}“.", 4);
+            _snackbar.Success(L.T("Stems hinzugefügt"),
+                detectContent ? L.F("Erkannt: {0} ({1} Spuren).", detected, stemList.Count) : L.F("{0} Spuren aus „{1}“.", stemList.Count, track.Name), 4);
         }
         catch (Exception ex)
         {
-            _snackbar.Error("Trennung fehlgeschlagen", ex.Message, 5);
+            _snackbar.Error(L.T("Trennung fehlgeschlagen"), ex.Message, 5);
         }
         finally
         {
@@ -112,19 +112,19 @@ public sealed partial class TimelineViewModel
         var offset = clip.TimelineOffsetSeconds;
 
         IsSeparating = true;
-        SeparationStatus = $"HQ-Trennung ({model.Name}) – erster Lauf lädt Modell …";
+        SeparationStatus = L.F("HQ-Trennung ({0}) – erster Lauf lädt Modell …", model.Name);
         try
         {
             var prog = new Progress<string>(line =>
             {
                 var m = System.Text.RegularExpressions.Regex.Match(line, @"(\d{1,3})%");
-                SeparationStatus = m.Success ? $"HQ-Trennung … {m.Groups[1].Value} %" : $"HQ-Trennung ({model.Name}) …";
+                SeparationStatus = m.Success ? L.F("HQ-Trennung … {0} %", m.Groups[1].Value) : L.F("HQ-Trennung ({0}) …", model.Name);
             });
 
             var stems = await AdvSep.SeparateAsync(path, model.ModelFilename, prog);
             if (stems.Count == 0)
             {
-                _snackbar.Warning("Keine Stems", "Die Trennung hat nichts erzeugt.", 4);
+                _snackbar.Warning(L.T("Keine Stems"), L.T("Die Trennung hat nichts erzeugt."), 4);
                 return;
             }
 
@@ -146,12 +146,12 @@ public sealed partial class TimelineViewModel
             OnPropertyChanged(nameof(HasTracks));
             RecomputeDuration();
             CommitClips();
-            Commit("HQ-Stems getrennt");
-            _snackbar.Success("Stems hinzugefügt", $"{stems.Count} Spuren ({model.Name}).", 4);
+            Commit(L.T("HQ-Stems getrennt"));
+            _snackbar.Success(L.T("Stems hinzugefügt"), L.F("{0} Spuren ({1}).", stems.Count, model.Name), 4);
         }
         catch (Exception ex)
         {
-            Audiola.Services.UiError.Show("HQ-Trennung fehlgeschlagen", ex.Message);
+            Audiola.Services.UiError.Show(L.T("HQ-Trennung fehlgeschlagen"), ex.Message);
         }
         finally
         {

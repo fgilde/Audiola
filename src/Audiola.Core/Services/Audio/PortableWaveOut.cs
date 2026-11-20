@@ -114,7 +114,7 @@ internal sealed class MiniAudioWaveOut : IWavePlayer
             if (!_contextInitialized)
             {
                 if (ma_context_init(null, _context) != ma_result.success)
-                    throw new InvalidOperationException("Der Audio-Kontext konnte nicht initialisiert werden.");
+                    throw new InvalidOperationException(L.T("Der Audio-Kontext konnte nicht initialisiert werden."));
                 _contextInitialized = true;
             }
 
@@ -128,7 +128,7 @@ internal sealed class MiniAudioWaveOut : IWavePlayer
             config.SetDataCallback(_dataCallback);
 
             if (ma_device_init(_context, ref config, _device) != ma_result.success)
-                throw new InvalidOperationException("Das Standard-Ausgabegerät konnte nicht geöffnet werden.");
+                throw new InvalidOperationException(L.T("Das Standard-Ausgabegerät konnte nicht geöffnet werden."));
 
             _deviceInitialized = true;
         }
@@ -139,10 +139,10 @@ internal sealed class MiniAudioWaveOut : IWavePlayer
         lock (_sync)
         {
             ThrowIfDisposed();
-            if (!_deviceInitialized) throw new InvalidOperationException("Init muss vor Play aufgerufen werden.");
+            if (!_deviceInitialized) throw new InvalidOperationException(L.T("Init muss vor Play aufgerufen werden."));
             if (_state == PlaybackState.Playing) return;
             if (ma_device_start(_device) != ma_result.success)
-                throw new InvalidOperationException("Die Wiedergabe konnte nicht gestartet werden.");
+                throw new InvalidOperationException(L.T("Die Wiedergabe konnte nicht gestartet werden."));
             _state = PlaybackState.Playing;
         }
     }

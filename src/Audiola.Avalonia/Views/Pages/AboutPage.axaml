@@ -1,5 +1,5 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="using:Audiola.Avalonia.Localization"
              xmlns:ic="using:FluentIcons.Avalonia"
              x:Class="Audiola.Avalonia.Views.Pages.AboutPage">
 
@@ -19,7 +19,7 @@
           <Image Grid.Column="0" Source="avares://Audiola/Assets/audiola.png"
                  Width="76" Height="76" VerticalAlignment="Center" />
           <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
-            <TextBlock FontSize="38" FontWeight="Bold" Text="Audiola">
+            <TextBlock FontSize="38" FontWeight="Bold" Text="{l:T 'Audiola'}">
               <TextBlock.Foreground>
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
                   <GradientStop Color="#6BD6FF" Offset="0" />
@@ -28,7 +28,7 @@
               </TextBlock.Foreground>
             </TextBlock>
             <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Text="Trennen · Mischen · Einsingen · Mastern — dein Studio für alles." />
+                       Text="{l:T 'Trennen · Mischen · Einsingen · Mastern — dein Studio für alles.'}" />
           </StackPanel>
           <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="6">
             <Border Classes="aboutChip">
@@ -47,19 +47,19 @@
         <!-- Was es ist -->
         <Border Grid.Row="0" Grid.Column="0" Classes="dawPanel" Padding="20">
           <StackPanel Spacing="10">
-            <TextBlock Classes="aboutHead" Text="Modernes Audio-Studio" />
+            <TextBlock Classes="aboutHead" Text="{l:T 'Modernes Audio-Studio'}" />
             <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Text="Mehrspur-Timeline, Stem-Trennung (Demucs &amp; audio-separator), Mixer, Mastering, Equalizer, räumliches Audio (Dolby-Atmos-/Binaural-Export), Stimmtausch &amp; Text-zu-Sprache (ElevenLabs sowie lokale Modelle) und Effekt-Bearbeitung." />
+                       Text="{l:T 'Mehrspur-Timeline, Stem-Trennung (Demucs &amp; audio-separator), Mixer, Mastering, Equalizer, räumliches Audio (Dolby-Atmos-/Binaural-Export), Stimmtausch &amp; Text-zu-Sprache (ElevenLabs sowie lokale Modelle) und Effekt-Bearbeitung.'}" />
             <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" FontSize="12.5"
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                       Text="Dazu Singola — die Karaoke-Bühne für Partys, mit denselben Einstellungen." />
+                       Text="{l:T 'Dazu Singola — die Karaoke-Bühne für Partys, mit denselben Einstellungen.'}" />
           </StackPanel>
         </Border>
 
         <!-- Herausgeber: gilde.org -->
         <Border Grid.Row="0" Grid.Column="1" Classes="dawPanel" Padding="20">
           <StackPanel Spacing="12">
-            <TextBlock Classes="aboutHead" Text="Von gilde.org" />
+            <TextBlock Classes="aboutHead" Text="{l:T 'Von gilde.org'}" />
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
               <!-- gilde.org-Logo, aus dem SVG nachgezeichnet: zwei Pfade mit Goldverlauf -->
               <Viewbox Grid.Column="0" Width="58" Height="58" VerticalAlignment="Top">
@@ -81,14 +81,14 @@
               </Viewbox>
               <StackPanel Grid.Column="1" Spacing="8">
                 <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                           Text="Audiola und Singola entstehen bei gilde.org." />
+                           Text="{l:T 'Audiola und Singola entstehen bei gilde.org.'}" />
                 <Button Classes="linkRow" Tag="https://audiola.de" Click="OnOpenLink">
                   <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                     <ic:SymbolIcon Grid.Column="0" Symbol="Globe" VerticalAlignment="Center" />
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                      <TextBlock FontWeight="SemiBold" Text="audiola.de" />
+                      <TextBlock FontWeight="SemiBold" Text="{l:T 'audiola.de'}" />
                       <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                 Text="Webseite, Downloads, Neuigkeiten" />
+                                 Text="{l:T 'Webseite, Downloads, Neuigkeiten'}" />
                     </StackPanel>
                     <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="↗"
                                Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
@@ -98,9 +98,9 @@
                   <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                     <ic:SymbolIcon Grid.Column="0" Symbol="Building" VerticalAlignment="Center" />
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                      <TextBlock FontWeight="SemiBold" Text="gilde.org" />
+                      <TextBlock FontWeight="SemiBold" Text="{l:T 'gilde.org'}" />
                       <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                 Text="Herausgeber — weitere Projekte" />
+                                 Text="{l:T 'Herausgeber — weitere Projekte'}" />
                     </StackPanel>
                     <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="↗"
                                Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
@@ -114,7 +114,7 @@
         <!-- Technik -->
         <Border Grid.Row="1" Grid.Column="0" Classes="dawPanel" Padding="20">
           <StackPanel Spacing="10">
-            <TextBlock Classes="aboutHead" Text="Technik" />
+            <TextBlock Classes="aboutHead" Text="{l:T 'Technik'}" />
             <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                        Text="{Binding TechText}" />
           </StackPanel>
@@ -123,14 +123,14 @@
         <!-- Quellcode -->
         <Border Grid.Row="1" Grid.Column="1" Classes="dawPanel" Padding="20">
           <StackPanel Spacing="10">
-            <TextBlock Classes="aboutHead" Text="Projekt &amp; Quellcode" />
+            <TextBlock Classes="aboutHead" Text="{l:T 'Projekt &amp; Quellcode'}" />
             <Button Classes="linkRow" Tag="https://github.com/fgilde/Audiola" Click="OnOpenLink">
               <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                 <ic:SymbolIcon Grid.Column="0" Symbol="Code" VerticalAlignment="Center" />
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                  <TextBlock FontWeight="SemiBold" Text="github.com/fgilde/Audiola" />
+                  <TextBlock FontWeight="SemiBold" Text="{l:T 'github.com/fgilde/Audiola'}" />
                   <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                             Text="Quellcode, Releases, Verlauf" />
+                             Text="{l:T 'Quellcode, Releases, Verlauf'}" />
                 </StackPanel>
                 <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="↗"
                            Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
@@ -140,9 +140,9 @@
               <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                 <ic:SymbolIcon Grid.Column="0" Symbol="DocumentBulletList" VerticalAlignment="Center" />
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                  <TextBlock FontWeight="SemiBold" Text="Fehler melden / Feature vorschlagen" />
+                  <TextBlock FontWeight="SemiBold" Text="{l:T 'Fehler melden / Feature vorschlagen'}" />
                   <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                             Text="Issues auf GitHub" />
+                             Text="{l:T 'Issues auf GitHub'}" />
                 </StackPanel>
                 <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="↗"
                            Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
@@ -157,33 +157,33 @@
              Fortsetzung des Fensters aussieht. -->
         <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Classes="dawPanel" Padding="20">
           <StackPanel Spacing="12">
-            <TextBlock Classes="aboutHead" Text="Kontakt &amp; Unterstützen" />
+            <TextBlock Classes="aboutHead" Text="{l:T 'Kontakt &amp; Unterstützen'}" />
             <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Text="Schreib uns direkt — ohne Konto, ohne Umweg. Und wenn dir Audiola etwas wert ist: Entwicklung, Modelle und GPU-Stunden kosten Zeit und Strom." />
+                       Text="{l:T 'Schreib uns direkt — ohne Konto, ohne Umweg. Und wenn dir Audiola etwas wert ist: Entwicklung, Modelle und GPU-Stunden kosten Zeit und Strom.'}" />
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
               <Button Grid.Column="0" Classes="linkRow" Tag="contact" Click="OnOpenConnect"
-                      ToolTip.Tip="Öffnet das Kontaktformular im Browser — in den Farben der App">
+                      ToolTip.Tip="{l:T 'Öffnet das Kontaktformular im Browser — in den Farben der App'}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                   <ic:SymbolIcon Grid.Column="0" Symbol="Mail" VerticalAlignment="Center"
                                  Foreground="{DynamicResource DawAccentBrush}" />
                   <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock FontWeight="SemiBold" Text="Kontakt aufnehmen" />
+                    <TextBlock FontWeight="SemiBold" Text="{l:T 'Kontakt aufnehmen'}" />
                     <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                               Text="Fragen, Fehlerberichte, Wünsche" />
+                               Text="{l:T 'Fragen, Fehlerberichte, Wünsche'}" />
                   </StackPanel>
                   <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="↗"
                              Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                 </Grid>
               </Button>
               <Button Grid.Column="1" Classes="linkRow" Tag="support" Click="OnOpenConnect"
-                      ToolTip.Tip="Öffnet die Unterstützen-Seite im Browser — in den Farben der App">
+                      ToolTip.Tip="{l:T 'Öffnet die Unterstützen-Seite im Browser — in den Farben der App'}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                   <ic:SymbolIcon Grid.Column="0" Symbol="Heart" VerticalAlignment="Center"
                                  Foreground="{DynamicResource DawAccentBrush}" />
                   <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock FontWeight="SemiBold" Text="Audiola unterstützen" />
+                    <TextBlock FontWeight="SemiBold" Text="{l:T 'Audiola unterstützen'}" />
                     <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                               Text="Audiola ist kostenlos und bleibt es" />
+                               Text="{l:T 'Audiola ist kostenlos und bleibt es'}" />
                   </StackPanel>
                   <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="↗"
                              Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
@@ -200,11 +200,11 @@
           <StackPanel Grid.Column="0" Spacing="2">
             <TextBlock FontWeight="SemiBold" Text="{Binding CopyrightText}" />
             <TextBlock FontSize="11.5" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                       Text="Alle Rechte vorbehalten." />
+                       Text="{l:T 'Alle Rechte vorbehalten.'}" />
           </StackPanel>
           <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="11.5"
                      Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                     Text="Windows · macOS · Linux" />
+                     Text="{l:T 'Windows · macOS · Linux'}" />
         </Grid>
       </Border>
 

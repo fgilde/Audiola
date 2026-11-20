@@ -23,7 +23,7 @@ public sealed class LevelMeterControl : Control
     private bool _clip;              // Übersteuerung — latcht bis zum Klick
 
     public LevelMeterControl() =>
-        ToolTip.SetTip(this, "Master-Pegel — rote LED = Übersteuerung (Klick setzt sie zurück)");
+        ToolTip.SetTip(this, L.T("Master-Pegel — rote LED = Übersteuerung (Klick setzt sie zurück)"));
 
     /// <summary>Neue Spitzenpegel (linear 0..1) übernehmen; rechnet in dB und glättet den Abfall.</summary>
     public void SetLevels(float l, float r)

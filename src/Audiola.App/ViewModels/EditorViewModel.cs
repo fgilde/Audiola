@@ -36,9 +36,9 @@ public sealed partial class EditorViewModel : ObservableObject
 
     [ObservableProperty] private string _formatInfo = "";
     [ObservableProperty] private string _pathInfo = "";
-    [ObservableProperty] private string _displayName = "Keine Datei geladen";
+    [ObservableProperty] private string _displayName = L.T("Keine Datei geladen");
     [ObservableProperty] private IReadOnlyList<float>? _peaks;
-    [ObservableProperty] private string _selectionInfo = "Keine Auswahl — auf der Wellenform ziehen, um einen Bereich zu markieren.";
+    [ObservableProperty] private string _selectionInfo = L.T("Keine Auswahl — auf der Wellenform ziehen, um einen Bereich zu markieren.");
     [ObservableProperty] private double _selectionStart = double.NaN;
     [ObservableProperty] private double _selectionEnd = double.NaN;
 
@@ -103,7 +103,7 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         if (_targetClip is null || _buffer is null) return;
         _timeline.ReplaceClipFromBuffer(_targetClip, _buffer, _sampleRate);
-        Notify("Ins Studio übernommen", "Clip aktualisiert.", true);
+        Notify(L.T("Ins Studio übernommen"), L.T("Clip aktualisiert."), true);
         _targetClip = null;
         OnPropertyChanged(nameof(HasClipTarget));
         BakeToStudioCommand.NotifyCanExecuteChanged();
@@ -120,7 +120,7 @@ public sealed partial class EditorViewModel : ObservableObject
     partial void OnLivePreviewChanged(bool value)
     {
         PushFx();
-        if (value) _snackbar.Info("Live-Vorschau", "Effekte sind beim Abspielen hörbar.", 2);
+        if (value) _snackbar.Info(L.T("Live-Vorschau"), L.T("Effekte sind beim Abspielen hörbar."), 2);
     }
 
     partial void OnPreviewEchoChanged(bool value) => PushFx();
@@ -197,11 +197,11 @@ public sealed partial class EditorViewModel : ObservableObject
         if (HasSelection && _buffer is not null && _sampleRate > 0)
         {
             var (a, b) = SelectionFrames();
-            SelectionInfo = $"Auswahl: {Time(a)} – {Time(b)}  ({Time(b - a)} lang)";
+            SelectionInfo = L.F("Auswahl: {0} – {1}  ({2} lang)", Time(a), Time(b), Time(b - a));
         }
         else
         {
-            SelectionInfo = "Keine Auswahl — auf der Wellenform ziehen, um einen Bereich zu markieren.";
+            SelectionInfo = L.T("Keine Auswahl — auf der Wellenform ziehen, um einen Bereich zu markieren.");
         }
         TrimCommand.NotifyCanExecuteChanged();
         DeleteCommand.NotifyCanExecuteChanged();
@@ -224,7 +224,7 @@ public sealed partial class EditorViewModel : ObservableObject
     private void Trim()
     {
         var (a, b) = SelectionFrames();
-        Apply(AudioEdits.Trim(_buffer!, a, b), "Getrimmt");
+        Apply(AudioEdits.Trim(_buffer!, a, b), L.T("Getrimmt"));
     }
 
     [RelayCommand(CanExecute = nameof(CanEdit))]
@@ -234,31 +234,31 @@ public sealed partial class EditorViewModel : ObservableObject
         var next = AudioEdits.Delete(_buffer!, a, b);
         if (AudioEdits.FrameCount(next) < 1)
         {
-            Notify("Löschen nicht möglich", "Es würde nichts übrig bleiben.", false);
+            Notify(L.T("Löschen nicht möglich"), L.T("Es würde nichts übrig bleiben."), false);
             return;
         }
-        Apply(next, "Bereich gelöscht");
+        Apply(next, L.T("Bereich gelöscht"));
     }
 
     [RelayCommand(CanExecute = nameof(CanEdit))]
     private void Silence()
     {
         var (a, b) = SelectionFrames();
-        Apply(AudioEdits.Silence(_buffer!, a, b), "Stille eingefügt");
+        Apply(AudioEdits.Silence(_buffer!, a, b), L.T("Stille eingefügt"));
     }
 
     [RelayCommand(CanExecute = nameof(CanEdit))]
     private void FadeIn()
     {
         var (a, b) = SelectionFrames();
-        Apply(AudioEdits.Fade(_buffer!, a, b, fadeIn: true), "Fade-In");
+        Apply(AudioEdits.Fade(_buffer!, a, b, fadeIn: true), L.T("Fade-In"));
     }
 
     [RelayCommand(CanExecute = nameof(CanEdit))]
     private void FadeOut()
     {
         var (a, b) = SelectionFrames();
-        Apply(AudioEdits.Fade(_buffer!, a, b, fadeIn: false), "Fade-Out");
+        Apply(AudioEdits.Fade(_buffer!, a, b, fadeIn: false), L.T("Fade-Out"));
     }
 
     // ---- Effekte (Auswahl, sonst ganzer Track) ----
@@ -278,7 +278,7 @@ public sealed partial class EditorViewModel : ObservableObject
     private void Normalize()
     {
         var (a, b) = EffectRange();
-        Apply(AudioEffects.Normalize(_buffer!, a, b), "Normalisiert (−1 dBFS)");
+        Apply(AudioEffects.Normalize(_buffer!, a, b), L.T("Normalisiert (−1 dBFS)"));
     }
 
     [RelayCommand(CanExecute = nameof(CanProcess))]
@@ -292,21 +292,21 @@ public sealed partial class EditorViewModel : ObservableObject
     private void Reverb()
     {
         var (a, b) = EffectRange();
-        Apply(AudioEffects.Reverb(_buffer!, a, b, _sampleRate, ReverbMix), "Hall");
+        Apply(AudioEffects.Reverb(_buffer!, a, b, _sampleRate, ReverbMix), L.T("Hall"));
     }
 
     [RelayCommand(CanExecute = nameof(CanProcess))]
     private void Widen()
     {
         var (a, b) = EffectRange();
-        Apply(AudioEffects.StereoWiden(_buffer!, a, b, WidenAmount), "Stereo verbreitert");
+        Apply(AudioEffects.StereoWiden(_buffer!, a, b, WidenAmount), L.T("Stereo verbreitert"));
     }
 
     [RelayCommand(CanExecute = nameof(CanProcess))]
     private void Reverse()
     {
         var (a, b) = EffectRange();
-        Apply(AudioEffects.Reverse(_buffer!, a, b), "Umgekehrt");
+        Apply(AudioEffects.Reverse(_buffer!, a, b), L.T("Umgekehrt"));
     }
 
     [RelayCommand(CanExecute = nameof(CanUndo))]
@@ -315,7 +315,7 @@ public sealed partial class EditorViewModel : ObservableObject
         if (_undo.Count == 0) return;
         _buffer = _undo.Pop();
         Commit();
-        Notify("Rückgängig", "Letzte Änderung zurückgenommen.", true);
+        Notify(L.T("Rückgängig"), L.T("Letzte Änderung zurückgenommen."), true);
     }
 
     private void Apply(float[] next, string message)
@@ -323,7 +323,7 @@ public sealed partial class EditorViewModel : ObservableObject
         _undo.Push(_buffer!);            // alten Stand sichern
         _buffer = next;
         Commit();
-        Notify(message, $"Neue Länge: {Time(AudioEdits.FrameCount(_buffer))}", true);
+        Notify(message, L.F("Neue Länge: {0}", Time(AudioEdits.FrameCount(_buffer))), true);
     }
 
     private void Commit()
@@ -382,14 +382,14 @@ public sealed partial class EditorViewModel : ObservableObject
         {
             FormatInfo = "";
             PathInfo = "";
-            DisplayName = "Keine Datei geladen";
+            DisplayName = L.T("Keine Datei geladen");
             Peaks = null;
             return;
         }
         var dur = TimeSpan.FromSeconds((double)AudioEdits.FrameCount(_buffer) / _sampleRate);
-        FormatInfo = $"{_sampleRate} Hz  ·  Stereo  ·  {dur:mm\\:ss}";
+        FormatInfo = L.F("{0} Hz  ·  Stereo  ·  {1:mm\\:ss}", _sampleRate, dur);
         PathInfo = _originalPath ?? "";
-        DisplayName = string.IsNullOrEmpty(_originalPath) ? "Bearbeitung" : Path.GetFileName(_originalPath);
+        DisplayName = string.IsNullOrEmpty(_originalPath) ? L.T("Bearbeitung") : Path.GetFileName(_originalPath);
         // Eigene Wellenform-Spitzen aus dem Arbeitspuffer — funktioniert auch im Clip-Modus,
         // in dem die Sitzung (Session.CurrentTrack) bewusst nicht überschrieben wird.
         Peaks = AudioEdits.ComputePeaks(_buffer);

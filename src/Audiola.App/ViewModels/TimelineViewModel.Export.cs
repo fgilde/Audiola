@@ -49,7 +49,7 @@ public sealed partial class TimelineViewModel
     {
         if (Tracks.Count == 0)
         {
-            _snackbar.Warning("Nichts zu exportieren", "Es sind keine Spuren im Studio.");
+            _snackbar.Warning(L.T("Nichts zu exportieren"), L.T("Es sind keine Spuren im Studio."));
             return;
         }
 
@@ -78,7 +78,7 @@ public sealed partial class TimelineViewModel
         if (track is null) return;
         if (track.Clips.Count == 0)
         {
-            _snackbar.Warning("Nichts zu exportieren", $"„{track.Name}“ enthält keine Clips.");
+            _snackbar.Warning(L.T("Nichts zu exportieren"), L.F("„{0}“ enthält keine Clips.", track.Name));
             return;
         }
         var end = track.Clips.Max(c => c.EndSeconds);

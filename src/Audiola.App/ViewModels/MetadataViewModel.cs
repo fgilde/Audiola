@@ -20,7 +20,7 @@ public sealed partial class MetadataViewModel : ObservableObject
     public SongMetadata Meta { get; }
 
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string _status = "Diese Tags werden beim Export geschrieben und im Projekt gespeichert.";
+    [ObservableProperty] private string _status = L.T("Diese Tags werden beim Export geschrieben und im Projekt gespeichert.");
 
     public MetadataViewModel(SongMetadata meta, IMetadataService metaSvc, TimelineViewModel timeline,
         INotifier snackbar, IFileDialogs files)
@@ -43,16 +43,16 @@ public sealed partial class MetadataViewModel : ObservableObject
     [RelayCommand]
     private async Task ImportFromFileAsync()
     {
-        var path = await _files.OpenFileAsync("Tags aus Audiodatei laden", FileFilter.Audio, FileFilter.Any);
+        var path = await _files.OpenFileAsync(L.T("Tags aus Audiodatei laden"), FileFilter.Audio, FileFilter.Any);
         if (path is null) return;
         Meta.Apply(_metaSvc.Read(path));
-        Status = $"Tags aus „{Path.GetFileName(path)}“ übernommen.";
+        Status = L.F("Tags aus „{0}“ übernommen.", Path.GetFileName(path));
     }
 
     [RelayCommand]
     private async Task ChooseCoverAsync()
     {
-        var path = await _files.OpenFileAsync("Cover-Bild wählen", FileFilter.Image, FileFilter.Any);
+        var path = await _files.OpenFileAsync(L.T("Cover-Bild wählen"), FileFilter.Image, FileFilter.Any);
         if (path is null) return;
         try
         {
@@ -65,7 +65,7 @@ public sealed partial class MetadataViewModel : ObservableObject
                 _ => "image/jpeg"
             };
         }
-        catch (Exception ex) { UiError.Show("Cover konnte nicht geladen werden", ex.Message); }
+        catch (Exception ex) { UiError.Show(L.T("Cover konnte nicht geladen werden"), ex.Message); }
     }
 
     [RelayCommand]
@@ -84,21 +84,21 @@ public sealed partial class MetadataViewModel : ObservableObject
     {
         var useEleven = string.Equals(engine, "eleven", StringComparison.OrdinalIgnoreCase);
         IsBusy = true;
-        Status = useEleven ? "Studio-Mix wird via ElevenLabs transkribiert …" : "Studio-Mix wird transkribiert (Whisper) …";
+        Status = useEleven ? L.T("Studio-Mix wird via ElevenLabs transkribiert …") : L.T("Studio-Mix wird transkribiert (Whisper) …");
         try
         {
             var mix = await _timeline.RenderMixToTempFileAsync();
-            if (mix is null) { Status = "Keine Spuren im Studio."; return; }
+            if (mix is null) { Status = L.T("Keine Spuren im Studio."); return; }
 
             var lrc = await _timeline.TranscribeFileToLrcAsync(mix,
                 string.IsNullOrWhiteSpace(Meta.Title) ? null : Meta.Title, useEleven);
-            if (string.IsNullOrWhiteSpace(lrc)) { Status = "Keine Sprache erkannt."; return; }
+            if (string.IsNullOrWhiteSpace(lrc)) { Status = L.T("Keine Sprache erkannt."); return; }
 
             Meta.Lyrics = lrc!;
-            Status = useEleven ? "Liedtext erzeugt (ElevenLabs)." : "Liedtext erzeugt (Whisper).";
-            _snackbar.Success("Liedtext erzeugt", "Aus dem Studio-Mix transkribiert.");
+            Status = useEleven ? L.T("Liedtext erzeugt (ElevenLabs).") : L.T("Liedtext erzeugt (Whisper).");
+            _snackbar.Success(L.T("Liedtext erzeugt"), L.T("Aus dem Studio-Mix transkribiert."));
         }
-        catch (Exception ex) { UiError.Show("Liedtext erzeugen fehlgeschlagen", ex.Message); Status = ""; }
+        catch (Exception ex) { UiError.Show(L.T("Liedtext erzeugen fehlgeschlagen"), ex.Message); Status = ""; }
         finally { IsBusy = false; }
     }
 }

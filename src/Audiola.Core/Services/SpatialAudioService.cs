@@ -217,9 +217,9 @@ public static class SpatialAudioService
 
     public static string ChannelLabel(SpatialLayout layout) => layout switch
     {
-        SpatialLayout.Surround51 => "5.1 (6 Kanäle)",
-        SpatialLayout.Surround71 => "7.1 (8 Kanäle)",
-        _ => "7.1.4 Atmos-Bett (12 Kanäle)"
+        SpatialLayout.Surround51 => L.T("5.1 (6 Kanäle)"),
+        SpatialLayout.Surround71 => L.T("7.1 (8 Kanäle)"),
+        _ => L.T("7.1.4 Atmos-Bett (12 Kanäle)")
     };
 
     // -------- Helfer --------

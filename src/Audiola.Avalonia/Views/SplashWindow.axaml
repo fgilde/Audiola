@@ -1,5 +1,5 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="using:Audiola.Avalonia.Localization"
         x:Class="Audiola.Avalonia.Views.SplashWindow"
         Width="460" Height="260"
         SystemDecorations="None"
@@ -35,7 +35,7 @@
           </Image.Effect>
         </Image>
         <TextBlock Margin="0,14,0,0" HorizontalAlignment="Center" FontSize="30" FontWeight="Bold"
-                   Foreground="#E9EBF2" Text="Audiola" />
+                   Foreground="#E9EBF2" Text="{l:T 'Audiola'}" />
         <!-- Frequenzverlauf der Marke -->
         <Rectangle Width="140" Height="3" Margin="0,10,0,0" RadiusX="1.5" RadiusY="1.5"
                    HorizontalAlignment="Center">
@@ -48,7 +48,7 @@
           </Rectangle.Fill>
         </Rectangle>
         <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="12"
-                   Foreground="#A7ADC0" Text="Trennen · Mischen · Einsingen · Mastern" />
+                   Foreground="#A7ADC0" Text="{l:T 'Trennen · Mischen · Einsingen · Mastern'}" />
       </StackPanel>
 
       <!-- Ladebalken am unteren Rand, im Markenverlauf -->

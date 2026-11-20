@@ -25,17 +25,17 @@ public sealed class PythonEnvironmentService : IPythonEnvironment
     {
         if (Exists) return;
 
-        progress?.Report("Erstelle isolierte Python-Umgebung …");
+        progress?.Report(L.T("Erstelle isolierte Python-Umgebung …"));
         var basePython = string.IsNullOrWhiteSpace(_settings.Current.PythonPath) ? "python" : _settings.Current.PythonPath;
         Directory.CreateDirectory(Path.GetDirectoryName(EnvDir)!);
 
         var (code, err) = await RunAsync(basePython, ["-m", "venv", EnvDir], progress, ct);
         if (code != 0 || !Exists)
             throw new InvalidOperationException(
-                "Konnte keine Python-Umgebung anlegen. Bitte Python 3.10+ installieren und den Pfad in den " +
-                $"Einstellungen setzen (Basis-Python: '{basePython}'). Details: {Short(err)}");
+                L.F("Konnte keine Python-Umgebung anlegen. Bitte Python 3.10+ installieren und den Pfad in den " +
+                "Einstellungen setzen (Basis-Python: '{0}'). Details: {1}", basePython, Short(err)));
 
-        progress?.Report("Aktualisiere pip …");
+        progress?.Report(L.T("Aktualisiere pip …"));
         await RunAsync(PythonExe, ["-m", "pip", "install", "--upgrade", "pip", "wheel"], progress, ct);
     }
 
@@ -50,16 +50,16 @@ public sealed class PythonEnvironmentService : IPythonEnvironment
         if (!string.IsNullOrWhiteSpace(indexUrl)) { args.Add("--index-url"); args.Add(indexUrl); }
         args.AddRange(packages);
 
-        progress?.Report($"Installiere: {string.Join(", ", packages)} …");
+        progress?.Report(L.F("Installiere: {0} …", string.Join(", ", packages)));
         var (code, err) = await RunAsync(PythonExe, [.. args], progress, ct);
         if (code != 0)
-            throw new InvalidOperationException($"pip install fehlgeschlagen ({string.Join(", ", packages)}): {Short(err)}");
+            throw new InvalidOperationException(L.F("pip install fehlgeschlagen ({0}): {1}", string.Join(", ", packages), Short(err)));
     }
 
     public async Task UninstallAsync(IReadOnlyList<string> packages, IProgress<string>? progress = null, CancellationToken ct = default)
     {
         if (packages.Count == 0 || !Exists) return;
-        progress?.Report($"Entferne: {string.Join(", ", packages)} …");
+        progress?.Report(L.F("Entferne: {0} …", string.Join(", ", packages)));
         var (code, err) = await RunAsync(PythonExe, ["-m", "pip", "uninstall", "-y", .. packages], progress, ct);
         // Ein nicht installiertes Paket ist kein Fehler — pip meldet das nur.
         if (code != 0) progress?.Report($"pip uninstall meldete: {Short(err)}");
@@ -69,10 +69,10 @@ public sealed class PythonEnvironmentService : IPythonEnvironment
     {
         if (!File.Exists(requirementsFile)) return;
         await EnsureAsync(progress, ct);
-        progress?.Report("Installiere requirements …");
+        progress?.Report(L.T("Installiere requirements …"));
         var (code, err) = await RunAsync(PythonExe, ["-m", "pip", "install", "-r", requirementsFile], progress, ct);
         if (code != 0)
-            throw new InvalidOperationException($"pip install -r fehlgeschlagen: {Short(err)}");
+            throw new InvalidOperationException(L.F("pip install -r fehlgeschlagen: {0}", Short(err)));
     }
 
     private static string Short(string s) => string.IsNullOrEmpty(s) ? "(keine Ausgabe)" : s.Length > 400 ? s[^400..] : s;

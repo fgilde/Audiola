@@ -68,7 +68,7 @@ public sealed class MicSelectorControl : TemplatedControl
         panel.Children.Add(_track);
         Template = new FuncControlTemplate((_, _) => panel);
 
-        ToolTip.SetTip(_combo, "Aufnahme-Gerät wählen — der Balken zeigt den Live-Pegel.");
+        ToolTip.SetTip(_combo, L.T("Aufnahme-Gerät wählen — der Balken zeigt den Live-Pegel."));
         _combo.SelectionChanged += (_, _) =>
         {
             if (!_suppress && _combo.SelectedItem is MicItem m) DeviceNumber = m.Index;

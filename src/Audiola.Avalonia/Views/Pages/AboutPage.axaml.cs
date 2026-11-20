@@ -30,8 +30,8 @@ public partial class AboutPage : UserControl
     /// <summary>Nennt die tatsächlich laufende Plattform (die App läuft auf Windows, macOS und Linux).</summary>
     public string TechText =>
         $".NET 10 · Avalonia (Fluent) · NAudio · CommunityToolkit.Mvvm · TagLibSharp · Velopack. " +
-        $"Läuft auf {RuntimeInformation.OSDescription.Trim()}. " +
-        "Lokale KI-Komponenten laufen über eine verwaltete Python-Umgebung (Demucs, faster-whisper, seed-vc u. a.).";
+        L.F("Läuft auf {0}. ", RuntimeInformation.OSDescription.Trim()) +
+        L.T("Lokale KI-Komponenten laufen über eine verwaltete Python-Umgebung (Demucs, faster-whisper, seed-vc u. a.).");
 
     private void OnOpenLink(object? sender, RoutedEventArgs e)
     {

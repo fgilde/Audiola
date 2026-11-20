@@ -1,5 +1,5 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="using:Audiola.Avalonia.Localization"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:controls="using:Audiola.Controls"
              xmlns:models="using:Audiola.Models"
@@ -30,9 +30,9 @@
 
   <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto">
     <StackPanel MaxWidth="1120" HorizontalAlignment="Left">
-      <TextBlock Classes="dawPageTitle" Text="Stimmen" />
+      <TextBlock Classes="dawPageTitle" Text="{l:T 'Stimmen'}" />
       <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                 Text="Eigene Stimmen erstellen und verwalten — lokal (CUDA/CPU) oder mit ElevenLabs. Stimmen gelten projektübergreifend." />
+                 Text="{l:T 'Eigene Stimmen erstellen und verwalten — lokal (CUDA/CPU) oder mit ElevenLabs. Stimmen gelten projektübergreifend.'}" />
 
       <!-- ————— Engine-Leiste ————— -->
       <Border Margin="0,18,0,0" Padding="16,12" CornerRadius="10"
@@ -40,11 +40,11 @@
               BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
         <Grid ColumnDefinitions="Auto,Auto,*,Auto">
           <StackPanel Grid.Column="0" Margin="0,0,26,0">
-            <TextBlock Classes="sectionCaption" Text="RECHEN-GERÄT" />
+            <TextBlock Classes="sectionCaption" Text="{l:T 'RECHEN-GERÄT'}" />
             <ComboBox Width="130" ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice, Mode=TwoWay}" />
           </StackPanel>
           <StackPanel Grid.Column="1" Margin="0,0,26,0">
-            <TextBlock Classes="sectionCaption" Text="WHISPER (TRANSKRIPTION)" />
+            <TextBlock Classes="sectionCaption" Text="{l:T 'WHISPER (TRANSKRIPTION)'}" />
             <ComboBox Width="130" ItemsSource="{Binding WhisperModels}" SelectedItem="{Binding WhisperModel, Mode=TwoWay}" />
           </StackPanel>
           <StackPanel Grid.Column="2" VerticalAlignment="Bottom" Margin="0,0,16,3">
@@ -64,13 +64,13 @@
           <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Bottom" Spacing="8">
             <Button Command="{Binding CheckGpuCommand}">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ic:SymbolIcon Symbol="ArrowSync" /><TextBlock Text="GPU prüfen" />
+                <ic:SymbolIcon Symbol="ArrowSync" /><TextBlock Text="{l:T 'GPU prüfen'}" />
               </StackPanel>
             </Button>
             <Button Command="{Binding InstallCudaTorchCommand}"
-                    ToolTip.Tip="PyTorch mit CUDA-Unterstützung installieren (GPU-Beschleunigung)">
+                    ToolTip.Tip="{l:T 'PyTorch mit CUDA-Unterstützung installieren (GPU-Beschleunigung)'}">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ic:SymbolIcon Symbol="ArrowDownload" /><TextBlock Text="CUDA-Torch" />
+                <ic:SymbolIcon Symbol="ArrowDownload" /><TextBlock Text="{l:T 'CUDA-Torch'}" />
               </StackPanel>
             </Button>
           </StackPanel>
@@ -81,22 +81,22 @@
 
         <!-- ————— LINKS: Eigene Stimme erstellen + Liste ————— -->
         <StackPanel Grid.Column="0">
-          <TextBlock Classes="sectionCaption" Text="NEUE STIMME ERSTELLEN" />
+          <TextBlock Classes="sectionCaption" Text="{l:T 'NEUE STIMME ERSTELLEN'}" />
           <Border Padding="18" CornerRadius="12"
                   Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                   BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
             <StackPanel>
               <!-- 1 · Name / Modell / Sprache -->
               <Grid ColumnDefinitions="*,8,170,8,64">
-                <TextBox Grid.Column="0" Watermark="Name der Stimme" Text="{Binding NewName, Mode=TwoWay}" />
+                <TextBox Grid.Column="0" Watermark="{l:T 'Name der Stimme'}" Text="{Binding NewName, Mode=TwoWay}" />
                 <ComboBox Grid.Column="2" ItemsSource="{Binding Models}" DisplayMemberBinding="{Binding Name}"
-                          SelectedItem="{Binding NewModel, Mode=TwoWay}" ToolTip.Tip="Voice-Modell" />
-                <TextBox Grid.Column="4" Watermark="de" Text="{Binding NewLanguage, Mode=TwoWay}"
-                         ToolTip.Tip="Sprache (z. B. de, en)" />
+                          SelectedItem="{Binding NewModel, Mode=TwoWay}" ToolTip.Tip="{l:T 'Voice-Modell'}" />
+                <TextBox Grid.Column="4" Watermark="{l:T 'de'}" Text="{Binding NewLanguage, Mode=TwoWay}"
+                         ToolTip.Tip="{l:T 'Sprache (z. B. de, en)'}" />
               </Grid>
 
               <!-- 2 · Mikrofon (mit Live-Pegel) -->
-              <TextBlock Classes="sectionCaption" Margin="2,16,0,6" Text="MIKROFON — der Balken zeigt dein Signal" />
+              <TextBlock Classes="sectionCaption" Margin="2,16,0,6" Text="{l:T 'MIKROFON — der Balken zeigt dein Signal'}" />
               <controls:MicSelectorControl HorizontalAlignment="Left"
                                            DeviceNumber="{Binding RecordDeviceNumber, Mode=TwoWay}" />
 
@@ -105,10 +105,10 @@
                 <Button MinWidth="150" Command="{Binding ToggleRecordCommand}" Classes.danger="{Binding IsRecording}"
                         Content="{Binding RecordButtonLabel}" HorizontalContentAlignment="Center" />
                 <TextBlock VerticalAlignment="Center" Margin="12,0" FontSize="12"
-                           Foreground="{DynamicResource DawTextFaintBrush}" Text="oder" />
+                           Foreground="{DynamicResource DawTextFaintBrush}" Text="{l:T 'oder'}" />
                 <Button Command="{Binding BrowseSampleCommand}">
                   <StackPanel Orientation="Horizontal" Spacing="6">
-                    <ic:SymbolIcon Symbol="FolderOpen" /><TextBlock Text="Sample wählen…" />
+                    <ic:SymbolIcon Symbol="FolderOpen" /><TextBlock Text="{l:T 'Sample wählen…'}" />
                   </StackPanel>
                 </Button>
                 <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="12" MaxWidth="220"
@@ -121,14 +121,14 @@
               <Button Margin="0,16,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                       Classes="accent" Command="{Binding CreateProfileCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                  <ic:SymbolIcon Symbol="PersonVoice" /><TextBlock Text="Stimme erstellen" />
+                  <ic:SymbolIcon Symbol="PersonVoice" /><TextBlock Text="{l:T 'Stimme erstellen'}" />
                 </StackPanel>
               </Button>
             </StackPanel>
           </Border>
 
-          <TextBlock Classes="sectionCaption" Margin="2,22,0,8" Text="DEINE STIMMEN" />
-          <TextBox Margin="0,0,0,10" Watermark="Vorschau-Text — wird bei ▶ mit der Stimme gesprochen"
+          <TextBlock Classes="sectionCaption" Margin="2,22,0,8" Text="{l:T 'DEINE STIMMEN'}" />
+          <TextBox Margin="0,0,0,10" Watermark="{l:T 'Vorschau-Text — wird bei ▶ mit der Stimme gesprochen'}"
                    Text="{Binding PreviewText, Mode=TwoWay}" />
           <ItemsControl ItemsSource="{Binding Profiles}">
             <ItemsControl.ItemTemplate>
@@ -148,12 +148,12 @@
                                  TextTrimming="CharacterEllipsis" Text="{Binding Description}" />
                     </StackPanel>
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
-                      <Button ToolTip.Tip="Vorschau abspielen"
+                      <Button ToolTip.Tip="{l:T 'Vorschau abspielen'}"
                               Command="{ReflectionBinding $parent[UserControl].DataContext.PreviewProfileCommand}"
                               CommandParameter="{Binding}">
                         <ic:SymbolIcon Symbol="Play" />
                       </Button>
-                      <Button ToolTip.Tip="Stimme löschen"
+                      <Button ToolTip.Tip="{l:T 'Stimme löschen'}"
                               Command="{ReflectionBinding $parent[UserControl].DataContext.DeleteProfileCommand}"
                               CommandParameter="{Binding}">
                         <ic:SymbolIcon Symbol="Delete" />
@@ -169,8 +169,8 @@
         <!-- ————— RECHTS: Modelle ————— -->
         <StackPanel Grid.Column="2">
           <StackPanel Orientation="Horizontal">
-            <TextBlock Classes="sectionCaption" Text="VOICE-MODELLE" />
-            <Button Margin="10,-6,0,0" Padding="6,2" ToolTip.Tip="Liste aktualisieren"
+            <TextBlock Classes="sectionCaption" Text="{l:T 'VOICE-MODELLE'}" />
+            <Button Margin="10,-6,0,0" Padding="6,2" ToolTip.Tip="{l:T 'Liste aktualisieren'}"
                     Command="{Binding LoadModelsCommand}">
               <ic:SymbolIcon Symbol="ArrowSync" />
             </Button>
@@ -186,7 +186,7 @@
                       <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                         <Border Classes="installedBadge" IsVisible="{Binding Installed}">
-                          <TextBlock Text="installiert" FontSize="10" Foreground="White" />
+                          <TextBlock Text="{l:T 'installiert'}" FontSize="10" Foreground="White" />
                         </Border>
                       </StackPanel>
                       <TextBlock Text="{Binding Description}" FontSize="12" TextWrapping="Wrap"
@@ -197,12 +197,12 @@
                     </StackPanel>
                     <!-- Laden nur, solange es fehlt; ist es da, kann es wieder weg (Gigabytes). -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                      <Button ToolTip.Tip="Modell herunterladen" IsVisible="{Binding !Installed}"
+                      <Button ToolTip.Tip="{l:T 'Modell herunterladen'}" IsVisible="{Binding !Installed}"
                               Command="{ReflectionBinding $parent[UserControl].DataContext.DownloadModelCommand}"
                               CommandParameter="{Binding}">
                         <ic:SymbolIcon Symbol="ArrowDownload" />
                       </Button>
-                      <Button ToolTip.Tip="Modell entfernen (Gewichte löschen)" IsVisible="{Binding Installed}"
+                      <Button ToolTip.Tip="{l:T 'Modell entfernen (Gewichte löschen)'}" IsVisible="{Binding Installed}"
                               Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveModelCommand}"
                               CommandParameter="{Binding}">
                         <ic:SymbolIcon Symbol="Delete" />
@@ -215,10 +215,10 @@
           </ItemsControl>
 
           <StackPanel Orientation="Horizontal" Margin="0,14,0,8">
-            <TextBlock Classes="sectionCaption" Margin="2,0,0,0" Text="WHISPER-MODELLE" />
+            <TextBlock Classes="sectionCaption" Margin="2,0,0,0" Text="{l:T 'WHISPER-MODELLE'}" />
             <TextBlock Margin="10,0,0,0" VerticalAlignment="Top" FontSize="11"
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                       Text="{Binding WhisperModel, StringFormat='aktiv: {0}'}" />
+                       Text="{Binding WhisperModel, Converter={x:Static l:Fmt.Instance}, ConverterParameter='aktiv: {0}'}" />
           </StackPanel>
           <ItemsControl ItemsSource="{Binding WhisperModelsList}">
             <ItemsControl.ItemTemplate>
@@ -230,19 +230,19 @@
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                       <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                       <Border Classes="installedBadge" IsVisible="{Binding Installed}">
-                        <TextBlock Text="installiert" FontSize="10" Foreground="White" />
+                        <TextBlock Text="{l:T 'installiert'}" FontSize="10" Foreground="White" />
                       </Border>
                       <TextBlock Margin="8,0,0,0" FontSize="11" VerticalAlignment="Center"
                                  Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                  Text="{Binding SizeText, StringFormat='≈ {0}'}" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                      <Button ToolTip.Tip="Modell herunterladen" IsVisible="{Binding !Installed}"
+                      <Button ToolTip.Tip="{l:T 'Modell herunterladen'}" IsVisible="{Binding !Installed}"
                               Command="{ReflectionBinding $parent[UserControl].DataContext.DownloadModelCommand}"
                               CommandParameter="{Binding}">
                         <ic:SymbolIcon Symbol="ArrowDownload" />
                       </Button>
-                      <Button ToolTip.Tip="Gewichte löschen" IsVisible="{Binding Installed}"
+                      <Button ToolTip.Tip="{l:T 'Gewichte löschen'}" IsVisible="{Binding Installed}"
                               Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveModelCommand}"
                               CommandParameter="{Binding}">
                         <ic:SymbolIcon Symbol="Delete" />

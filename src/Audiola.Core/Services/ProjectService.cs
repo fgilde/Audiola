@@ -54,7 +54,7 @@ public sealed class ProjectService : IProjectService
 
         using var zip = ZipFile.OpenRead(path);
         var manifest = zip.GetEntry("project.json")
-            ?? throw new InvalidOperationException("Keine project.json im Projekt gefunden.");
+            ?? throw new InvalidOperationException(L.T("Keine project.json im Projekt gefunden."));
 
         ProjectDto dto;
         using (var reader = new StreamReader(manifest.Open()))

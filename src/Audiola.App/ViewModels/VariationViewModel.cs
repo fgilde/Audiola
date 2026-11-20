@@ -16,7 +16,7 @@ public sealed partial class VariationViewModel : ObservableObject
     public SessionState Session { get; }
 
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string _statusText = "Bereit. Export erzeugt eine subtile Variante des geladenen Songs.";
+    [ObservableProperty] private string _statusText = L.T("Bereit. Export erzeugt eine subtile Variante des geladenen Songs.");
 
     [ObservableProperty] private double _overallStrength = 35;
     [ObservableProperty] private double _timbreShift = 12;
@@ -102,7 +102,7 @@ public sealed partial class VariationViewModel : ObservableObject
         if (Session.CurrentTrack is null)
             return;
 
-        var target = await _files.SaveFileAsync("Klangvariation exportieren",
+        var target = await _files.SaveFileAsync(L.T("Klangvariation exportieren"),
             Path.GetFileNameWithoutExtension(Session.CurrentTrack.FileName) + "-variation.wav",
             FileFilter.Wav, FileFilter.Any);
         if (target is null)
@@ -113,7 +113,7 @@ public sealed partial class VariationViewModel : ObservableObject
 
         try
         {
-            StatusText = "Erzeuge subtile Variante …";
+            StatusText = L.T("Erzeuge subtile Variante …");
             var result = await _variationService.ProcessAndExportAsync(
                 Session.CurrentTrack.FilePath,
                 target,
@@ -121,12 +121,12 @@ public sealed partial class VariationViewModel : ObservableObject
 
             StatusText = BuildResultText(result);
 
-            _snackbar.Success("Variation exportiert", Path.GetFileName(target), 3);
+            _snackbar.Success(L.T("Variation exportiert"), Path.GetFileName(target), 3);
         }
         catch (Exception ex)
         {
-            StatusText = "Fehler: " + ex.Message;
-            _snackbar.Error("Variation fehlgeschlagen", ex.Message, 5);
+            StatusText = L.F("Fehler: {0}", ex.Message);
+            _snackbar.Error(L.T("Variation fehlgeschlagen"), ex.Message, 5);
         }
         finally
         {
@@ -138,21 +138,21 @@ public sealed partial class VariationViewModel : ObservableObject
     private static string BuildResultText(VariationResult result)
     {
         var loudnessText = double.IsInfinity(result.InputLufs) || double.IsInfinity(result.OutputLufs)
-            ? "LUFS nicht sinnvoll messbar."
-            : $"Lautheit: {result.InputLufs:F1} → {result.OutputLufs:F1} LUFS";
+            ? L.T("LUFS nicht sinnvoll messbar.")
+            : L.F("Lautheit: {0:F1} → {1:F1} LUFS", result.InputLufs, result.OutputLufs);
 
         var normalizationText = Math.Abs(result.AppliedLoudnessGainDb) > 0.05
-            ? $" | Ausgleich: {result.AppliedLoudnessGainDb:+0.0;-0.0} dB"
+            ? L.F(" | Ausgleich: {0:+0.0;-0.0} dB", result.AppliedLoudnessGainDb)
             : string.Empty;
 
         var clipText = result.ClippedSamples > 0
-            ? $" | Clipping-Samples: {result.ClippedSamples}"
+            ? L.F(" | Clipping-Samples: {0}", result.ClippedSamples)
             : string.Empty;
 
         var widthText = result.StereoWidthSkipped
-            ? " | Stereo-Breite uebersprungen (nahezu Mono)"
+            ? L.T(" | Stereo-Breite übersprungen (nahezu Mono)")
             : string.Empty;
 
-        return $"{loudnessText}{normalizationText}{clipText} | Seed: {result.Seed}{widthText}";
+        return L.F("{0}{1}{2} | Seed: {3}{4}", loudnessText, normalizationText, clipText, result.Seed, widthText);
     }
 }

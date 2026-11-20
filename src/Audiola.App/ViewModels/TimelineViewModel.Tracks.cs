@@ -13,8 +13,8 @@ public sealed partial class TimelineViewModel
 
     public string HiddenTracksText => HiddenTracks.Count switch
     {
-        1 => "1 Spur ausgeblendet",
-        var n => $"{n} Spuren ausgeblendet"
+        1 => L.T("1 Spur ausgeblendet"),
+        var n => L.F("{0} Spuren ausgeblendet", n)
     };
 
     private List<StemTrackViewModel> AudibleHiddenTracks() => Tracks.Where(t => t.IsHidden && t.IsAudible).ToList();
@@ -22,8 +22,8 @@ public sealed partial class TimelineViewModel
 
     public string AudibleHiddenTracksText => AudibleHiddenTracks() switch
     {
-        [var one] => $"Die ausgeblendete Spur „{one.Name}“ wird mit abgespielt und exportiert.",
-        var list => $"{list.Count} ausgeblendete Spuren werden mit abgespielt und exportiert: {string.Join(", ", list.Select(t => t.Name))}."
+        [var one] => L.F("Die ausgeblendete Spur „{0}“ wird mit abgespielt und exportiert.", one.Name),
+        var list => L.F("{0} ausgeblendete Spuren werden mit abgespielt und exportiert: {1}.", list.Count, string.Join(", ", list.Select(t => t.Name)))
     };
 
     /// <summary>Hörbarkeit aller Spuren neu bestimmen (Solo einer Spur verdrängt die anderen) und Hinweise aktualisieren.</summary>
@@ -77,8 +77,8 @@ public sealed partial class TimelineViewModel
     private bool BlockedByLock(StemTrackViewModel? track)
     {
         if (track is not { IsLocked: true }) return false;
-        _snackbar.Warning("Spur gesperrt",
-            $"„{track.Name}“ ist gesperrt. Zum Bearbeiten erst das Schloss im Spurkopf lösen.", 4);
+        _snackbar.Warning(L.T("Spur gesperrt"),
+            L.F("„{0}“ ist gesperrt. Zum Bearbeiten erst das Schloss im Spurkopf lösen.", track.Name), 4);
         return true;
     }
 
@@ -89,7 +89,7 @@ public sealed partial class TimelineViewModel
     public bool MoveClipToNewTrack(ClipViewModel clip, int insertIndex, double newOffsetSeconds)
     {
         if (BlockedByLock(clip.Track)) return false;
-        var track = StemTrackViewModel.ForFile("", $"Spur {Tracks.Count + 1}", Palette[Tracks.Count % Palette.Length]);
+        var track = StemTrackViewModel.ForFile("", L.F("Spur {0}", Tracks.Count + 1), Palette[Tracks.Count % Palette.Length]);
         Tracks.Insert(Math.Clamp(insertIndex, 0, Tracks.Count), track);
         OnPropertyChanged(nameof(HasTracks));
         return MoveClipToTrack(clip, track, newOffsetSeconds);

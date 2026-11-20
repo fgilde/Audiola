@@ -35,7 +35,7 @@ public sealed partial class MasteringViewModel : ObservableObject
     public TransportViewModel Transport { get; }
 
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string _statusText = "Quelle wird vorbereitet …";
+    [ObservableProperty] private string _statusText = L.T("Quelle wird vorbereitet …");
     [ObservableProperty] private string _sourceLabel = "";
     [ObservableProperty] private bool _previewMaster;
     [ObservableProperty] private IReadOnlyList<float> _mixPeaks = [];
@@ -189,7 +189,7 @@ public sealed partial class MasteringViewModel : ObservableObject
         if (string.IsNullOrEmpty(name)) return;
         if (MasteringProfiles.All.Any(p => p.Name == name))
         {
-            _snackbar.Warning("Name belegt", "Dieser Name ist ein eingebautes Profil.");
+            _snackbar.Warning(L.T("Name belegt"), L.T("Dieser Name ist ein eingebautes Profil."));
             return;
         }
 
@@ -203,7 +203,7 @@ public sealed partial class MasteringViewModel : ObservableObject
         SelectedProfile = name;
         NewProfileName = "";
         DeleteProfileCommand.NotifyCanExecuteChanged();
-        _snackbar.Success("Profil gespeichert", name, 2);
+        _snackbar.Success(L.T("Profil gespeichert"), name, 2);
     }
 
     private bool CanDeleteProfile => IsUserProfile(SelectedProfile);
@@ -226,7 +226,7 @@ public sealed partial class MasteringViewModel : ObservableObject
         if (_timeline.Tracks.Count > 0 && _timeline.DurationSeconds > 0.01)
         {
             IsBusy = true;
-            StatusText = "Rendere Studio-Mix …";
+            StatusText = L.T("Rendere Studio-Mix …");
             UpdateCommands();
             var dur = TimeSpan.FromSeconds(_timeline.DurationSeconds);
             var tracks = _timeline.Tracks.ToList();
@@ -243,12 +243,12 @@ public sealed partial class MasteringViewModel : ObservableObject
                 _originalPeaks = peaks;
                 _masteredPeaks = null;
                 _inputLufs = lufs;
-                SourceLabel = $"Studio-Mix ({tracks.Count} aktive Spuren)";
+                SourceLabel = L.F("Studio-Mix ({0} aktive Spuren)", tracks.Count);
             }
             catch (Exception ex)
             {
                 _sourcePath = null;
-                SourceLabel = "Render-Fehler: " + ex.Message;
+                SourceLabel = L.T("Render-Fehler: ") + ex.Message;
             }
             IsBusy = false;
         }
@@ -258,19 +258,19 @@ public sealed partial class MasteringViewModel : ObservableObject
             _originalPeaks = Session.CurrentTrack.Peaks;
             _masteredPeaks = null;
             _inputLufs = await _mastering.MeasureLufsAsync(_sourcePath);
-            SourceLabel = "Datei: " + Session.CurrentTrack.FileName;
+            SourceLabel = L.T("Datei: ") + Session.CurrentTrack.FileName;
         }
         else
         {
             _sourcePath = null;
             _originalPeaks = [];
             _masteredPeaks = null;
-            SourceLabel = "Keine Quelle — im Studio Spuren laden.";
+            SourceLabel = L.T("Keine Quelle — im Studio Spuren laden.");
         }
 
         PushMaster();
         await UpdateMasteredWaveformAsync();
-        StatusText = _sourcePath is null ? SourceLabel : $"Quelle: {SourceLabel}";
+        StatusText = _sourcePath is null ? SourceLabel : L.F("Quelle: {0}", SourceLabel);
         UpdateCommands();
     }
 
@@ -282,7 +282,7 @@ public sealed partial class MasteringViewModel : ObservableObject
     public async Task PrepareFromTrackAsync(StemTrackViewModel track)
     {
         IsBusy = true;
-        StatusText = $"Rendere Spur „{track.Name}“ …";
+        StatusText = L.F("Rendere Spur „{0}“ …", track.Name);
         UpdateCommands();
 
         _trackTarget = track;
@@ -307,18 +307,18 @@ public sealed partial class MasteringViewModel : ObservableObject
             _originalPeaks = peaks;
             _masteredPeaks = null;
             _inputLufs = lufs;
-            SourceLabel = $"Spur: {track.Name}";
+            SourceLabel = L.F("Spur: {0}", track.Name);
         }
         catch (Exception ex)
         {
             _sourcePath = null;
-            SourceLabel = "Render-Fehler: " + ex.Message;
+            SourceLabel = L.T("Render-Fehler: ") + ex.Message;
         }
         IsBusy = false;
 
         PushMaster();
         await UpdateMasteredWaveformAsync();
-        StatusText = _sourcePath is null ? SourceLabel : $"Quelle: {SourceLabel}";
+        StatusText = _sourcePath is null ? SourceLabel : L.F("Quelle: {0}", SourceLabel);
         UpdateCommands();
     }
 
@@ -339,17 +339,17 @@ public sealed partial class MasteringViewModel : ObservableObject
     {
         if (_trackTarget is null || _sourcePath is null) return;
         IsBusy = true;
-        StatusText = "Mastere Spur …";
+        StatusText = L.T("Mastere Spur …");
         try
         {
             var outp = TempDir.File("trackmaster", ".wav", "mastered");
             var result = await _mastering.ProcessAndExportAsync(_sourcePath, outp, BuildSettings());
             await _timeline.ApplyProcessedTrackAsync(_trackTarget, outp);
-            _snackbar.Success("Spur gemastert",
-                $"{_trackTarget.Name}: {result.InputLufs:F1} → {result.OutputLufs:F1} LUFS");
+            _snackbar.Success(L.T("Spur gemastert"),
+                L.F("{0}: {1:F1} → {2:F1} LUFS", _trackTarget.Name, result.InputLufs, result.OutputLufs));
             CloseDialogRequested?.Invoke();
         }
-        catch (Exception ex) { UiError.Show("Spur mastern fehlgeschlagen", ex.Message); }
+        catch (Exception ex) { UiError.Show(L.T("Spur mastern fehlgeschlagen"), ex.Message); }
         finally { IsBusy = false; }
     }
 
@@ -366,7 +366,7 @@ public sealed partial class MasteringViewModel : ObservableObject
     partial void OnPreviewMasterChanged(bool value)
     {
         PushMaster();
-        StatusText = value ? "Vorschau: Master AN (A/B – Schalter zum Vergleichen)" : "Vorschau: Master AUS (Original).";
+        StatusText = value ? L.T("Vorschau: Master AN (A/B – Schalter zum Vergleichen)") : L.T("Vorschau: Master AUS (Original).");
         _ = UpdateMasteredWaveformAsync();
     }
 
@@ -409,7 +409,7 @@ public sealed partial class MasteringViewModel : ObservableObject
     [RelayCommand]
     private async Task BulkMasterAsync()
     {
-        var picked = await _files.OpenFilesAsync("Dateien für Bulk-Mastering wählen", true,
+        var picked = await _files.OpenFilesAsync(L.T("Dateien für Bulk-Mastering wählen"), true,
             FileFilter.Audio, FileFilter.Any);
         if (picked.Count == 0) return;
 
@@ -426,7 +426,7 @@ public sealed partial class MasteringViewModel : ObservableObject
             for (var i = 0; i < files.Count; i++)
             {
                 var input = files[i];
-                BulkStatus = $"Mastere {i + 1}/{files.Count}: {Path.GetFileName(input)} …";
+                BulkStatus = L.F("Mastere {0}/{1}: {2} …", i + 1, files.Count, Path.GetFileName(input));
                 try
                 {
                     var dir = Path.GetDirectoryName(input)!;
@@ -453,9 +453,9 @@ public sealed partial class MasteringViewModel : ObservableObject
                 catch { fail++; }
             }
 
-            BulkStatus = $"Fertig: {ok} gemastert{(fail > 0 ? $", {fail} fehlgeschlagen" : "")}.";
-            if (fail == 0) _snackbar.Success("Bulk-Mastering fertig", BulkStatus, 5);
-            else _snackbar.Warning("Bulk-Mastering fertig", BulkStatus, 5);
+            BulkStatus = fail > 0 ? L.F("Fertig: {0} gemastert, {1} fehlgeschlagen.", ok, fail) : L.F("Fertig: {0} gemastert.", ok);
+            if (fail == 0) _snackbar.Success(L.T("Bulk-Mastering fertig"), BulkStatus, 5);
+            else _snackbar.Warning(L.T("Bulk-Mastering fertig"), BulkStatus, 5);
         }
         finally
         {
@@ -510,7 +510,7 @@ public sealed partial class MasteringViewModel : ObservableObject
         NormalizeLoudness = s.NormalizeLoudness;
         TargetLufs = s.TargetLufs;
 
-        StatusText = $"Profil „{value}“ angewendet.";
+        StatusText = L.F("Profil „{0}“ angewendet.", value);
         PushMaster();
     }
 
@@ -537,15 +537,15 @@ public sealed partial class MasteringViewModel : ObservableObject
         ExportCommand.NotifyCanExecuteChanged();
         try
         {
-            StatusText = "Messe Lautheit …";
+            StatusText = L.T("Messe Lautheit …");
             var lufs = await _mastering.MeasureLufsAsync(_sourcePath);
             StatusText = double.IsInfinity(lufs)
-                ? "Signal zu leise/kurz für eine LUFS-Messung."
-                : $"Eingang: {lufs:F1} LUFS (Ziel: {TargetLufs:F0} LUFS).";
+                ? L.T("Signal zu leise/kurz für eine LUFS-Messung.")
+                : L.F("Eingang: {0:F1} LUFS (Ziel: {1:F0} LUFS).", lufs, TargetLufs);
         }
         catch (Exception ex)
         {
-            StatusText = "Fehler: " + ex.Message;
+            StatusText = L.T("Fehler: ") + ex.Message;
         }
         finally
         {
@@ -569,12 +569,12 @@ public sealed partial class MasteringViewModel : ObservableObject
             name,
             async () =>
             {
-                StatusText = "Verarbeite & exportiere …";
+                StatusText = L.T("Verarbeite & exportiere …");
                 var tempWav = TempDir.File("master", ".wav", "master");
                 var result = await _mastering.ProcessAndExportAsync(src, tempWav, settings);
-                StatusText = $"Fertig: {result.InputLufs:F1} → {result.OutputLufs:F1} LUFS " +
-                             $"(Gain {result.AppliedGainDb:+0.0;-0.0} dB)" +
-                             (result.ClippedSamples > 0 ? $", {result.ClippedSamples} Clipping-Samples" : "");
+                StatusText = L.F("Fertig: {0:F1} → {1:F1} LUFS ", result.InputLufs, result.OutputLufs) +
+                             L.F("(Gain {0:+0.0;-0.0} dB)", result.AppliedGainDb) +
+                             (result.ClippedSamples > 0 ? L.F(", {0} Clipping-Samples", result.ClippedSamples) : "");
                 return (NAudio.Wave.ISampleProvider)new NAudio.Wave.AudioFileReader(tempWav);
             },
             meta);

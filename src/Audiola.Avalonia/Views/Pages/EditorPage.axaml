@@ -1,5 +1,5 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="using:Audiola.Avalonia.Localization"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:controls="using:Audiola.Controls"
              xmlns:vm="using:Audiola.ViewModels"
@@ -15,32 +15,32 @@
     <!-- Kontextmenü der Wellenform: Click-Handler statt Bindungen — ein Menü ist ein eigenes
          Fenster, Bindungen auf den Seiten-DataContext greifen dort nicht zuverlässig. -->
     <ContextMenu x:Key="WaveformMenu">
-      <MenuItem Header="Nur Auswahl behalten" Click="Trim_Click">
+      <MenuItem Header="{l:T 'Nur Auswahl behalten'}" Click="Trim_Click">
         <MenuItem.Icon><ic:SymbolIcon Symbol="Crop" /></MenuItem.Icon>
       </MenuItem>
-      <MenuItem Header="Auswahl löschen" InputGesture="Delete" Click="Delete_Click">
+      <MenuItem Header="{l:T 'Auswahl löschen'}" InputGesture="Delete" Click="Delete_Click">
         <MenuItem.Icon><ic:SymbolIcon Symbol="Cut" /></MenuItem.Icon>
       </MenuItem>
-      <MenuItem Header="Auswahl stummschalten" Click="Silence_Click">
+      <MenuItem Header="{l:T 'Auswahl stummschalten'}" Click="Silence_Click">
         <MenuItem.Icon><ic:SymbolIcon Symbol="SpeakerMute" /></MenuItem.Icon>
       </MenuItem>
       <Separator />
-      <MenuItem Header="Einblenden" Click="FadeIn_Click">
+      <MenuItem Header="{l:T 'Einblenden'}" Click="FadeIn_Click">
         <MenuItem.Icon><ic:SymbolIcon Symbol="ArrowTrending" /></MenuItem.Icon>
       </MenuItem>
-      <MenuItem Header="Ausblenden" Click="FadeOut_Click">
+      <MenuItem Header="{l:T 'Ausblenden'}" Click="FadeOut_Click">
         <MenuItem.Icon><ic:SymbolIcon Symbol="ArrowTrendingDown" /></MenuItem.Icon>
       </MenuItem>
-      <MenuItem Header="Normalisieren" Click="Normalize_Click">
+      <MenuItem Header="{l:T 'Normalisieren'}" Click="Normalize_Click">
         <MenuItem.Icon><ic:SymbolIcon Symbol="Gauge" /></MenuItem.Icon>
       </MenuItem>
-      <MenuItem Header="Rückwärts" Click="Reverse_Click">
+      <MenuItem Header="{l:T 'Rückwärts'}" Click="Reverse_Click">
         <MenuItem.Icon><ic:SymbolIcon Symbol="ArrowSync" /></MenuItem.Icon>
       </MenuItem>
       <Separator />
-      <MenuItem Header="Alles auswählen" InputGesture="Ctrl+A" Click="SelectAll_Click" />
-      <MenuItem Header="Auswahl aufheben" InputGesture="Escape" Click="ClearSelection_Click" />
-      <MenuItem Header="Rückgängig" InputGesture="Ctrl+Z" Click="Undo_Click">
+      <MenuItem Header="{l:T 'Alles auswählen'}" InputGesture="Ctrl+A" Click="SelectAll_Click" />
+      <MenuItem Header="{l:T 'Auswahl aufheben'}" InputGesture="Escape" Click="ClearSelection_Click" />
+      <MenuItem Header="{l:T 'Rückgängig'}" InputGesture="Ctrl+Z" Click="Undo_Click">
         <MenuItem.Icon><ic:SymbolIcon Symbol="ArrowUndo" /></MenuItem.Icon>
       </MenuItem>
     </ContextMenu>
@@ -51,26 +51,26 @@
     <!-- ═══ Kopfzeile: Titel links, primäre Aktionen rechts (wie im Studio) ═══ -->
     <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
       <Button Grid.Column="0" Classes="dawIcon" Margin="-8,0,10,0" VerticalAlignment="Top"
-              Command="{Binding CloseEditorCommand}" ToolTip.Tip="Zurück zum Studio, ohne zu übernehmen">
+              Command="{Binding CloseEditorCommand}" ToolTip.Tip="{l:T 'Zurück zum Studio, ohne zu übernehmen'}">
         <ic:SymbolIcon Symbol="ArrowLeft" />
       </Button>
       <StackPanel Grid.Column="1">
-        <TextBlock Classes="dawPageTitle" Text="Spur bearbeiten" />
+        <TextBlock Classes="dawPageTitle" Text="{l:T 'Spur bearbeiten'}" />
         <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                   Text="Bereich markieren, schneiden, blenden, Effekte — Änderungen landen erst mit „Ins Studio übernehmen“ auf der Spur." />
+                   Text="{l:T 'Bereich markieren, schneiden, blenden, Effekte — Änderungen landen erst mit „Ins Studio übernehmen“ auf der Spur.'}" />
       </StackPanel>
       <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top"
                   IsVisible="{Binding HasTrack}">
         <Button Command="{Binding ExportCommand}"
-                ToolTip.Tip="Die bearbeitete Fassung als eigene Audiodatei speichern (WAV/MP3/…)">
+                ToolTip.Tip="{l:T 'Die bearbeitete Fassung als eigene Audiodatei speichern (WAV/MP3/…)'}">
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <ic:SymbolIcon Symbol="Save" /><TextBlock Text="Exportieren" />
+            <ic:SymbolIcon Symbol="Save" /><TextBlock Text="{l:T 'Exportieren'}" />
           </StackPanel>
         </Button>
         <Button Classes="accent" Command="{Binding BakeToStudioCommand}"
-                ToolTip.Tip="Bearbeitung auf die Spur im Studio übernehmen (Strg+Z im Studio macht es rückgängig)">
+                ToolTip.Tip="{l:T 'Bearbeitung auf die Spur im Studio übernehmen (Strg+Z im Studio macht es rückgängig)'}">
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <ic:SymbolIcon Symbol="Timeline" /><TextBlock Text="Ins Studio übernehmen" />
+            <ic:SymbolIcon Symbol="Timeline" /><TextBlock Text="{l:T 'Ins Studio übernehmen'}" />
           </StackPanel>
         </Button>
       </StackPanel>
@@ -84,19 +84,19 @@
           <StackPanel>
             <StackPanel Orientation="Horizontal">
               <Button Classes="toolBtn" Command="{Binding TrimCommand}"
-                      ToolTip.Tip="Nur die Auswahl behalten — alles außerhalb wird entfernt">
+                      ToolTip.Tip="{l:T 'Nur die Auswahl behalten — alles außerhalb wird entfernt'}">
                 <ic:SymbolIcon Symbol="Crop" />
               </Button>
               <Button Classes="toolBtn" Command="{Binding DeleteCommand}"
-                      ToolTip.Tip="Auswahl entfernen und die Enden zusammenfügen (Entf)">
+                      ToolTip.Tip="{l:T 'Auswahl entfernen und die Enden zusammenfügen (Entf)'}">
                 <ic:SymbolIcon Symbol="Cut" />
               </Button>
               <Button Classes="toolBtn" Command="{Binding SilenceCommand}"
-                      ToolTip.Tip="Auswahl stummschalten — die Länge bleibt">
+                      ToolTip.Tip="{l:T 'Auswahl stummschalten — die Länge bleibt'}">
                 <ic:SymbolIcon Symbol="SpeakerMute" />
               </Button>
               <Button Classes="toolBtn" Command="{Binding ClearSelectionCommand}"
-                      ToolTip.Tip="Auswahl aufheben (Esc)">
+                      ToolTip.Tip="{l:T 'Auswahl aufheben (Esc)'}">
                 <ic:SymbolIcon Symbol="SelectObjectSkew" />
               </Button>
             </StackPanel>
@@ -107,11 +107,11 @@
           <StackPanel>
             <StackPanel Orientation="Horizontal">
               <Button Classes="toolBtn" Command="{Binding FadeInCommand}"
-                      ToolTip.Tip="Einblenden — die Auswahl von Stille auf volle Lautstärke">
+                      ToolTip.Tip="{l:T 'Einblenden — die Auswahl von Stille auf volle Lautstärke'}">
                 <ic:SymbolIcon Symbol="ArrowTrending" />
               </Button>
               <Button Classes="toolBtn" Command="{Binding FadeOutCommand}"
-                      ToolTip.Tip="Ausblenden — die Auswahl von voller Lautstärke auf Stille">
+                      ToolTip.Tip="{l:T 'Ausblenden — die Auswahl von voller Lautstärke auf Stille'}">
                 <ic:SymbolIcon Symbol="ArrowTrendingDown" />
               </Button>
             </StackPanel>
@@ -122,23 +122,23 @@
           <StackPanel>
             <StackPanel Orientation="Horizontal">
               <Button Classes="toolBtn" Command="{Binding NormalizeCommand}"
-                      ToolTip.Tip="Normalisieren — Pegel auf −1 dBFS anheben (Auswahl oder ganze Spur)">
+                      ToolTip.Tip="{l:T 'Normalisieren — Pegel auf −1 dBFS anheben (Auswahl oder ganze Spur)'}">
                 <ic:SymbolIcon Symbol="Gauge" />
               </Button>
               <Button Classes="toolBtn" Command="{Binding EchoCommand}"
-                      ToolTip.Tip="Echo hinzufügen — Verzögerung, Feedback und Mix unten unter „Effekt-Einstellungen“">
+                      ToolTip.Tip="{l:T 'Echo hinzufügen — Verzögerung, Feedback und Mix unten unter „Effekt-Einstellungen“'}">
                 <ic:SymbolIcon Symbol="SoundWaveCircle" />
               </Button>
               <Button Classes="toolBtn" Command="{Binding ReverbCommand}"
-                      ToolTip.Tip="Hall hinzufügen — Menge unter „Effekt-Einstellungen“">
+                      ToolTip.Tip="{l:T 'Hall hinzufügen — Menge unter „Effekt-Einstellungen“'}">
                 <ic:SymbolIcon Symbol="Sparkle" />
               </Button>
               <Button Classes="toolBtn" Command="{Binding WidenCommand}"
-                      ToolTip.Tip="Stereo-Breite erhöhen — Stärke unter „Effekt-Einstellungen“">
+                      ToolTip.Tip="{l:T 'Stereo-Breite erhöhen — Stärke unter „Effekt-Einstellungen“'}">
                 <ic:SymbolIcon Symbol="ArrowExpand" />
               </Button>
               <Button Classes="toolBtn" Command="{Binding ReverseCommand}"
-                      ToolTip.Tip="Rückwärts abspielen (Auswahl oder ganze Spur)">
+                      ToolTip.Tip="{l:T 'Rückwärts abspielen (Auswahl oder ganze Spur)'}">
                 <ic:SymbolIcon Symbol="ArrowSync" />
               </Button>
             </StackPanel>
@@ -149,7 +149,7 @@
           <StackPanel>
             <StackPanel Orientation="Horizontal">
               <Button Classes="toolBtn" Command="{Binding UndoCommand}"
-                      ToolTip.Tip="Letzten Schritt rückgängig machen (Strg+Z)">
+                      ToolTip.Tip="{l:T 'Letzten Schritt rückgängig machen (Strg+Z)'}">
                 <ic:SymbolIcon Symbol="ArrowUndo" />
               </Button>
             </StackPanel>
@@ -160,13 +160,13 @@
         <Border Classes="toolGroup last">
           <StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="10" Height="34">
-              <TextBlock Classes="toolLabel" Text="Vorschau" />
+              <TextBlock Classes="toolLabel" Text="{l:T 'Vorschau'}" />
               <ToggleSwitch VerticalAlignment="Center" OnContent="" OffContent="" Margin="0"
                             IsChecked="{Binding LivePreview, Mode=TwoWay}"
-                            ToolTip.Tip="Effekte beim Abspielen live hören, bevor sie angewendet werden" />
-              <CheckBox VerticalAlignment="Center" Content="Echo" IsChecked="{Binding PreviewEcho, Mode=TwoWay}" />
-              <CheckBox VerticalAlignment="Center" Content="Hall" IsChecked="{Binding PreviewReverb, Mode=TwoWay}" />
-              <CheckBox VerticalAlignment="Center" Content="Stereo" IsChecked="{Binding PreviewWiden, Mode=TwoWay}" />
+                            ToolTip.Tip="{l:T 'Effekte beim Abspielen live hören, bevor sie angewendet werden'}" />
+              <CheckBox VerticalAlignment="Center" Content="{l:T 'Echo'}" IsChecked="{Binding PreviewEcho, Mode=TwoWay}" />
+              <CheckBox VerticalAlignment="Center" Content="{l:T 'Hall'}" IsChecked="{Binding PreviewReverb, Mode=TwoWay}" />
+              <CheckBox VerticalAlignment="Center" Content="{l:T 'Stereo'}" IsChecked="{Binding PreviewWiden, Mode=TwoWay}" />
             </StackPanel>
           </StackPanel>
         </Border>
@@ -177,35 +177,35 @@
       <Expander.Header>
         <StackPanel Orientation="Horizontal" Spacing="8">
           <ic:SymbolIcon Symbol="Options" FontSize="14" />
-          <TextBlock Text="Effekt-Einstellungen" />
+          <TextBlock Text="{l:T 'Effekt-Einstellungen'}" />
         </StackPanel>
       </Expander.Header>
       <UniformGrid Columns="2" Margin="0,4,0,4">
         <StackPanel Margin="0,0,20,0" Spacing="6">
           <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
-            <TextBlock FontSize="12" Text="Echo · Verzögerung" />
-            <TextBlock Grid.Column="1" Classes="value" Text="{Binding EchoDelayMs, StringFormat='{}{0:F0} ms'}" />
+            <TextBlock FontSize="12" Text="{l:T 'Echo · Verzögerung'}" />
+            <TextBlock Grid.Column="1" Classes="value" Text="{Binding EchoDelayMs, Converter={x:Static l:Fmt.Instance}, ConverterParameter='{}{0:F0} ms'}" />
           </Grid>
           <Slider Minimum="50" Maximum="1000" Value="{Binding EchoDelayMs, Mode=TwoWay}" />
           <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
-            <TextBlock FontSize="12" Text="Echo · Feedback" />
+            <TextBlock FontSize="12" Text="{l:T 'Echo · Feedback'}" />
             <TextBlock Grid.Column="1" Classes="value" Text="{Binding EchoFeedback, StringFormat='{}{0:P0}'}" />
           </Grid>
           <Slider Minimum="0" Maximum="0.9" Value="{Binding EchoFeedback, Mode=TwoWay}" />
           <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
-            <TextBlock FontSize="12" Text="Echo · Mix" />
+            <TextBlock FontSize="12" Text="{l:T 'Echo · Mix'}" />
             <TextBlock Grid.Column="1" Classes="value" Text="{Binding EchoMix, StringFormat='{}{0:P0}'}" />
           </Grid>
           <Slider Minimum="0" Maximum="1" Value="{Binding EchoMix, Mode=TwoWay}" />
         </StackPanel>
         <StackPanel Spacing="6">
           <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
-            <TextBlock FontSize="12" Text="Hall · Menge" />
+            <TextBlock FontSize="12" Text="{l:T 'Hall · Menge'}" />
             <TextBlock Grid.Column="1" Classes="value" Text="{Binding ReverbMix, StringFormat='{}{0:P0}'}" />
           </Grid>
           <Slider Minimum="0" Maximum="1" Value="{Binding ReverbMix, Mode=TwoWay}" />
           <Grid Classes="sliderRow" ColumnDefinitions="*,Auto">
-            <TextBlock FontSize="12" Text="Stereo · Breite" />
+            <TextBlock FontSize="12" Text="{l:T 'Stereo · Breite'}" />
             <TextBlock Grid.Column="1" Classes="value" Text="{Binding WidenAmount, StringFormat='{}{0:F2}×'}" />
           </Grid>
           <Slider Minimum="0" Maximum="2" Value="{Binding WidenAmount, Mode=TwoWay}" />
@@ -220,12 +220,12 @@
         <!-- Leerzustand: sagt, wie man hierher kommt, statt eine leere Fläche zu zeigen -->
         <StackPanel Classes="emptyState" IsVisible="{Binding !HasTrack}">
           <ic:SymbolIcon Symbol="SoundWaveCircle" />
-          <TextBlock Classes="title" Text="Keine Spur geöffnet" />
+          <TextBlock Classes="title" Text="{l:T 'Keine Spur geöffnet'}" />
           <TextBlock Classes="hint"
-                     Text="Im Studio einen Clip doppelt anklicken oder eine Audiodatei über „Start“ öffnen — dann erscheint sie hier zum Schneiden und Bearbeiten." />
+                     Text="{l:T 'Im Studio einen Clip doppelt anklicken oder eine Audiodatei über „Start“ öffnen — dann erscheint sie hier zum Schneiden und Bearbeiten.'}" />
           <Button HorizontalAlignment="Center" Command="{Binding CloseEditorCommand}">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="Timeline" /><TextBlock Text="Zum Studio" />
+              <ic:SymbolIcon Symbol="Timeline" /><TextBlock Text="{l:T 'Zum Studio'}" />
             </StackPanel>
           </Button>
         </StackPanel>
@@ -250,7 +250,7 @@
                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding SelectionInfo}" />
         <TextBlock FontSize="11.5" TextWrapping="Wrap"
                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                   Text="Ziehen wählt aus · Klick setzt die Abspielmarke · Doppelklick wählt alles · Umschalt+Klick erweitert · Rechtsklick öffnet das Menü · Leertaste spielt" />
+                   Text="{l:T 'Ziehen wählt aus · Klick setzt die Abspielmarke · Doppelklick wählt alles · Umschalt+Klick erweitert · Rechtsklick öffnet das Menü · Leertaste spielt'}" />
       </StackPanel>
       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
         <ic:SymbolIcon Symbol="Info" FontSize="14" VerticalAlignment="Center"

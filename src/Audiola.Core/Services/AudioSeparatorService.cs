@@ -26,11 +26,11 @@ public sealed class AudioSeparatorService : IAdvancedSeparationService
 
     public IReadOnlyList<SeparationModel> Models { get; } =
     [
-        new("roformer", "RoFormer (Vocals/Instrumental)", "SOTA-Qualität für Gesang/Instrumental.",
+        new("roformer", "RoFormer (Vocals/Instrumental)", L.T("SOTA-Qualität für Gesang/Instrumental."),
             "model_bs_roformer_ep_317_sdr_12.9755.ckpt"),
-        new("demucs6s", "Demucs 6 Stems", "Vocals, Drums, Bass, Gitarre, Klavier, Rest.",
+        new("demucs6s", "Demucs 6 Stems", L.T("Vocals, Drums, Bass, Gitarre, Klavier, Rest."),
             "htdemucs_6s.yaml"),
-        new("karaoke", "Karaoke (Lead/Background)", "Trennt Lead- von Background-Vocals.",
+        new("karaoke", "Karaoke (Lead/Background)", L.T("Trennt Lead- von Background-Vocals."),
             "mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt"),
     ];
 
@@ -38,7 +38,7 @@ public sealed class AudioSeparatorService : IAdvancedSeparationService
         IProgress<string>? progress = null, CancellationToken ct = default)
     {
         if (!ScriptAvailable)
-            throw new InvalidOperationException("Trenn-Skript (voicebox_engine.py) fehlt.");
+            throw new InvalidOperationException(L.T("Trenn-Skript (voicebox_engine.py) fehlt."));
 
         await EnsureInstalledAsync(progress, ct);
 
@@ -48,7 +48,7 @@ public sealed class AudioSeparatorService : IAdvancedSeparationService
         var (code, stdout, err) = await RunAsync(
             ["separate", "--input", inputFile, "--out-dir", outDir, "--model", modelFilename], progress, ct);
         if (code != 0)
-            throw new InvalidOperationException($"HQ-Trennung fehlgeschlagen: {Short(err)}");
+            throw new InvalidOperationException(L.F("HQ-Trennung fehlgeschlagen: {0}", Short(err)));
 
         var parsed = JsonSerializer.Deserialize<SepResponse>(ExtractJson(stdout), JsonOpts);
         return parsed?.Files?
@@ -65,7 +65,7 @@ public sealed class AudioSeparatorService : IAdvancedSeparationService
 
         Directory.CreateDirectory(_settings.Current.VoiceModelsDirectory);
         var cuda = GpuDetect.ShouldUseCuda(Device); // „auto“ erkennt die NVIDIA-GPU, nicht nur explizites „cuda“
-        progress?.Report("Installiere audio-separator … (einmalig, groß)");
+        progress?.Report(L.T("Installiere audio-separator … (einmalig, groß)"));
         await _env.InstallAsync([cuda ? "audio-separator[gpu]" : "audio-separator[cpu]"], null, progress, ct);
         try { File.WriteAllText(marker, "ok"); } catch { }
     }
@@ -73,9 +73,9 @@ public sealed class AudioSeparatorService : IAdvancedSeparationService
     private static string Pretty(string stem) => stem.Trim() switch
     {
         "Vocals" => "Vocals", "Instrumental" => "Instrumental", "Drums" => "Drums", "Bass" => "Bass",
-        "Guitar" => "Gitarre", "Piano" => "Klavier", "Other" => "Rest",
-        "Lead Vocals" or "lead_vocals" => "Lead-Vocals",
-        "Back Vocals" or "Backing Vocals" or "back_vocals" => "Background-Vocals",
+        "Guitar" => L.T("Gitarre"), "Piano" => L.T("Klavier"), "Other" => L.T("Rest"),
+        "Lead Vocals" or "lead_vocals" => L.T("Lead-Vocals"),
+        "Back Vocals" or "Backing Vocals" or "back_vocals" => L.T("Background-Vocals"),
         _ => stem.Trim()
     };
 

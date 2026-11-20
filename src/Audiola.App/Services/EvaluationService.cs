@@ -18,7 +18,7 @@ public sealed class EvaluationService : IEvaluationService
     {
         var lines = await File.ReadAllLinesAsync(filePath, ct);
         if (lines.Length < 2)
-            throw new InvalidOperationException("CSV enthält keine Datenzeilen (Kopfzeile + mindestens eine Zeile erwartet).");
+            throw new InvalidOperationException(L.T("CSV enthält keine Datenzeilen (Kopfzeile + mindestens eine Zeile erwartet)."));
 
         var delimiter = lines[0].Count(c => c == ';') > lines[0].Count(c => c == ',') ? ';' : ',';
         var header = SplitLine(lines[0], delimiter);
@@ -28,9 +28,9 @@ public sealed class EvaluationService : IEvaluationService
         var scoreIdx = FindColumn(header, ScoreHeaders);
 
         if (truthIdx < 0)
-            throw new InvalidOperationException("Keine Wahrheits-Spalte gefunden (z. B. 'truth', 'label', 'ist').");
+            throw new InvalidOperationException(L.T("Keine Wahrheits-Spalte gefunden (z. B. 'truth', 'label', 'ist')."));
         if (predIdx < 0 && scoreIdx < 0)
-            throw new InvalidOperationException("Weder Urteils-Spalte ('predicted'/'verdict') noch Score-Spalte gefunden.");
+            throw new InvalidOperationException(L.T("Weder Urteils-Spalte ('predicted'/'verdict') noch Score-Spalte gefunden."));
 
         var rows = new List<EvalRow>();
         for (var i = 1; i < lines.Length; i++)
@@ -49,7 +49,7 @@ public sealed class EvaluationService : IEvaluationService
         }
 
         if (rows.Count == 0)
-            throw new InvalidOperationException("Keine interpretierbaren Zeilen gefunden.");
+            throw new InvalidOperationException(L.T("Keine interpretierbaren Zeilen gefunden."));
 
         return rows;
     }

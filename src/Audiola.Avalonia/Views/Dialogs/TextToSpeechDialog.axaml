@@ -1,11 +1,11 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="using:Audiola.Avalonia.Localization"
         xmlns:dialogs="using:Audiola.Avalonia.Views.Dialogs"
         xmlns:ic="using:FluentIcons.Avalonia"
         xmlns:vm="using:Audiola.ViewModels"
         x:Class="Audiola.Avalonia.Views.Dialogs.TextToSpeechDialog"
         x:DataType="vm:VoiceSourceViewModel"
-        Title="Spur aus Text (Sprache)"
+        Title="{l:T 'Spur aus Text (Sprache)'}"
         Width="600" Height="800"
         MinWidth="440" MinHeight="540"
         WindowStartupLocation="CenterOwner"
@@ -16,10 +16,10 @@
 
   <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
     <StackPanel Grid.Row="0" Margin="18,16,18,0">
-      <TextBlock FontWeight="SemiBold" Text="Text" Margin="0,0,0,4" />
+      <TextBlock FontWeight="SemiBold" Text="{l:T 'Text'}" Margin="0,0,0,4" />
       <TextBox Name="TtsTextInput" MinHeight="90" MaxHeight="150" AcceptsReturn="True" TextWrapping="Wrap"
-               Text="Hallo, das ist ein Test." />
-      <TextBlock Margin="0,14,0,4" FontWeight="SemiBold" Text="Stimme" />
+               Text="{l:T 'Hallo, das ist ein Test.'}" />
+      <TextBlock Margin="0,14,0,4" FontWeight="SemiBold" Text="{l:T 'Stimme'}" />
     </StackPanel>
 
     <ScrollViewer Grid.Row="1" Margin="14,0,14,0" VerticalScrollBarVisibility="Auto">
@@ -27,30 +27,30 @@
     </ScrollViewer>
 
     <StackPanel Grid.Row="2" Margin="18,12,18,0">
-      <TextBlock FontWeight="SemiBold" Text="Einstellungen" Margin="0,0,0,4" />
+      <TextBlock FontWeight="SemiBold" Text="{l:T 'Einstellungen'}" Margin="0,0,0,4" />
       <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                 Text="{Binding #SpeedSlider.Value, StringFormat='Geschwindigkeit: {0:F2}×'}" />
+                 Text="{Binding #SpeedSlider.Value, Converter={x:Static l:Fmt.Instance}, ConverterParameter='Geschwindigkeit: {0:F2}×'}" />
       <Slider Name="SpeedSlider" Minimum="0.7" Maximum="1.2" Value="1.0" />
       <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                 Text="{Binding #StabilitySlider.Value, StringFormat='Stabilität: {0:P0}'}" />
+                 Text="{Binding #StabilitySlider.Value, Converter={x:Static l:Fmt.Instance}, ConverterParameter='Stabilität: {0:P0}'}" />
       <Slider Name="StabilitySlider" Minimum="0" Maximum="1" Value="0.5" />
       <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                 Text="{Binding #SimilaritySlider.Value, StringFormat='Ähnlichkeit: {0:P0}'}" />
+                 Text="{Binding #SimilaritySlider.Value, Converter={x:Static l:Fmt.Instance}, ConverterParameter='Ähnlichkeit: {0:P0}'}" />
       <Slider Name="SimilaritySlider" Minimum="0" Maximum="1" Value="0.75" />
     </StackPanel>
 
     <TextBlock Grid.Row="3" Margin="18,4,18,0" FontSize="12"
                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-               Text="Die erzeugte Sprache wird als neue Spur in die Timeline gelegt." />
+               Text="{l:T 'Die erzeugte Sprache wird als neue Spur in die Timeline gelegt.'}" />
 
     <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="18,10,18,16" Spacing="8">
       <ProgressBar Width="50" Margin="0,0,4,0" VerticalAlignment="Center" IsIndeterminate="True"
                    IsVisible="{Binding IsResolving}" />
-      <Button Content="Abbrechen" Click="Cancel_Click" IsEnabled="{Binding !IsResolving}" />
+      <Button Content="{l:T 'Abbrechen'}" Click="Cancel_Click" IsEnabled="{Binding !IsResolving}" />
       <Button Classes="accent" Click="Ok_Click" IsEnabled="{Binding !IsResolving}"
-              ToolTip.Tip="Text mit der gewählten Stimme sprechen lassen und als neue Spur ins Studio legen">
+              ToolTip.Tip="{l:T 'Text mit der gewählten Stimme sprechen lassen und als neue Spur ins Studio legen'}">
         <StackPanel Orientation="Horizontal" Spacing="6">
-          <ic:SymbolIcon Symbol="Add" /><TextBlock Text="Als Spur einfügen" />
+          <ic:SymbolIcon Symbol="Add" /><TextBlock Text="{l:T 'Als Spur einfügen'}" />
         </StackPanel>
       </Button>
     </StackPanel>

@@ -80,14 +80,14 @@ public sealed class ExportService
             catch (Exception tagEx) { tagWarning = tagEx.Message; }
 
             if (tagWarning is null)
-                _snackbar.Success("Exportiert", Path.GetFileName(req.Path));
+                _snackbar.Success(L.T("Exportiert"), Path.GetFileName(req.Path));
             else
-                _snackbar.Warning("Exportiert (Tags eingeschränkt)",
-                    $"{Path.GetFileName(req.Path)} — Metadaten konnten nicht vollständig geschrieben werden.", 5);
+                _snackbar.Warning(L.T("Exportiert (Tags eingeschränkt)"),
+                    L.F("{0} — Metadaten konnten nicht vollständig geschrieben werden.", Path.GetFileName(req.Path)), 5);
         }
         catch (Exception ex)
         {
-            UiError.Show("Export fehlgeschlagen", ex.Message);
+            UiError.Show(L.T("Export fehlgeschlagen"), ex.Message);
         }
     }
 }

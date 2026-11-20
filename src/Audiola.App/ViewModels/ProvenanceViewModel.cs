@@ -15,7 +15,7 @@ public sealed partial class ProvenanceViewModel : ObservableObject
     public SessionState Session { get; }
 
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string _statusText = "Track laden, Studio-Mix verwenden oder Datei wählen, dann analysieren.";
+    [ObservableProperty] private string _statusText = L.T("Track laden, Studio-Mix verwenden oder Datei wählen, dann analysieren.");
     [ObservableProperty] private string _assessment = "";
     [ObservableProperty] private string? _c2paRaw;
     [ObservableProperty] private bool _hasC2paRaw;
@@ -66,12 +66,12 @@ public sealed partial class ProvenanceViewModel : ObservableObject
         string? mix;
         try
         {
-            StatusText = "Studio-Mix wird gerendert …";
+            StatusText = L.T("Studio-Mix wird gerendert …");
             mix = await _timeline.RenderMixToTempFileAsync();
         }
         catch (Exception ex)
         {
-            StatusText = "Fehler beim Rendern des Mix: " + ex.Message;
+            StatusText = L.F("Fehler beim Rendern des Mix: {0}", ex.Message);
             IsBusy = false;
             AnalyzeTrackCommand.NotifyCanExecuteChanged();
             return;
@@ -83,8 +83,8 @@ public sealed partial class ProvenanceViewModel : ObservableObject
     [RelayCommand]
     private async Task AnalyzeFileAsync()
     {
-        var path = await _files.OpenFileAsync("Datei für Provenienz-Analyse wählen",
-            new FileFilter("Audio/Medien", "wav", "mp3", "flac", "m4a", "ogg", "aiff"), FileFilter.Any);
+        var path = await _files.OpenFileAsync(L.T("Datei für Provenienz-Analyse wählen"),
+            new FileFilter(L.T("Audio/Medien"), "wav", "mp3", "flac", "m4a", "ogg", "aiff"), FileFilter.Any);
         if (path is not null)
             await RunAnalysis(path);
     }
@@ -101,7 +101,7 @@ public sealed partial class ProvenanceViewModel : ObservableObject
 
         try
         {
-            StatusText = "Analysiere …";
+            StatusText = L.T("Analysiere …");
             var report = await _provenance.AnalyzeAsync(filePath);
 
             foreach (var f in report.Findings)
@@ -115,12 +115,12 @@ public sealed partial class ProvenanceViewModel : ObservableObject
 
             var aiCount = report.Findings.Count(x => x.Severity == FindingSeverity.AiIndicator);
             StatusText = aiCount > 0
-                ? $"{report.Findings.Count} Befunde, davon {aiCount} KI-/Provenienz-Hinweise."
-                : $"{report.Findings.Count} Befunde, keine expliziten KI-Marker.";
+                ? L.F("{0} Befunde, davon {1} KI-/Provenienz-Hinweise.", report.Findings.Count, aiCount)
+                : L.F("{0} Befunde, keine expliziten KI-Marker.", report.Findings.Count);
         }
         catch (Exception ex)
         {
-            StatusText = "Fehler: " + ex.Message;
+            StatusText = L.F("Fehler: {0}", ex.Message);
         }
         finally
         {

@@ -57,9 +57,9 @@ public sealed partial class TimelineViewModel
             if (choice.IsLocal)
             {
                 IsSeparating = true;
-                SeparationStatus = "Bereite lokalen Stimmtausch vor (seed-vc — erster Lauf lädt das Modell) …";
+                SeparationStatus = L.T("Bereite lokalen Stimmtausch vor (seed-vc — erster Lauf lädt das Modell) …");
                 await _localVoice.DownloadModelAsync("seed-vc", prog);
-                SeparationStatus = "Stimmtausch läuft (seed-vc) … das kann auf CPU lange dauern.";
+                SeparationStatus = L.T("Stimmtausch läuft (seed-vc) … das kann auf CPU lange dauern.");
             }
 
             var prep = await Task.Run(() =>
@@ -107,12 +107,12 @@ public sealed partial class TimelineViewModel
                 ReplaceClipFromBuffer(clip, newBuf, prep.rate);
             }
 
-            _snackbar.Success("Stimme getauscht",
-                prep.whole ? "Der Clip wurde ersetzt." : "Der markierte Bereich wurde ersetzt.");
+            _snackbar.Success(L.T("Stimme getauscht"),
+                prep.whole ? L.T("Der Clip wurde ersetzt.") : L.T("Der markierte Bereich wurde ersetzt."));
         }
         catch (Exception ex)
         {
-            Audiola.Services.UiError.Show("Stimmtausch fehlgeschlagen", ex.Message);
+            Audiola.Services.UiError.Show(L.T("Stimmtausch fehlgeschlagen"), ex.Message);
         }
         finally
         {
@@ -130,8 +130,8 @@ public sealed partial class TimelineViewModel
         if (string.IsNullOrWhiteSpace(text) || choice is null || IsVoiceChanging) return;
 
         IsVoiceChanging = true;
-        _snackbar.Info("Sprache wird erzeugt …",
-            choice.IsLocal ? "Lokales Modell — beim ersten Mal kann das einige Zeit dauern." : "Über ElevenLabs …", 6);
+        _snackbar.Info(L.T("Sprache wird erzeugt …"),
+            choice.IsLocal ? L.T("Lokales Modell — beim ersten Mal kann das einige Zeit dauern.") : L.T("Über ElevenLabs …"), 6);
         try
         {
             float[] samples; int sr;
@@ -153,11 +153,11 @@ public sealed partial class TimelineViewModel
 
             await AddAudioFileAsync(temp, -1, 0);
 
-            _snackbar.Success("Sprache erzeugt", "Neue Spur aus Text hinzugefügt.");
+            _snackbar.Success(L.T("Sprache erzeugt"), L.T("Neue Spur aus Text hinzugefügt."));
         }
         catch (Exception ex)
         {
-            Audiola.Services.UiError.Show("Text-zu-Sprache fehlgeschlagen", ex.Message);
+            Audiola.Services.UiError.Show(L.T("Text-zu-Sprache fehlgeschlagen"), ex.Message);
         }
         finally
         {
@@ -180,7 +180,7 @@ public sealed partial class TimelineViewModel
                     string.IsNullOrWhiteSpace(_settings.Current.WhisperModel) ? "base" : _settings.Current.WhisperModel);
             if (segments.Count == 0)
             {
-                _snackbar.Warning("Keine Sprache erkannt", "Das Transkript ist leer.", 4);
+                _snackbar.Warning(L.T("Keine Sprache erkannt"), L.T("Das Transkript ist leer."), 4);
                 return;
             }
 
@@ -189,7 +189,7 @@ public sealed partial class TimelineViewModel
             clip.Track.Lrc = lrc;
 
             // Optional zusätzlich als Datei sichern.
-            var target = await _files.SaveFileAsync("Transkript zusätzlich als Datei speichern (optional)",
+            var target = await _files.SaveFileAsync(L.T("Transkript zusätzlich als Datei speichern (optional)"),
                 System.IO.Path.GetFileNameWithoutExtension(clip.SourcePath) + ".lrc", FileFilter.Lyrics);
             if (target is not null)
             {
@@ -198,11 +198,11 @@ public sealed partial class TimelineViewModel
                 await System.IO.File.WriteAllTextAsync(target, content);
             }
 
-            _snackbar.Success("Transkribiert", $"{segments.Count} Segmente — wird beim Export der Spur eingebettet.", 4);
+            _snackbar.Success(L.T("Transkribiert"), L.F("{0} Segmente — wird beim Export der Spur eingebettet.", segments.Count), 4);
         }
         catch (Exception ex)
         {
-            Audiola.Services.UiError.Show("Transkription fehlgeschlagen", ex.Message);
+            Audiola.Services.UiError.Show(L.T("Transkription fehlgeschlagen"), ex.Message);
         }
         finally { IsTranscribing = false; }
     }

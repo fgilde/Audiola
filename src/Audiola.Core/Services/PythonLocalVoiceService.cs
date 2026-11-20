@@ -34,21 +34,21 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
     /// <summary>Eingebaute Modell-Liste (Fallback + Basis für den Install-Status).</summary>
     private static readonly LocalVoiceModel[] Catalog =
     [
-        new("kokoro", "Kokoro 82M", "Schnelles Preset-TTS (CPU-tauglich). pip install kokoro soundfile.", "tts", 330, false),
-        new("qwen3-tts", "Qwen3-TTS 1.7B", "Mehrsprachiges Cloning. pip install qwen-tts.", "both", 1700, false),
-        new("xtts-v2", "Coqui XTTS v2", "Mehrsprachig, Zero-Shot-Cloning aus einem Sample. pip install TTS.", "both", 1900, false),
-        new("chatterbox", "Chatterbox", "Cloning aus einem Sample. pip install chatterbox-tts.", "both", 3000, false),
-        new("seed-vc", "seed-vc (Stimmtausch)", "Zero-Shot Voice Conversion für Sprache + Gesang — erhält Melodie/Timing.", "clone", 1500, false),
+        new("kokoro", "Kokoro 82M", L.T("Schnelles Preset-TTS (CPU-tauglich). pip install kokoro soundfile."), "tts", 330, false),
+        new("qwen3-tts", "Qwen3-TTS 1.7B", L.T("Mehrsprachiges Cloning. pip install qwen-tts."), "both", 1700, false),
+        new("xtts-v2", "Coqui XTTS v2", L.T("Mehrsprachig, Zero-Shot-Cloning aus einem Sample. pip install TTS."), "both", 1900, false),
+        new("chatterbox", "Chatterbox", L.T("Cloning aus einem Sample. pip install chatterbox-tts."), "both", 3000, false),
+        new("seed-vc", L.T("seed-vc (Stimmtausch)"), L.T("Zero-Shot Voice Conversion für Sprache + Gesang — erhält Melodie/Timing."), "clone", 1500, false),
     ];
 
     private static readonly LocalVoiceModel[] WhisperCatalog =
     [
-        new("whisper-tiny", "Whisper tiny", "Sehr schnell, geringste Genauigkeit.", "transcribe", 75, false),
-        new("whisper-base", "Whisper base", "Schnell, ordentliche Genauigkeit.", "transcribe", 145, false),
-        new("whisper-small", "Whisper small", "Guter Kompromiss.", "transcribe", 480, false),
-        new("whisper-medium", "Whisper medium", "Genauer, langsamer.", "transcribe", 1500, false),
-        new("whisper-large-v3", "Whisper large-v3", "Höchste Genauigkeit.", "transcribe", 3000, false),
-        new("whisper-turbo", "Whisper turbo", "Fast wie large, ~8× schneller.", "transcribe", 1600, false),
+        new("whisper-tiny", "Whisper tiny", L.T("Sehr schnell, geringste Genauigkeit."), "transcribe", 75, false),
+        new("whisper-base", "Whisper base", L.T("Schnell, ordentliche Genauigkeit."), "transcribe", 145, false),
+        new("whisper-small", "Whisper small", L.T("Guter Kompromiss."), "transcribe", 480, false),
+        new("whisper-medium", "Whisper medium", L.T("Genauer, langsamer."), "transcribe", 1500, false),
+        new("whisper-large-v3", "Whisper large-v3", L.T("Höchste Genauigkeit."), "transcribe", 3000, false),
+        new("whisper-turbo", "Whisper turbo", L.T("Fast wie large, ~8× schneller."), "transcribe", 1600, false),
     ];
 
     public async Task<IReadOnlyList<LocalVoiceModel>> GetModelsAsync(CancellationToken ct = default)
@@ -115,18 +115,18 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         var (code, _, err) = await RunAsync(
             ["download", "--model", modelId, "--models-dir", ModelsDir, "--device", Device], progress, ct);
         if (code != 0)
-            throw new InvalidOperationException($"Download fehlgeschlagen: {Short(err)}");
+            throw new InvalidOperationException(L.F("Download fehlgeschlagen: {0}", Short(err)));
     }
 
     public async Task RemoveModelAsync(string modelId, IProgress<string>? progress = null, CancellationToken ct = default)
     {
         RequireScript();
-        progress?.Report($"Entferne {modelId} …");
+        progress?.Report(L.F("Entferne {0} …", modelId));
 
         // 1) Gewichte, Marker und (bei seed-vc) das ganze Repo inklusive eigener Umgebung.
         var (code, stdout, err) = await RunAsync(["remove", "--model", modelId, "--models-dir", ModelsDir], progress, ct);
         if (code != 0)
-            throw new InvalidOperationException($"Entfernen fehlgeschlagen: {Short(err)}");
+            throw new InvalidOperationException(L.F("Entfernen fehlgeschlagen: {0}", Short(err)));
 
         // 2) Das Python-Paket nur, wenn es kein anderes Modell braucht. Whisper-Größen teilen
         //    faster-whisper, deshalb bleibt es stehen — dort zählen ohnehin nur die Gewichte.
@@ -135,8 +135,8 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
 
         var freed = ExtractJson(stdout);
         progress?.Report(freed.Contains("removed\":[]", StringComparison.Ordinal)
-            ? "Es war nichts (mehr) installiert."
-            : "Entfernt.");
+            ? L.T("Es war nichts (mehr) installiert.")
+            : L.T("Entfernt."));
     }
 
     /// <summary>Das Paket, das nur zu diesem Modell gehört — <c>null</c>, wenn es geteilt wird.</summary>
@@ -159,7 +159,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
 
         if (!File.Exists(inf))
         {
-            progress?.Report("Lade seed-vc herunter …");
+            progress?.Report(L.T("Lade seed-vc herunter …"));
             var zipPath = Path.Combine(ModelsDir, $"_seedvc_{Guid.NewGuid():N}.zip");
             var extractDir = Path.Combine(ModelsDir, $"_extract_{Guid.NewGuid():N}");
             try
@@ -173,7 +173,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
                     await resp.Content.CopyToAsync(fs, ct);
                 }
 
-                progress?.Report("Entpacke seed-vc …");
+                progress?.Report(L.T("Entpacke seed-vc …"));
                 ZipFile.ExtractToDirectory(zipPath, extractDir);
                 var inner = Directory.GetDirectories(extractDir).FirstOrDefault() ?? extractDir; // seed-vc-main
                 if (Directory.Exists(repo)) Directory.Delete(repo, recursive: true);
@@ -186,7 +186,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
             }
 
             if (!File.Exists(inf))
-                throw new InvalidOperationException("seed-vc konnte nicht bereitgestellt werden (inference.py fehlt nach dem Entpacken).");
+                throw new InvalidOperationException(L.T("seed-vc konnte nicht bereitgestellt werden (inference.py fehlt nach dem Entpacken)."));
         }
 
         // WICHTIG: seed-vc hat Abhängigkeiten, die mit dem Haupt-venv KOLLIDIEREN
@@ -204,17 +204,17 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
             var (reqCode, reqErr) = await RunPipAsync(
                 venvPy, ["-m", "pip", "install", "-r", Path.Combine(repo, "requirements.txt")], progress, ct);
             if (reqCode != 0)
-                throw new InvalidOperationException($"Abhängigkeiten von seed-vc ließen sich nicht installieren: {Short(reqErr)}");
+                throw new InvalidOperationException(L.F("Abhängigkeiten von seed-vc ließen sich nicht installieren: {0}", Short(reqErr)));
 
             // 2) Bei NVIDIA-GPU das CPU-torch durch den passenden CUDA-Build (gleiche Version) ersetzen,
             //    sonst läuft die Diffusion auf der CPU und der Tausch dauert ewig.
             if (ShouldUseCuda())
             {
-                progress?.Report("Installiere CUDA-Torch für seed-vc (GPU-Beschleunigung) …");
+                progress?.Report(L.T("Installiere CUDA-Torch für seed-vc (GPU-Beschleunigung) …"));
                 var (cudaCode, cudaErr) = await RunPipAsync(venvPy, ["-m", "pip", "install", "--force-reinstall", "--no-deps",
                     "torch==2.4.0", "torchvision==0.19.0", "torchaudio==2.4.0", "--index-url", GpuDetect.CudaIndexUrl], progress, ct);
                 if (cudaCode != 0)
-                    throw new InvalidOperationException($"CUDA-Torch für seed-vc ließ sich nicht installieren: {Short(cudaErr)}");
+                    throw new InvalidOperationException(L.F("CUDA-Torch für seed-vc ließ sich nicht installieren: {0}", Short(cudaErr)));
             }
 
             // hf_xet beschleunigt nur den Download der Gewichte — ein Fehlschlag ist verschmerzbar.
@@ -233,10 +233,10 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         var venvPy = AppPaths.PythonExecutable(venvDir);
         if (!File.Exists(venvPy))
         {
-            progress?.Report("Erstelle isolierte seed-vc-Umgebung (eigene Paketversionen) …");
+            progress?.Report(L.T("Erstelle isolierte seed-vc-Umgebung (eigene Paketversionen) …"));
             var (code, err) = await RunPipAsync(_env.PythonExe, ["-m", "venv", venvDir], progress, ct);
             if (code != 0 || !File.Exists(venvPy))
-                throw new InvalidOperationException($"seed-vc-Umgebung konnte nicht erstellt werden: {Short(err)}");
+                throw new InvalidOperationException(L.F("seed-vc-Umgebung konnte nicht erstellt werden: {0}", Short(err)));
             await RunPipAsync(venvPy, ["-m", "pip", "install", "--upgrade", "pip", "wheel"], progress, ct);
         }
         return venvPy;
@@ -261,7 +261,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         var marker = Path.Combine(ModelsDir, ".audiola_whisper_ok");
         if (File.Exists(marker)) return;
 
-        progress?.Report("Installiere faster-whisper …");
+        progress?.Report(L.T("Installiere faster-whisper …"));
         await _env.InstallAsync(["faster-whisper"], null, progress, ct);
         try { File.WriteAllText(marker, "ok"); } catch { /* Marker optional */ }
     }
@@ -278,14 +278,14 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
 
     public async Task<GpuStatus> CheckGpuAsync(CancellationToken ct = default)
     {
-        if (!_env.Exists) return new GpuStatus(false, false, "", "Python-Umgebung noch nicht eingerichtet (erst ein Modell „Laden“).");
-        if (!ScriptAvailable) return new GpuStatus(false, false, "", "Sidecar-Skript fehlt.");
+        if (!_env.Exists) return new GpuStatus(false, false, "", L.T("Python-Umgebung noch nicht eingerichtet (erst ein Modell „Laden“)."));
+        if (!ScriptAvailable) return new GpuStatus(false, false, "", L.T("Sidecar-Skript fehlt."));
         try
         {
             var (code, stdout, err) = await RunAsync(["gpu-check"], null, ct);
             if (code != 0) return new GpuStatus(false, false, "", Short(err));
             var g = JsonSerializer.Deserialize<GpuDto>(ExtractJson(stdout), JsonOpts);
-            if (g is null) return new GpuStatus(false, false, "", "Keine Antwort.");
+            if (g is null) return new GpuStatus(false, false, "", L.T("Keine Antwort."));
             return new GpuStatus(g.Torch, g.Cuda, g.Device_Name ?? "", g.Error);
         }
         catch (Exception ex) { return new GpuStatus(false, false, "", ex.Message); }
@@ -294,7 +294,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
     public async Task InstallCudaTorchAsync(IProgress<string>? progress = null, CancellationToken ct = default)
     {
         await _env.EnsureAsync(progress, ct);
-        progress?.Report("Installiere CUDA-Variante von torch/torchvision/torchaudio … (groß, dauert)");
+        progress?.Report(L.T("Installiere CUDA-Variante von torch/torchvision/torchaudio … (groß, dauert)"));
         // Alle drei zusammen aus demselben Index → passende ABI (sonst „Einsprungpunkt nicht gefunden").
         await _env.InstallAsync(["torch", "torchvision", "torchaudio"], GpuDetect.CudaIndexUrl,
             progress, ct, forceReinstall: true);
@@ -315,7 +315,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
 
         var (code, _, err) = await RunAsync([.. args], null, ct);
         if (code != 0 || !File.Exists(outWav))
-            throw new InvalidOperationException($"Lokale Sprachsynthese fehlgeschlagen: {Short(err)}");
+            throw new InvalidOperationException(L.F("Lokale Sprachsynthese fehlgeschlagen: {0}", Short(err)));
         return AudioProcessingHelper.ReadStereo(outWav);
     }
 
@@ -325,7 +325,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
     {
         RequireScript();
         var speaker = profile.SamplePaths.FirstOrDefault(File.Exists)
-            ?? throw new InvalidOperationException("Diese lokale Stimme hat kein Referenz-Sample für den Stimmtausch.");
+            ?? throw new InvalidOperationException(L.T("Diese lokale Stimme hat kein Referenz-Sample für den Stimmtausch."));
         var outWav = TempWav("vc");
 
         // Sicherheits-Timeout, damit es nicht endlos hängt (CPU-Diffusion kann extrem lange dauern).
@@ -344,14 +344,14 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
             throw new InvalidOperationException(
-                "Lokaler Stimmtausch abgebrochen (Zeitüberschreitung nach 30 Min). seed-vc ist auf CPU sehr langsam — " +
-                "bitte eine CUDA-GPU verwenden (Gerät in „Stimmen“ auf cuda) oder einen kürzeren Bereich markieren.");
+                L.T("Lokaler Stimmtausch abgebrochen (Zeitüberschreitung nach 30 Min). seed-vc ist auf CPU sehr langsam — " +
+                "bitte eine CUDA-GPU verwenden (Gerät in „Stimmen“ auf cuda) oder einen kürzeren Bereich markieren."));
         }
 
         if (code != 0 || !File.Exists(outWav))
         {
             var detail = err.Length > 1500 ? err[^1500..] : err;
-            throw new InvalidOperationException($"Lokaler Stimmtausch fehlgeschlagen:\n{detail}");
+            throw new InvalidOperationException(L.F("Lokaler Stimmtausch fehlgeschlagen:\n{0}", detail));
         }
         return AudioProcessingHelper.ReadStereo(outWav);
     }
@@ -367,7 +367,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
              "--strength", strength.ToString(System.Globalization.CultureInfo.InvariantCulture)],
             progress, ct);
         if (code != 0 || !File.Exists(outWav))
-            throw new InvalidOperationException($"Tonhöhen-Korrektur fehlgeschlagen: {Short(err)}");
+            throw new InvalidOperationException(L.F("Tonhöhen-Korrektur fehlgeschlagen: {0}", Short(err)));
         return AudioProcessingHelper.ReadStereo(outWav);
     }
 
@@ -378,7 +378,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         Directory.CreateDirectory(ModelsDir);
         var marker = Path.Combine(ModelsDir, ".audiola_autotune_ok");
         if (File.Exists(marker)) return;
-        progress?.Report("Richte Tonhöhen-Korrektur ein (pyworld) …");
+        progress?.Report(L.T("Richte Tonhöhen-Korrektur ein (pyworld) …"));
         await _env.InstallAsync(["pyworld", "soundfile"], null, progress, ct);
         try { File.WriteAllText(marker, "ok"); } catch { }
     }
@@ -393,7 +393,7 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
         var (code, stdout, err) = await RunAsync(
             ["transcribe", "--input", inputWav, "--model", whisperModel, "--device", Device, "--out", outPath], null, ct);
         if (code != 0)
-            throw new InvalidOperationException($"Transkription fehlgeschlagen: {Short(err)}");
+            throw new InvalidOperationException(L.F("Transkription fehlgeschlagen: {0}", Short(err)));
 
         string json;
         try { json = File.Exists(outPath) ? await File.ReadAllTextAsync(outPath, ct) : ExtractJson(stdout); }
@@ -415,9 +415,9 @@ public sealed class PythonLocalVoiceService : ILocalVoiceService
     {
         if (!ScriptAvailable)
             throw new InvalidOperationException(
-                $"Lokale Voice-Engine nicht gefunden — voicebox_engine.py fehlt neben dem Programm ({ScriptPath}). " +
+                L.F("Lokale Voice-Engine nicht gefunden — voicebox_engine.py fehlt neben dem Programm ({0}). " +
                 "Das deutet auf eine unvollständige Installation hin: Audiola neu installieren und danach " +
-                "„Hilfe → Einrichtungs-Assistent“ durchlaufen.");
+                "„Hilfe → Einrichtungs-Assistent“ durchlaufen.", ScriptPath));
     }
 
     private static string TempWav(string tag)

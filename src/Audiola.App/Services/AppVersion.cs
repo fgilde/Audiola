@@ -22,7 +22,7 @@ public static class AppVersion
     public static string Short => IsDevBuild ? "dev" : Number;
 
     /// <summary>Für „Über Audiola“: „Version 1.2.6“ bzw. mit Hinweis im Entwicklungsbuild.</summary>
-    public static string Display => IsDevBuild ? $"Version {Number} · Entwicklungsbuild" : $"Version {Number}";
+    public static string Display => IsDevBuild ? L.F("Version {0} · Entwicklungsbuild", Number) : L.F("Version {0}", Number);
 
     private static string Resolve()
     {

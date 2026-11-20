@@ -9,12 +9,12 @@ public sealed record VoiceInfo(string Id, string Name, string Category)
     /// <summary>Deutsche Kategorie-Überschrift für die Gruppierung im Dropdown.</summary>
     public string CategoryLabel => Category switch
     {
-        "premade" => "Standard",
-        "cloned" => "Eigene (geklont)",
-        "professional" => "Professionell",
-        "generated" => "Generiert",
-        "famous" => "Prominente",
-        _ => string.IsNullOrEmpty(Category) ? "Sonstige" : Category
+        "premade" => L.T("Standard"),
+        "cloned" => L.T("Eigene (geklont)"),
+        "professional" => L.T("Professionell"),
+        "generated" => L.T("Generiert"),
+        "famous" => L.T("Prominente"),
+        _ => string.IsNullOrEmpty(Category) ? L.T("Sonstige") : Category
     };
 }
 

@@ -53,9 +53,9 @@ public sealed partial class SetupWizardViewModel : ObservableObject
 
         Models =
         [
-            new("qwen3-tts", "Qwen3-TTS 1.7B", "Mehrsprachige Sprachsynthese & Stimm-Erzeugung. Wird mindestens benötigt.", required: true),
-            new("seed-vc", "seed-vc (Stimmtausch)", "Tauscht die Stimme einer Spur, behält Melodie/Betonung (auch Gesang).", required: false),
-            new("whisper-base", "Whisper base (Transkription)", "Erzeugt Liedtexte/Untertitel (LRC) aus Audio.", required: false),
+            new("qwen3-tts", "Qwen3-TTS 1.7B", L.T("Mehrsprachige Sprachsynthese & Stimm-Erzeugung. Wird mindestens benötigt."), required: true),
+            new("seed-vc", L.T("seed-vc (Stimmtausch)"), L.T("Tauscht die Stimme einer Spur, behält Melodie/Betonung (auch Gesang)."), required: false),
+            new("whisper-base", L.T("Whisper base (Transkription)"), L.T("Erzeugt Liedtexte/Untertitel (LRC) aus Audio."), required: false),
         ];
     }
 
@@ -69,7 +69,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     public bool CanBack => StepIndex > 0 && !IsBusy;
     public bool CanNext => StepIndex < StepCount - 1 && !IsBusy;
     public bool IsLastStep => StepIndex == StepCount - 1;
-    public string StepCaption => $"Schritt {StepIndex + 1} von {StepCount}";
+    public string StepCaption => L.F("Schritt {0} von {1}", StepIndex + 1, StepCount);
 
     partial void OnStepIndexChanged(int value)
     {
@@ -118,7 +118,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
 
     // ---- Schritt: GPU / CUDA ----
     [ObservableProperty] private string _device;
-    [ObservableProperty] private string _gpuStatus = "Noch nicht geprüft — auf „GPU prüfen“ klicken.";
+    [ObservableProperty] private string _gpuStatus = L.T("Noch nicht geprüft — auf „GPU prüfen“ klicken.");
     [ObservableProperty] private bool _cudaActive;
     [ObservableProperty] private bool _cudaInstallable;
 
@@ -133,7 +133,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(NotBusy))]
     private async Task CheckGpuAsync()
     {
-        IsBusy = true; BusyText = "Prüfe GPU/CUDA …";
+        IsBusy = true; BusyText = L.T("Prüfe GPU/CUDA …");
         try
         {
             var s = await _voice.CheckGpuAsync();
@@ -141,14 +141,14 @@ public sealed partial class SetupWizardViewModel : ObservableObject
             CudaActive = s.CudaAvailable;
             CudaInstallable = !s.CudaAvailable; // kein CUDA aktiv → Installation anbieten
         }
-        catch (Exception ex) { GpuStatus = "Fehler: " + ex.Message; }
+        catch (Exception ex) { GpuStatus = L.F("Fehler: {0}", ex.Message); }
         finally { IsBusy = false; }
     }
 
     [RelayCommand(CanExecute = nameof(NotBusy))]
     private async Task InstallCudaAsync()
     {
-        IsBusy = true; BusyText = "Installiere CUDA-Torch … (groß, dauert einige Minuten)";
+        IsBusy = true; BusyText = L.T("Installiere CUDA-Torch … (groß, dauert einige Minuten)");
         try
         {
             await _voice.InstallCudaTorchAsync(new Progress<string>(m => BusyText = m));
@@ -157,7 +157,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
             CudaActive = s.CudaAvailable;
             CudaInstallable = !s.CudaAvailable;
         }
-        catch (Exception ex) { UiError.Show("CUDA-Installation fehlgeschlagen", ex.Message); }
+        catch (Exception ex) { UiError.Show(L.T("CUDA-Installation fehlgeschlagen"), ex.Message); }
         finally { IsBusy = false; }
     }
 
@@ -169,40 +169,40 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     {
         if (item is null || item.IsDownloading || IsBusy) return;
         item.IsDownloading = true;
-        item.Status = "Lädt …";
+        item.Status = L.T("Lädt …");
         try
         {
             await _voice.DownloadModelAsync(item.Id, new Progress<string>(m => item.Status = m));
             item.Installed = true;
-            item.Status = "Installiert ✓";
+            item.Status = L.T("Installiert ✓");
             OnPropertyChanged(nameof(RequiredModelsInstalled));
         }
         catch (Exception ex)
         {
             item.Status = "";
-            UiError.Show($"Download fehlgeschlagen: {item.Name}", ex.Message);
+            UiError.Show(L.F("Download fehlgeschlagen: {0}", item.Name), ex.Message);
         }
         finally { item.IsDownloading = false; }
     }
 
     // ---- Schritt: Stem-Trennung ----
     [ObservableProperty] private bool _stemReady;
-    [ObservableProperty] private string _stemStatus = "Noch nicht eingerichtet.";
+    [ObservableProperty] private string _stemStatus = L.T("Noch nicht eingerichtet.");
 
     [RelayCommand(CanExecute = nameof(NotBusy))]
     private async Task InstallStemAsync()
     {
-        IsBusy = true; BusyText = "Richte Stem-Trennung ein … (einmalig, groß)";
+        IsBusy = true; BusyText = L.T("Richte Stem-Trennung ein … (einmalig, groß)");
         try
         {
             await _separation.EnsureInstalledAsync(new Progress<string>(m => BusyText = m));
             StemReady = true;
-            StemStatus = "Stem-Trennung bereit ✓";
+            StemStatus = L.T("Stem-Trennung bereit ✓");
         }
         catch (Exception ex)
         {
             StemStatus = "";
-            UiError.Show("Stem-Trennung einrichten fehlgeschlagen", ex.Message);
+            UiError.Show(L.T("Stem-Trennung einrichten fehlgeschlagen"), ex.Message);
         }
         finally { IsBusy = false; }
     }
@@ -228,7 +228,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
             foreach (var item in Models)
             {
                 var match = models.FirstOrDefault(m => string.Equals(m.Id, item.Id, StringComparison.OrdinalIgnoreCase));
-                if (match is { Installed: true }) { item.Installed = true; item.Status = "Installiert ✓"; }
+                if (match is { Installed: true }) { item.Installed = true; item.Status = L.T("Installiert ✓"); }
             }
             OnPropertyChanged(nameof(RequiredModelsInstalled));
             OnPropertyChanged(nameof(LocalVoiceReady));

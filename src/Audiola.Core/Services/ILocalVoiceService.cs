@@ -19,10 +19,10 @@ public sealed record TranscriptSegment(double Start, double End, string Text);
 public sealed record GpuStatus(bool TorchInstalled, bool CudaAvailable, string DeviceName, string? Detail)
 {
     public string Summary => !TorchInstalled
-        ? "torch noch nicht installiert — Modell „Laden“ oder „CUDA-Torch installieren“."
+        ? L.T("torch noch nicht installiert — Modell „Laden“ oder „CUDA-Torch installieren“.")
         : CudaAvailable
-            ? $"CUDA aktiv: {DeviceName}"
-            : "CUDA NICHT verfügbar — es läuft auf CPU (langsam). „CUDA-Torch installieren“ versuchen.";
+            ? L.F("CUDA aktiv: {0}", DeviceName)
+            : L.T("CUDA NICHT verfügbar — es läuft auf CPU (langsam). „CUDA-Torch installieren“ versuchen.");
 }
 
 /// <summary>

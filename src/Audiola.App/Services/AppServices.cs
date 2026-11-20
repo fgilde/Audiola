@@ -16,5 +16,5 @@ public static class AppServices
 
     public static T Get<T>() where T : class
         => _provider?.GetService(typeof(T)) as T
-           ?? throw new InvalidOperationException($"Dienst {typeof(T)} nicht registriert.");
+           ?? throw new InvalidOperationException(L.F("Dienst {0} nicht registriert.", typeof(T)));
 }

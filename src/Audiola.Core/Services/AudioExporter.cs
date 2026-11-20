@@ -167,7 +167,7 @@ public static class AudioExporter
     {
         var fmt = source.WaveFormat;
         if (fmt.Channels < 1)
-            throw new InvalidOperationException("Ungültiges Audioformat für FLAC-Export (keine Kanäle).");
+            throw new InvalidOperationException(L.T("Ungültiges Audioformat für FLAC-Export (keine Kanäle)."));
 
         var pcm = new AudioPCMConfig(16, fmt.Channels, fmt.SampleRate);
 

@@ -10,12 +10,12 @@ public sealed class StudioEffectsVariationProvider : IAudioVariationProvider
 
     private static readonly AudioVariation[] Variations =
     [
-        new("reverb",    "Hall (sanft)",      "Dezenter Raum/Hall (Schroeder-Reverb, Wet ~25 %)."),
-        new("echo",      "Echo/Delay",        "Slapback-artiges Delay mit Feedback."),
-        new("wide",      "Stereo breiter",    "Verbreitert das Stereobild (Mid/Side, Faktor 1.4)."),
-        new("cleanup",   "Vocal-Cleanup",     "De-Esser, Härte zähmen, sanfte Kompression."),
-        new("normalize", "Normalisieren",     "Peak-Normalisierung auf −1 dBFS."),
-        new("reverse",   "Umkehren",          "Spielt das Material rückwärts."),
+        new("reverb",    L.T("Hall (sanft)"),      L.T("Dezenter Raum/Hall (Schroeder-Reverb, Wet ~25 %).")),
+        new("echo",      L.T("Echo/Delay"),        L.T("Slapback-artiges Delay mit Feedback.")),
+        new("wide",      L.T("Stereo breiter"),    L.T("Verbreitert das Stereobild (Mid/Side, Faktor 1.4).")),
+        new("cleanup",   L.T("Vocal-Cleanup"),     L.T("De-Esser, Härte zähmen, sanfte Kompression.")),
+        new("normalize", L.T("Normalisieren"),     L.T("Peak-Normalisierung auf −1 dBFS.")),
+        new("reverse",   L.T("Umkehren"),          L.T("Spielt das Material rückwärts.")),
     ];
 
     public IReadOnlyList<AudioVariation> GetVariations() => Variations;

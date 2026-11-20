@@ -93,7 +93,7 @@ public sealed partial class TransportViewModel : ObservableObject
         var track = _session.CurrentTrack;
         HasTrack = _engine.Duration > TimeSpan.Zero || track is not null;
         ModeLabel = Mode == TransportMode.StemMix ? "Studio" : "Original";
-        TrackName = Mode == TransportMode.StemMix ? "Studio-Mix" : track?.FileName ?? "";
+        TrackName = Mode == TransportMode.StemMix ? L.T("Studio-Mix") : track?.FileName ?? "";
         Peaks = track?.Peaks ?? [];
     }
 

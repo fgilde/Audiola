@@ -80,13 +80,13 @@ public static class PortableAudioFile
         };
 
         using var process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException("FFmpeg konnte nicht gestartet werden.");
+            ?? throw new InvalidOperationException(L.T("FFmpeg konnte nicht gestartet werden."));
         var error = process.StandardError.ReadToEnd();
         process.WaitForExit();
 
         if (process.ExitCode != 0 || !File.Exists(target))
             throw new InvalidOperationException(
-                $"„{Path.GetFileName(path)}“ konnte auf dieser Plattform nicht dekodiert werden. {error}".Trim());
+                L.F("„{0}“ konnte auf dieser Plattform nicht dekodiert werden. {1}", Path.GetFileName(path), error).Trim());
 
         return target;
     }

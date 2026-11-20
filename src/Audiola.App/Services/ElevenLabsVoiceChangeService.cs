@@ -30,7 +30,7 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
     {
         var voiceId = _settings.Current.ElevenLabsVoiceId;
         if (string.IsNullOrWhiteSpace(voiceId))
-            throw new InvalidOperationException("ElevenLabs Voice-ID fehlt in den Einstellungen.");
+            throw new InvalidOperationException(L.T("ElevenLabs Voice-ID fehlt in den Einstellungen."));
         return ChangeAsync(inputWavPath, voiceId, ct);
     }
 
@@ -70,7 +70,7 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
         {
             var body = await resp.Content.ReadAsStringAsync(ct);
             throw new InvalidOperationException(
-                $"ElevenLabs-Fehler {(int)resp.StatusCode}: {Shorten(body)}");
+                L.F("ElevenLabs-Fehler {0}: {1}", (int)resp.StatusCode, Shorten(body)));
         }
 
         var mp3 = TempDir.File("voice", ".mp3", "sts");
@@ -85,9 +85,9 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
     {
         RequireApiKey();
         if (string.IsNullOrWhiteSpace(voiceId))
-            throw new InvalidOperationException("Keine Zielstimme gewählt.");
+            throw new InvalidOperationException(L.T("Keine Zielstimme gewählt."));
         if (string.IsNullOrWhiteSpace(text))
-            throw new InvalidOperationException("Kein Text angegeben.");
+            throw new InvalidOperationException(L.T("Kein Text angegeben."));
 
         var url = $"https://api.elevenlabs.io/v1/text-to-speech/{voiceId}?output_format=mp3_44100_128";
         var payload = new
@@ -112,7 +112,7 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
         if (!resp.IsSuccessStatusCode)
         {
             var body = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"ElevenLabs-Fehler {(int)resp.StatusCode}: {Shorten(body)}");
+            throw new InvalidOperationException(L.F("ElevenLabs-Fehler {0}: {1}", (int)resp.StatusCode, Shorten(body)));
         }
 
         var mp3 = TempDir.File("voice", ".mp3", "tts");
@@ -126,7 +126,7 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
     {
         RequireApiKey();
         if (!File.Exists(audioPath))
-            throw new InvalidOperationException("Audiodatei für die Transkription nicht gefunden.");
+            throw new InvalidOperationException(L.T("Audiodatei für die Transkription nicht gefunden."));
 
         var bytes = await File.ReadAllBytesAsync(audioPath, ct);
         using var form = new MultipartFormDataContent();
@@ -140,7 +140,7 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
         using var resp = await Http.SendAsync(req, ct);
         var json = await resp.Content.ReadAsStringAsync(ct);
         if (!resp.IsSuccessStatusCode)
-            throw new InvalidOperationException($"ElevenLabs-Fehler {(int)resp.StatusCode}: {Shorten(json)}");
+            throw new InvalidOperationException(L.F("ElevenLabs-Fehler {0}: {1}", (int)resp.StatusCode, Shorten(json)));
 
         return ParseScribe(json);
     }
@@ -214,21 +214,21 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
     private void RequireApiKey()
     {
         if (!HasApiKey)
-            throw new InvalidOperationException("Bitte zuerst den ElevenLabs API-Key in den Einstellungen eintragen.");
+            throw new InvalidOperationException(L.T("Bitte zuerst den ElevenLabs API-Key in den Einstellungen eintragen."));
     }
 
     public async Task<IReadOnlyList<VoiceInfo>> GetVoicesAsync(CancellationToken ct = default)
     {
         var key = _settings.Current.ElevenLabsApiKey;
         if (string.IsNullOrWhiteSpace(key))
-            throw new InvalidOperationException("Bitte zuerst den ElevenLabs API-Key eintragen.");
+            throw new InvalidOperationException(L.T("Bitte zuerst den ElevenLabs API-Key eintragen."));
 
         using var req = new HttpRequestMessage(HttpMethod.Get, "https://api.elevenlabs.io/v1/voices");
         req.Headers.Add("xi-api-key", key);
         using var resp = await Http.SendAsync(req, ct);
         var json = await resp.Content.ReadAsStringAsync(ct);
         if (!resp.IsSuccessStatusCode)
-            throw new InvalidOperationException($"ElevenLabs-Fehler {(int)resp.StatusCode}: {Shorten(json)}");
+            throw new InvalidOperationException(L.F("ElevenLabs-Fehler {0}: {1}", (int)resp.StatusCode, Shorten(json)));
 
         using var doc = JsonDocument.Parse(json);
         var list = new List<VoiceInfo>();
@@ -247,9 +247,9 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
     {
         var key = _settings.Current.ElevenLabsApiKey;
         if (string.IsNullOrWhiteSpace(key))
-            throw new InvalidOperationException("Bitte zuerst den ElevenLabs API-Key eintragen.");
+            throw new InvalidOperationException(L.T("Bitte zuerst den ElevenLabs API-Key eintragen."));
         if (samplePaths.Count == 0)
-            throw new InvalidOperationException("Keine Audiodatei für die Stimme angegeben.");
+            throw new InvalidOperationException(L.T("Keine Audiodatei für die Stimme angegeben."));
 
         using var form = new MultipartFormDataContent
         {
@@ -268,7 +268,7 @@ public sealed class ElevenLabsVoiceChangeService : IVoiceChangeService
         using var resp = await Http.SendAsync(req, ct);
         var json = await resp.Content.ReadAsStringAsync(ct);
         if (!resp.IsSuccessStatusCode)
-            throw new InvalidOperationException($"ElevenLabs-Fehler {(int)resp.StatusCode}: {Shorten(json)}");
+            throw new InvalidOperationException(L.F("ElevenLabs-Fehler {0}: {1}", (int)resp.StatusCode, Shorten(json)));
 
         using var doc = JsonDocument.Parse(json);
         return doc.RootElement.TryGetProperty("voice_id", out var vid) ? vid.GetString() ?? "" : "";

@@ -67,8 +67,8 @@ public sealed class LatencyCalibrator
 
         if (offsets.Count == 0)
             throw new InvalidOperationException(
-                "Es wurde kein Klick erkannt. Bitte ohne Kopfhörer kalibrieren, das Mikrofon aktivieren " +
-                "und die Lautsprecher-Lautstärke etwas erhöhen.");
+                L.T("Es wurde kein Klick erkannt. Bitte ohne Kopfhörer kalibrieren, das Mikrofon aktivieren " +
+                "und die Lautsprecher-Lautstärke etwas erhöhen."));
 
         offsets.Sort();
         return offsets[offsets.Count / 2] * 1000.0; // Median in ms

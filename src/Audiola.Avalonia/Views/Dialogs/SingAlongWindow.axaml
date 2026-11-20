@@ -1,11 +1,11 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="using:Audiola.Avalonia.Localization"
         xmlns:ic="using:FluentIcons.Avalonia"
         xmlns:controls="using:Audiola.Controls"
         xmlns:vm="using:Audiola.ViewModels"
         x:Class="Audiola.Avalonia.Views.Dialogs.SingAlongWindow"
         x:DataType="vm:SingAlongViewModel"
-        Title="Einsingen"
+        Title="{l:T 'Einsingen'}"
         Width="1040" Height="760"
         MinWidth="820" MinHeight="600"
         WindowStartupLocation="CenterOwner"
@@ -116,30 +116,30 @@
               Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
         <StackPanel>
           <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-            <TextBlock VerticalAlignment="Center" Text="Mikrofon:" FontSize="13" />
+            <TextBlock VerticalAlignment="Center" Text="{l:T 'Mikrofon:'}" FontSize="13" />
             <controls:MicSelectorControl Margin="8,0,0,0" DeviceNumber="{Binding SelectedMicNumber, Mode=TwoWay}" />
           </StackPanel>
           <StackPanel Orientation="Horizontal" Spacing="8">
             <Button Classes="accent" Command="{Binding PrepareCommand}">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ic:SymbolIcon Symbol="MusicNote2" /><TextBlock Text="Backing vorbereiten" />
+                <ic:SymbolIcon Symbol="MusicNote2" /><TextBlock Text="{l:T 'Backing vorbereiten'}" />
               </StackPanel>
             </Button>
             <Button Command="{Binding CalibrateCommand}"
-                    ToolTip.Tip="Klick-Test — bitte OHNE Kopfhörer, damit das Mikro die Klicks hört.">
+                    ToolTip.Tip="{l:T 'Klick-Test — bitte OHNE Kopfhörer, damit das Mikro die Klicks hört.'}">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ic:SymbolIcon Symbol="Timer" /><TextBlock Text="Latenz kalibrieren" />
+                <ic:SymbolIcon Symbol="Timer" /><TextBlock Text="{l:T 'Latenz kalibrieren'}" />
               </StackPanel>
             </Button>
             <Button Command="{Binding ExtractLyricsCommand}" IsVisible="{Binding NeedsLyrics}"
-                    ToolTip.Tip="Liedtext aus der Gesangsspur erkennen (getaktet) und projektweit speichern.">
+                    ToolTip.Tip="{l:T 'Liedtext aus der Gesangsspur erkennen (getaktet) und projektweit speichern.'}">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ic:SymbolIcon Symbol="TextBulletListSquare" /><TextBlock Text="Lyrics extrahieren" />
+                <ic:SymbolIcon Symbol="TextBulletListSquare" /><TextBlock Text="{l:T 'Lyrics extrahieren'}" />
               </StackPanel>
             </Button>
             <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" FontSize="12"
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                       Text="{Binding LatencyMs, StringFormat='Versatz: {0:F0} ms'}" />
+                       Text="{Binding LatencyMs, Converter={x:Static l:Fmt.Instance}, ConverterParameter='Versatz: {0:F0} ms'}" />
             <TextBlock VerticalAlignment="Center" FontSize="12"
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{Binding CalibrationStatus}" />
           </StackPanel>
@@ -153,10 +153,10 @@
         <Border Grid.Column="0" Padding="12" CornerRadius="10"
                 Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
           <DockPanel>
-            <TextBlock DockPanel.Dock="Top" FontWeight="SemiBold" Text="Spuren" />
+            <TextBlock DockPanel.Dock="Top" FontWeight="SemiBold" Text="{l:T 'Spuren'}" />
             <TextBlock DockPanel.Dock="Top" Margin="0,2,0,8" FontSize="11" TextWrapping="Wrap"
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                       Text="Gesangsspur auswählen (liefert die Referenz-Melodie) und stummschalten, damit du nur das Playback hörst." />
+                       Text="{l:T 'Gesangsspur auswählen (liefert die Referenz-Melodie) und stummschalten, damit du nur das Playback hörst.'}" />
             <ListBox Classes="trackList" ItemsSource="{Binding Tracks}"
                      SelectedItem="{Binding ReferenceTrack, Mode=TwoWay}"
                      Background="Transparent" BorderThickness="0">
@@ -166,9 +166,9 @@
                     <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="{Binding Name}"
                                TextTrimming="CharacterEllipsis" />
                     <ToggleButton Grid.Column="1" Classes="tagToggle mute" Content="M"
-                                  ToolTip.Tip="Stummschalten" IsChecked="{Binding IsMuted, Mode=TwoWay}" />
+                                  ToolTip.Tip="{l:T 'Stummschalten'}" IsChecked="{Binding IsMuted, Mode=TwoWay}" />
                     <ToggleButton Grid.Column="2" Classes="tagToggle solo" Content="S"
-                                  ToolTip.Tip="Solo" IsChecked="{Binding IsSolo, Mode=TwoWay}" />
+                                  ToolTip.Tip="{l:T 'Solo'}" IsChecked="{Binding IsSolo, Mode=TwoWay}" />
                   </Grid>
                 </DataTemplate>
               </ListBox.ItemTemplate>
@@ -189,22 +189,22 @@
                 <StackPanel Orientation="Horizontal">
                   <Ellipse Width="12" Height="12" Fill="#FF3B30" VerticalAlignment="Center" />
                   <TextBlock Margin="7,0,0,0" VerticalAlignment="Center" FontWeight="Bold"
-                             Foreground="#FF6B60" Text="AUFNAHME" />
+                             Foreground="#FF6B60" Text="{l:T 'AUFNAHME'}" />
                 </StackPanel>
               </Border>
               <TextBlock VerticalAlignment="Center" FontSize="26" FontWeight="Bold"
                          Text="{Binding ScorePercent, StringFormat='{}{0}%'}" />
               <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="13"
                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                         Text="{Binding Points, StringFormat='{}{0} Punkte'}" />
+                         Text="{Binding Points, Converter={x:Static l:Fmt.Instance}, ConverterParameter='{}{0} Punkte'}" />
               <Border Classes="pitchDot" Classes.onPitch="{Binding IsOnPitch}"
                       Width="12" Height="12" Margin="20,0,0,0" CornerRadius="6" VerticalAlignment="Center" />
               <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="13"
                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                         Text="{Binding TargetNote, StringFormat='Ziel {0}'}" />
+                         Text="{Binding TargetNote, Converter={x:Static l:Fmt.Instance}, ConverterParameter='Ziel {0}'}" />
               <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="13"
                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                         Text="{Binding SungNote, StringFormat='· Du {0}'}" />
+                         Text="{Binding SungNote, Converter={x:Static l:Fmt.Instance}, ConverterParameter='· Du {0}'}" />
             </StackPanel>
           </Border>
 
@@ -238,7 +238,7 @@
           <Slider Name="PosSlider" Minimum="0" Maximum="{Binding DurationSeconds}"
                   Value="{Binding PositionSeconds, Mode=OneWay}"
                   PointerPressed="Pos_ScrubStart" PointerReleased="Pos_ScrubEnd"
-                  ToolTip.Tip="Ziehen zum Springen — an dieser Stelle aufnehmen überschreibt ab hier." />
+                  ToolTip.Tip="{l:T 'Ziehen zum Springen — an dieser Stelle aufnehmen überschreibt ab hier.'}" />
           <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
             <!-- Wiedergabe / Pause -->
             <Button MinWidth="150" HorizontalContentAlignment="Center" Command="{Binding TogglePlayCommand}"
@@ -247,14 +247,14 @@
             <Button MinWidth="180" Margin="8,0,0,0" Classes="danger" HorizontalContentAlignment="Center"
                     Command="{Binding ToggleRecordCommand}" IsEnabled="{Binding Prepared}"
                     Content="{Binding RecordButtonLabel}" />
-            <ToggleSwitch Margin="12,0,0,0" VerticalAlignment="Center" Content="Vorzähler"
+            <ToggleSwitch Margin="12,0,0,0" VerticalAlignment="Center" Content="{l:T 'Vorzähler'}"
                           IsChecked="{Binding CountInEnabled, Mode=TwoWay}"
-                          ToolTip.Tip="3-Sekunden-Countdown vor jeder Aufnahme" />
+                          ToolTip.Tip="{l:T '3-Sekunden-Countdown vor jeder Aufnahme'}" />
             <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" FontSize="13"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding PositionText}" />
             <Button Margin="20,0,0,0" Classes="success" Command="{Binding AcceptCommand}">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ic:SymbolIcon Symbol="CheckmarkCircle" /><TextBlock Text="Als Spur übernehmen" />
+                <ic:SymbolIcon Symbol="CheckmarkCircle" /><TextBlock Text="{l:T 'Als Spur übernehmen'}" />
               </StackPanel>
             </Button>
           </StackPanel>
@@ -262,21 +262,21 @@
           <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
             <Button Classes="accent" Command="{Binding MakePerfectCommand}"
                     IsEnabled="{Binding HasRecording}"
-                    ToolTip.Tip="Zieht deine Aufnahme auf die Original-Melodie (deine Stimme bleibt) und übernimmt sie als neue Spur.">
+                    ToolTip.Tip="{l:T 'Zieht deine Aufnahme auf die Original-Melodie (deine Stimme bleibt) und übernimmt sie als neue Spur.'}">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ic:SymbolIcon Symbol="Sparkle" /><TextBlock Text="Perfekt machen" />
+                <ic:SymbolIcon Symbol="Sparkle" /><TextBlock Text="{l:T 'Perfekt machen'}" />
               </StackPanel>
             </Button>
             <TextBlock Margin="16,0,6,0" VerticalAlignment="Center" FontSize="12"
-                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Stärke" />
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{l:T 'Stärke'}" />
             <Slider Width="120" VerticalAlignment="Center" Minimum="0" Maximum="1"
                     Value="{Binding MagicStrength, Mode=TwoWay}"
-                    ToolTip.Tip="0 = unverändert, 1 = exakt auf der Melodie" />
+                    ToolTip.Tip="{l:T '0 = unverändert, 1 = exakt auf der Melodie'}" />
             <TextBlock Margin="16,0,6,0" VerticalAlignment="Center" FontSize="12"
-                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="Veredeln mit" />
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" Text="{l:T 'Veredeln mit'}" />
             <ComboBox Width="200" ItemsSource="{Binding Voices}" DisplayMemberBinding="{Binding Name}"
                       SelectedItem="{Binding SelectedVoice, Mode=TwoWay}"
-                      ToolTip.Tip="Optional: die korrigierte Stimme per seed-vc auf eine Zielstimme tauschen." />
+                      ToolTip.Tip="{l:T 'Optional: die korrigierte Stimme per seed-vc auf eine Zielstimme tauschen.'}" />
           </StackPanel>
         </StackPanel>
       </Border>
@@ -288,7 +288,7 @@
         <TextBlock FontSize="128" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"
                    Text="{Binding CountIn}" />
         <TextBlock Margin="0,4,0,0" FontSize="16" Foreground="#CCFFFFFF" HorizontalAlignment="Center"
-                   Text="Bereit machen — die Aufnahme startet gleich" />
+                   Text="{l:T 'Bereit machen — die Aufnahme startet gleich'}" />
       </StackPanel>
     </Border>
 

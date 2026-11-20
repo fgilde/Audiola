@@ -122,7 +122,7 @@ internal sealed class MiniAudioWaveIn : IWaveIn
             if (!_contextInitialized)
             {
                 if (ma_context_init(null, _context) != ma_result.success)
-                    throw new InvalidOperationException("Der Audio-Kontext konnte nicht initialisiert werden.");
+                    throw new InvalidOperationException(L.T("Der Audio-Kontext konnte nicht initialisiert werden."));
                 _contextInitialized = true;
             }
 
@@ -143,14 +143,14 @@ internal sealed class MiniAudioWaveIn : IWaveIn
                 }
 
                 if (ma_device_init(_context, ref config, _device) != ma_result.success)
-                    throw new InvalidOperationException("Das Mikrofon konnte nicht geöffnet werden.");
+                    throw new InvalidOperationException(L.T("Das Mikrofon konnte nicht geöffnet werden."));
                 _deviceInitialized = true;
 
                 if (ma_device_start(_device) != ma_result.success)
                 {
                     ma_device_uninit(_device);
                     _deviceInitialized = false;
-                    throw new InvalidOperationException("Die Aufnahme konnte nicht gestartet werden.");
+                    throw new InvalidOperationException(L.T("Die Aufnahme konnte nicht gestartet werden."));
                 }
                 _recording = true;
             }
@@ -228,7 +228,7 @@ public static class AudioDevices
                 for (var i = 0; i < WaveInEvent.DeviceCount; i++)
                 {
                     try { names.Add(WaveInEvent.GetCapabilities(i).ProductName); }
-                    catch { names.Add($"Mikrofon {i + 1}"); }
+                    catch { names.Add(L.F("Mikrofon {0}", i + 1)); }
                 }
                 return names;
             }
@@ -241,7 +241,7 @@ public static class AudioDevices
                     return [];
                 var devices = captureDevices ?? [];
                 return devices.Length == 0
-                    ? ["Standard-Mikrofon"]
+                    ? [L.T("Standard-Mikrofon")]
                     : [.. devices.Select(d => d.GetName())];
             }
             catch { return []; }

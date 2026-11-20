@@ -36,7 +36,7 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
     [ObservableProperty] private double _roomAmount = 0.18;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private bool _isPreviewing;
-    [ObservableProperty] private string _statusText = "Quelle wird vorbereitet …";
+    [ObservableProperty] private string _statusText = L.T("Quelle wird vorbereitet …");
 
     public SpatialAudioViewModel(TimelineViewModel timeline, INotifier snackbar, SpatialPreviewEngine preview,
         StemMixerEngine engine, IFileDialogs files)
@@ -75,7 +75,7 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
         {
             Sources.Clear();
             OnPropertyChanged(nameof(HasSources));
-            StatusText = "Keine Spuren — im Studio Stems laden oder trennen.";
+            StatusText = L.T("Keine Spuren — im Studio Stems laden oder trennen.");
             UpdateCommands();
             return;
         }
@@ -88,7 +88,7 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
         var pending = _pendingSpatial;
 
         IsBusy = true;
-        StatusText = "Bereite Spuren vor (rendern – inkl. Stimmtausch & Verschiebungen) …";
+        StatusText = L.T("Bereite Spuren vor (rendern – inkl. Stimmtausch & Verschiebungen) …");
         UpdateCommands();
         try
         {
@@ -142,10 +142,10 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
             OnPropertyChanged(nameof(HasSources));
             _pendingSpatial = null;
             StatusText = Sources.Count == 0
-                ? "Keine abspielbaren Spuren."
-                : $"{Sources.Count} Spuren bereit — Punkte ziehen oder Regler nutzen.";
+                ? L.T("Keine abspielbaren Spuren.")
+                : L.F("{0} Spuren bereit — Punkte ziehen oder Regler nutzen.", Sources.Count);
         }
-        catch (Exception ex) { StatusText = "Fehler: " + ex.Message; }
+        catch (Exception ex) { StatusText = L.F("Fehler: {0}", ex.Message); }
         finally { IsBusy = false; UpdateCommands(); }
     }
 
@@ -227,7 +227,7 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
             };
             v.AzimuthDeg = p.Az; v.ElevationDeg = p.El; v.Distance = p.Dist; v.GainDb = 0;
         }
-        StatusText = "Automatisch angeordnet — Lead vorne, Drums leicht erhöht, Instrumente im Raum verteilt.";
+        StatusText = L.T("Automatisch angeordnet — Lead vorne, Drums leicht erhöht, Instrumente im Raum verteilt.");
     }
 
     [RelayCommand(CanExecute = nameof(CanRun))]
@@ -236,14 +236,14 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
         IsBusy = true; UpdateCommands();
         try
         {
-            StatusText = "Bereite Live-Vorschau vor …";
+            StatusText = L.T("Bereite Live-Vorschau vor …");
             await _preview.StartAsync(Sources);
             IsPreviewing = _preview.IsPlaying;
             StatusText = IsPreviewing
-                ? "Live-Vorschau läuft (Kopfhörer empfohlen) — Regler wirken sofort."
-                : "Keine abspielbaren Spuren.";
+                ? L.T("Live-Vorschau läuft (Kopfhörer empfohlen) — Regler wirken sofort.")
+                : L.T("Keine abspielbaren Spuren.");
         }
-        catch (Exception ex) { StatusText = "Fehler: " + ex.Message; }
+        catch (Exception ex) { StatusText = L.F("Fehler: {0}", ex.Message); }
         finally { IsBusy = false; UpdateCommands(); }
     }
 
@@ -263,7 +263,7 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
         var meta = AppServices.Get<SongMetadata>().ToMetadata();
         var name = string.IsNullOrWhiteSpace(meta.Title) ? "spatial-binaural" : $"{meta.Title} (binaural)";
 
-        StatusText = "Binauraler Mix wird beim Export gerendert …";
+        StatusText = L.T("Binauraler Mix wird beim Export gerendert …");
         await AppServices.Get<Audiola.Services.ExportService>().ExportAsync(
             name,
             () => Task.Run(() => SpatialAudioService.RenderBinaural(list, room)),
@@ -274,7 +274,7 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
     private async Task ExportMultichannelAsync()
     {
         var layout = SelectedLayoutEnum;
-        var target = await _files.SaveFileAsync("Mehrkanal-WAV exportieren",
+        var target = await _files.SaveFileAsync(L.T("Mehrkanal-WAV exportieren"),
             $"spatial-{LayoutTag}.wav", FileFilter.Wav);
         if (target is null) return;
 
@@ -282,20 +282,20 @@ public sealed partial class SpatialAudioViewModel : ObservableObject
         IsBusy = true; UpdateCommands();
         try
         {
-            StatusText = $"Rendere {SpatialAudioService.ChannelLabel(layout)} …";
+            StatusText = L.F("Rendere {0} …", SpatialAudioService.ChannelLabel(layout));
             var list = BuildSources();
             await Task.Run(() =>
             {
                 var (inter, ch, sr) = SpatialAudioService.RenderMultichannel(list, layout);
                 SpatialAudioService.WriteSurroundWav(target, inter, ch, sr, SpatialAudioService.ChannelMask(layout));
             });
-            StatusText = "Fertig: " + Path.GetFileName(target);
-            _snackbar.Success("Mehrkanal exportiert", Path.GetFileName(target));
+            StatusText = L.F("Fertig: {0}", Path.GetFileName(target));
+            _snackbar.Success(L.T("Mehrkanal exportiert"), Path.GetFileName(target));
         }
         catch (Exception ex)
         {
-            StatusText = "Fehler: " + ex.Message;
-            _snackbar.Error("Export fehlgeschlagen", ex.Message, 5);
+            StatusText = L.F("Fehler: {0}", ex.Message);
+            _snackbar.Error(L.T("Export fehlgeschlagen"), ex.Message, 5);
         }
         finally { IsBusy = false; UpdateCommands(); }
     }

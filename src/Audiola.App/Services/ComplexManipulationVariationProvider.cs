@@ -57,7 +57,7 @@ public sealed class ComplexManipulationVariationProvider : IAudioVariationProvid
 
         if (!variationsById.TryGetValue(variationId, out var config))
         {
-            throw new KeyNotFoundException($"Unbekannte Variation: {variationId}");
+            throw new KeyNotFoundException(L.F("Unbekannte Variation: {0}", variationId));
         }
 
         return Task.Run(() => ApplyInternal(config, interleavedStereo, sampleRate, ct), ct);
@@ -109,7 +109,7 @@ public sealed class ComplexManipulationVariationProvider : IAudioVariationProvid
             provider = new WdlResamplingSampleProvider(provider, config.TargetSampleRate);
             provider = new WdlResamplingSampleProvider(provider, sampleRate);
             steps.Add($"Resample(targetHz={config.TargetSampleRate}, restoreHz={sampleRate})");
-            notes.Add("Sample-Rate-Variationen werden fuer dieses Provider-Interface auf die Eingangs-Sample-Rate zurueckgebracht.");
+            notes.Add(L.T("Sample-Rate-Variationen werden fuer dieses Provider-Interface auf die Eingangs-Sample-Rate zurueckgebracht."));
         }
 
         if (config.Compression)
@@ -179,7 +179,7 @@ public sealed class ComplexManipulationVariationProvider : IAudioVariationProvid
     {
         var variations = new List<VariationConfig>
         {
-            new("original", "Original", "Unveraenderte Referenzdatei.")
+            new("original", "Original", L.T("Unveraenderte Referenzdatei."))
         };
 
         for (var i = 1; i <= 5; i++)
@@ -187,7 +187,7 @@ public sealed class ComplexManipulationVariationProvider : IAudioVariationProvid
             variations.Add(new VariationConfig(
                 $"noise{i}",
                 $"Noise{i}",
-                $"Fuegt leichtes breitbandiges Rauschen in Stufe {i} hinzu.",
+                L.F("Fuegt leichtes breitbandiges Rauschen in Stufe {0} hinzu.", i),
                 noiseLevel: i * 0.0035f));
         }
 
@@ -201,40 +201,40 @@ public sealed class ComplexManipulationVariationProvider : IAudioVariationProvid
             variations.Add(new VariationConfig(
                 id,
                 $"Pitch{pitch:+0.0;-0.0}",
-                $"Verschiebt die Tonhoehe mit SoundTouch um {pitch:+0.0;-0.0} Halbtone.",
+                L.F("Verschiebt die Tonhoehe mit SoundTouch um {0:+0.0;-0.0} Halbtone.", pitch),
                 pitchShift: pitch));
         }
 
-        variations.Add(new VariationConfig("time_stretch_104", "TimeStretch104", "Verlangsamt das Material leicht mit Faktor 1.04.", timeStretch: 1.04));
-        variations.Add(new VariationConfig("time_stretch_096", "TimeStretch096", "Beschleunigt das Material leicht mit Faktor 0.96.", timeStretch: 0.96));
+        variations.Add(new VariationConfig("time_stretch_104", "TimeStretch104", L.T("Verlangsamt das Material leicht mit Faktor 1.04."), timeStretch: 1.04));
+        variations.Add(new VariationConfig("time_stretch_096", "TimeStretch096", L.T("Beschleunigt das Material leicht mit Faktor 0.96."), timeStretch: 0.96));
 
-        variations.Add(new VariationConfig("low_cut_80", "LowCut80", "Entfernt sehr tiefe Frequenzen ueber einen High-Pass bei 80 Hz.", lowCut: 80));
-        variations.Add(new VariationConfig("high_cut_16k", "HighCut16k", "Begrenzt die Hoehen ueber einen Low-Pass bei 16 kHz.", highCut: 16000));
-        variations.Add(new VariationConfig("band_cut_mids", "BandCutMids", "Kombiniert Hoch- und Tiefpass fuer eine deutliche Mittenverlagerung.", lowCut: 250, highCut: 4000));
-        variations.Add(new VariationConfig("resample_22k", "Resample22k", "Resampelt herunter und wieder zurueck, um Codec-/Bandbreitenartefakte zu simulieren.", targetSampleRate: 22050));
+        variations.Add(new VariationConfig("low_cut_80", "LowCut80", L.T("Entfernt sehr tiefe Frequenzen ueber einen High-Pass bei 80 Hz."), lowCut: 80));
+        variations.Add(new VariationConfig("high_cut_16k", "HighCut16k", L.T("Begrenzt die Hoehen ueber einen Low-Pass bei 16 kHz."), highCut: 16000));
+        variations.Add(new VariationConfig("band_cut_mids", "BandCutMids", L.T("Kombiniert Hoch- und Tiefpass fuer eine deutliche Mittenverlagerung."), lowCut: 250, highCut: 4000));
+        variations.Add(new VariationConfig("resample_22k", "Resample22k", L.T("Resampelt herunter und wieder zurueck, um Codec-/Bandbreitenartefakte zu simulieren."), targetSampleRate: 22050));
 
-        variations.Add(new VariationConfig("compression", "Compression", "Komprimiert Pegelspitzen dezent.", compression: true));
-        variations.Add(new VariationConfig("saturation", "Saturation", "Fuegt weiche harmonische Saettigung hinzu.", saturation: 0.2f));
-        variations.Add(new VariationConfig("light_reverb", "LightReverb", "Mischt einen kurzen, einfachen Raumanteil bei.", reverb: 0.18f));
-        variations.Add(new VariationConfig("bit_crusher_10", "BitCrusher10", "Reduziert die Aufloesung auf 10 Bit.", bitDepth: 10));
-        variations.Add(new VariationConfig("tremolo_5hz", "Tremolo5Hz", "Moduliert die Lautstaerke mit 5 Hz.", tremoloDepth: 0.35f, tremoloFrequencyHz: 5.0));
+        variations.Add(new VariationConfig("compression", "Compression", L.T("Komprimiert Pegelspitzen dezent."), compression: true));
+        variations.Add(new VariationConfig("saturation", "Saturation", L.T("Fuegt weiche harmonische Saettigung hinzu."), saturation: 0.2f));
+        variations.Add(new VariationConfig("light_reverb", "LightReverb", L.T("Mischt einen kurzen, einfachen Raumanteil bei."), reverb: 0.18f));
+        variations.Add(new VariationConfig("bit_crusher_10", "BitCrusher10", L.T("Reduziert die Aufloesung auf 10 Bit."), bitDepth: 10));
+        variations.Add(new VariationConfig("tremolo_5hz", "Tremolo5Hz", L.T("Moduliert die Lautstaerke mit 5 Hz."), tremoloDepth: 0.35f, tremoloFrequencyHz: 5.0));
 
-        variations.Add(new VariationConfig("stereo_wide_130", "StereoWide130", "Erweitert die Stereobreite moderat.", stereoWidth: 1.3f));
-        variations.Add(new VariationConfig("stereo_wide_160", "StereoWide160", "Erweitert die Stereobreite deutlich.", stereoWidth: 1.6f));
-        variations.Add(new VariationConfig("phase_flip_right", "PhaseFlipRight", "Invertiert den rechten Kanal phasenmaessig.", phaseFlipRightChannel: true));
+        variations.Add(new VariationConfig("stereo_wide_130", "StereoWide130", L.T("Erweitert die Stereobreite moderat."), stereoWidth: 1.3f));
+        variations.Add(new VariationConfig("stereo_wide_160", "StereoWide160", L.T("Erweitert die Stereobreite deutlich."), stereoWidth: 1.6f));
+        variations.Add(new VariationConfig("phase_flip_right", "PhaseFlipRight", L.T("Invertiert den rechten Kanal phasenmaessig."), phaseFlipRightChannel: true));
 
-        variations.Add(new VariationConfig("gentle_tilt_bright", "GentleTiltBright", "Leichter Tilt-EQ Richtung heller Klang mit Sicherheits-Limiter.", highShelfGainDb: 1.2f, lowShelfGainDb: -0.6f, outputGainDb: -0.8f, limiterThreshold: 0.97f));
-        variations.Add(new VariationConfig("gentle_tilt_warm", "GentleTiltWarm", "Leichter Tilt-EQ Richtung waermerer Klang mit Sicherheits-Limiter.", highShelfGainDb: -0.9f, lowShelfGainDb: 0.8f, outputGainDb: -0.8f, limiterThreshold: 0.97f));
-        variations.Add(new VariationConfig("safe_limiter", "SafeLimiter", "Reduziert den Ausgangspegel und begrenzt Spitzen sanft.", outputGainDb: -1.2f, limiterThreshold: 0.96f));
+        variations.Add(new VariationConfig("gentle_tilt_bright", "GentleTiltBright", L.T("Leichter Tilt-EQ Richtung heller Klang mit Sicherheits-Limiter."), highShelfGainDb: 1.2f, lowShelfGainDb: -0.6f, outputGainDb: -0.8f, limiterThreshold: 0.97f));
+        variations.Add(new VariationConfig("gentle_tilt_warm", "GentleTiltWarm", L.T("Leichter Tilt-EQ Richtung waermerer Klang mit Sicherheits-Limiter."), highShelfGainDb: -0.9f, lowShelfGainDb: 0.8f, outputGainDb: -0.8f, limiterThreshold: 0.97f));
+        variations.Add(new VariationConfig("safe_limiter", "SafeLimiter", L.T("Reduziert den Ausgangspegel und begrenzt Spitzen sanft."), outputGainDb: -1.2f, limiterThreshold: 0.96f));
 
-        variations.Add(new VariationConfig("strong_combo1", "StrongCombo1", "Kombiniert Rauschen, Pitch, Filter, Resampling und Stereo-Breite.", noiseLevel: 0.008f, pitchShift: 1.2, targetSampleRate: 32000, lowCut: 80, highCut: 16000, saturation: 0.15f, stereoWidth: 1.25f));
-        variations.Add(new VariationConfig("strong_combo2", "StrongCombo2", "Kombiniert Rauschen, Time-Stretch, Filter, Kompression, Reverb und Tremolo.", noiseLevel: 0.012f, timeStretch: 1.04, lowCut: 100, highCut: 14000, compression: true, reverb: 0.15f, tremoloDepth: 0.20f, tremoloFrequencyHz: 4.5));
-        variations.Add(new VariationConfig("aggressive", "Aggressive", "Setzt mehrere auffaellige Eingriffe fuer einen starken Kontrast ein.", noiseLevel: 0.015f, pitchShift: -1.8, targetSampleRate: 24000, lowCut: 120, saturation: 0.25f, reverb: 0.25f, bitDepth: 10, phaseFlipRightChannel: true));
+        variations.Add(new VariationConfig("strong_combo1", "StrongCombo1", L.T("Kombiniert Rauschen, Pitch, Filter, Resampling und Stereo-Breite."), noiseLevel: 0.008f, pitchShift: 1.2, targetSampleRate: 32000, lowCut: 80, highCut: 16000, saturation: 0.15f, stereoWidth: 1.25f));
+        variations.Add(new VariationConfig("strong_combo2", "StrongCombo2", L.T("Kombiniert Rauschen, Time-Stretch, Filter, Kompression, Reverb und Tremolo."), noiseLevel: 0.012f, timeStretch: 1.04, lowCut: 100, highCut: 14000, compression: true, reverb: 0.15f, tremoloDepth: 0.20f, tremoloFrequencyHz: 4.5));
+        variations.Add(new VariationConfig("aggressive", "Aggressive", L.T("Setzt mehrere auffaellige Eingriffe fuer einen starken Kontrast ein."), noiseLevel: 0.015f, pitchShift: -1.8, targetSampleRate: 24000, lowCut: 120, saturation: 0.25f, reverb: 0.25f, bitDepth: 10, phaseFlipRightChannel: true));
 
         variations.Add(new VariationConfig(
             CompleteVariationId,
             "DemoComplete",
-            "Klangschonende Komplettkette fuer den Gesamtvergleich.",
+            L.T("Klangschonende Komplettkette fuer den Gesamtvergleich."),
             lowCut: 32,
             highCut: 17500,
             compression: true,
@@ -247,8 +247,8 @@ public sealed class ComplexManipulationVariationProvider : IAudioVariationProvid
             limiterThreshold: 0.965f,
             extraNotes:
             [
-                "Dieses File nutzt bewusst nur die klangschonenden Techniken in einer sehr dezenten Kette.",
-                "Destruktivere Effekte wie BitCrusher, PhaseFlip und Tremolo bleiben als Einzelvarianten fuer Vergleichstests getrennt."
+                L.T("Dieses File nutzt bewusst nur die klangschonenden Techniken in einer sehr dezenten Kette."),
+                L.T("Destruktivere Effekte wie BitCrusher, PhaseFlip und Tremolo bleiben als Einzelvarianten fuer Vergleichstests getrennt.")
             ]));
 
         return variations;

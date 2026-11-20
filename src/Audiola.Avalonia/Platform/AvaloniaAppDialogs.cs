@@ -24,9 +24,9 @@ public sealed class AvaloniaAppDialogs(INotifier notifier) : IAppDialogs
 
     public Task<SaveDiscardCancel> AskSaveDiscardCancelAsync(string title, string message)
         => AskAsync(title, message,
-            ("Speichern", SaveDiscardCancel.Save),
+            (L.T("Speichern"), SaveDiscardCancel.Save),
             ("Verwerfen", SaveDiscardCancel.Discard),
-            ("Abbrechen", SaveDiscardCancel.Cancel));
+            (L.T("Abbrechen"), SaveDiscardCancel.Cancel));
 
     public void ShowTrackMastering(object trackViewModel)
     {
@@ -67,7 +67,7 @@ public sealed class AvaloniaAppDialogs(INotifier notifier) : IAppDialogs
         }
         catch (Exception ex)
         {
-            notifier.Error("Vorschau fehlgeschlagen", ex.Message);
+            notifier.Error(L.T("Vorschau fehlgeschlagen"), ex.Message);
         }
         return Task.CompletedTask;
     }

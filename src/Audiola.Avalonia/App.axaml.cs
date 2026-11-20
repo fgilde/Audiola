@@ -29,10 +29,12 @@ public partial class App : Application
     {
         // Startbild sofort zeigen — Container, Audio-Kontext und ein evtl. übergebenes
         // Projekt brauchen einen Moment.
+        _services = BuildServices();
+        // Sprache vor dem ersten Fenster setzen — die Texte werden beim Laden übersetzt.
+        L.Use(_services.GetRequiredService<ISettingsService>().Current.Language);
+
         var splash = ApplicationLifetime is IClassicDesktopStyleApplicationLifetime ? new SplashWindow() : null;
         splash?.Show();
-
-        _services = BuildServices();
         splash?.SetProgress(0.5);
 
         // Geteilten Code an den Avalonia-Host binden (UI-Thread, Fehlerdialog, Dienstzugriff).
@@ -97,7 +99,7 @@ public partial class App : Application
         }
         catch { /* Wenn schon das Protokoll klemmt, hilft nur Weiterlaufen. */ }
 
-        try { _services?.GetService<INotifier>()?.Error("Da ging etwas schief", e.Exception.Message, 8); }
+        try { _services?.GetService<INotifier>()?.Error(L.T("Da ging etwas schief"), e.Exception.Message, 8); }
         catch { /* ignore */ }
 
         e.Handled = true;

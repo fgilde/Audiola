@@ -21,6 +21,9 @@ public sealed class AppSettings
     /// <summary>"Light", "Dark" oder "System".</summary>
     public string Theme { get; set; } = "System";
 
+    /// <summary>Oberflächensprache ("de", "en", "fr"); leer = Systemsprache.</summary>
+    public string Language { get; set; } = "";
+
     /// <summary>Zuletzt geöffnete Dateien (neueste zuerst).</summary>
     public List<string> RecentFiles { get; set; } = [];
 

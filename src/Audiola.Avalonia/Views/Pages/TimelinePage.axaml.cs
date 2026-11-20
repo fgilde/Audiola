@@ -275,12 +275,12 @@ public partial class TimelinePage : UserControl, INavigationAware
 
     // ---- Variationen-Provider anwenden ----
     private async void Variations_All_Click(object? sender, RoutedEventArgs e)
-        => await OpenVariationsAsync([.. _vm.Tracks.SelectMany(t => t.Clips)], "Gesamtes Audio (alle Spuren)");
+        => await OpenVariationsAsync([.. _vm.Tracks.SelectMany(t => t.Clips)], L.T("Gesamtes Audio (alle Spuren)"));
 
     private async void ClipVariations_Click(object? sender, RoutedEventArgs e)
     {
         if (_vm.SelectedClip is { } clip)
-            await OpenVariationsAsync([clip], "Ausgewählter Clip");
+            await OpenVariationsAsync([clip], L.T("Ausgewählter Clip"));
     }
 
     // ---- Spur-Kontextmenü: Variationen und Stimmtausch auf allen Clips der Spur ----
@@ -332,7 +332,7 @@ public partial class TimelinePage : UserControl, INavigationAware
     private async void TrackVariations_Click(object? sender, RoutedEventArgs e)
     {
         if (MenuTrack(sender) is not { } track || track.Clips.Count == 0) return;
-        await OpenVariationsAsync([.. track.Clips], $"Spur „{track.DisplayName}“");
+        await OpenVariationsAsync([.. track.Clips], L.F("Spur „{0}“", track.DisplayName));
     }
 
     private async void TrackVoiceChange_Click(object? sender, RoutedEventArgs e)
@@ -412,7 +412,7 @@ public partial class TimelinePage : UserControl, INavigationAware
         if (_fadeClip is null) return;
         e.Pointer.Capture(null);
         _fadeClip = null;
-        _vm.Commit(_fadeIsIn ? "Fade-In" : "Fade-Out");
+        _vm.Commit(_fadeIsIn ? L.T("Fade-In") : L.T("Fade-Out"));
         e.Handled = true;
     }
 
@@ -595,7 +595,7 @@ public partial class TimelinePage : UserControl, INavigationAware
         DragGhost.Height = Math.Max(8, lh - 4);
         DragGhost.Classes.Set("locked", target.Track!.IsLocked);
         DragGhostText.Text = target.Track!.IsLocked
-            ? $"Gesperrt: „{target.Track.Name}“"
+            ? L.F("Gesperrt: „{0}“", target.Track.Name)
             : $"→ {target.Track.Name}";
     }
 
@@ -644,7 +644,7 @@ public partial class TimelinePage : UserControl, INavigationAware
                     ? _vm.MoveClipToNewTrack(clip, InsertIndexFor(target.Boundary), newOffset)
                     : _vm.MoveClipToTrack(clip, target.Track!, newOffset);
                 if (done)
-                    _vm.Commit(target.Boundary >= 0 ? "Clip auf neue Spur" : "Clip auf andere Spur");
+                    _vm.Commit(target.Boundary >= 0 ? L.T("Clip auf neue Spur") : L.T("Clip auf andere Spur"));
                 else
                     _vm.MoveClipToTrack(clip, clip.Track, _dragStartOffset);   // Ziel gesperrt → zurück
                 e.Handled = true;
@@ -655,7 +655,7 @@ public partial class TimelinePage : UserControl, INavigationAware
         if (_moved)
         {
             _vm.CommitClips();
-            _vm.Commit(_dragMode == DragMode.Move ? "Clip verschoben" : "Clip getrimmt");
+            _vm.Commit(_dragMode == DragMode.Move ? L.T("Clip verschoben") : L.T("Clip getrimmt"));
         }
         e.Handled = true;
     }

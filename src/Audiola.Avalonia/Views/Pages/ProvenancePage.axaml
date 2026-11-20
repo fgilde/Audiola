@@ -1,5 +1,5 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="using:Audiola.Avalonia.Localization"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:models="using:Audiola.Models"
              xmlns:conv="using:Audiola.Avalonia.Converters"
@@ -18,24 +18,24 @@
 
     <!-- Kopf -->
     <StackPanel Grid.Row="0">
-      <TextBlock Classes="dawPageTitle" Text="Provenienz &amp; KI-Erkennung" />
+      <TextBlock Classes="dawPageTitle" Text="{l:T 'Provenienz &amp; KI-Erkennung'}" />
       <TextBlock Margin="0,2,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"
-                 Text="Liest aus, welche Herkunfts-/Wasserzeichen-Daten eingebettet sind, und erklärt, warum ein Track als KI eingestuft werden kann. Reine Analyse — es wird nichts verändert." />
+                 Text="{l:T 'Liest aus, welche Herkunfts-/Wasserzeichen-Daten eingebettet sind, und erklärt, warum ein Track als KI eingestuft werden kann. Reine Analyse — es wird nichts verändert.'}" />
     </StackPanel>
 
     <!-- Aktionen -->
     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,16,0,0">
       <Button Classes="accent" Command="{Binding AnalyzeTrackCommand}"
-              ToolTip.Tip="Analysiert den geladenen Track – oder, falls keiner geladen ist, den aktuellen Studio-Mix.">
+              ToolTip.Tip="{l:T 'Analysiert den geladenen Track – oder, falls keiner geladen ist, den aktuellen Studio-Mix.'}">
         <StackPanel Orientation="Horizontal" Spacing="6">
           <ic:SymbolIcon Symbol="DocumentSearch" />
-          <TextBlock Text="Track / Studio-Mix analysieren" />
+          <TextBlock Text="{l:T 'Track / Studio-Mix analysieren'}" />
         </StackPanel>
       </Button>
       <Button Margin="8,0,0,0" Command="{Binding AnalyzeFileCommand}">
         <StackPanel Orientation="Horizontal" Spacing="6">
           <ic:SymbolIcon Symbol="FolderOpen" />
-          <TextBlock Text="Datei wählen …" />
+          <TextBlock Text="{l:T 'Datei wählen …'}" />
         </StackPanel>
       </Button>
       <ProgressBar Width="80" Margin="16,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
@@ -52,9 +52,9 @@
                 Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" IsVisible="{Binding !HasFindings}">
           <StackPanel Classes="emptyState">
             <ic:SymbolIcon Symbol="DocumentSearch" />
-            <TextBlock Classes="title" Text="Noch nichts analysiert" />
+            <TextBlock Classes="title" Text="{l:T 'Noch nichts analysiert'}" />
             <TextBlock Classes="hint"
-                       Text="„Track / Studio-Mix analysieren“ prüft die geladene Musik auf Herkunftsdaten, Wasserzeichen und KI-Hinweise — oder wähle eine beliebige Datei. Es wird nur gelesen, nichts verändert." />
+                       Text="{l:T '„Track / Studio-Mix analysieren“ prüft die geladene Musik auf Herkunftsdaten, Wasserzeichen und KI-Hinweise — oder wähle eine beliebige Datei. Es wird nur gelesen, nichts verändert.'}" />
           </StackPanel>
         </Border>
 
@@ -96,14 +96,14 @@
                 Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                 IsVisible="{Binding Assessment, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
           <StackPanel>
-            <TextBlock FontWeight="SemiBold" Text="Bewertung" Margin="0,0,0,8" />
+            <TextBlock FontWeight="SemiBold" Text="{l:T 'Bewertung'}" Margin="0,0,0,8" />
             <TextBlock FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12"
                        Text="{Binding Assessment}" TextWrapping="Wrap" />
           </StackPanel>
         </Border>
 
         <!-- C2PA-Rohausgabe -->
-        <Expander Margin="0,8,0,0" Header="c2patool-Rohausgabe (C2PA-Manifest)"
+        <Expander Margin="0,8,0,0" Header="{l:T 'c2patool-Rohausgabe (C2PA-Manifest)'}"
                   HorizontalAlignment="Stretch" IsVisible="{Binding HasC2paRaw}">
           <TextBox IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" MaxHeight="320"
                    FontFamily="Cascadia Mono,Consolas,Menlo,monospace" FontSize="12"

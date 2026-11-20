@@ -1,11 +1,11 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="using:Audiola.Avalonia.Localization"
         xmlns:ic="using:FluentIcons.Avalonia"
         xmlns:controls="using:Audiola.Controls"
         xmlns:vm="using:Audiola.ViewModels"
         x:Class="Audiola.Avalonia.Views.Dialogs.TrackMasteringDialog"
         x:DataType="vm:MasteringViewModel"
-        Title="Spur mastern"
+        Title="{l:T 'Spur mastern'}"
         Width="820" Height="760"
         MinWidth="560" MinHeight="520"
         WindowStartupLocation="CenterOwner"
@@ -26,9 +26,9 @@
         <!-- Sekundär: gemasterte Spur als Datei exportieren -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
           <Button Command="{Binding ExportCommand}"
-                  ToolTip.Tip="Die gemasterte Spur als Audiodatei speichern (ohne die Spur im Studio zu ändern)">
+                  ToolTip.Tip="{l:T 'Die gemasterte Spur als Audiodatei speichern (ohne die Spur im Studio zu ändern)'}">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="Save" /><TextBlock Text="Als Datei exportieren" />
+              <ic:SymbolIcon Symbol="Save" /><TextBlock Text="{l:T 'Als Datei exportieren'}" />
             </StackPanel>
           </Button>
           <ProgressBar Width="60" Margin="12,0,0,0" VerticalAlignment="Center" IsIndeterminate="True"
@@ -37,12 +37,12 @@
         <!-- Primär: Anwenden / Abbrechen -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
           <Button Classes="accent" Command="{Binding ApplyToTrackCommand}"
-                  ToolTip.Tip="Spur mastern und im Studio ersetzen (Strg+Z macht es rückgängig)">
+                  ToolTip.Tip="{l:T 'Spur mastern und im Studio ersetzen (Strg+Z macht es rückgängig)'}">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="CheckmarkCircle" /><TextBlock Text="Anwenden" />
+              <ic:SymbolIcon Symbol="CheckmarkCircle" /><TextBlock Text="{l:T 'Anwenden'}" />
             </StackPanel>
           </Button>
-          <Button Content="Abbrechen" Click="Close_Click" />
+          <Button Content="{l:T 'Abbrechen'}" Click="Close_Click" />
         </StackPanel>
       </Grid>
     </Border>

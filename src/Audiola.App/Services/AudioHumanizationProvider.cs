@@ -6,13 +6,13 @@ public sealed class AudioHumanizationProvider : IAudioVariationProvider
 
     public IReadOnlyList<AudioVariation> GetVariations() =>
     [
-        new("H01", "Micro Wow/Flutter", "Sehr kleine tape-artige Timing-Schwankungen."),
-        new("H02", "Transient Humanize", "Minimale, zufällige Transienten-/Peak-Unregelmäßigkeiten."),
-        new("H03", "Stereo Drift", "Langsame Mid/Side- und Kanalbalance-Bewegung."),
-        new("H04", "Noise Bed", "Sehr leiser analoger Noise-Floor."),
-        new("H05", "Groove Drift", "Sehr leichte abschnittsweise Timing-Verschiebung."),
-        new("H06", "Human Combo Subtle", "Qualitätsschonende Kombination aus Timing, Stereo, Transienten und Noise."),
-        new("H07", "Human Combo Strong", "Stärkerer Diagnosemodus mit deutlicherer Fingerprint-Verschiebung.")
+        new("H01", "Micro Wow/Flutter", L.T("Sehr kleine tape-artige Timing-Schwankungen.")),
+        new("H02", "Transient Humanize", L.T("Minimale, zufällige Transienten-/Peak-Unregelmäßigkeiten.")),
+        new("H03", "Stereo Drift", L.T("Langsame Mid/Side- und Kanalbalance-Bewegung.")),
+        new("H04", "Noise Bed", L.T("Sehr leiser analoger Noise-Floor.")),
+        new("H05", "Groove Drift", L.T("Sehr leichte abschnittsweise Timing-Verschiebung.")),
+        new("H06", "Human Combo Subtle", L.T("Qualitätsschonende Kombination aus Timing, Stereo, Transienten und Noise.")),
+        new("H07", "Human Combo Strong", L.T("Stärkerer Diagnosemodus mit deutlicherer Fingerprint-Verschiebung."))
     ];
 
     public Task<float[]> ApplyAsync(string variationId, float[] interleavedStereo, int sampleRate, CancellationToken ct = default)

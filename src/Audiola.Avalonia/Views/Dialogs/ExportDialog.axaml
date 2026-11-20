@@ -1,11 +1,11 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="using:Audiola.Avalonia.Localization"
         xmlns:ic="using:FluentIcons.Avalonia"
         xmlns:conv="using:Audiola.Avalonia.Converters"
         xmlns:dialogs="using:Audiola.Avalonia.Views.Dialogs"
         x:Class="Audiola.Avalonia.Views.Dialogs.ExportDialog"
         x:DataType="dialogs:ExportDialog"
-        Title="Exportieren"
+        Title="{l:T 'Exportieren'}"
         Width="640" Height="760"
         MinWidth="460" MinHeight="500"
         WindowStartupLocation="CenterOwner"
@@ -23,22 +23,22 @@
     <!-- Format + Bitrate -->
     <Grid Grid.Row="0" Margin="18,16,18,0" ColumnDefinitions="*,Auto">
       <StackPanel Grid.Column="0">
-        <TextBlock FontWeight="SemiBold" Text="Format" Margin="0,0,0,4" />
+        <TextBlock FontWeight="SemiBold" Text="{l:T 'Format'}" Margin="0,0,0,4" />
         <ComboBox Name="FormatBox" SelectedIndex="0" Width="200" HorizontalAlignment="Left"
                   SelectionChanged="Format_Changed">
-          <ComboBoxItem Content="WAV (unkomprimiert)" Tag="wav" />
-          <ComboBoxItem Content="MP3" Tag="mp3" />
-          <ComboBoxItem Content="M4A / AAC" Tag="m4a" />
-          <ComboBoxItem Content="FLAC (verlustfrei)" Tag="flac" />
+          <ComboBoxItem Content="{l:T 'WAV (unkomprimiert)'}" Tag="wav" />
+          <ComboBoxItem Content="{l:T 'MP3'}" Tag="mp3" />
+          <ComboBoxItem Content="{l:T 'M4A / AAC'}" Tag="m4a" />
+          <ComboBoxItem Content="{l:T 'FLAC (verlustfrei)'}" Tag="flac" />
         </ComboBox>
       </StackPanel>
       <StackPanel Grid.Column="1" Name="BitratePanel">
-        <TextBlock FontWeight="SemiBold" Text="Bitrate" Margin="0,0,0,4" />
+        <TextBlock FontWeight="SemiBold" Text="{l:T 'Bitrate'}" Margin="0,0,0,4" />
         <ComboBox Name="BitrateBox" SelectedIndex="2" Width="130" HorizontalAlignment="Left">
-          <ComboBoxItem Content="128 kbps" Tag="128000" />
-          <ComboBoxItem Content="192 kbps" Tag="192000" />
-          <ComboBoxItem Content="256 kbps" Tag="256000" />
-          <ComboBoxItem Content="320 kbps" Tag="320000" />
+          <ComboBoxItem Content="{l:T '128 kbps'}" Tag="128000" />
+          <ComboBoxItem Content="{l:T '192 kbps'}" Tag="192000" />
+          <ComboBoxItem Content="{l:T '256 kbps'}" Tag="256000" />
+          <ComboBoxItem Content="{l:T '320 kbps'}" Tag="320000" />
         </ComboBox>
       </StackPanel>
     </Grid>
@@ -50,9 +50,9 @@
         <ic:SymbolIcon Grid.Column="0" Symbol="Info" VerticalAlignment="Top" Margin="0,2,12,0"
                        Foreground="{DynamicResource DawAccentLightBrush}" />
         <StackPanel Grid.Column="1">
-          <TextBlock FontWeight="SemiBold" Text="Hinweis zu WAV" />
+          <TextBlock FontWeight="SemiBold" Text="{l:T 'Hinweis zu WAV'}" />
           <TextBlock Margin="0,2,0,0" TextWrapping="Wrap"
-                     Text="WAV speichert Tags/Cover/Lyrics nur eingeschränkt. Für vollständige Metadaten MP3, M4A oder FLAC wählen (eine .lrc-Datei wird zusätzlich daneben gespeichert)." />
+                     Text="{l:T 'WAV speichert Tags/Cover/Lyrics nur eingeschränkt. Für vollständige Metadaten MP3, M4A oder FLAC wählen (eine .lrc-Datei wird zusätzlich daneben gespeichert).'}" />
         </StackPanel>
       </Grid>
     </Border>
@@ -75,65 +75,65 @@
           <Button Margin="0,8,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                   Click="ChooseCover_Click">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="Image" /><TextBlock Text="Cover wählen" />
+              <ic:SymbolIcon Symbol="Image" /><TextBlock Text="{l:T 'Cover wählen'}" />
             </StackPanel>
           </Button>
           <Button Margin="0,6,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                   Click="RemoveCover_Click" IsVisible="{Binding Meta.HasCover}">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <ic:SymbolIcon Symbol="Delete" /><TextBlock Text="Entfernen" />
+              <ic:SymbolIcon Symbol="Delete" /><TextBlock Text="{l:T 'Entfernen'}" />
             </StackPanel>
           </Button>
         </StackPanel>
 
         <!-- Tag-Felder -->
         <StackPanel Grid.Row="0" Grid.Column="1">
-          <TextBlock FontWeight="SemiBold" Text="Titel" />
+          <TextBlock FontWeight="SemiBold" Text="{l:T 'Titel'}" />
           <TextBox Margin="0,2,0,8" Text="{Binding Meta.Title, Mode=TwoWay}" />
-          <TextBlock FontWeight="SemiBold" Text="Interpret" />
+          <TextBlock FontWeight="SemiBold" Text="{l:T 'Interpret'}" />
           <TextBox Margin="0,2,0,8" Text="{Binding Meta.Artist, Mode=TwoWay}" />
-          <TextBlock FontWeight="SemiBold" Text="Album" />
+          <TextBlock FontWeight="SemiBold" Text="{l:T 'Album'}" />
           <TextBox Margin="0,2,0,8" Text="{Binding Meta.Album, Mode=TwoWay}" />
           <Grid ColumnDefinitions="*,80,80">
             <StackPanel Grid.Column="0" Margin="0,0,8,0">
-              <TextBlock FontWeight="SemiBold" Text="Genre" />
+              <TextBlock FontWeight="SemiBold" Text="{l:T 'Genre'}" />
               <TextBox Margin="0,2,0,8" Text="{Binding Meta.Genre, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel Grid.Column="1" Margin="0,0,8,0">
-              <TextBlock FontWeight="SemiBold" Text="Jahr" />
+              <TextBlock FontWeight="SemiBold" Text="{l:T 'Jahr'}" />
               <TextBox Margin="0,2,0,8" Text="{Binding Meta.Year, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel Grid.Column="2">
-              <TextBlock FontWeight="SemiBold" Text="Track" />
+              <TextBlock FontWeight="SemiBold" Text="{l:T 'Track'}" />
               <TextBox Margin="0,2,0,8" Text="{Binding Meta.TrackNumber, Mode=TwoWay}" />
             </StackPanel>
           </Grid>
-          <TextBlock FontWeight="SemiBold" Text="Album-Interpret" />
+          <TextBlock FontWeight="SemiBold" Text="{l:T 'Album-Interpret'}" />
           <TextBox Margin="0,2,0,8" Text="{Binding Meta.AlbumArtist, Mode=TwoWay}" />
-          <TextBlock FontWeight="SemiBold" Text="Kommentar" />
+          <TextBlock FontWeight="SemiBold" Text="{l:T 'Kommentar'}" />
           <TextBox Margin="0,2,0,8" Text="{Binding Meta.Comment, Mode=TwoWay}" />
         </StackPanel>
 
         <!-- Lyrics -->
         <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
           <StackPanel Orientation="Horizontal">
-            <ToggleSwitch Name="EmbedLyricsToggle" IsChecked="True" Content="Liedtext einbetten" />
+            <ToggleSwitch Name="EmbedLyricsToggle" IsChecked="True" Content="{l:T 'Liedtext einbetten'}" />
             <Button Name="GenerateLyricsButton" Margin="16,0,0,0" Click="GenerateLyrics_Click" IsVisible="False">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ic:SymbolIcon Symbol="Wand" /><TextBlock Text="Erzeugen (Whisper)" />
+                <ic:SymbolIcon Symbol="Wand" /><TextBlock Text="{l:T 'Erzeugen (Whisper)'}" />
               </StackPanel>
             </Button>
             <Button Name="GenerateLyricsElevenButton" Margin="8,0,0,0" Tag="eleven"
                     Click="GenerateLyrics_Click" IsVisible="False">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <ic:SymbolIcon Symbol="Cloud" /><TextBlock Text="via ElevenLabs" />
+                <ic:SymbolIcon Symbol="Cloud" /><TextBlock Text="{l:T 'via ElevenLabs'}" />
               </StackPanel>
             </Button>
             <ProgressBar Name="LyricsBusy" Width="50" Margin="10,0,0,0" VerticalAlignment="Center"
                          IsIndeterminate="True" IsVisible="False" />
           </StackPanel>
           <TextBox Margin="0,6,0,0" MinHeight="110" MaxHeight="220" AcceptsReturn="True" TextWrapping="Wrap"
-                   Watermark="Liedtext (optional, LRC mit Zeitstempeln wird unterstützt)"
+                   Watermark="{l:T 'Liedtext (optional, LRC mit Zeitstempeln wird unterstützt)'}"
                    Text="{Binding Meta.Lyrics, Mode=TwoWay}" />
         </StackPanel>
       </Grid>
@@ -145,15 +145,15 @@
         <ProgressBar Name="PreviewBusy" Width="50" Margin="0,0,4,0" VerticalAlignment="Center"
                      IsIndeterminate="True" IsVisible="False" />
         <Button Name="PreviewButton" Click="Preview_Click" IsVisible="False"
-                ToolTip.Tip="Datei mit den aktuellen Tags &amp; Lyrics erzeugen und ansehen">
+                ToolTip.Tip="{l:T 'Datei mit den aktuellen Tags &amp; Lyrics erzeugen und ansehen'}">
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <ic:SymbolIcon Symbol="Eye" /><TextBlock Text="Vorschau" />
+            <ic:SymbolIcon Symbol="Eye" /><TextBlock Text="{l:T 'Vorschau'}" />
           </StackPanel>
         </Button>
-        <Button Content="Abbrechen" Click="Cancel_Click" />
+        <Button Content="{l:T 'Abbrechen'}" Click="Cancel_Click" />
         <Button Classes="accent" Click="Export_Click">
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <ic:SymbolIcon Symbol="Save" /><TextBlock Text="Exportieren…" />
+            <ic:SymbolIcon Symbol="Save" /><TextBlock Text="{l:T 'Exportieren…'}" />
           </StackPanel>
         </Button>
       </StackPanel>

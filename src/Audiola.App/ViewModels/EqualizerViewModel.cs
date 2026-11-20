@@ -22,7 +22,7 @@ public sealed partial class EqualizerViewModel : ObservableObject
     private string? _sourcePath;
 
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string _statusText = "Quelle wird vorbereitet …";
+    [ObservableProperty] private string _statusText = L.T("Quelle wird vorbereitet …");
     [ObservableProperty] private string _sourceLabel = "";
     [ObservableProperty] private int _sampleRate = 44100;
     [ObservableProperty] private bool _isLivePreview = true;
@@ -64,7 +64,7 @@ public sealed partial class EqualizerViewModel : ObservableObject
         if (_timeline.Tracks.Count > 0 && _timeline.DurationSeconds > 0.01)
         {
             IsBusy = true; ExportCommand.NotifyCanExecuteChanged();
-            StatusText = "Rendere Studio-Mix …";
+            StatusText = L.T("Rendere Studio-Mix …");
             SampleRate = _session.CurrentTrack?.SampleRate ?? 44100;
             var dur = TimeSpan.FromSeconds(_timeline.DurationSeconds);
             var tracks = _timeline.Tracks.ToList();
@@ -77,21 +77,21 @@ public sealed partial class EqualizerViewModel : ObservableObject
                     AudioEdits.WriteWav(temp, samples, sr);
                     return temp;
                 });
-                SourceLabel = $"Studio-Mix ({tracks.Count} Spuren)";
+                SourceLabel = L.F("Studio-Mix ({0} Spuren)", tracks.Count);
             }
-            catch (Exception ex) { _sourcePath = null; SourceLabel = "Render-Fehler: " + ex.Message; }
+            catch (Exception ex) { _sourcePath = null; SourceLabel = L.F("Render-Fehler: {0}", ex.Message); }
             IsBusy = false;
         }
         else if (_session.CurrentTrack is not null)
         {
             _sourcePath = _session.CurrentTrack.FilePath;
             SampleRate = _session.CurrentTrack.SampleRate;
-            SourceLabel = "Datei: " + _session.CurrentTrack.FileName;
+            SourceLabel = L.F("Datei: {0}", _session.CurrentTrack.FileName);
         }
-        else { _sourcePath = null; SourceLabel = "Keine Quelle — im Studio Spuren laden."; }
+        else { _sourcePath = null; SourceLabel = L.T("Keine Quelle — im Studio Spuren laden."); }
 
         StatusText = _sourcePath is null ? SourceLabel
-            : $"Quelle: {SourceLabel} — Kurve ziehen (live), dann exportieren.";
+            : L.F("Quelle: {0} — Kurve ziehen (live), dann exportieren.", SourceLabel);
         ExportCommand.NotifyCanExecuteChanged();
     }
 
@@ -127,7 +127,7 @@ public sealed partial class EqualizerViewModel : ObservableObject
     private void Reset()
     {
         foreach (var b in Bands) b.GainDb = 0;
-        StatusText = "EQ zurückgesetzt (flach).";
+        StatusText = L.T("EQ zurückgesetzt (flach).");
     }
 
     private bool CanExport => _sourcePath is not null && !IsBusy;

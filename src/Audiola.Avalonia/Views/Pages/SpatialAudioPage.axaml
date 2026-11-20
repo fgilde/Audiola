@@ -1,5 +1,5 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="using:Audiola.Avalonia.Localization"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:conv="using:Audiola.Avalonia.Converters"
              xmlns:vm="using:Audiola.ViewModels"
@@ -14,9 +14,9 @@
 
   <ScrollViewer Margin="42,24,42,24" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel MaxWidth="1120" HorizontalAlignment="Left">
-      <TextBlock Classes="dawPageTitle" Text="Spatial Audio (3D / Immersive)" />
+      <TextBlock Classes="dawPageTitle" Text="{l:T 'Spatial Audio (3D / Immersive)'}" />
       <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                 Text="Platziere die Studio-Spuren im Raum und rendere einen binauralen 3D-Mix (Kopfhörer) oder eine Mehrkanal-WAV (5.1 / 7.1 / 7.1.4 Atmos-Bett-Layout)." />
+                 Text="{l:T 'Platziere die Studio-Spuren im Raum und rendere einen binauralen 3D-Mix (Kopfhörer) oder eine Mehrkanal-WAV (5.1 / 7.1 / 7.1.4 Atmos-Bett-Layout).'}" />
 
       <Border Margin="0,12,0,0" Padding="14,12" CornerRadius="8"
               Background="{DynamicResource DawAccentSoftBrush}"
@@ -25,9 +25,9 @@
           <ic:SymbolIcon Grid.Column="0" Symbol="Info" VerticalAlignment="Top" Margin="0,2,12,0"
                          Foreground="{DynamicResource DawAccentLightBrush}" />
           <StackPanel Grid.Column="1">
-            <TextBlock FontWeight="SemiBold" Text="Hinweis zu Dolby Atmos" />
+            <TextBlock FontWeight="SemiBold" Text="{l:T 'Hinweis zu Dolby Atmos'}" />
             <TextBlock Margin="0,2,0,0" TextWrapping="Wrap"
-                       Text="Zertifiziertes Dolby-Atmos-Bitstream braucht Dolbys lizenzierten Encoder. Hier wird der räumliche Klang erzeugt: binaural (HRTF) bzw. als 7.1.4-Mehrkanal-WAV, die du in einen Atmos-Renderer/DAW importieren kannst." />
+                       Text="{l:T 'Zertifiziertes Dolby-Atmos-Bitstream braucht Dolbys lizenzierten Encoder. Hier wird der räumliche Klang erzeugt: binaural (HRTF) bzw. als 7.1.4-Mehrkanal-WAV, die du in einen Atmos-Renderer/DAW importieren kannst.'}" />
           </StackPanel>
         </Grid>
       </Border>
@@ -37,7 +37,7 @@
         <!-- 3D-Radar -->
         <Border Grid.Column="0" Classes="dawPanel" Padding="16" VerticalAlignment="Top">
           <StackPanel>
-            <TextBlock FontWeight="SemiBold" Text="Bühne (Draufsicht)" Margin="0,0,0,8" />
+            <TextBlock FontWeight="SemiBold" Text="{l:T 'Bühne (Draufsicht)'}" Margin="0,0,0,8" />
             <Panel Name="RadarArea" Width="220" Height="220">
               <Ellipse Width="200" Height="200" Stroke="#2E3340" StrokeThickness="1.5"
                        HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -50,7 +50,7 @@
               <!-- Hörer -->
               <ic:SymbolIcon Symbol="Person" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"
                              Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-              <TextBlock Text="VORN" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Top"
+              <TextBlock Text="{l:T 'VORN'}" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Top"
                          Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
               <!-- Quellen-Punkte -->
               <ItemsControl ItemsSource="{Binding Sources}">
@@ -79,44 +79,44 @@
             </Panel>
             <TextBlock Margin="0,6,0,0" FontSize="11" TextWrapping="Wrap" MaxWidth="220"
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                       Text="Punktgröße = Höhe (Elevation). Ringe = Distanz." />
+                       Text="{l:T 'Punktgröße = Höhe (Elevation). Ringe = Distanz.'}" />
           </StackPanel>
         </Border>
 
         <!-- Steuerung -->
         <Border Grid.Column="1" Classes="dawPanel" Margin="12,0,0,0" Padding="16" VerticalAlignment="Top">
           <StackPanel>
-            <TextBlock FontWeight="SemiBold" Text="Ausgabe" Margin="0,0,0,8" />
+            <TextBlock FontWeight="SemiBold" Text="{l:T 'Ausgabe'}" Margin="0,0,0,8" />
             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-              <TextBlock VerticalAlignment="Center" Width="150" Text="Mehrkanal-Layout:" />
+              <TextBlock VerticalAlignment="Center" Width="150" Text="{l:T 'Mehrkanal-Layout:'}" />
               <ComboBox Width="220" VerticalAlignment="Center" ItemsSource="{Binding Layouts}"
                         SelectedItem="{Binding SelectedLayout, Mode=TwoWay}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
               <TextBlock VerticalAlignment="Center" Width="150"
-                         Text="{Binding RoomAmount, StringFormat='Raum/Hall: {0:P0}'}" />
+                         Text="{Binding RoomAmount, Converter={x:Static l:Fmt.Instance}, ConverterParameter='Raum/Hall: {0:P0}'}" />
               <Slider Width="220" Minimum="0" Maximum="0.6" Value="{Binding RoomAmount, Mode=TwoWay}" />
             </StackPanel>
 
             <WrapPanel Margin="0,10,0,0">
               <Button Margin="0,0,8,6" Command="{Binding PreviewCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                  <ic:SymbolIcon Symbol="Headphones" /><TextBlock Text="Live-Vorschau" />
+                  <ic:SymbolIcon Symbol="Headphones" /><TextBlock Text="{l:T 'Live-Vorschau'}" />
                 </StackPanel>
               </Button>
               <Button Margin="0,0,8,6" Command="{Binding StopPreviewCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                  <ic:SymbolIcon Symbol="Stop" /><TextBlock Text="Stopp" />
+                  <ic:SymbolIcon Symbol="Stop" /><TextBlock Text="{l:T 'Stopp'}" />
                 </StackPanel>
               </Button>
               <Button Margin="0,0,8,6" Command="{Binding AutoArrangeCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                  <ic:SymbolIcon Symbol="Sparkle" /><TextBlock Text="Automatisch ausrichten" />
+                  <ic:SymbolIcon Symbol="Sparkle" /><TextBlock Text="{l:T 'Automatisch ausrichten'}" />
                 </StackPanel>
               </Button>
               <Button Margin="0,0,8,6" Command="{Binding ResetPositionsCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                  <ic:SymbolIcon Symbol="ArrowReset" /><TextBlock Text="Zurücksetzen" />
+                  <ic:SymbolIcon Symbol="ArrowReset" /><TextBlock Text="{l:T 'Zurücksetzen'}" />
                 </StackPanel>
               </Button>
               <ProgressBar Width="60" Margin="4,0,0,6" VerticalAlignment="Center" IsIndeterminate="True"
@@ -124,19 +124,19 @@
             </WrapPanel>
             <TextBlock Margin="0,6,0,0" FontSize="11" TextWrapping="Wrap"
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                       Text="Während die Live-Vorschau läuft, wirken Azimut/Höhe/Distanz/Pegel sofort. (Raum/Hall wird nur beim Export hinzugefügt.)" />
+                       Text="{l:T 'Während die Live-Vorschau läuft, wirken Azimut/Höhe/Distanz/Pegel sofort. (Raum/Hall wird nur beim Export hinzugefügt.)'}" />
 
             <StackPanel Orientation="Horizontal" Margin="0,12,0,0" Spacing="8">
               <Button Classes="accent" Command="{Binding ExportBinauralCommand}"
-                    ToolTip.Tip="Stereo-WAV für Kopfhörer: der Raum wird per HRTF in zwei Kanäle gerechnet">
+                    ToolTip.Tip="{l:T 'Stereo-WAV für Kopfhörer: der Raum wird per HRTF in zwei Kanäle gerechnet'}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                  <ic:SymbolIcon Symbol="Headphones" /><TextBlock Text="Binaural exportieren" />
+                  <ic:SymbolIcon Symbol="Headphones" /><TextBlock Text="{l:T 'Binaural exportieren'}" />
                 </StackPanel>
               </Button>
               <Button Classes="accent" Command="{Binding ExportMultichannelCommand}"
-                    ToolTip.Tip="Mehrkanal-WAV im gewählten Layout (5.1 / 7.1 / 7.1.4) — für Atmos-Renderer und DAWs">
+                    ToolTip.Tip="{l:T 'Mehrkanal-WAV im gewählten Layout (5.1 / 7.1 / 7.1.4) — für Atmos-Renderer und DAWs'}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                  <ic:SymbolIcon Symbol="Speaker2" /><TextBlock Text="Mehrkanal-WAV exportieren" />
+                  <ic:SymbolIcon Symbol="Speaker2" /><TextBlock Text="{l:T 'Mehrkanal-WAV exportieren'}" />
                 </StackPanel>
               </Button>
             </StackPanel>
@@ -148,13 +148,13 @@
       </Grid>
 
       <!-- Quellen / Positionen -->
-      <TextBlock Margin="0,22,0,8" FontWeight="SemiBold" Text="Spuren positionieren" />
+      <TextBlock Margin="0,22,0,8" FontWeight="SemiBold" Text="{l:T 'Spuren positionieren'}" />
       <Border Classes="dawPanel" Padding="24" IsVisible="{Binding !HasSources}">
         <StackPanel Classes="emptyState">
           <ic:SymbolIcon Symbol="Headphones" />
-          <TextBlock Classes="title" Text="Keine Spuren zum Positionieren" />
+          <TextBlock Classes="title" Text="{l:T 'Keine Spuren zum Positionieren'}" />
           <TextBlock Classes="hint"
-                     Text="Lade im Studio einen Song und trenne ihn in Stems — jede Spur erscheint dann hier und auf der Bühne oben, wo du sie im Raum verschieben kannst." />
+                     Text="{l:T 'Lade im Studio einen Song und trenne ihn in Stems — jede Spur erscheint dann hier und auf der Bühne oben, wo du sie im Raum verschieben kannst.'}" />
         </StackPanel>
       </Border>
       <ItemsControl ItemsSource="{Binding Sources}">
@@ -166,27 +166,27 @@
                   <Border Width="12" Height="12" CornerRadius="3" VerticalAlignment="Center"
                           Background="{Binding AccentColor, Converter={StaticResource StringToBrush}}" />
                   <TextBlock Margin="8,0,0,0" FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding Name}" />
-                  <CheckBox Margin="16,0,0,0" Content="Stumm" IsChecked="{Binding Muted, Mode=TwoWay}" />
+                  <CheckBox Margin="16,0,0,0" Content="{l:T 'Stumm'}" IsChecked="{Binding Muted, Mode=TwoWay}" />
                 </StackPanel>
                 <Grid ColumnDefinitions="*,*,*,*">
                   <StackPanel Grid.Column="0" Margin="0,0,8,0">
                     <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Text="{Binding AzimuthDeg, StringFormat='Azimut: {0:F0}°'}" />
+                               Text="{Binding AzimuthDeg, Converter={x:Static l:Fmt.Instance}, ConverterParameter='Azimut: {0:F0}°'}" />
                     <Slider Minimum="-180" Maximum="180" Value="{Binding AzimuthDeg, Mode=TwoWay}" />
                   </StackPanel>
                   <StackPanel Grid.Column="1" Margin="0,0,8,0">
                     <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Text="{Binding ElevationDeg, StringFormat='Höhe: {0:F0}°'}" />
+                               Text="{Binding ElevationDeg, Converter={x:Static l:Fmt.Instance}, ConverterParameter='Höhe: {0:F0}°'}" />
                     <Slider Minimum="0" Maximum="90" Value="{Binding ElevationDeg, Mode=TwoWay}" />
                   </StackPanel>
                   <StackPanel Grid.Column="2" Margin="0,0,8,0">
                     <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Text="{Binding Distance, StringFormat='Distanz: {0:F2}'}" />
+                               Text="{Binding Distance, Converter={x:Static l:Fmt.Instance}, ConverterParameter='Distanz: {0:F2}'}" />
                     <Slider Minimum="0.3" Maximum="2.5" Value="{Binding Distance, Mode=TwoWay}" />
                   </StackPanel>
                   <StackPanel Grid.Column="3">
                     <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Text="{Binding GainDb, StringFormat='Pegel: {0:+0.0;-0.0;0} dB'}" />
+                               Text="{Binding GainDb, Converter={x:Static l:Fmt.Instance}, ConverterParameter='Pegel: {0:+0.0;-0.0;0} dB'}" />
                     <Slider Minimum="-12" Maximum="12" Value="{Binding GainDb, Mode=TwoWay}" />
                   </StackPanel>
                 </Grid>

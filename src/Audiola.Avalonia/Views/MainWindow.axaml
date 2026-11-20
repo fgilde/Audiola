@@ -1,5 +1,5 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:l="using:Audiola.Avalonia.Localization"
         xmlns:ic="using:FluentIcons.Avalonia"
         xmlns:controls="using:Audiola.Controls"
         xmlns:vm="using:Audiola.ViewModels"
@@ -40,12 +40,12 @@
 
         <!-- Menü (kompakt) -->
         <Menu Grid.Column="0" VerticalAlignment="Center">
-          <MenuItem Header="_Datei">
-            <MenuItem Header="Öffnen… (Audio/ZIP)" InputGesture="Ctrl+O" Command="{Binding OpenFileCommand}" />
-            <MenuItem Header="Audio ins Studio hinzufügen…" Command="{Binding AddToStudioCommand}" />
+          <MenuItem Header="{l:T '_Datei'}">
+            <MenuItem Header="{l:T 'Öffnen… (Audio/ZIP)'}" InputGesture="Ctrl+O" Command="{Binding OpenFileCommand}" />
+            <MenuItem Header="{l:T 'Audio ins Studio hinzufügen…'}" Command="{Binding AddToStudioCommand}" />
             <Separator />
-            <MenuItem Header="Projekt öffnen…" Command="{Binding OpenProjectCommand}" />
-            <MenuItem Header="Letzte Projekte" ItemsSource="{Binding Home.RecentProjects}"
+            <MenuItem Header="{l:T 'Projekt öffnen…'}" Command="{Binding OpenProjectCommand}" />
+            <MenuItem Header="{l:T 'Letzte Projekte'}" ItemsSource="{Binding Home.RecentProjects}"
                       IsEnabled="{Binding Home.HasRecentProjects}">
               <MenuItem.ItemContainerTheme>
                 <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}"
@@ -58,7 +58,7 @@
                 </ControlTheme>
               </MenuItem.ItemContainerTheme>
             </MenuItem>
-            <MenuItem Header="Letzte Dateien" ItemsSource="{Binding Home.RecentFiles}"
+            <MenuItem Header="{l:T 'Letzte Dateien'}" ItemsSource="{Binding Home.RecentFiles}"
                       IsEnabled="{Binding Home.HasRecent}">
               <MenuItem.ItemContainerTheme>
                 <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}"
@@ -72,32 +72,32 @@
               </MenuItem.ItemContainerTheme>
             </MenuItem>
             <Separator />
-            <MenuItem Header="Projekt speichern" InputGesture="Ctrl+S" Command="{Binding SaveProjectCommand}"
+            <MenuItem Header="{l:T 'Projekt speichern'}" InputGesture="Ctrl+S" Command="{Binding SaveProjectCommand}"
                       IsEnabled="{Binding Transport.HasTrack}" />
-            <MenuItem Header="Projekt speichern unter…" InputGesture="Ctrl+Shift+S"
+            <MenuItem Header="{l:T 'Projekt speichern unter…'}" InputGesture="Ctrl+Shift+S"
                       Command="{Binding SaveProjectAsCommand}" IsEnabled="{Binding Transport.HasTrack}" />
-            <MenuItem Header="Projekt schließen" Command="{Binding CloseProjectCommand}"
+            <MenuItem Header="{l:T 'Projekt schließen'}" Command="{Binding CloseProjectCommand}"
                       IsEnabled="{Binding Transport.HasTrack}" />
             <Separator />
-            <MenuItem Header="Beenden" Click="Exit_Click" />
+            <MenuItem Header="{l:T 'Beenden'}" Click="Exit_Click" />
           </MenuItem>
-          <MenuItem Header="_Hilfe">
-            <MenuItem Header="Einrichtungs-Assistent…" Command="{Binding ShowSetupWizardCommand}" />
-            <MenuItem Header="Mess-Harness" Tag="Evaluation" Click="Nav_Click" />
+          <MenuItem Header="{l:T '_Hilfe'}">
+            <MenuItem Header="{l:T 'Einrichtungs-Assistent…'}" Command="{Binding ShowSetupWizardCommand}" />
+            <MenuItem Header="{l:T 'Mess-Harness'}" Tag="Evaluation" Click="Nav_Click" />
             <Separator />
-            <MenuItem Header="Nach Updates suchen…" Command="{Binding CheckUpdatesCommand}" />
+            <MenuItem Header="{l:T 'Nach Updates suchen…'}" Command="{Binding CheckUpdatesCommand}" />
             <Separator />
-            <MenuItem Header="Über Audiola" Tag="About" Click="Nav_Click" />
+            <MenuItem Header="{l:T 'Über Audiola'}" Tag="About" Click="Nav_Click" />
           </MenuItem>
         </Menu>
 
         <!-- Play / Stop -->
         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0" Spacing="6">
-          <Button Width="46" Height="34" Classes="accent" ToolTip.Tip="Abspielen / Pause"
+          <Button Width="46" Height="34" Classes="accent" ToolTip.Tip="{l:T 'Abspielen / Pause'}"
                   Command="{Binding Transport.PlayPauseCommand}" IsEnabled="{Binding Transport.HasTrack}">
             <ic:SymbolIcon Symbol="Play" FontSize="18" />
           </Button>
-          <Button Width="42" Height="34" ToolTip.Tip="Stopp"
+          <Button Width="42" Height="34" ToolTip.Tip="{l:T 'Stopp'}"
                   Command="{Binding Transport.StopCommand}" IsEnabled="{Binding Transport.HasTrack}">
             <ic:SymbolIcon Symbol="Stop" FontSize="18" />
           </Button>
@@ -148,51 +148,51 @@
         <DockPanel LastChildFill="False">
           <StackPanel Name="RailItems" DockPanel.Dock="Top" Margin="0,6,0,0">
             <RadioButton Classes="dawRail" GroupName="Rail" IsChecked="True" Tag="Home" Click="Nav_Click"
-                         ToolTip.Tip="Start — Projekte &amp; zuletzt geöffnet">
+                         ToolTip.Tip="{l:T 'Start — Projekte &amp; zuletzt geöffnet'}">
               <ic:SymbolIcon Symbol="Home" FontSize="19" />
             </RadioButton>
             <RadioButton Classes="dawRail" GroupName="Rail" Tag="Timeline" Click="Nav_Click"
-                         ToolTip.Tip="Studio (Timeline)">
+                         ToolTip.Tip="{l:T 'Studio (Timeline)'}">
               <ic:SymbolIcon Symbol="Timeline" FontSize="19" />
             </RadioButton>
             <Rectangle Height="1" Margin="12,6" Fill="{DynamicResource DawStrokeBrush}" />
             <RadioButton Classes="dawRail" GroupName="Rail" Tag="Equalizer" Click="Nav_Click"
-                         ToolTip.Tip="Equalizer">
+                         ToolTip.Tip="{l:T 'Equalizer'}">
               <ic:SymbolIcon Symbol="Options" FontSize="19" />
             </RadioButton>
             <RadioButton Classes="dawRail" GroupName="Rail" Tag="Mastering" Click="Nav_Click"
-                         ToolTip.Tip="Mastering">
+                         ToolTip.Tip="{l:T 'Mastering'}">
               <ic:SymbolIcon Symbol="SoundWaveCircle" FontSize="19" />
             </RadioButton>
             <RadioButton Classes="dawRail" GroupName="Rail" Tag="SpatialAudio" Click="Nav_Click"
-                         ToolTip.Tip="Spatial Audio (3D)">
+                         ToolTip.Tip="{l:T 'Spatial Audio (3D)'}">
               <ic:SymbolIcon Symbol="Headphones" FontSize="19" />
             </RadioButton>
             <RadioButton Classes="dawRail" GroupName="Rail" Tag="Voices" Click="Nav_Click"
-                         ToolTip.Tip="Stimmen (TTS &amp; Klonen)">
+                         ToolTip.Tip="{l:T 'Stimmen (TTS &amp; Klonen)'}">
               <ic:SymbolIcon Symbol="PersonVoice" FontSize="19" />
             </RadioButton>
             <RadioButton Classes="dawRail" GroupName="Rail" Tag="Metadata" Click="Nav_Click"
-                         ToolTip.Tip="Metadaten &amp; Tags">
+                         ToolTip.Tip="{l:T 'Metadaten &amp; Tags'}">
               <ic:SymbolIcon Symbol="Tag" FontSize="19" />
             </RadioButton>
             <RadioButton Classes="dawRail" GroupName="Rail" Tag="Variation" Click="Nav_Click"
-                         ToolTip.Tip="Klangvariation (Studio-Effekte)">
+                         ToolTip.Tip="{l:T 'Klangvariation (Studio-Effekte)'}">
               <ic:SymbolIcon Symbol="Pulse" FontSize="19" />
             </RadioButton>
             <RadioButton Classes="dawRail" GroupName="Rail" Tag="Provenance" Click="Nav_Click"
-                         ToolTip.Tip="Provenienz-Analyse">
+                         ToolTip.Tip="{l:T 'Provenienz-Analyse'}">
               <ic:SymbolIcon Symbol="DocumentSearch" FontSize="19" />
             </RadioButton>
           </StackPanel>
           <StackPanel Name="RailFooter" DockPanel.Dock="Bottom" Margin="0,0,0,8">
             <Rectangle Height="1" Margin="12,6" Fill="{DynamicResource DawStrokeBrush}" />
             <RadioButton Classes="dawRail" GroupName="Rail" Tag="Settings" Click="Nav_Click"
-                         ToolTip.Tip="Einstellungen">
+                         ToolTip.Tip="{l:T 'Einstellungen'}">
               <ic:SymbolIcon Symbol="Settings" FontSize="19" />
             </RadioButton>
             <RadioButton Classes="dawRail" GroupName="Rail" Tag="About" Click="Nav_Click"
-                         ToolTip.Tip="Über Audiola">
+                         ToolTip.Tip="{l:T 'Über Audiola'}">
               <ic:SymbolIcon Symbol="Info" FontSize="19" />
             </RadioButton>
           </StackPanel>

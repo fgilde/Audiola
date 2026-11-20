@@ -38,13 +38,33 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _voiceStatus = "";
 
-    public string RecordButtonText => IsRecording ? "Aufnahme stoppen & Stimme erstellen" : "Eigene Stimme aufnehmen";
+    public string RecordButtonText => IsRecording ? L.T("Aufnahme stoppen & Stimme erstellen") : L.T("Eigene Stimme aufnehmen");
 
     [ObservableProperty]
-    private string _demucsStatus = "Nicht geprueft.";
+    private string _demucsStatus = L.T("Nicht geprüft.");
 
     [ObservableProperty]
     private bool _isCheckingDemucs;
+
+    /// <summary>Anzeigenamen der wählbaren Sprachen (Reihenfolge wie <see cref="L.Languages"/>).</summary>
+    public IReadOnlyList<string> LanguageNames { get; } = [.. L.Languages.Select(l => l.Name)];
+
+    /// <summary>Gewählte Sprache; wird gespeichert und greift nach dem Neustart.</summary>
+    public int LanguageIndex
+    {
+        get => L.Languages.ToList().FindIndex(l => l.Code == (_settings.Current.Language is { Length: > 0 } c ? c : L.Current));
+        set
+        {
+            if (value < 0 || value == LanguageIndex) return;
+            _settings.Current.Language = L.Languages[value].Code;
+            _settings.Save();
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(LanguageRestartHint));
+        }
+    }
+
+    /// <summary>Hinweis, solange die gewählte Sprache noch nicht aktiv ist.</summary>
+    public bool LanguageRestartHint => _settings.Current.Language is { Length: > 0 } c && c != L.Current;
 
     public IReadOnlyList<string> AvailableModels { get; } =
         ["htdemucs", "htdemucs_ft", "htdemucs_6s", "mdx_extra", "mdx_extra_q"];
@@ -83,7 +103,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task CreateVoiceFromFileAsync()
     {
-        var paths = await _files.OpenFilesAsync("Audio-Sample(s) für die Stimme wählen", true,
+        var paths = await _files.OpenFilesAsync(L.T("Audio-Sample(s) für die Stimme wählen"), true,
             FileFilter.Audio, FileFilter.Any);
         if (paths.Count == 0) return;
         await CreateVoiceAsync([.. paths]);
@@ -102,17 +122,17 @@ public sealed partial class SettingsViewModel : ObservableObject
             {
                 _recorder.Start(RecordDeviceNumber);
                 IsRecording = true;
-                VoiceStatus = "Aufnahme läuft … sprich einige Sätze und stoppe dann.";
+                VoiceStatus = L.T("Aufnahme läuft … sprich einige Sätze und stoppe dann.");
             }
             catch (Exception ex)
             {
-                ShowError("Aufnahme fehlgeschlagen", ex.Message);
+                ShowError(L.T("Aufnahme fehlgeschlagen"), ex.Message);
             }
             return;
         }
 
         // Stoppen → fertige WAV → Stimme erstellen.
-        VoiceStatus = "Aufnahme wird verarbeitet …";
+        VoiceStatus = L.T("Aufnahme wird verarbeitet …");
         var path = await _recorder.StopAsync();
         IsRecording = false;
         if (!string.IsNullOrEmpty(path))
@@ -122,18 +142,18 @@ public sealed partial class SettingsViewModel : ObservableObject
     private async Task CreateVoiceAsync(IReadOnlyList<string> paths)
     {
         IsVoiceBusy = true;
-        VoiceStatus = "Stimme wird erstellt …";
+        VoiceStatus = L.T("Stimme wird erstellt …");
         try
         {
-            var name = string.IsNullOrWhiteSpace(NewVoiceName) ? "Audiola-Stimme" : NewVoiceName.Trim();
+            var name = string.IsNullOrWhiteSpace(NewVoiceName) ? L.T("Audiola-Stimme") : NewVoiceName.Trim();
             await _voiceChange.CreateVoiceFromSamplesAsync(name, paths);
-            VoiceStatus = $"Stimme '{name}' erstellt.";
-            _snackbar.Success("Stimme erstellt", $"'{name}' steht jetzt im Stimmtausch-Dialog bereit.", 4);
+            VoiceStatus = L.F("Stimme '{0}' erstellt.", name);
+            _snackbar.Success(L.T("Stimme erstellt"), L.F("'{0}' steht jetzt im Stimmtausch-Dialog bereit.", name), 4);
         }
         catch (Exception ex)
         {
             VoiceStatus = "";
-            ShowError("Stimme erstellen fehlgeschlagen", ex.Message);
+            ShowError(L.T("Stimme erstellen fehlgeschlagen"), ex.Message);
         }
         finally { IsVoiceBusy = false; }
     }
@@ -144,7 +164,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task BrowseOutputAsync()
     {
-        var folder = await _files.PickFolderAsync("Ausgabeordner waehlen");
+        var folder = await _files.PickFolderAsync(L.T("Ausgabeordner wählen"));
         if (folder is not null) OutputDirectory = folder;
     }
 
@@ -152,13 +172,13 @@ public sealed partial class SettingsViewModel : ObservableObject
     private async Task CheckDemucsAsync()
     {
         IsCheckingDemucs = true;
-        DemucsStatus = "Pruefe …";
+        DemucsStatus = L.T("Prüfe …");
         try
         {
             var ok = await _separation.IsAvailableAsync();
-            DemucsStatus = ok ? "Demucs gefunden ✓" : "Demucs nicht gefunden ✗";
-            if (ok) _snackbar.Success("Demucs OK", "Stem-Trennung ist einsatzbereit.", 4);
-            else _snackbar.Warning("Demucs fehlt", "Bitte 'pip install demucs' ausfuehren.", 4);
+            DemucsStatus = ok ? L.T("Demucs gefunden ✓") : L.T("Demucs nicht gefunden ✗");
+            if (ok) _snackbar.Success(L.T("Demucs OK"), L.T("Stem-Trennung ist einsatzbereit."), 4);
+            else _snackbar.Warning(L.T("Demucs fehlt"), L.T("Bitte 'pip install demucs' ausführen."), 4);
         }
         finally
         {

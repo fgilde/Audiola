@@ -69,17 +69,17 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
 
     // ---- Status ----
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string _status = "Backing vorbereiten und Latenz kalibrieren.";
+    [ObservableProperty] private string _status = L.T("Backing vorbereiten und Latenz kalibrieren.");
     [ObservableProperty] private bool _prepared;
     [ObservableProperty] private bool _isRecording;
     [ObservableProperty] private bool _isPlaying;
 
     /// <summary>Beschriftungen der Transport-Knöpfe (die Views binden Text statt eigener Trigger).</summary>
-    public string PlayButtonLabel => IsPlaying ? "⏸  Pause" : "▶  Wiedergabe";
+    public string PlayButtonLabel => IsPlaying ? L.T("⏸  Pause") : L.T("▶  Wiedergabe");
 
-    public string RecordButtonLabel => IsCountingIn ? "✕  Vorzähler abbrechen"
-        : IsRecording ? "⏹  Aufnahme stoppen"
-        : "⏺  Aufnahme";
+    public string RecordButtonLabel => IsCountingIn ? L.T("✕  Vorzähler abbrechen")
+        : IsRecording ? L.T("⏹  Aufnahme stoppen")
+        : L.T("⏺  Aufnahme");
 
     partial void OnIsPlayingChanged(bool value) => OnPropertyChanged(nameof(PlayButtonLabel));
 
@@ -148,7 +148,7 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         for (int i = 0; i < NAudio.Wave.WaveInEvent.DeviceCount; i++)
             Mics.Add(new MicDevice(i, NAudio.Wave.WaveInEvent.GetCapabilities(i).ProductName));
         SelectedMic = Mics.FirstOrDefault();
-        if (Mics.Count == 0) Status = "Kein Mikrofon gefunden — bitte ein Aufnahmegerät anschließen.";
+        if (Mics.Count == 0) Status = L.T("Kein Mikrofon gefunden — bitte ein Aufnahmegerät anschließen.");
 
         // Gesangs-Spur raten (Name enthält „vocal"/„gesang"/„stimme"/„lead").
         ReferenceTrack = Tracks.FirstOrDefault(t =>
@@ -162,7 +162,7 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
 
         // Ziel-Stimmen für die optionale Veredelung (seed-vc): „keine" + lokale Profile.
         Voices.Clear();
-        Voices.Add(new VoiceOption("Nur Tonhöhe (deine Stimme)", null));
+        Voices.Add(new VoiceOption(L.T("Nur Tonhöhe (deine Stimme)"), null));
         foreach (var p in _voiceStore.Profiles) Voices.Add(new VoiceOption(p.Name, p));
         SelectedVoice = Voices.FirstOrDefault();
     }
@@ -193,7 +193,7 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         LyricPrev = LyricCurrent = LyricNext = "";
         if (HasLyrics)
             Status = LrcParser.HasTimestamps(lrc)
-                ? "Lyrics geladen." : "Lyrics geladen (ohne Zeitmarken, grob verteilt).";
+                ? L.T("Lyrics geladen.") : L.T("Lyrics geladen (ohne Zeitmarken, grob verteilt).");
     }
 
     /// <summary>Lyrics aus der Gesangsspur (oder dem Mix) transkribieren und projektweit speichern.</summary>
@@ -201,24 +201,24 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     private async Task ExtractLyricsAsync()
     {
         if (IsBusy) return;
-        IsBusy = true; Status = "Lyrics werden extrahiert …";
+        IsBusy = true; Status = L.T("Lyrics werden extrahiert …");
         try
         {
             string? source = ReferenceTrack?.Clips.FirstOrDefault()?.SourcePath;
             source ??= await _timeline.RenderMixToTempFileAsync();
-            if (source is null) { Status = "Keine Audioquelle für die Lyrics."; return; }
+            if (source is null) { Status = L.T("Keine Audioquelle für die Lyrics."); return; }
 
             // ElevenLabs nutzen, falls ein Key hinterlegt ist — sonst lokal (Whisper).
             var useElevenLabs = _timeline.ElevenLabsAvailable;
             var lrc = await _timeline.TranscribeFileToLrcAsync(source,
                 string.IsNullOrWhiteSpace(_songMeta.Title) ? null : _songMeta.Title, useElevenLabs);
-            if (string.IsNullOrWhiteSpace(lrc)) { Status = "Es konnten keine Lyrics erkannt werden."; return; }
+            if (string.IsNullOrWhiteSpace(lrc)) { Status = L.T("Es konnten keine Lyrics erkannt werden."); return; }
 
             _songMeta.Lyrics = lrc;   // projektweit speichern → nur einmal nötig
             LoadLyrics(lrc);
-            Status = "Lyrics extrahiert und gespeichert.";
+            Status = L.T("Lyrics extrahiert und gespeichert.");
         }
-        catch (Exception ex) { UiError.Show("Lyrics-Extraktion fehlgeschlagen", ex.Message); Status = ""; }
+        catch (Exception ex) { UiError.Show(L.T("Lyrics-Extraktion fehlgeschlagen"), ex.Message); Status = ""; }
         finally { IsBusy = false; }
     }
 
@@ -227,23 +227,23 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     private async Task PrepareAsync()
     {
         if (IsBusy) return;
-        IsBusy = true; Status = "Backing wird gerendert …";
+        IsBusy = true; Status = L.T("Backing wird gerendert …");
         try
         {
             _backingPath = await _timeline.RenderMixToTempFileAsync();
-            if (_backingPath is null) { Status = "Kein Backing (keine Spuren)."; return; }
+            if (_backingPath is null) { Status = L.T("Kein Backing (keine Spuren)."); return; }
             _engine.LoadBacking(_backingPath);
             DurationSeconds = _engine.Duration.TotalSeconds;
 
-            Status = "Referenz-Melodie wird analysiert …";
+            Status = L.T("Referenz-Melodie wird analysiert …");
             await BuildReferenceAsync();
 
             Prepared = true;
             Status = _reference.Length > 0
-                ? "Bereit. Kopfhörer auf, Aufnahme starten."
-                : "Bereit (ohne Referenz-Melodie — Gesangsspur wählen für Ton-Bewertung).";
+                ? L.T("Bereit. Kopfhörer auf, Aufnahme starten.")
+                : L.T("Bereit (ohne Referenz-Melodie — Gesangsspur wählen für Ton-Bewertung).");
         }
-        catch (Exception ex) { UiError.Show("Vorbereitung fehlgeschlagen", ex.Message); Status = ""; }
+        catch (Exception ex) { UiError.Show(L.T("Vorbereitung fehlgeschlagen"), ex.Message); Status = ""; }
         finally { IsBusy = false; }
     }
 
@@ -271,12 +271,12 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     private async Task CalibrateAsync()
     {
         if (IsBusy) return;
-        IsBusy = true; CalibrationStatus = "Messung läuft — bitte OHNE Kopfhörer, ruhig sein …";
+        IsBusy = true; CalibrationStatus = L.T("Messung läuft — bitte OHNE Kopfhörer, ruhig sein …");
         try
         {
             var ms = await _calibrator.MeasureMsAsync(SelectedMic?.Index ?? 0);
             LatencyMs = Math.Round(ms);
-            CalibrationStatus = $"Gemessen: {LatencyMs:F0} ms Versatz.";
+            CalibrationStatus = L.F("Gemessen: {0:F0} ms Versatz.", LatencyMs);
         }
         catch (Exception ex) { CalibrationStatus = ex.Message; }
         finally { IsBusy = false; }
@@ -312,7 +312,7 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
     private async Task ToggleRecordAsync()
     {
         if (!Prepared) return;
-        if (IsCountingIn) { CancelCountIn(); Status = "Vorzähler abgebrochen."; return; }
+        if (IsCountingIn) { CancelCountIn(); Status = L.T("Vorzähler abgebrochen."); return; }
         if (_engine.IsRecording) { _engine.Stop(); return; }
 
         if (CountInEnabled)
@@ -321,7 +321,7 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
             for (var i = 3; i >= 1; i--)
             {
                 CountIn = i;
-                Status = $"Aufnahme startet in {i} …";
+                Status = L.F("Aufnahme startet in {0} …", i);
                 await Task.Delay(1000);
                 if (token != _countInToken || !Prepared) return;   // abgebrochen / Fenster zu
             }
@@ -358,19 +358,19 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         CancelCountIn();
         _engine.Stop();
         var buf = _engine.VocalBuffer;
-        if (buf.Length == 0) { Status = "Noch nichts aufgenommen."; return; }
+        if (buf.Length == 0) { Status = L.T("Noch nichts aufgenommen."); return; }
 
-        IsBusy = true; Status = "Aufnahme wird übernommen …";
+        IsBusy = true; Status = L.T("Aufnahme wird übernommen …");
         try
         {
             var wav = TempDir.File("vocal", ".wav", "gesang");
             AudioExporter.Export(buf, _engine.SampleRate, 1, wav);
             await _timeline.AddAudioFileAsync(wav, -1, 0);
 
-            _snackbar.Success("Gesang übernommen", "Als neue Spur ins Studio eingefügt.");
-            Status = "Übernommen.";
+            _snackbar.Success(L.T("Gesang übernommen"), L.T("Als neue Spur ins Studio eingefügt."));
+            Status = L.T("Übernommen.");
         }
-        catch (Exception ex) { UiError.Show("Übernahme fehlgeschlagen", ex.Message); Status = ""; }
+        catch (Exception ex) { UiError.Show(L.T("Übernahme fehlgeschlagen"), ex.Message); Status = ""; }
         finally { IsBusy = false; }
     }
 
@@ -382,15 +382,15 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
         _engine.Stop();
 
         var buf = _engine.VocalBuffer;
-        if (!HasRecording || buf.Length == 0) { Status = "Erst etwas einsingen."; return; }
+        if (!HasRecording || buf.Length == 0) { Status = L.T("Erst etwas einsingen."); return; }
         var refPath = ReferenceTrack?.Clips.FirstOrDefault()?.SourcePath;
         if (string.IsNullOrEmpty(refPath))
         {
-            Status = "Keine Gesangsspur als Referenz gewählt (links in der Spurenliste).";
+            Status = L.T("Keine Gesangsspur als Referenz gewählt (links in der Spurenliste).");
             return;
         }
 
-        IsBusy = true; Status = "Tonhöhe wird auf die Original-Melodie gezogen …";
+        IsBusy = true; Status = L.T("Tonhöhe wird auf die Original-Melodie gezogen …");
         try
         {
             var prog = new Progress<string>(m => Status = m);
@@ -407,7 +407,7 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
             // 3) Optional: Stimm-Veredelung per seed-vc (auf eine Zielstimme)
             if (SelectedVoice?.Profile is { } prof)
             {
-                Status = $"Stimme wird veredelt ({prof.Name}) …";
+                Status = L.F("Stimme wird veredelt ({0}) …", prof.Name);
                 var (swapped, sr2) = await _voice.ChangeVoiceAsync(resultWav, prof, 50, autoF0Adjust: false, prog);
                 resultWav = TempDir.File("magic", ".wav", "voiced");
                 AudioExporter.Export(swapped, sr2, 2, resultWav);
@@ -415,10 +415,10 @@ public sealed partial class SingAlongViewModel : ObservableObject, IDisposable
 
             // 4) Als neue Studio-Spur
             await _timeline.AddAudioFileAsync(resultWav, -1, 0);
-            _snackbar.Success("Perfektioniert ✨", "Als neue Spur ins Studio eingefügt.");
-            Status = "Fertig — perfektionierte Spur eingefügt.";
+            _snackbar.Success(L.T("Perfektioniert ✨"), L.T("Als neue Spur ins Studio eingefügt."));
+            Status = L.T("Fertig — perfektionierte Spur eingefügt.");
         }
-        catch (Exception ex) { UiError.Show("Perfekt machen fehlgeschlagen", ex.Message); Status = ""; }
+        catch (Exception ex) { UiError.Show(L.T("Perfekt machen fehlgeschlagen"), ex.Message); Status = ""; }
         finally { IsBusy = false; }
     }
 

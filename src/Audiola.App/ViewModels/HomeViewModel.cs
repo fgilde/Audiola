@@ -72,7 +72,7 @@ public sealed partial class HomeViewModel : ObservableObject
     [RelayCommand]
     private async Task OpenFileAsync()
     {
-        var path = await _files.OpenFileAsync("Audiodatei öffnen", FileFilter.Audio, FileFilter.Any);
+        var path = await _files.OpenFileAsync(L.T("Audiodatei öffnen"), FileFilter.Audio, FileFilter.Any);
         if (path is not null)
             await Load(path);
     }
@@ -80,7 +80,7 @@ public sealed partial class HomeViewModel : ObservableObject
     [RelayCommand]
     private async Task OpenProjectDialogAsync()
     {
-        var path = await _files.OpenFileAsync("Projekt öffnen", FileFilter.Project, FileFilter.Any);
+        var path = await _files.OpenFileAsync(L.T("Projekt öffnen"), FileFilter.Project, FileFilter.Any);
         if (path is null) return;
         await OpenAsync(new RecentItem(path, Path.GetFileNameWithoutExtension(path), isProject: true));
     }
@@ -98,7 +98,7 @@ public sealed partial class HomeViewModel : ObservableObject
         // Fehlende Dateien freundlich abfangen (statt Fehler-Dialog) und Aufräumen anbieten.
         if (!File.Exists(item.Path))
         {
-            _snackbar.Warning("Datei nicht gefunden", $"{item.Name} existiert nicht mehr — Eintrag wird entfernt.", 4);
+            _snackbar.Warning(L.T("Datei nicht gefunden"), L.F("{0} existiert nicht mehr — Eintrag wird entfernt.", item.Name), 4);
             Remove(item);
             return;
         }
@@ -110,11 +110,11 @@ public sealed partial class HomeViewModel : ObservableObject
             {
                 await _workspace.OpenAsync(item.Path);
                 _navigation.Navigate(ShellPage.Timeline);
-                _snackbar.Success("Projekt geladen", item.Name, 2);
+                _snackbar.Success(L.T("Projekt geladen"), item.Name, 2);
             }
             catch (Exception ex)
             {
-                _snackbar.Error("Öffnen fehlgeschlagen", ex.Message);
+                _snackbar.Error(L.T("Öffnen fehlgeschlagen"), ex.Message);
             }
             finally { IsLoading = false; }
         }
@@ -136,10 +136,10 @@ public sealed partial class HomeViewModel : ObservableObject
     private void Delete(RecentItem? item)
     {
         if (item is null) return;
-        var what = item.IsProject ? "Projektdatei" : "Audiodatei";
-        if (!_dialogs.Confirm("Löschen bestätigen",
-                $"{what} wirklich von der Festplatte löschen?\n\n{item.Path}")) return;
-        TryDelete(item.Path, item.IsProject ? "Projekt gelöscht" : "Datei gelöscht");
+        var what = item.IsProject ? L.T("Projektdatei") : L.T("Audiodatei");
+        if (!_dialogs.Confirm(L.T("Löschen bestätigen"),
+                L.F("{0} wirklich von der Festplatte löschen?\n\n{1}", what, item.Path))) return;
+        TryDelete(item.Path, item.IsProject ? L.T("Projekt gelöscht") : L.T("Datei gelöscht"));
         if (item.IsProject) _workspace.RemoveRecent(item.Path);
         else _loader.RemoveRecent(item.Path);
     }
@@ -153,7 +153,7 @@ public sealed partial class HomeViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            _snackbar.Error("Löschen fehlgeschlagen", ex.Message);
+            _snackbar.Error(L.T("Löschen fehlgeschlagen"), ex.Message);
         }
     }
 
@@ -164,12 +164,12 @@ public sealed partial class HomeViewModel : ObservableObject
         {
             var track = await _loader.LoadAsync(path);
             await _timeline.AddAudioFileAsync(path, -1, 0); // als erste/weitere Studio-Spur
-            _snackbar.Success("Geladen", track.FileName, 2);
+            _snackbar.Success(L.T("Geladen"), track.FileName, 2);
             _navigation.Navigate(ShellPage.Timeline);
         }
         catch (Exception ex)
         {
-            _snackbar.Error("Fehler beim Laden", ex.Message);
+            _snackbar.Error(L.T("Fehler beim Laden"), ex.Message);
         }
         finally
         {
@@ -200,9 +200,9 @@ public sealed class RecentItem
             Exists = fi.Exists;
             DetailsText = Exists
                 ? $"{FormatSize(fi.Length)}  ·  {fi.LastWriteTime:dd.MM.yyyy HH:mm}"
-                : "Datei fehlt";
+                : L.T("Datei fehlt");
         }
-        catch { Exists = false; DetailsText = "Datei fehlt"; }
+        catch { Exists = false; DetailsText = L.T("Datei fehlt"); }
     }
 
     private static string FormatSize(long bytes)

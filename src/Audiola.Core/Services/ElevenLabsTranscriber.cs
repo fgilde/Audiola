@@ -17,8 +17,8 @@ public static class ElevenLabsTranscriber
     /// <summary>Transkribiert die Audiodatei und liefert synchronisierte LRC-Lyrics (oder null ohne Wörter).</summary>
     public static async Task<string?> TranscribeToLrcAsync(string audioPath, string apiKey, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(apiKey)) throw new InvalidOperationException("Kein ElevenLabs-API-Key hinterlegt.");
-        if (!File.Exists(audioPath)) throw new FileNotFoundException("Audiodatei nicht gefunden.", audioPath);
+        if (string.IsNullOrWhiteSpace(apiKey)) throw new InvalidOperationException(L.T("Kein ElevenLabs-API-Key hinterlegt."));
+        if (!File.Exists(audioPath)) throw new FileNotFoundException(L.T("Audiodatei nicht gefunden."), audioPath);
 
         var bytes = await File.ReadAllBytesAsync(audioPath, ct);
         using var form = new MultipartFormDataContent();
@@ -32,7 +32,7 @@ public static class ElevenLabsTranscriber
         using var resp = await Http.SendAsync(req, ct);
         var json = await resp.Content.ReadAsStringAsync(ct);
         if (!resp.IsSuccessStatusCode)
-            throw new InvalidOperationException($"Transkription fehlgeschlagen ({(int)resp.StatusCode}): {Truncate(json, 300)}");
+            throw new InvalidOperationException(L.F("Transkription fehlgeschlagen ({0}): {1}", (int)resp.StatusCode, Truncate(json, 300)));
 
         return WordsToLrc(json);
     }

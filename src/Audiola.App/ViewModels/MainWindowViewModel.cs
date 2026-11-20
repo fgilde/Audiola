@@ -17,7 +17,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         [".wav", ".mp3", ".flac", ".aiff", ".aif", ".m4a", ".ogg"];
 
     private static readonly FileFilter AudioAndZip =
-        new("Audio & ZIP", "wav", "mp3", "flac", "aiff", "m4a", "ogg", "zip");
+        new(L.T("Audio & ZIP"), "wav", "mp3", "flac", "aiff", "m4a", "ogg", "zip");
 
     private readonly IShellNavigation _navigation;
     private readonly INotifier _snackbar;
@@ -36,7 +36,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     /// <summary>Text der Statusleiste — zeigt laufende Hintergrund-Arbeit (Stems, Stimmtausch …).</summary>
     [ObservableProperty]
-    private string _status = "Bereit";
+    private string _status = L.T("Bereit");
 
     /// <summary>True, solange eine Hintergrund-Aufgabe läuft (Statuskugel wird gelb).</summary>
     [ObservableProperty]
@@ -81,7 +81,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             {
                 IsWorking = _timeline.IsSeparating;
                 Status = string.IsNullOrWhiteSpace(_timeline.SeparationStatus)
-                    ? "Bereit" : _timeline.SeparationStatus;
+                    ? L.T("Bereit") : _timeline.SeparationStatus;
             }
             else if (args.PropertyName is nameof(TimelineViewModel.CurrentProjectPath)
                 or nameof(TimelineViewModel.IsDirty))
@@ -110,15 +110,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private async Task OpenFileAsync()
     {
-        var paths = await _files.OpenFilesAsync("Öffnen (Audio oder ZIP)", true, AudioAndZip,
-            FileFilter.Audio, new FileFilter("ZIP-Archive", "zip"), FileFilter.Any);
+        var paths = await _files.OpenFilesAsync(L.T("Öffnen (Audio oder ZIP)"), true, AudioAndZip,
+            FileFilter.Audio, new FileFilter(L.T("ZIP-Archive"), "zip"), FileFilter.Any);
         if (paths.Count > 0) await LoadInputsAsync(paths);
     }
 
     [RelayCommand]
     private async Task AddToStudioAsync()
     {
-        var paths = await _files.OpenFilesAsync("Audio ins Studio hinzufügen", true, AudioAndZip,
+        var paths = await _files.OpenFilesAsync(L.T("Audio ins Studio hinzufügen"), true, AudioAndZip,
             FileFilter.Audio, FileFilter.Any);
         if (paths.Count > 0) await LoadInputsAsync(paths);
     }
@@ -126,7 +126,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private async Task OpenProjectAsync()
     {
-        var path = await _files.OpenFileAsync("Projekt öffnen", FileFilter.Project, FileFilter.Any);
+        var path = await _files.OpenFileAsync(L.T("Projekt öffnen"), FileFilter.Project, FileFilter.Any);
         if (path is not null) await OpenProjectPathAsync(path);
     }
 
@@ -138,11 +138,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         {
             await _workspace.OpenAsync(path);
             _navigation.Navigate(ShellPage.Timeline);
-            _snackbar.Success("Projekt geladen", Path.GetFileName(path), 3);
+            _snackbar.Success(L.T("Projekt geladen"), Path.GetFileName(path), 3);
         }
         catch (Exception ex)
         {
-            _snackbar.Error("Öffnen fehlgeschlagen", ex.Message, 5);
+            _snackbar.Error(L.T("Öffnen fehlgeschlagen"), ex.Message, 5);
         }
     }
 
@@ -163,7 +163,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         var files = ExpandToAudioFiles(list);
         if (files.Count == 0)
         {
-            _snackbar.Warning("Nichts geladen", "Keine unterstützten Audiodateien gefunden.", 3);
+            _snackbar.Warning(L.T("Nichts geladen"), L.T("Keine unterstützten Audiodateien gefunden."), 3);
             return;
         }
 
@@ -177,8 +177,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (loaded == 0) return;
 
         AdoptMetadataIfEmpty(files[0]);
-        _snackbar.Success("Geladen",
-            loaded == 1 ? Path.GetFileName(files[0]) : $"{loaded} Spuren hinzugefügt.", 2);
+        _snackbar.Success(L.T("Geladen"),
+            loaded == 1 ? Path.GetFileName(files[0]) : L.F("{0} Spuren hinzugefügt.", loaded), 2);
     }
 
     /// <summary>True, wenn der Pfad als Audio, ZIP oder Projekt geladen werden kann (für Drag&amp;Drop).</summary>
@@ -251,13 +251,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _timeline.CloseProject();
         _songMeta.Clear();
         _navigation.Navigate(ShellPage.Home);
-        _snackbar.Info("Projekt geschlossen", "Das Studio ist jetzt leer.", 2);
+        _snackbar.Info(L.T("Projekt geschlossen"), L.T("Das Studio ist jetzt leer."), 2);
     }
 
     private bool EnsureHasContent()
     {
         if (_workspace.HasContent) return true;
-        _snackbar.Warning("Nichts zu speichern", "Im Studio sind keine Spuren geladen.", 4);
+        _snackbar.Warning(L.T("Nichts zu speichern"), L.T("Im Studio sind keine Spuren geladen."), 4);
         return false;
     }
 
@@ -274,11 +274,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
             try
             {
-                path = await _files.SaveFileAsync("Projekt speichern", suggested, FileFilter.Project, FileFilter.Any);
+                path = await _files.SaveFileAsync(L.T("Projekt speichern"), suggested, FileFilter.Project, FileFilter.Any);
             }
             catch (Exception ex)
             {
-                _snackbar.Error("Speichern fehlgeschlagen", ex.Message, 5);
+                _snackbar.Error(L.T("Speichern fehlgeschlagen"), ex.Message, 5);
                 return false;
             }
 
@@ -289,12 +289,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
         try
         {
             await _workspace.SaveAsync(path);
-            _snackbar.Success("Projekt gespeichert", Path.GetFileName(path), 3);
+            _snackbar.Success(L.T("Projekt gespeichert"), Path.GetFileName(path), 3);
             return true;
         }
         catch (Exception ex)
         {
-            _snackbar.Error("Speichern fehlgeschlagen", ex.Message, 5);
+            _snackbar.Error(L.T("Speichern fehlgeschlagen"), ex.Message, 5);
             return false;
         }
     }
@@ -310,7 +310,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         try
         {
             await _workspace.SaveAsync(_workspace.CurrentPath!);
-            Status = $"Automatisch gespeichert · {DateTime.Now:HH:mm}";
+            Status = L.F("Automatisch gespeichert · {0:HH:mm}", DateTime.Now);
         }
         catch { /* still — beim nächsten Tick erneut versuchen */ }
         finally { _autoSaving = false; }
@@ -322,7 +322,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (!_workspace.IsDirty) return true;
 
         return await _dialogs.AskSaveDiscardCancelAsync(
-            "Projekt speichern?", "Es gibt ungespeicherte Änderungen. Vorher speichern?") switch
+            L.T("Projekt speichern?"), L.T("Es gibt ungespeicherte Änderungen. Vorher speichern?")) switch
         {
             SaveDiscardCancel.Save => await TrySaveAsync(),
             SaveDiscardCancel.Discard => true,
@@ -348,22 +348,22 @@ public sealed partial class MainWindowViewModel : ObservableObject
             if (info is null) return;
 
             var version = info.TargetFullRelease.Version.ToString();
-            Status = $"Update {version} verfügbar";
-            _snackbar.Info("Update verfügbar",
-                $"Version {version} steht bereit — über Hilfe → „Nach Updates suchen…“ installieren.", 8);
+            Status = L.F("Update {0} verfügbar", version);
+            _snackbar.Info(L.T("Update verfügbar"),
+                L.F("Version {0} steht bereit — über Hilfe → „Nach Updates suchen…“ installieren.", version), 8);
 
-            if (!_dialogs.Confirm("Update verfügbar",
-                    $"Version {version} ist verfügbar (installiert: {_updates.CurrentVersion})."
+            if (!_dialogs.Confirm(L.T("Update verfügbar"),
+                    L.F("Version {0} ist verfügbar (installiert: {1}).", version, _updates.CurrentVersion)
                     + Environment.NewLine + Environment.NewLine
-                    + "Jetzt herunterladen und neu starten?"))
+                    + L.T("Jetzt herunterladen und neu starten?")))
                 return;
 
             IsWorking = true;
-            Status = $"Update {version} wird geladen …";
+            Status = L.F("Update {0} wird geladen …", version);
             if (await _updates.DownloadAsync(info))
                 _updates.ApplyAndRestart(info);
             else
-                _snackbar.Error("Update fehlgeschlagen", "Siehe audiola.log.", 6);
+                _snackbar.Error(L.T("Update fehlgeschlagen"), L.T("Siehe audiola.log."), 6);
         }
         catch { /* Update-Fehler dürfen den Start nicht stören */ }
         finally { IsWorking = false; }
@@ -374,29 +374,29 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         if (!_updates.IsManaged)
         {
-            _snackbar.Info("Updates",
-                "Automatische Updates gibt es nur in der installierten Version (Setup von GitHub).", 5);
+            _snackbar.Info(L.T("Updates"),
+                L.T("Automatische Updates gibt es nur in der installierten Version (Setup von GitHub)."), 5);
             return;
         }
 
-        _snackbar.Info("Updates", "Suche nach Updates …", 2);
+        _snackbar.Info(L.T("Updates"), L.T("Suche nach Updates …"), 2);
 
         var info = await _updates.CheckAsync();
         if (info is null)
         {
-            _snackbar.Success("Updates", "Du hast die neueste Version.", 3);
+            _snackbar.Success(L.T("Updates"), L.T("Du hast die neueste Version."), 3);
             return;
         }
 
         var newVer = info.TargetFullRelease.Version.ToString();
-        if (!_dialogs.Confirm("Audiola-Update",
-                $"Eine neue Version ist verfügbar: v{newVer}.\n\nJetzt herunterladen und neu starten?"))
+        if (!_dialogs.Confirm(L.T("Audiola-Update"),
+                L.F("Eine neue Version ist verfügbar: v{0}.\n\nJetzt herunterladen und neu starten?", newVer)))
             return;
 
         if (await _updates.DownloadAsync(info))
             _updates.ApplyAndRestart(info);
         else
-            _snackbar.Error("Update fehlgeschlagen", "Siehe audiola.log.", 5);
+            _snackbar.Error(L.T("Update fehlgeschlagen"), L.T("Siehe audiola.log."), 5);
     }
 
     // ---- Navigation aus Menü/Rail ----

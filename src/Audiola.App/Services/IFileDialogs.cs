@@ -5,12 +5,12 @@ namespace Audiola.Services;
 /// <param name="Extensions">Endungen ohne Punkt, z. B. ["mp3", "wav"]. Leer = alle Dateien.</param>
 public sealed record FileFilter(string Name, params string[] Extensions)
 {
-    public static readonly FileFilter Audio = new("Audiodateien", "mp3", "wav", "flac", "m4a", "aac", "ogg", "aiff", "wma");
-    public static readonly FileFilter Project = new("Audiola-Projekt", "audiola");
-    public static readonly FileFilter Wav = new("WAV-Datei", "wav");
-    public static readonly FileFilter Lyrics = new("Liedtext", "lrc", "txt");
-    public static readonly FileFilter Image = new("Bilddateien", "jpg", "jpeg", "png", "bmp", "webp");
-    public static readonly FileFilter Any = new("Alle Dateien");
+    public static readonly FileFilter Audio = new(L.T("Audiodateien"), "mp3", "wav", "flac", "m4a", "aac", "ogg", "aiff", "wma");
+    public static readonly FileFilter Project = new(L.T("Audiola-Projekt"), "audiola");
+    public static readonly FileFilter Wav = new(L.T("WAV-Datei"), "wav");
+    public static readonly FileFilter Lyrics = new(L.T("Liedtext"), "lrc", "txt");
+    public static readonly FileFilter Image = new(L.T("Bilddateien"), "jpg", "jpeg", "png", "bmp", "webp");
+    public static readonly FileFilter Any = new(L.T("Alle Dateien"));
 }
 
 /// <summary>

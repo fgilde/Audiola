@@ -19,7 +19,7 @@ public sealed class StemMixService : IStemMixService
             .ToList();
 
         if (active.Count == 0)
-            throw new InvalidOperationException("Keine aktiven Stems zum Mischen.");
+            throw new InvalidOperationException(L.T("Keine aktiven Stems zum Mischen."));
 
         var readers = new List<AudioFileReader>();
         try

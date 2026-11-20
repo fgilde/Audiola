@@ -42,7 +42,7 @@ public sealed class DemucsStemSeparationService : IStemSeparationService
         CancellationToken ct = default)
     {
         if (!File.Exists(inputFile))
-            throw new FileNotFoundException("Eingabedatei nicht gefunden.", inputFile);
+            throw new FileNotFoundException(L.T("Eingabedatei nicht gefunden."), inputFile);
 
         var model = string.IsNullOrWhiteSpace(modelOverride) ? _settings.Current.DemucsModel : modelOverride;
         var outDir = _settings.Current.OutputDirectory;
@@ -57,18 +57,18 @@ public sealed class DemucsStemSeparationService : IStemSeparationService
         }
         argList.Add(inputFile);
 
-        progress?.Report($"Starte Demucs ({model}{(shifts > 0 ? $", shifts={shifts}" : "")}) …");
+        progress?.Report(L.F("Starte Demucs ({0}) …", model + (shifts > 0 ? $", shifts={shifts}" : "")));
         var (exitCode, _) = await RunAsync([.. argList], progress, ct);
 
         if (exitCode != 0)
             throw new InvalidOperationException(
-                $"Demucs ist mit Code {exitCode} fehlgeschlagen. Ist 'pip install demucs' ausgefuehrt und der Python-Pfad korrekt?");
+                L.F("Demucs ist mit Code {0} fehlgeschlagen. Ist 'pip install demucs' ausgefuehrt und der Python-Pfad korrekt?", exitCode));
 
         var trackName = Path.GetFileNameWithoutExtension(inputFile);
         var stemDir = Path.Combine(outDir, model, trackName);
 
         if (!Directory.Exists(stemDir))
-            throw new DirectoryNotFoundException($"Erwartetes Stem-Verzeichnis nicht gefunden: {stemDir}");
+            throw new DirectoryNotFoundException(L.F("Erwartetes Stem-Verzeichnis nicht gefunden: {0}", stemDir));
 
         var stems = new List<Stem>();
         foreach (var kind in Enum.GetValues<StemKind>())
@@ -79,9 +79,9 @@ public sealed class DemucsStemSeparationService : IStemSeparationService
         }
 
         if (stems.Count == 0)
-            throw new InvalidOperationException("Demucs hat keine Stems erzeugt.");
+            throw new InvalidOperationException(L.T("Demucs hat keine Stems erzeugt."));
 
-        progress?.Report($"Fertig: {stems.Count} Stems extrahiert.");
+        progress?.Report(L.F("Fertig: {0} Stems extrahiert.", stems.Count));
 
         return new StemSet
         {

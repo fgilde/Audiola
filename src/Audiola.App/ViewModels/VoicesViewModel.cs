@@ -50,23 +50,23 @@ public sealed partial class VoicesViewModel : ObservableObject
     [ObservableProperty] private string _whisperModel;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _status = "";
-    [ObservableProperty] private string _gpuStatus = "GPU-Status: noch nicht geprüft.";
+    [ObservableProperty] private string _gpuStatus = L.T("GPU-Status: noch nicht geprüft.");
     [ObservableProperty] private bool _cudaActive;
 
     // Vorschau
-    [ObservableProperty] private string _previewText = "Hallo, das ist ein Test der lokalen Stimme.";
+    [ObservableProperty] private string _previewText = L.T("Hallo, das ist ein Test der lokalen Stimme.");
     private PortableWaveOut? _previewOut;
     private AudioFileReader? _previewReader;
 
     // Neues Profil
-    [ObservableProperty] private string _newName = "Meine Stimme";
+    [ObservableProperty] private string _newName = L.T("Meine Stimme");
     [ObservableProperty] private LocalVoiceModel? _newModel;
     [ObservableProperty] private string _newLanguage = "de";
     [ObservableProperty] private string? _samplePath;
     [ObservableProperty] private bool _isRecording;
 
     /// <summary>Beschriftung des Aufnahme-Knopfs (die Views binden Text statt eigener Trigger).</summary>
-    public string RecordButtonLabel => IsRecording ? "■  Stopp" : "●  Aufnehmen";
+    public string RecordButtonLabel => IsRecording ? L.T("■  Stopp") : L.T("●  Aufnehmen");
 
     partial void OnIsRecordingChanged(bool value) => OnPropertyChanged(nameof(RecordButtonLabel));
 
@@ -95,29 +95,29 @@ public sealed partial class VoicesViewModel : ObservableObject
         {
             var g = await _local.CheckGpuAsync();
             CudaActive = g.CudaAvailable;
-            GpuStatus = "GPU: " + g.Summary;
+            GpuStatus = L.T("GPU: ") + g.Summary;
         }
-        catch (Exception ex) { GpuStatus = "GPU-Check fehlgeschlagen: " + ex.Message; }
+        catch (Exception ex) { GpuStatus = L.T("GPU-Check fehlgeschlagen: ") + ex.Message; }
     }
 
     [RelayCommand]
     private async Task InstallCudaTorch()
     {
-        IsBusy = true; Status = "Installiere CUDA-Torch …";
+        IsBusy = true; Status = L.T("Installiere CUDA-Torch …");
         try
         {
             await _local.InstallCudaTorchAsync(new Progress<string>(s => Status = s));
             await CheckGpu();
-            Status = "Fertig.";
+            Status = L.T("Fertig.");
         }
-        catch (Exception ex) { Status = "Fehler."; UiError.Show("CUDA-Torch-Installation fehlgeschlagen", ex.Message); }
+        catch (Exception ex) { Status = L.T("Fehler."); UiError.Show(L.T("CUDA-Torch-Installation fehlgeschlagen"), ex.Message); }
         finally { IsBusy = false; }
     }
 
     [RelayCommand]
     private async Task LoadModelsAsync()
     {
-        IsBusy = true; Status = "Lade Modell-Liste …";
+        IsBusy = true; Status = L.T("Lade Modell-Liste …");
         try
         {
             var models = await _local.GetModelsAsync();
@@ -129,9 +129,9 @@ public sealed partial class VoicesViewModel : ObservableObject
             WhisperModelsList.Clear();
             foreach (var w in whisper) WhisperModelsList.Add(w);
 
-            Status = ScriptAvailable ? $"{Models.Count} Modelle." : "Lokale Engine nicht installiert (voicebox_engine.py + Python-Pakete fehlen).";
+            Status = ScriptAvailable ? L.F("{0} Modelle.", Models.Count) : L.T("Lokale Engine nicht installiert (voicebox_engine.py + Python-Pakete fehlen).");
         }
-        catch (Exception ex) { Status = "Fehler: " + ex.Message; }
+        catch (Exception ex) { Status = L.T("Fehler: ") + ex.Message; }
         finally { IsBusy = false; }
     }
 
@@ -139,17 +139,17 @@ public sealed partial class VoicesViewModel : ObservableObject
     private async Task DownloadModel(LocalVoiceModel? model)
     {
         if (model is null) return;
-        IsBusy = true; Status = $"Lade {model.Name} …";
+        IsBusy = true; Status = L.F("Lade {0} …", model.Name);
         try
         {
             await _local.DownloadModelAsync(model.Id, new Progress<string>(s => Status = s));
-            _snackbar.Success("Modell installiert", model.Name);
+            _snackbar.Success(L.T("Modell installiert"), model.Name);
             await LoadModelsAsync();
         }
         catch (Exception ex)
         {
-            Status = "Fehler beim Download.";
-            UiError.Show("Download fehlgeschlagen", ex.Message);
+            Status = L.T("Fehler beim Download.");
+            UiError.Show(L.T("Download fehlgeschlagen"), ex.Message);
         }
         finally { IsBusy = false; }
     }
@@ -159,17 +159,17 @@ public sealed partial class VoicesViewModel : ObservableObject
     private async Task RemoveModel(LocalVoiceModel? model)
     {
         if (model is null) return;
-        IsBusy = true; Status = $"Entferne {model.Name} …";
+        IsBusy = true; Status = L.F("Entferne {0} …", model.Name);
         try
         {
             await _local.RemoveModelAsync(model.Id, new Progress<string>(s => Status = s));
-            _snackbar.Success("Modell entfernt", model.Name);
+            _snackbar.Success(L.T("Modell entfernt"), model.Name);
             await LoadModelsAsync();
         }
         catch (Exception ex)
         {
-            Status = "Fehler beim Entfernen.";
-            UiError.Show("Entfernen fehlgeschlagen", ex.Message);
+            Status = L.T("Fehler beim Entfernen.");
+            UiError.Show(L.T("Entfernen fehlgeschlagen"), ex.Message);
         }
         finally { IsBusy = false; }
     }
@@ -177,7 +177,7 @@ public sealed partial class VoicesViewModel : ObservableObject
     [RelayCommand]
     private async Task BrowseSampleAsync()
     {
-        var path = await _files.OpenFileAsync("Stimm-Sample wählen", FileFilter.Audio, FileFilter.Any);
+        var path = await _files.OpenFileAsync(L.T("Stimm-Sample wählen"), FileFilter.Audio, FileFilter.Any);
         if (path is not null) SamplePath = path;
     }
 
@@ -188,25 +188,25 @@ public sealed partial class VoicesViewModel : ObservableObject
     private void ToggleRecord()
     {
         if (IsRecording) { _ = StopRecordAsync(); return; }
-        try { _recorder.Start(RecordDeviceNumber); IsRecording = true; Status = "Aufnahme läuft …"; }
-        catch (Exception ex) { Status = "Mikrofon-Fehler: " + ex.Message; }
+        try { _recorder.Start(RecordDeviceNumber); IsRecording = true; Status = L.T("Aufnahme läuft …"); }
+        catch (Exception ex) { Status = L.T("Mikrofon-Fehler: ") + ex.Message; }
     }
 
     private async Task StopRecordAsync()
     {
         SamplePath = await _recorder.StopAsync();
         IsRecording = false;
-        Status = string.IsNullOrEmpty(SamplePath) ? "Aufnahme fehlgeschlagen." : "Sample aufgenommen.";
+        Status = string.IsNullOrEmpty(SamplePath) ? L.T("Aufnahme fehlgeschlagen.") : L.T("Sample aufgenommen.");
     }
 
     [RelayCommand]
     private void CreateProfile()
     {
-        if (string.IsNullOrWhiteSpace(NewName)) { Status = "Bitte einen Namen angeben."; return; }
-        if (NewModel is null) { Status = "Bitte ein Modell wählen."; return; }
+        if (string.IsNullOrWhiteSpace(NewName)) { Status = L.T("Bitte einen Namen angeben."); return; }
+        if (NewModel is null) { Status = L.T("Bitte ein Modell wählen."); return; }
         if (NewModel.CanClone && string.IsNullOrEmpty(SamplePath))
         {
-            Status = "Dieses Modell klont aus einem Sample — bitte Aufnahme oder Datei wählen.";
+            Status = L.T("Dieses Modell klont aus einem Sample — bitte Aufnahme oder Datei wählen.");
             return;
         }
 
@@ -222,9 +222,9 @@ public sealed partial class VoicesViewModel : ObservableObject
         _store.Add(profile, samples);
 
         SamplePath = null;
-        NewName = "Meine Stimme";
-        Status = $"Stimme „{profile.Name}“ erstellt.";
-        _snackbar.Success("Stimme erstellt", profile.Name, 2);
+        NewName = L.T("Meine Stimme");
+        Status = L.F("Stimme „{0}“ erstellt.", profile.Name);
+        _snackbar.Success(L.T("Stimme erstellt"), profile.Name, 2);
     }
 
     [RelayCommand]
@@ -238,7 +238,7 @@ public sealed partial class VoicesViewModel : ObservableObject
     {
         if (p is null || string.IsNullOrWhiteSpace(PreviewText)) return;
         StopPreview();
-        IsBusy = true; Status = $"Erzeuge Vorschau mit „{p.Name}“ …";
+        IsBusy = true; Status = L.F("Erzeuge Vorschau mit „{0}“ …", p.Name);
         try
         {
             var (samples, sr) = await _local.SpeakAsync(PreviewText, p, 1.0);
@@ -249,12 +249,12 @@ public sealed partial class VoicesViewModel : ObservableObject
             _previewOut = new PortableWaveOut();
             _previewOut.Init(_previewReader);
             _previewOut.Play();
-            Status = "Vorschau läuft.";
+            Status = L.T("Vorschau läuft.");
         }
         catch (Exception ex)
         {
             Status = "Vorschau fehlgeschlagen.";
-            UiError.Show("Vorschau fehlgeschlagen", ex.Message);
+            UiError.Show(L.T("Vorschau fehlgeschlagen"), ex.Message);
         }
         finally { IsBusy = false; }
     }

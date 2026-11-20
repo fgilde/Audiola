@@ -77,14 +77,14 @@ public partial class ExportDialog : Window
         PreviewButton.IsEnabled = false;
         PreviewBusy.IsVisible = true;
         try { await _preview(request); }
-        catch (Exception ex) { UiError.Show("Vorschau fehlgeschlagen", ex.Message); }
+        catch (Exception ex) { UiError.Show(L.T("Vorschau fehlgeschlagen"), ex.Message); }
         finally { PreviewButton.IsEnabled = true; PreviewBusy.IsVisible = false; }
     }
 
     private async void ChooseCover_Click(object? sender, RoutedEventArgs e)
     {
         var path = await AppServices.Get<IFileDialogs>()
-            .OpenFileAsync("Cover-Bild wählen", FileFilter.Image, FileFilter.Any);
+            .OpenFileAsync(L.T("Cover-Bild wählen"), FileFilter.Image, FileFilter.Any);
         if (path is null) return;
         try
         {
@@ -97,7 +97,7 @@ public partial class ExportDialog : Window
                 _ => "image/jpeg"
             };
         }
-        catch (Exception ex) { UiError.Show("Cover konnte nicht geladen werden", ex.Message); }
+        catch (Exception ex) { UiError.Show(L.T("Cover konnte nicht geladen werden"), ex.Message); }
     }
 
     private void RemoveCover_Click(object? sender, RoutedEventArgs e) => Meta.CoverArt = null;
@@ -115,7 +115,7 @@ public partial class ExportDialog : Window
             var lrc = await _generateLyrics(useEleven);
             if (!string.IsNullOrWhiteSpace(lrc)) Meta.Lyrics = lrc!;
         }
-        catch (Exception ex) { UiError.Show("Liedtext erzeugen fehlgeschlagen", ex.Message); }
+        catch (Exception ex) { UiError.Show(L.T("Liedtext erzeugen fehlgeschlagen"), ex.Message); }
         finally
         {
             GenerateLyricsButton.IsEnabled = true;
@@ -136,7 +136,7 @@ public partial class ExportDialog : Window
         ];
 
         var path = await AppServices.Get<IFileDialogs>()
-            .SaveFileAsync("Exportieren", Sanitize(_defaultFileName) + "." + fmt, filters);
+            .SaveFileAsync(L.T("Exportieren"), Sanitize(_defaultFileName) + "." + fmt, filters);
         if (path is null) return;
 
         // Endung sicherstellen — Linux-Dialoge hängen sie nicht automatisch an.

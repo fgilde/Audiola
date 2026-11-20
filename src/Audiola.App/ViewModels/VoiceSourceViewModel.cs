@@ -85,18 +85,18 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
     [ObservableProperty] private bool _isRecording;
 
     /// <summary>Beschriftung des Aufnahme-Knopfs (die Views binden Text statt eigener Trigger).</summary>
-    public string RecordButtonLabel => IsRecording ? "■ Aufnahme stoppen" : "● Aufnahme starten";
+    public string RecordButtonLabel => IsRecording ? L.T("■ Aufnahme stoppen") : L.T("● Aufnahme starten");
 
     partial void OnIsRecordingChanged(bool value) => OnPropertyChanged(nameof(RecordButtonLabel));
     [ObservableProperty] private string? _recordedPath;
     [ObservableProperty] private string? _uploadPath;
-    [ObservableProperty] private string _newVoiceName = "Meine Stimme";
+    [ObservableProperty] private string _newVoiceName = L.T("Meine Stimme");
     [ObservableProperty] private bool _keepVoice;
     [ObservableProperty] private bool _isResolving;
 
     public async Task LoadVoicesAsync()
     {
-        if (!_voice.HasApiKey) { Status = "Kein ElevenLabs API-Key — in den Einstellungen hinterlegen."; return; }
+        if (!_voice.HasApiKey) { Status = L.T("Kein ElevenLabs API-Key — in den Einstellungen hinterlegen."); return; }
         IsLoadingVoices = true;
         try
         {
@@ -105,9 +105,9 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
             foreach (var v in list) _voices.Add(v);
             RebuildVoicesView();
             SelectedVoice = _voices.FirstOrDefault();
-            Status = $"{_voices.Count} Stimmen geladen.";
+            Status = L.F("{0} Stimmen geladen.", _voices.Count);
         }
-        catch (Exception ex) { Status = "Fehler: " + ex.Message; }
+        catch (Exception ex) { Status = L.F("Fehler: {0}", ex.Message); }
         finally { IsLoadingVoices = false; }
     }
 
@@ -124,9 +124,9 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
             _recorder.Start(RecordDeviceNumber);
             IsRecording = true;
             RecordedPath = null;
-            Status = "Aufnahme läuft … sprich ins Mikrofon.";
+            Status = L.T("Aufnahme läuft … sprich ins Mikrofon.");
         }
-        catch (Exception ex) { Status = "Mikrofon-Fehler: " + ex.Message; }
+        catch (Exception ex) { Status = L.F("Mikrofon-Fehler: {0}", ex.Message); }
     }
 
     /// <summary>Mikrofon (NAudio-Gerätenummer) für die Aufnahme.</summary>
@@ -136,17 +136,17 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
     {
         RecordedPath = await _recorder.StopAsync();
         IsRecording = false;
-        Status = string.IsNullOrEmpty(RecordedPath) ? "Aufnahme fehlgeschlagen." : "Aufnahme bereit.";
+        Status = string.IsNullOrEmpty(RecordedPath) ? L.T("Aufnahme fehlgeschlagen.") : L.T("Aufnahme bereit.");
     }
 
     [RelayCommand]
     private async Task BrowseFileAsync()
     {
-        var path = await _files.OpenFileAsync("Audiodatei als Stimm-Vorlage", FileFilter.Audio, FileFilter.Any);
+        var path = await _files.OpenFileAsync(L.T("Audiodatei als Stimm-Vorlage"), FileFilter.Audio, FileFilter.Any);
         if (path is not null)
         {
             UploadPath = path;
-            Status = "Datei gewählt: " + Path.GetFileName(UploadPath);
+            Status = L.F("Datei gewählt: {0}", Path.GetFileName(UploadPath));
         }
     }
 
@@ -162,7 +162,7 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
             // Lokale, bereits erstellte Stimme.
             if (EngineMode == 1)
             {
-                if (SelectedLocalProfile is null) { Status = "Bitte eine lokale Stimme wählen (oder unter „Stimmen“ erstellen)."; return null; }
+                if (SelectedLocalProfile is null) { Status = L.T("Bitte eine lokale Stimme wählen (oder unter „Stimmen“ erstellen)."); return null; }
                 return new VoiceChoice
                 {
                     Engine = "local",
@@ -183,18 +183,18 @@ public sealed partial class VoiceSourceViewModel : ObservableObject
                     var sample = Mode == 1 ? RecordedPath : UploadPath;
                     if (string.IsNullOrEmpty(sample) || !File.Exists(sample))
                     {
-                        Status = Mode == 1 ? "Bitte zuerst aufnehmen." : "Bitte zuerst eine Datei wählen.";
+                        Status = Mode == 1 ? L.T("Bitte zuerst aufnehmen.") : L.T("Bitte zuerst eine Datei wählen.");
                         return null;
                     }
-                    Status = "Stimme wird erstellt (Klonen) …";
+                    Status = L.T("Stimme wird erstellt (Klonen) …");
                     var id = await _voice.CreateVoiceFromSamplesAsync(NewVoiceName, [sample]);
-                    if (string.IsNullOrEmpty(id)) { Status = "Klonen fehlgeschlagen."; return null; }
+                    if (string.IsNullOrEmpty(id)) { Status = L.T("Klonen fehlgeschlagen."); return null; }
                     return new VoiceChoice { Engine = "elevenlabs", ElevenVoiceId = id, TemporaryEleven = !KeepVoice };
                 default:
                     return null;
             }
         }
-        catch (Exception ex) { Status = "Fehler: " + ex.Message; return null; }
+        catch (Exception ex) { Status = L.F("Fehler: {0}", ex.Message); return null; }
         finally { IsResolving = false; }
     }
 }

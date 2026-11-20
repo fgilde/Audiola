@@ -27,4 +27,8 @@
     <Content Include="audio_detector_probe.py" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Localization\*.json" LogicalName="Audiola.Localization.%(Filename).json" />
+  </ItemGroup>
+
 </Project>
